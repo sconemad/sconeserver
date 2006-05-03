@@ -1,0 +1,5 @@
+
+map("*","getfile")
+map(".","dirindex")
+map("!","errorpage")
+map("*.pl","exec")

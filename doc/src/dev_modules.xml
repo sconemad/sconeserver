@@ -1,0 +1,62 @@
+<?xml version="1.0" ?>
+<article title="Modules">
+
+<!-- ----+---------+---------+---------+---------+---------+---------+----- -->
+<content>
+
+<p>
+When a connection is accepted, each associated module in the connection map is
+notified in turn by calling the connect() method for each module. The 
+arguments given are a descriptor, representing the connected socket endpoint, 
+and a list of arguments that were specified in the configuration for the 
+connection map (if any were given).
+In theory, a module can do anything in response to a connection notification, 
+though typically it will:
+</p>
+
+<ul>
+
+  <li>
+  <em>Do nothing</em> - 
+  Leaving the other modules in the list to handle the connection. If there are
+  no other modules then the connection will be dropped. This is done by simply
+  returning <em>true</em> from connect().
+  </li>
+  
+  <li>
+  <em>Drop the connection</em> - 
+  The connection is closed, no subsequent modules in the list are notified. 
+  This is useful for modules that perform authentication based on address.
+  This is done by returning <em>false</em> from connect().
+  </li>
+
+  <li>
+  <em>Install one or more streams to handle the connection data</em> - 
+  SconeServer has a system which allows multiple streams to be used in a chain
+  to filter data passing to or from the connection. Modules should always 
+  install streams at the end of the chain, allowing layered protocols to be
+  handled by simply adding the required modules in the correct order. A stream
+  can be added by calling add_stream( scx::Stream* ) on the endpoint, and
+  connect() should return <em>true</em> to indicate that the connection should
+  proceed.
+  </li>
+
+</ul>
+
+<p>
+A simple module might just install a stream to count the number of bytes sent
+and recieved through the connection, for example, the "stat" module does 
+exactly this. A more complicated module might perform buffering to increase 
+I/O efficency, or implement some kind of filtering, or encryption of data.
+</p>
+
+<p>
+SconeServer can be easily extended to handle new protocols or features by
+writing new modules. The next section will show how this can be done by 
+developing some example modules.
+</p>
+
+</content>
+<!-- ----+---------+---------+---------+---------+---------+---------+----- -->
+
+</article>

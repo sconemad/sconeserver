@@ -1,0 +1,116 @@
+
+
+<html>
+<head>
+<meta http-equiv='content-type' content='text/html; charset=utf-8' />
+<link rel='shortcut icon' href='./favicon.ico' />
+<title>SconeServer - SconeServer-0.6.0 manual</title>
+<link rel='stylesheet' href='./style/print.css' media='print' type='text/css' />
+<link rel='stylesheet' href='./style/main.css' media='screen' type='text/css' />
+
+</head>
+<body>
+<div class='titlebar'>
+<img src='title_sconeserver.jpg' alt='SconeServer'>
+</div>
+<div id='side'>
+
+<h2>Contents</h2>
+<ul>
+<li><a href='./index.html'>SconeServer</a></li>
+<ul>
+<li><a href='./about.html'>About</a></li>
+<li><a href='./download.html'>Download</a></li>
+<li><a href='./install.html'>Install</a></li>
+<li><a href='./config.html'>Configure</a></li>
+<li><a href='./modules.html'>Modules</a></li>
+<ul>
+<li class='index-this'>sconeserver</li>
+<li><a href='./mod_router.html'>router</a></li>
+<ul>
+<li><a href='./mod_router_ip.html'>ip</a></li>
+<li><a href='./mod_router_ip6.html'>ip6</a></li>
+<li><a href='./mod_router_local.html'>local</a></li>
+<li><a href='./mod_router_bluetooth.html'>bluetooth</a></li>
+</ul>
+<li><a href='./mod_simple.html'>simple</a></li>
+<li><a href='./mod_stat.html'>stat</a></li>
+<li><a href='./mod_http.html'>http</a></li>
+<ul>
+<li><a href='./mod_http_getfile.html'>getfile</a></li>
+</ul>
+<li><a href='./mod_ssl.html'>ssl</a></li>
+</ul>
+<li><a href='./develop.html'>Development</a></li>
+<ul>
+<li><a href='./dev_sconed.html'>sconed</a></li>
+<li><a href='./dev_libsconex.html'>libsconex</a></li>
+<li><a href='./dev_modules.html'>Modules</a></li>
+<li><a href='./dev_examples.html'>Examples</a></li>
+<ul>
+<li><a href='./dev_examples_tuesdayonly.html'>tuesdayonly</a></li>
+<li><a href='./dev_examples_rot13.html'>rot13</a></li>
+</ul>
+<li><a href='./dev_build.html'>Build system</a></li>
+</ul>
+<li><a href='./faq.html'>FAQ</a></li>
+</ul>
+</ul>
+
+
+</div>
+<h1>SconeServer</h1>
+<div class='box'>
+<p>
+The <em>sconeserver</em> module is the root of the module tree, and is always 
+present when SconeServer is running. Its main task is to manage the 
+simultaneous handling of client connections, dispatching events to the relevant
+modules where appropriate. 
+</p>
+
+<h2>Configuration</h2>
+
+<p>
+The sconeserver module's configuration file is used to:
+</p>
+
+<ul>
+  <li>
+  Set any global options.
+  </li>
+  <li>
+  Load the main modules.
+  </li>
+</ul>
+
+
+<h2>SconeScript Interface</h2>
+
+<p>
+In addition to the standard module interface, it also has the following:
+</p>
+
+  <div class='scr-obj'>
+  <h4>
+  restart()
+  </h4>
+  <p>
+  Restart SconeServer.
+  </p>
+  </div>
+
+  <div class='scr-obj'>
+  <h4>
+  shutdown()
+  </h4>
+  <p>
+  Shutdown SconeServer.
+  </p>
+  </div>
+</div>
+
+<address>
+Copyright (c) 2000-2005 Andrew Wedgbury / wedge (at) sconemad (dot) com
+</address>
+</body>
+</html>

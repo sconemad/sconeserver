@@ -1,0 +1,77 @@
+#!/usr/bin/perl -w
+#
+# localterm - A simple terminal on a local (UNIX domain) socket
+# 
+# usage: localterm <path-to-socket>
+#
+# Copyright (c) 2005 Andrew Wedgbury <wedge@sconemad.com>
+#
+
+use IO::Socket;
+use IO::Select;
+
+my ($path) = @ARGV;
+
+my $sock = IO::Socket::UNIX->new(
+  Peer => $path
+);
+
+die "Can't create socket: $!" unless $sock;
+$sock->connected() || die "Could not connect";
+binmode($sock->fileno);
+$sock->blocking(0);
+
+my $in = new IO::Handle->new;
+$in->fdopen(fileno(STDIN),"r");
+binmode($in->fileno);
+$in->blocking(0);
+
+my $out = new IO::Handle->new;
+$out->fdopen(fileno(STDOUT),"w");
+binmode($out->fileno);
+$out->blocking(0);
+
+print "--- localterm: connected to $path ---\n";
+
+my $sel = IO::Select->new;
+$sel->add($sock);
+$sel->add($in);
+
+my $end = 0;
+my $buffer;
+
+while (@ready = $sel->can_read()) {
+  
+  ++$end if ($sock->eof());
+
+  foreach my $s(@ready) {
+    while (1) {
+      my $n = $s->read($buffer,4096);
+
+      # Detect socket close
+      goto do_shutdown if ($end>1);
+      last if (!$n);
+      
+      if ($s == $sock) {
+        # Read from socket and send to stdout
+        $out->write($buffer,$n);
+        $out->flush();
+        $end=0;
+
+      } else {
+        # Read from stdin and send to socket
+        $sock->write($buffer,$n);
+        $sock->flush();
+      }
+    }
+  }
+}
+
+do_shutdown:
+
+$sock->close();
+
+print "\n--- localterm: connection to $path closed ---\n";
+
+exit;
+

@@ -1,0 +1,158 @@
+<?xml version="1.0" ?>
+<article short="rot13" title="rot13 - A simple text transform module">
+
+<!-- ----+---------+---------+---------+---------+---------+---------+----- -->
+<content>
+
+<p>
+Here we develop a more complex module, which deploys a stream to perform 
+simple transforms on textual data. This could be used as a template for 
+modules that provide filtering functionality, such as encryption, compression 
+and bandwith limiting.
+</p>
+
+<p>
+The module is called "rot13" and its purpose is to transform text using the
+<a href='http://en.wikipedia.org/wiki/ROT13'>rot13</a> method - commonly used
+to obscure the answers to puzzles on internet discussion forums. Both ingoing 
+and outgoing channels can be transformed, this is selectable using a pair of 
+options passed from the configuration file.
+</p>
+
+<p>
+This time we split the code into source and header files. As well as a module
+class, we also require another class - a stream, which is deployed by the 
+module from its connect() method. The stream performs the required transforms 
+whenever data is read and written by subsequent streams.
+</p>
+
+<p>
+First the module class:
+</p>
+
+<?WMG 
+  $ex_path = '../examples/rot13';
+  $src->read_file("$ex_path/Rot13Module.h"); 
+  $src->read_file("$ex_path/Rot13Module.cpp"); 
+?>
+
+<p>
+Most of this is similar to the previous example. The only interesting bit is 
+the <code>connect()</code> method, where we interpret any arguments that are 
+passed from the configuration settings and add a newly constructed Rot13Stream
+object to the socket. 
+</p>
+
+<p>
+Everything else is handled by the Rot13Stream class, which looks like:
+</p>
+
+<?WMG 
+  $src->read_file("$ex_path/Rot13Stream.h"); 
+  $src->read_file("$ex_path/Rot13Stream.cpp"); 
+?>
+
+<p>
+The first thing to notice is that Rot13Stream is derived from scx::Stream, the
+base class for all stream classes. From this it inherits an interface for
+reading and writing data, amongst other things.
+</p>
+
+<p>
+The key point is that any reading and writing done by subsequent streams
+associated with this socket will be done via our Rot13Stream, allowing us to
+modify the data before it is read or written. This is done simply by 
+overriding the <code>read()</code> and <code>write()</code> methods as shown.
+</p>
+
+<h3>Building the module</h3>
+
+<p>
+As with the previous example, building should be fairly straightforward 
+provided SconeServer has been installed. However, as we now have multiple
+source files, we need to compile each one seperately and link the objects.
+This is best handles by a makefile, for example:
+</p>
+
+<?WMG 
+  $src->read_file("$ex_path/Makefile.example"); 
+?>
+
+<p>
+Building the module is then just a matter of typing:
+</p>
+
+<pre class='shell'>
+<b>$</b> make
+</pre>
+
+<h3>Loading into SconeServer</h3>
+
+<p>
+Provided the module binary is located in SconeServer's module search path, it
+can be loaded with the SconeScript command:
+</p>
+
+<pre class='script'>
+insmod("rot13")
+</pre>
+
+<p>
+As before, add this to "sconeserver.conf" if you want the module to be loaded 
+every time SconeServer starts.
+</p>
+
+<h3>Using the module</h3>
+
+<p>
+The module will act as a filter to any module(s) following it in its route 
+chain. To test it, we can create a chain and add our module followed by the
+<a href="/modules/simple.html">simple</a> module's echo service (which echoes
+back whatever it receives):
+</p>
+
+<pre class='script'>
+router.add("rot13echo");
+ router.rot13echo.add("rot13",0,1);
+ router.rot13echo.add("simple","echo");
+ router.rot13echo.listen(ip.addr("localhost",9000));
+</pre>
+
+<p>
+The additional values (0 and 1) following "rot13" are arguments. These are 
+passed to the module's <code>connect()</code> method when the chain is 
+connected. For this module we use two arguments - flags to indicate whether 
+the transform should be performed on the input and output respectively.
+In this case we have selected just the output to be transformed.
+</p>
+
+<p>
+We also set the chain to listen for connections on TCP port 9000. We can
+then connect to the server using telnet and try it out:
+</p>
+
+<pre class='shell'>
+<b>$</b> telnet localhost 9000
+<b>Trying 127.0.0.1...</b>
+<b>Connected to localhost.</b>
+<b>Escape character is '^]'.</b>
+abcdefg
+<b>nopqrst</b>
+gnat
+<b>tang</b>
+irk
+<b>vex</b>
+^]
+<b>telnet&gt;</b> q
+<b>Connection closed.</b>
+</pre>
+
+<p>
+So there we have it - the characters we send are being transformed using 
+rot13 and sent back!
+</p>
+
+</content>
+<!-- ----+---------+---------+---------+---------+---------+---------+----- -->
+
+</article>

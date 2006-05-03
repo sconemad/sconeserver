@@ -1,0 +1,67 @@
+<?xml version="1.0" ?>
+<article title="Frequently Asked Questions" short="FAQ">
+
+<!-- ----+---------+---------+---------+---------+---------+---------+----- -->
+<content>
+
+<p>
+A collection of frequently asked questions that people have frequently asked me
+about SconeServer.
+</p>
+
+<h2>General</h2>
+
+<h3>Why is it called SconeServer?</h3>
+<p>
+No particular reason, other than I like scones, and it seems to be a name
+that's not being used by any other company or product. 
+</p>
+
+<h3>What's wrong with Apache, IIS, etc...?</h3>
+<p>
+Nothing (as far as I know) - in fact I don't really know very much about Apache
+or any other web server for that matter.
+I wrote SconeServer for my own amusement, and not to try and improve on any
+existing server software. Having said that, I have tried to make SconeServer
+as efficient as I possibly can whilst maintaining a good overall structure
+to the code, so I hope it would perform reasonably well in comparison to
+other similar products.
+</p>
+
+<h3>Why should I use it?</h3>
+<p>
+You shouldn't - unless you want to. It's certainly not a good idea to rely on
+an alpha version working perfectly, as there will inevitably be some problems.
+</p>
+
+<h2>Installation</h2>
+
+<h3>What platforms will it run on?</h3>
+<p>
+SconeServer should run on any POSIX compliant system, i.e. UNIX and UNIX-like
+systems such as Linux, Open/Free/NetBSD, Darwin and Solaris. It should also run 
+on Microsoft Windows. I mainly develop on Slackware Linux, and test on other 
+systems periodically, so there is a chance that some problems will creep in 
+between tests.
+</p>
+
+<h3>How do I install it?</h3>
+<p>
+Read the <a href="install.html">Installation</a> section.
+</p>
+
+<h3>What do I do if it doesn't compile?</h3>
+<p>
+Don't know.
+</p>
+
+<h3>How do I make it run automatically when the machine boots?</h3>
+<p>
+On UNIX-like systems, this usually involves tinkering about in /etc/rc.d, 
+though it is probably best to consult your system's documentation beforehand.
+</p>
+
+</content>
+<!-- ----+---------+---------+---------+---------+---------+---------+----- -->
+
+</article>

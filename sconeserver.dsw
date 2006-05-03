@@ -1,0 +1,203 @@
+Microsoft Developer Studio Workspace File, Format Version 6.00
+# WARNING: DO NOT EDIT OR DELETE THIS WORKSPACE FILE!
+
+###############################################################################
+
+Project: "dirindex"=.\http\dirindex\dirindex.dsp - Package Owner=<4>
+
+Package=<5>
+{{{
+}}}
+
+Package=<4>
+{{{
+    Begin Project Dependency
+    Project_Dep_Name http
+    End Project Dependency
+    Begin Project Dependency
+    Project_Dep_Name sconex
+    End Project Dependency
+}}}
+
+###############################################################################
+
+Project: "errorpage"=.\http\errorpage\errorpage.dsp - Package Owner=<4>
+
+Package=<5>
+{{{
+}}}
+
+Package=<4>
+{{{
+    Begin Project Dependency
+    Project_Dep_Name http
+    End Project Dependency
+    Begin Project Dependency
+    Project_Dep_Name sconex
+    End Project Dependency
+}}}
+
+###############################################################################
+
+Project: "getfile"=.\http\getfile\getfile.dsp - Package Owner=<4>
+
+Package=<5>
+{{{
+}}}
+
+Package=<4>
+{{{
+    Begin Project Dependency
+    Project_Dep_Name http
+    End Project Dependency
+    Begin Project Dependency
+    Project_Dep_Name sconex
+    End Project Dependency
+}}}
+
+###############################################################################
+
+Project: "http"=.\http\http.dsp - Package Owner=<4>
+
+Package=<5>
+{{{
+}}}
+
+Package=<4>
+{{{
+    Begin Project Dependency
+    Project_Dep_Name sconex
+    End Project Dependency
+}}}
+
+###############################################################################
+
+Project: "mime"=.\mime\mime.dsp - Package Owner=<4>
+
+Package=<5>
+{{{
+}}}
+
+Package=<4>
+{{{
+    Begin Project Dependency
+    Project_Dep_Name sconex
+    End Project Dependency
+}}}
+
+###############################################################################
+
+Project: "router"=.\router\router.dsp - Package Owner=<4>
+
+Package=<5>
+{{{
+}}}
+
+Package=<4>
+{{{
+    Begin Project Dependency
+    Project_Dep_Name sconex
+    End Project Dependency
+}}}
+
+###############################################################################
+
+Project: "sconed"=.\sconed.dsp - Package Owner=<4>
+
+Package=<5>
+{{{
+}}}
+
+Package=<4>
+{{{
+    Begin Project Dependency
+    Project_Dep_Name sconex
+    End Project Dependency
+}}}
+
+###############################################################################
+
+Project: "sconex"=.\sconex\sconex.dsp - Package Owner=<4>
+
+Package=<5>
+{{{
+}}}
+
+Package=<4>
+{{{
+}}}
+
+###############################################################################
+
+Project: "simple"=.\simple\simple.dsp - Package Owner=<4>
+
+Package=<5>
+{{{
+}}}
+
+Package=<4>
+{{{
+    Begin Project Dependency
+    Project_Dep_Name sconex
+    End Project Dependency
+}}}
+
+###############################################################################
+
+Project: "ssl"=.\ssl\ssl.dsp - Package Owner=<4>
+
+Package=<5>
+{{{
+}}}
+
+Package=<4>
+{{{
+    Begin Project Dependency
+    Project_Dep_Name sconex
+    End Project Dependency
+}}}
+
+###############################################################################
+
+Project: "stat"=.\stat\stat.dsp - Package Owner=<4>
+
+Package=<5>
+{{{
+}}}
+
+Package=<4>
+{{{
+    Begin Project Dependency
+    Project_Dep_Name sconex
+    End Project Dependency
+}}}
+
+###############################################################################
+
+Project: "test"=.\test\test.dsp - Package Owner=<4>
+
+Package=<5>
+{{{
+}}}
+
+Package=<4>
+{{{
+    Begin Project Dependency
+    Project_Dep_Name sconex
+    End Project Dependency
+}}}
+
+###############################################################################
+
+Global:
+
+Package=<5>
+{{{
+}}}
+
+Package=<3>
+{{{
+}}}
+
+###############################################################################
+

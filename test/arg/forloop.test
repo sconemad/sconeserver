@@ -1,0 +1,13 @@
+print("START" + endl);
+
+for ( var("a",0); 
+      a < 10; 
+      set("a",a+1) ) {
+
+  print ("LOOP a=" + a + endl);
+
+}
+
+test(a==10,"i think a should be 12");
+
+print("END a=" + a + endl);

@@ -1,0 +1,38 @@
+<?xml version="1.0" ?>
+<article short="sconed" title="sconed - SconeServer Daemon">
+
+<!-- ----+---------+---------+---------+---------+---------+---------+----- -->
+<content>
+
+<p>
+The executable daemon <em>sconed</em> is run in order to start 
+<em>SconeServer</em>. It does a few things, including:
+</p>
+
+<ul>
+
+<li>
+Performing platform-specific startup tasks. For example, making the process
+a daemon on UNIX-like systems, or a system service on Win32.
+</li>
+
+<li>
+Handling <a href='/config.html#commandline'>command line options</a>.
+</li>
+
+<li>
+Creating the root module <a href='/modules/sconeserver.html'>sconeserver</a>,
+which loads its configuration file, along with any sub-modules, to get 
+SconeServer into a state where it is ready to run.
+</li>
+
+<li>
+Passing control to the sconeserver module's event loop.
+</li>
+
+</ul>
+
+</content>
+<!-- ----+---------+---------+---------+---------+---------+---------+----- -->
+
+</article>

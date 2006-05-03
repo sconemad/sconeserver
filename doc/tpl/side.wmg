@@ -1,0 +1,15 @@
+<div id='side'>
+
+<?WMG
+
+# Site index
+
+print "<h2>Contents</h2>\n";
+my $this = $src->{name}.".html";
+print "<ul>\n";
+$src->{SITE}->{INDEX}->print_index($this);
+print "</ul>\n";
+
+?>
+
+</div>

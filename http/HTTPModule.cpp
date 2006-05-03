@@ -1,0 +1,105 @@
+/* SconeServer (http://www.sconemad.com)
+
+HTTP (HyperText Transfer Protocol) Module
+
+Copyright (c) 2000-2004 Andrew Wedgbury <wedge@sconemad.com>
+
+This program is free software; you can redistribute it and/or modify
+it under the terms of the GNU General Public License as published by
+the Free Software Foundation; either version 2, or (at your option)
+any later version.
+
+This program is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+GNU General Public License for more details.
+
+You should have received a copy of the GNU General Public License
+along with this program (see the file COPYING); if not, write to the
+Free Software Foundation, Inc.,
+59 Temple Place - Suite 330, Boston, MA  02111-1307, USA */
+
+#include "http/HTTPModule.h"
+#include "http/ConnectionStream.h"
+#include "http/Host.h"
+
+#include "sconex/Arg.h"
+#include "sconex/Logger.h"
+#include "sconex/ModuleInterface.h"
+#include "sconex/ModuleLoaderDLL.h"
+#include "sconex/StreamDebugger.h"
+namespace http {
+
+SCONESERVER_MODULE(HTTPModule);
+
+//=========================================================================
+HTTPModule::HTTPModule(
+)
+  : SCXBASE Module("http",scx::version()),
+    m_host_mapper(*this)
+{
+
+}
+
+//=========================================================================
+HTTPModule::~HTTPModule()
+{
+
+}
+
+//=========================================================================
+std::string HTTPModule::info() const
+{
+  return "Copyright (c) 2000-2004 Andrew Wedgbury\n"
+         "HTTP web server\n";
+}
+
+//=========================================================================
+int HTTPModule::init()
+{
+  return Module::init();
+}
+
+//=========================================================================
+bool HTTPModule::connect(
+  scx::Descriptor* endpoint,
+  scx::ArgList* args
+)
+{
+  const scx::ArgString* a_profile =
+    dynamic_cast<const scx::ArgString*>(args->get(0));
+  std::string profile = (a_profile ? a_profile->get_string() : "default");
+
+  ConnectionStream* s = new ConnectionStream(*this,profile);
+  s->add_module_ref(ref());
+  
+  endpoint->add_stream(s);
+  return true;
+}
+
+//=============================================================================
+HostMapper& HTTPModule::get_host_mapper()
+{
+  return m_host_mapper;
+}
+
+//=============================================================================
+scx::Arg* HTTPModule::arg_lookup(const std::string& name)
+{
+  if ("hosts" == name) {
+    return new scx::ArgObject(&m_host_mapper);
+  }
+    
+  return SCXBASE Module::arg_lookup(name);
+}
+
+//=============================================================================
+scx::Arg* HTTPModule::arg_function(
+  const std::string& name,
+  scx::Arg* args
+)
+{
+  return SCXBASE Module::arg_function(name,args);
+}
+
+};

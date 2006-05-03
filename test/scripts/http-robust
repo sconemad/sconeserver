@@ -1,0 +1,61 @@
+#!/usr/bin/perl -w
+
+use IO::Socket;
+use IO::Select;
+
+my $HOSTNAME = "localhost";
+my $PORT = 9080;
+
+my $scd = IO::Socket::INET->new(
+  PeerAddr => $HOSTNAME,
+  PeerPort => $PORT
+);
+
+die "Can't create socket: $!" unless $scd;
+
+if (!$scd->connected()) {
+  print "Could not connect\n";
+}
+#binmode($scd);
+
+my $read_set = IO::Select->new;
+$read_set->add($scd);
+
+test_req(
+  "GET /index.html HTTP/1.1",
+  "User-Agent: scx-test",
+  "Host: localhost",
+  "If-Modified-Since: Wed, 16 Nov 2005 18:36:41 +0000",
+  "",
+
+  "HEAD /index.html HTTP/1.1",
+  "User-Agent: scx-test",
+  "Host: localhost",
+  "If-Modified-Since: Wed, 16 Nov 2005 18:36:40 +0000",
+  ""
+);
+
+#test_req("HEAD /test/ HTTP/1.1",
+#	 "User-Agent: scx-test",
+#	 "Host: localhost",
+#	 "Connection: close"
+#	 );
+	 
+$scd->close();
+
+
+sub test_req
+{
+  for ($i=0; $i<100; ++$i) {
+    print (('-' x 78)."\n");
+    foreach my $line (@_) {
+	print "<= $line\n";
+	print $scd "$line\r\n";
+    }
+    print "<=\n";
+  }
+    while (my $line = <$scd>) { 
+	chomp $line;
+	print "=> $line\n";
+    }
+}

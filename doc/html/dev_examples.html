@@ -1,0 +1,88 @@
+
+
+<html>
+<head>
+<meta http-equiv='content-type' content='text/html; charset=utf-8' />
+<link rel='shortcut icon' href='./favicon.ico' />
+<title>Examples - SconeServer-0.6.0 manual</title>
+<link rel='stylesheet' href='./style/print.css' media='print' type='text/css' />
+<link rel='stylesheet' href='./style/main.css' media='screen' type='text/css' />
+
+</head>
+<body>
+<div class='titlebar'>
+<img src='title_sconeserver.jpg' alt='SconeServer'>
+</div>
+<div id='side'>
+
+<h2>Contents</h2>
+<ul>
+<li><a href='./index.html'>SconeServer</a></li>
+<ul>
+<li><a href='./about.html'>About</a></li>
+<li><a href='./download.html'>Download</a></li>
+<li><a href='./install.html'>Install</a></li>
+<li><a href='./config.html'>Configure</a></li>
+<li><a href='./modules.html'>Modules</a></li>
+<ul>
+<li><a href='./mod_sconeserver.html'>sconeserver</a></li>
+<li><a href='./mod_router.html'>router</a></li>
+<ul>
+<li><a href='./mod_router_ip.html'>ip</a></li>
+<li><a href='./mod_router_ip6.html'>ip6</a></li>
+<li><a href='./mod_router_local.html'>local</a></li>
+<li><a href='./mod_router_bluetooth.html'>bluetooth</a></li>
+</ul>
+<li><a href='./mod_simple.html'>simple</a></li>
+<li><a href='./mod_stat.html'>stat</a></li>
+<li><a href='./mod_http.html'>http</a></li>
+<ul>
+<li><a href='./mod_http_getfile.html'>getfile</a></li>
+</ul>
+<li><a href='./mod_ssl.html'>ssl</a></li>
+</ul>
+<li><a href='./develop.html'>Development</a></li>
+<ul>
+<li><a href='./dev_sconed.html'>sconed</a></li>
+<li><a href='./dev_libsconex.html'>libsconex</a></li>
+<li><a href='./dev_modules.html'>Modules</a></li>
+<li class='index-this'>Examples</li>
+<ul>
+<li><a href='./dev_examples_tuesdayonly.html'>tuesdayonly</a></li>
+<li><a href='./dev_examples_rot13.html'>rot13</a></li>
+</ul>
+<li><a href='./dev_build.html'>Build system</a></li>
+</ul>
+<li><a href='./faq.html'>FAQ</a></li>
+</ul>
+</ul>
+
+
+</div>
+<h1>Examples</h1>
+<div class='box'>
+<p>
+SconeServer can be easily extended to handle new protocols or features by
+writing new modules. This section will show, using examples, how this is done.
+</p>
+
+<h3><a href='./dev_examples_tuesdayonly.html'>tuesdayonly</a></h3>
+<p>
+This demonstrates the bare minimum amount of code required to implement a
+SconeServer module. It doesn't perform any communication - it simply decides 
+whether to accept a connection or not depending on what day of the week it is!
+</p>
+
+<h3><a href='./dev_examples_rot13.html'>rot13</a></h3>
+<p>
+This demonstrates a slightly more complex module, which deploys a stream to 
+perform simple transforms on textual data. It also shows how connection 
+options can be passed from the configuration files and used by the module.
+</p>
+</div>
+
+<address>
+Copyright (c) 2000-2005 Andrew Wedgbury / wedge (at) sconemad (dot) com
+</address>
+</body>
+</html>

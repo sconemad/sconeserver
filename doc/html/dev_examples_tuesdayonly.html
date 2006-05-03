@@ -1,0 +1,227 @@
+
+
+<html>
+<head>
+<meta http-equiv='content-type' content='text/html; charset=utf-8' />
+<link rel='shortcut icon' href='./favicon.ico' />
+<title>tuesdayonly - A minimal module - SconeServer-0.6.0 manual</title>
+<link rel='stylesheet' href='./style/print.css' media='print' type='text/css' />
+<link rel='stylesheet' href='./style/main.css' media='screen' type='text/css' />
+
+</head>
+<body>
+<div class='titlebar'>
+<img src='title_sconeserver.jpg' alt='SconeServer'>
+</div>
+<div id='side'>
+
+<h2>Contents</h2>
+<ul>
+<li><a href='./index.html'>SconeServer</a></li>
+<ul>
+<li><a href='./about.html'>About</a></li>
+<li><a href='./download.html'>Download</a></li>
+<li><a href='./install.html'>Install</a></li>
+<li><a href='./config.html'>Configure</a></li>
+<li><a href='./modules.html'>Modules</a></li>
+<ul>
+<li><a href='./mod_sconeserver.html'>sconeserver</a></li>
+<li><a href='./mod_router.html'>router</a></li>
+<ul>
+<li><a href='./mod_router_ip.html'>ip</a></li>
+<li><a href='./mod_router_ip6.html'>ip6</a></li>
+<li><a href='./mod_router_local.html'>local</a></li>
+<li><a href='./mod_router_bluetooth.html'>bluetooth</a></li>
+</ul>
+<li><a href='./mod_simple.html'>simple</a></li>
+<li><a href='./mod_stat.html'>stat</a></li>
+<li><a href='./mod_http.html'>http</a></li>
+<ul>
+<li><a href='./mod_http_getfile.html'>getfile</a></li>
+</ul>
+<li><a href='./mod_ssl.html'>ssl</a></li>
+</ul>
+<li><a href='./develop.html'>Development</a></li>
+<ul>
+<li><a href='./dev_sconed.html'>sconed</a></li>
+<li><a href='./dev_libsconex.html'>libsconex</a></li>
+<li><a href='./dev_modules.html'>Modules</a></li>
+<li><a href='./dev_examples.html'>Examples</a></li>
+<ul>
+<li class='index-this'>tuesdayonly</li>
+<li><a href='./dev_examples_rot13.html'>rot13</a></li>
+</ul>
+<li><a href='./dev_build.html'>Build system</a></li>
+</ul>
+<li><a href='./faq.html'>FAQ</a></li>
+</ul>
+</ul>
+
+
+</div>
+<h1>tuesdayonly - A minimal module</h1>
+<div class='box'>
+<p>
+This shows the bare minimum code required to implement a SconeServer module. 
+Its not intended to be particularly useful, but could be used as a template 
+for other simple modules.
+</p>
+
+<p>
+The module is called "tuesdayonly", and its purpose is to only allow 
+connections on tuesdays! It doesn't do any actual communications - it just 
+decides whether a connection should be accepted or not by returning either
+true or false from the Module::connect() method.
+</p>
+
+<p>
+Being very simple, this module can be implemented in a single source file. 
+Anything more complicated than this would generally be better split into 
+separate source files and headers. 
+</p>
+
+<pre class='file'><div class='head'>--- ../examples/tuesdayonly/TuesdayOnly.cpp ---</div><div class='body'>/* SconeServer example
+
+A very simple module which only allows connections on Tuesdays!
+
+Copyright (c) 2000-2005 Andrew Wedgbury &lt;wedge@sconemad.com&gt; */
+
+#include "sconex/Module.h"
+#include "sconex/ModuleInterface.h"
+#include "sconex/TimeDate.h"
+
+//=============================================================================
+// Our module class, which must be derived from scx::Module
+class TuesdayOnlyModule : public scx::Module {
+
+public:
+
+  TuesdayOnlyModule();
+  
+  virtual ~TuesdayOnlyModule();
+
+  virtual std::string info() const;
+  
+  virtual int init();
+
+  virtual bool connect(
+    scx::Descriptor* endpoint,
+    scx::ArgList* args
+  );
+
+};
+
+// The following must be present to allow the resulting
+// shared object to be used as a SconeServer module.
+SCONESERVER_MODULE(TuesdayOnlyModule);
+
+//=============================================================================
+// Constructor
+TuesdayOnlyModule::TuesdayOnlyModule()
+  : scx::Module("tuesdayonly", scx::VersionTag(1,0,0))
+{
+  // Specify module name and version in base constructor
+}
+
+//=============================================================================
+// Destructor
+TuesdayOnlyModule::~TuesdayOnlyModule()
+{
+  // Nothing to do here
+}
+
+//=============================================================================
+// Return an information string describing this module
+std::string TuesdayOnlyModule::info() const
+{
+  return "Copyright (c) 2000-2005 Andrew Wedgbury\n"
+  "A very simple example module which only allows connections on Tuesdays!\n";
+}
+  
+//=============================================================================
+// Initialise the module
+int TuesdayOnlyModule::init()
+{
+  // Everything is fine so return 0
+  return 0;
+}
+
+//=============================================================================
+// Notification of connection attempt
+bool TuesdayOnlyModule::connect(
+  scx::Descriptor* /* endpoint */,
+  scx::ArgList* /* args */
+)
+{
+  // Return 'true' only if today is a tuesday, otherwise return 'false' -
+  // causing the connection to be dropped.
+  return (scx::Date::now().day() == scx::Date::Tue);
+}
+</div></pre>
+
+
+<p>
+Note that the <code>SCONESERVER_MODULE</code> declaration 
+<strong>must</strong> be present in order to allow the resulting shared object
+to be used as a SconeServer module. It should be declared 
+<strong>once</strong> - preferably in the source file containing the module 
+class. This is because it expands to implement a standard entry point, which
+constructs and returns an instance of the module class.
+</p>
+
+<h3>Building the module</h3>
+
+<p>
+This should be fairly straightforward provided SconeServer has been installed,
+basically you need to link with libsconex, producing a shared object or 
+dynamic link library. For example, using gcc, this can be done with:
+</p>
+
+<pre class='shell'>
+<b>$</b> g++ -shared -lsconex -o tuesdayonly.so TuesdayOnly.cpp
+</pre>
+
+<h3>Loading into SconeServer</h3>
+
+<p>
+The module binary should be named "tuesdayonly.so" on Linux/UNIX-like systems,
+or "tuesdayonly.dll" on Windows systems. This should be copied to 
+SconeServer's module directory (mod_path). The module can then be loaded with 
+the SconeScript command:
+
+<pre class='script'>
+insmod("tuesdayonly")
+</pre>
+
+<p>
+Add this to "sconeserver.conf" if you want the module to be loaded every time 
+SconeServer starts.
+</p>
+
+<h3>Using the module</h3>
+
+<p>
+The module can be used to control access to any module(s) following it in its
+route chain. Assuming the module has been built and loaded into SconeServer
+(see above), if we set up a route chain like this (either in sconeserver.conf, 
+or from a configuration console):
+</p>
+
+<pre class='script'>
+router.add("tuesweb");
+ router.tuesweb.add("tuesdayonly");
+ router.tuesweb.add("http");
+</pre>
+
+<p>
+Then our module "tuesdayonly" will act as a filter on the "tuesweb" route chain
+- only allowing connections to pass through to the "http" module (which could 
+be, for example, a web server) on tuesdays.
+</p>
+</div>
+
+<address>
+Copyright (c) 2000-2005 Andrew Wedgbury / wedge (at) sconemad (dot) com
+</address>
+</body>
+</html>

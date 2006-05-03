@@ -1,0 +1,34 @@
+<?xml version="1.0" ?>
+<article title="Examples">
+
+<subs>
+dev_examples_tuesdayonly
+dev_examples_rot13
+</subs>
+
+<!-- ----+---------+---------+---------+---------+---------+---------+----- -->
+<content>
+
+<p>
+SconeServer can be easily extended to handle new protocols or features by
+writing new modules. This section will show, using examples, how this is done.
+</p>
+
+<h3><a href='dev_examples_tuesdayonly.html'>tuesdayonly</a></h3>
+<p>
+This demonstrates the bare minimum amount of code required to implement a
+SconeServer module. It doesn't perform any communication - it simply decides 
+whether to accept a connection or not depending on what day of the week it is!
+</p>
+
+<h3><a href='dev_examples_rot13.html'>rot13</a></h3>
+<p>
+This demonstrates a slightly more complex module, which deploys a stream to 
+perform simple transforms on textual data. It also shows how connection 
+options can be passed from the configuration files and used by the module.
+</p>
+
+</content>
+<!-- ----+---------+---------+---------+---------+---------+---------+----- -->
+
+</article>

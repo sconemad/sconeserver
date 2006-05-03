@@ -1,0 +1,21 @@
+
+open(CFG,"../configure.in");
+while (<CFG>) { 
+  if (/AC_INIT\(([^,]+),([^,]+),([^,]+)\)/) {
+    ($package,$version,$email) = ($1,$2,$3); 
+    last;
+  }
+}
+close(CFG);
+$title = "$package-$version manual";
+print ">>> $title <<<\n";
+
+$site->{title}=$title;
+$site->{webmaster}=$email;
+$site->{author}="Andrew Wedgbury";
+$site->{copyright}="Copyright (c) 2000-2005 Andrew Wedgbury";
+$site->{description} = "Manual for $package version $version";
+
+$site->{HEAD} = "";
+$site->{HEAD} .= "<link rel='stylesheet' href='/style/print.css' media='print' type='text/css' />\n";
+$site->{HEAD} .= "<link rel='stylesheet' href='/style/main.css' media='screen' type='text/css' />\n";

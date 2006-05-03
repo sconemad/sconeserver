@@ -1,0 +1,120 @@
+
+
+<html>
+<head>
+<meta http-equiv='content-type' content='text/html; charset=utf-8' />
+<link rel='shortcut icon' href='./favicon.ico' />
+<title>bluetooth - Bluetooth sockets - SconeServer-0.6.0 manual</title>
+<link rel='stylesheet' href='./style/print.css' media='print' type='text/css' />
+<link rel='stylesheet' href='./style/main.css' media='screen' type='text/css' />
+
+</head>
+<body>
+<div class='titlebar'>
+<img src='title_sconeserver.jpg' alt='SconeServer'>
+</div>
+<div id='side'>
+
+<h2>Contents</h2>
+<ul>
+<li><a href='./index.html'>SconeServer</a></li>
+<ul>
+<li><a href='./about.html'>About</a></li>
+<li><a href='./download.html'>Download</a></li>
+<li><a href='./install.html'>Install</a></li>
+<li><a href='./config.html'>Configure</a></li>
+<li><a href='./modules.html'>Modules</a></li>
+<ul>
+<li><a href='./mod_sconeserver.html'>sconeserver</a></li>
+<li><a href='./mod_router.html'>router</a></li>
+<ul>
+<li><a href='./mod_router_ip.html'>ip</a></li>
+<li><a href='./mod_router_ip6.html'>ip6</a></li>
+<li><a href='./mod_router_local.html'>local</a></li>
+<li class='index-this'>bluetooth</li>
+</ul>
+<li><a href='./mod_simple.html'>simple</a></li>
+<li><a href='./mod_stat.html'>stat</a></li>
+<li><a href='./mod_http.html'>http</a></li>
+<ul>
+<li><a href='./mod_http_getfile.html'>getfile</a></li>
+</ul>
+<li><a href='./mod_ssl.html'>ssl</a></li>
+</ul>
+<li><a href='./develop.html'>Development</a></li>
+<ul>
+<li><a href='./dev_sconed.html'>sconed</a></li>
+<li><a href='./dev_libsconex.html'>libsconex</a></li>
+<li><a href='./dev_modules.html'>Modules</a></li>
+<li><a href='./dev_examples.html'>Examples</a></li>
+<ul>
+<li><a href='./dev_examples_tuesdayonly.html'>tuesdayonly</a></li>
+<li><a href='./dev_examples_rot13.html'>rot13</a></li>
+</ul>
+<li><a href='./dev_build.html'>Build system</a></li>
+</ul>
+<li><a href='./faq.html'>FAQ</a></li>
+</ul>
+</ul>
+
+
+</div>
+<h1>bluetooth - Bluetooth sockets</h1>
+<div class='box'>
+<p>
+The bluetooth module allows Bluetooth socket addresses, commonly used for 
+connecting mobile devices and accessories, as well as computers.
+</p>
+
+<p>
+<strong>NOTE:</strong> Only rfcomm (stream) socket types are supported at 
+present.
+</p>
+
+
+<h2>SconeScript Interface</h2>
+
+<p>
+In addition to the standard module interface, it also has the following:
+</p>
+
+  <div class='scr-obj'>
+  <h4>
+  addr (
+    <span>address : <em>string</em> , </span>
+    <span>channel : <em>int</em> </span>
+  )
+  </h4>
+  <p>
+  Create a socket address for the specified Bluetooth address and channel.
+  </p>
+
+  <p>
+  <em>address</em> can be: 
+  <ul>
+    <li>
+    A hexadecimal Bluetooth device address in the form "aa:bb:cc:dd:ee:ff".
+    </li>
+    <li>
+    An asterisk "*" - indicating a wildcard address. This is only valid when
+    used with listening sockets and indicates that connections should be 
+    accepted on all available local devices.
+    </li>
+  </ul>
+
+  <p>
+  <em>channel</em> should be a Bluetooth channel number.
+
+  <p>
+  If the address is required for listening, then <em>host</em> should specify
+  a local device (or, more commonly, "*" for all) and <em>channel</em> 
+  should specify a currently unused channel.
+  </p>
+  </div>
+</div>
+
+<address>
+Copyright (c) 2000-2005 Andrew Wedgbury / wedge (at) sconemad (dot) com
+</address>
+</body>
+</html>

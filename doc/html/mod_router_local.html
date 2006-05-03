@@ -1,0 +1,107 @@
+
+
+<html>
+<head>
+<meta http-equiv='content-type' content='text/html; charset=utf-8' />
+<link rel='shortcut icon' href='./favicon.ico' />
+<title>local - Local (UNIX Domain) sockets - SconeServer-0.6.0 manual</title>
+<link rel='stylesheet' href='./style/print.css' media='print' type='text/css' />
+<link rel='stylesheet' href='./style/main.css' media='screen' type='text/css' />
+
+</head>
+<body>
+<div class='titlebar'>
+<img src='title_sconeserver.jpg' alt='SconeServer'>
+</div>
+<div id='side'>
+
+<h2>Contents</h2>
+<ul>
+<li><a href='./index.html'>SconeServer</a></li>
+<ul>
+<li><a href='./about.html'>About</a></li>
+<li><a href='./download.html'>Download</a></li>
+<li><a href='./install.html'>Install</a></li>
+<li><a href='./config.html'>Configure</a></li>
+<li><a href='./modules.html'>Modules</a></li>
+<ul>
+<li><a href='./mod_sconeserver.html'>sconeserver</a></li>
+<li><a href='./mod_router.html'>router</a></li>
+<ul>
+<li><a href='./mod_router_ip.html'>ip</a></li>
+<li><a href='./mod_router_ip6.html'>ip6</a></li>
+<li class='index-this'>local</li>
+<li><a href='./mod_router_bluetooth.html'>bluetooth</a></li>
+</ul>
+<li><a href='./mod_simple.html'>simple</a></li>
+<li><a href='./mod_stat.html'>stat</a></li>
+<li><a href='./mod_http.html'>http</a></li>
+<ul>
+<li><a href='./mod_http_getfile.html'>getfile</a></li>
+</ul>
+<li><a href='./mod_ssl.html'>ssl</a></li>
+</ul>
+<li><a href='./develop.html'>Development</a></li>
+<ul>
+<li><a href='./dev_sconed.html'>sconed</a></li>
+<li><a href='./dev_libsconex.html'>libsconex</a></li>
+<li><a href='./dev_modules.html'>Modules</a></li>
+<li><a href='./dev_examples.html'>Examples</a></li>
+<ul>
+<li><a href='./dev_examples_tuesdayonly.html'>tuesdayonly</a></li>
+<li><a href='./dev_examples_rot13.html'>rot13</a></li>
+</ul>
+<li><a href='./dev_build.html'>Build system</a></li>
+</ul>
+<li><a href='./faq.html'>FAQ</a></li>
+</ul>
+</ul>
+
+
+</div>
+<h1>local - Local (UNIX Domain) sockets</h1>
+<div class='box'>
+<p>
+The local module allows local socket addresses, which can be used for 
+communicating between processes on the local machine.
+</p>
+
+
+<h2>SconeScript Interface</h2>
+
+<p>
+In addition to the standard module interface, it also has the following:
+</p>
+
+  <div class='scr-obj'>
+  <h4>
+  addr (
+    <span>path : <em>string</em> </span>
+  )
+  </h4>
+  <p>
+  Create a socket address for the specified local path.
+  </p>
+
+  <p>
+  <em>path</em> should be an absolute path to the socket on the local 
+  machine.
+  </p>
+
+  <p>
+  If the address is required for listening, then <em>path</em> should not
+  already exist. If it does, then the file will be removed before listening
+  takes place.
+  </p>
+
+  <p>
+  Appropriate filesystem permissions are required for the path specified.
+  </p>
+  </div>
+</div>
+
+<address>
+Copyright (c) 2000-2005 Andrew Wedgbury / wedge (at) sconemad (dot) com
+</address>
+</body>
+</html>

@@ -1,0 +1,69 @@
+#!/usr/bin/perl -w
+
+use IO::Socket;
+use IO::Select;
+use IPC::Open2;
+
+my $HOSTNAME = "localhost";
+my $PORT = 8007;
+
+# Start up sconed
+open2(\*OUTPUT,\*SCONED,"sconed -fn");
+
+print SCONED "insmod('simple')\n";
+print SCONED "map.add('echo')\n";
+print SCONED "map.echo.add('simple','echo')\n";
+print SCONED "map.listen('echo',IP4('*',$PORT))\n";
+while (<OUTPUT>) { print; last if (/^SconeServer/); }
+sleep(1);
+my $s = IO::Socket::INET->new(
+  PeerAddr => $HOSTNAME,
+  PeerPort => $PORT
+);
+
+die "Can't create socket: $!" unless $s;
+
+if (!$s->connected()) {
+  print "Could not connect\n";
+}
+binmode($s);
+
+my $teststr;
+for ($i=0; $i<10; ++$i) {
+
+  $teststr="";
+  my $len = int(rand(10000));
+  for ($ic=0; $ic<$len; ++$ic) {
+    my $b = sprintf("%c",33+rand(126-33));
+    $teststr .= $b;
+  }
+  $teststr .= "\n";
+
+  print $s $teststr;
+  print "SEND ". length($teststr) ." - ";
+
+  my $result = <$s>;
+  print "RECV ". length($result) ." - ";
+
+  if ($result eq $teststr) {
+    print "<OK>\n";
+  } else {
+    print STDERR "<ERROR>\n";
+    cleanup();
+    exit(1);
+  }
+}
+
+cleanup();
+exit(0);
+
+sub cleanup
+{
+  print SCONED "exit\n";
+  $s->close();
+  close(SCONED);
+  close(OUTPUT);
+
+
+}
+

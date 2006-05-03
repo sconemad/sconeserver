@@ -1,0 +1,233 @@
+<?xml version="1.0" ?>
+<article short="router" title="router - Connection routing">
+
+<subs>
+mod_router_ip
+mod_router_ip6
+mod_router_local
+mod_router_bluetooth
+</subs>
+
+<description>
+Manages incoming connections, mapping them to the approprate modules.
+</description>
+
+<!-- ----+---------+---------+---------+---------+---------+---------+----- -->
+<content>
+
+<p>
+The <em>router</em> module plays a vital role in the SconeServer framework, as
+it is used to listen for and accept incoming connections, passing them on to 
+the appropriate module(s) for processing. This is done by defining
+<em>route chains</em>, which list the module(s) to be notified in the event of
+a particular connection. Each entry in the route chain can also include any 
+number of arguments, which are passed along to the module with the 
+notification.
+</p>
+
+
+<h2>Connections</h2>
+
+<p>
+The module creates listeners where required. These accept any incoming
+connections and pass them directly to the router module along with the name
+of the associated route chain. The router module traverses the route chain,
+notifying each module in turn of the connection, passing along any associated
+arguments. Assuming each module responds positively, the connection is added
+to the SconeServer kernel.
+</p>
+
+<h3>Sub-chains</h3>
+
+  <div class='scr-obj'>
+  <h4>
+  router.&lt;route-name&gt;.add (
+    <span>"router",</span>
+    <span>sub-chain-name : <em>string</em></span>
+  )
+  </h4>
+  </div>
+
+<p>
+It is possible to specify the <em>router</em> module itself within a 
+route chain, specifying the name of another chain as an argument. The effect
+of this is that the other chain will be traversed at this point - returning to 
+the original chain when finished. This is analogous to a subroutine in a 
+programming language, and allows shared chains to be setup, which can be 
+reused and maintained more easily in configuration files.
+</p>
+
+<pre class='script'>
+ router.add("A")
+  router.A.add("module1"))
+  router.A.add("module2"))
+  router.A.add("router","B")
+  router.A.add("module3"))
+  router.A.add("module4"))
+  router.A.listen(ip.addr("*",9999))
+
+ router.add("B")
+  router.B.add("module5")
+  router.B.add("module6")
+</pre>
+
+<p>
+In this example, any incoming connections on port 9999 will be passed to the 
+following modules in turn:
+</p>
+
+<p style='text-align:center;'>
+<img src='routerchain.png' />
+</p>
+
+<!-- ----+---------+---------+---------+---------+---------+---------+----- -->
+<h2>Socket Plugins</h2>
+
+<p>
+The router module itself is independent of the type of socket (address family
+or domain). Specific socket types are then implemented as plugins, which are 
+usually loaded as sub-modules to the router module. Socket plugins simply 
+implement a SconeScript method (usually called "addr"), which returns a socket
+address for that particular socket type. The documentation for each socket 
+plugin should specify what parameters are required for its <em>addr</em> 
+method.
+</p>
+
+<p>
+The socket address returned by the plugin's <em>addr</em> method can then 
+be passed to the <em>listen</em> method of the router chain (detailed below)
+to tell the router to listen on a particular address using the specified
+type of socket.
+</p>
+
+<p>
+The following socket plugins are currently available:
+</p>
+
+  <h3><a href='mod_router_ip.html'>ip</a></h3>
+  <p>
+  TCP/IP Version 4 - The Internet Protocols, for making connections over 
+  the Internet. This is probably the only one most people will be 
+  interested in.
+  </p>
+  
+  <h3><a href='mod_router_ip6.html'>ip6</a></h3>
+  <p>
+  TCP/IP Version 6 - The next generation Internet Protocols.
+  </p>
+
+  <h3><a href='mod_router_local.html'>local</a></h3>
+  <p>
+  Local (also called UNIX Domain) socket type, for making connections
+  between processes running on the local machine. These types of sockets
+  appear as a special type of file in the filesystem.
+  </p>
+
+  <h3><a href='mod_router_bluetooth.html'>bluetooth</a></h3>
+  <p>
+  A short range radio communications protocol commonly used for connecting 
+  mobile devices and accessories.
+  </p>
+
+
+<h2>SconeScript Interface</h2>
+
+<p>
+In addition to the standard module interface, it also has the following:
+</p>
+
+  <div class='scr-obj'>
+  <h4>
+  add (
+    <span>route-name : <em>string</em> </span>
+  )
+  </h4>
+  <p>
+  Adds a new route chain.
+  </p>
+  </div>
+
+  <div class='scr-obj'>
+  <h4>
+  remove (
+    <span>route-name : <em>string</em> </span>
+  )
+  </h4>
+  <p>
+  Removes a route chain.
+  </p>
+  </div>
+
+  <div class='scr-obj'>
+  <h4>
+  list : <em>string</em>
+  </h4>
+  <p>
+  Lists the route chains.
+  </p>
+  </div>
+
+  <div class='scr-obj'>
+  <h4>
+  &lt;route-name&gt; : <em>object</em> 
+  </h4>
+  <p>
+  Lookup route chain given by &lt;route-name&gt;.
+  </p>
+  </div>
+
+<h3>Route chains</h3>
+
+<p>
+Each route chain has the following interface:
+</p>
+
+  <div class='scr-obj'>
+  <h4>
+  add (
+    <span>module-name : <em>string</em> , </span>
+    <span>...</span>
+  )
+  </h4>
+  <p>
+  Adds a new module to the route chain. 
+  Additional arguments are stored and passed to the module on connection.
+  </p>
+  </div>
+
+  <div class='scr-obj'>
+  <h4>
+  remove (
+    <span>module-name : <em>string</em> </span>
+  )
+  </h4>
+  <p>
+  Removes a module from the route chain.
+  </p>
+  </div>
+
+  <div class='scr-obj'>
+  <h4>
+  listen (
+    <span>address : <em>socket address</em> </span>
+  )
+  </h4>
+  <p>
+  Start listening on specifed address - any incoming connections will then be
+  processed by this route chain.
+  </p>
+  </div>
+
+  <div class='scr-obj'>
+  <h4>
+  list : <em>string</em>
+  </h4>
+  <p>
+  Lists the modules in the chain.
+  </p>
+  </div>
+
+</content>
+<!-- ----+---------+---------+---------+---------+---------+---------+----- -->
+
+</article>

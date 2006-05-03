@@ -1,0 +1,14 @@
+CFLAGS = -Wall
+LIBS =  -lsconex
+OBJS = Rot13Module.o Rot13Stream.o
+
+all: rot13
+
+rot13: $(OBJS)
+	g++ -shared -o $@ $(OBJS) $(LIBS)
+
+%o: %.cpp:
+	g++ $(CFLAGS) -c $<
+
+clean:
+	rm *.o core

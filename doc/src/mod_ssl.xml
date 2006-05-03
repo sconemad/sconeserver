@@ -1,0 +1,100 @@
+<?xml version="1.0" ?>
+<article short="ssl" title="SSL - Secure Sockets Layer">
+
+<description>
+Stream encryption/decrypion using the OpenSSL library (http://www.openssl.org).
+</description>
+
+<!-- ----+---------+---------+---------+---------+---------+---------+----- -->
+<content>
+
+<p>
+The ssl module provides stream encryption/decrypion using the OpenSSL 
+library (http://www.openssl.org).
+</p>
+
+
+<h2>Connections</h2>
+
+  <div class='scr-obj'>
+  <h4>
+  router.&lt;route-name&gt;.add (
+    <span>"ssl",</span>
+    <span>channel-name : <em>string</em></span>
+  )
+  </h4>
+  </div>
+
+<p>
+A connection to the ssl module will insert a Secure Sockets Layer 
+encryption/decryption object into the connection stream at this point,
+encrypting any outgoing data, decrypting any incoming data. Multiple channels
+are supported by the module, allowing different encryption settings. The
+channel name should be passed as an argument with the connection.
+</p>
+
+
+<h2>SconeScript Interface</h2>
+
+<p>
+In addition to the standard module interface, it also has the following:
+</p>
+
+  <div class='scr-obj'>
+  <h4>
+  add ( 
+    <span>channel-name : <em>string</em> </span>
+  )
+  </h4>
+  <p>
+  Add a new SSL channel.
+  </p>
+  </div>
+
+  <div class='scr-obj'>
+  <h4>
+  remove ( 
+    <span>channel-name : <em>string</em> </span>
+  )
+  </h4>
+  <p>
+  Remove a SSL channel.
+  </p>
+  </div>
+
+  <div class='scr-obj'>
+  <h4>
+  list : <em>string</em>
+  </h4>
+  <p>
+  Lists all SSL channels.
+  </p>
+  </div>
+
+  <div class='scr-obj'>
+  <h4>
+  &lt;channel-name&gt; : <em>object</em>
+  </h4>
+  <p>
+  Lookup SSL channel given by &lt;channel-name&gt;.
+  </p>
+  </div>
+
+<h3>SSL Channels</h3>
+
+  <div class='scr-obj'>
+  <h4>
+  load_key (
+    <span>key-name : <em>string</em> </span>
+  )
+  </h4>
+  <p>
+  Load the specified key to use with this SSL channel.
+  </p>
+  </div>
+
+
+</content>
+<!-- ----+---------+---------+---------+---------+---------+---------+----- -->
+
+</article>

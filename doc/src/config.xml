@@ -1,0 +1,108 @@
+<?xml version="1.0" ?>
+<article title="Configure">
+
+<!-- ----+---------+---------+---------+---------+---------+---------+----- -->
+<content>
+
+<p>
+This section describes the basic concepts involved in configuring SconeServer.
+</p>
+
+<h2>SconeScript</h2>
+
+<p>
+SconeServer is configured using a simple but powerful object-orientated 
+language called <em>SconeScript</em>. SconeScript commands can either be read 
+from a file, or run interactively from a configuration console. This is 
+roughly analogous to running a shell script or batch file versus entering
+commands in an interactive shell.
+</p>
+
+<p>
+SconeScript uses a syntax which is similar to JavaScript. Commands always
+execute within the context of an object, which in the case of a configuration
+file, will be the module being configured. Every object can have any number
+of properties, methods and sub-objects, which should be well described in the
+module's documentation.
+</p>
+
+<h3>Main configuration file - sconeserver.conf</h3>
+
+<p>
+On startup, the root module sconeserver reads its configuration from the 
+file "<em>prefix</em>/etc/sconeserver.conf", unless an alternative path has 
+been specified on the <a href='#commandline'>command line</a>.
+The <a href="modules/sconeserver.html">sconeserver root module</a> page has
+more information on the configuration options available here.
+</p>
+
+<!-- ----+---------+---------+---------+---------+---------+---------+----- -->
+<h3>Sub-modules</h3>
+
+<p>
+Each loaded module will most likely have its own configuration options - see 
+the module documentation for details. Configuration options for modules can be
+entered in the main configuration file, though it is more common for modules 
+to have their own configuration file(s), which are read automatically when the 
+module is loaded. By default these will be located at
+"<em>prefix</em>/etc/<em>module-name</em>.conf".
+</p>
+
+
+<a name='commandline'></a>
+<h2>Command line options</h2>
+
+<h3>-v, --version</h3>
+
+  <p>
+  Print version information and exit.
+  </p>
+
+<h3>-h, --help</h3>
+
+  <p>
+  Print help on command line options and exit.
+  </p>
+
+<h3>-f</h3>
+
+  <p>
+  Start in foreground mode. In this mode, sconed does not become a daemon
+  process, and a configuration console is connected to the terminal to allow 
+  commands to be issued. Issuing the "exit" command from this console will
+  shutdown SconeServer.
+  </p>
+
+<h3>-n</h3>
+
+  <p>
+  Don't read any configuration on startup. Starts a completely unconfigured 
+  SconeServer. Probably not a lot of use without also specifying "-f". This
+  mode is used by the automatic tests.
+  </p>
+
+<h3>-c=<em>path</em></h3>
+
+  <p>
+  Use an alternative path to configuration files, instead of the default 
+  "<em>prefix</em>/etc".
+  </p>
+
+<h3>-m=<em>path</em></h3>
+
+  <p>
+  Use an alternative module path, instead of the default 
+  "<em>prefix</em>/lib/sconeserver".
+  </p>
+
+<h3>-l=<em>path</em></h3>
+
+  <p>
+  Use an alternative path for variable or log files, instead of the default 
+  "<em>prefix</em>/var".
+  </p>
+
+</content>
+<!-- ----+---------+---------+---------+---------+---------+---------+----- -->
+
+</article>

@@ -1,0 +1,115 @@
+SconeServer (http://www.sconemad.com)
+TODO List and ideas for future development
+
+------------------------
+NEW MODULES
+------------------------
+
+* Authorisation
+  Optional standalone or system password settings.
+  Need to look at terminfo to disable echoing of passwords.
+  Allow/deny based on source address.
+  Essential for configuration console security.
+
+* HTTP:Perl
+  For running perl in process.
+
+* Forward
+  Route connections through to a specified destination.
+
+* TFTP
+  A good one to test connected UDP once implemented.
+
+------------------------
+SCONEX
+------------------------
+
+* Seamless File & MemFile operation
+  To allow files to be cached in memory but read from using the regular file
+  interface.
+
+* Multithreading
+  Configurable number of 'worker' threads (>= 0).
+  Multiplexer dispatches events to free threads.
+  Must implement required sync functions for OpenSSL.
+  Exec module will have problems calling fork, one solution would be to use
+  a 'surrogate' process to do the forking, linked with a pipe.
+
+* Datagram socket support
+  Need to investigate exact operation of connected UDP sockets.
+
+* Refactor SconeScript(Arg) and framework classes.
+  Arg, ArgProc, ArgObject
+  Module, ModuleLoader*
+  TimeDate, Version
+
+* Docs for descriptor-stream event model, something like:
+
+  Opened - Stream has been opened
+    Ok    - Accept, opened will not be called again on this stream
+    Wait  - Don't send opened event to subsequent streams yet
+    End   - Remove this stream from the list, no further events
+    Close - Initiate close sequence for this connection
+    Error - Force the connection closed at earliest oppurtunity
+
+  Readable - Data is available to read on the connection
+    Ok    - Accept
+    Wait  - Don't send readable event to subsequent streams yet
+    End   - Remove this stream from the list, no further events
+    Close - Initiate close sequence for this connection
+    Error - Force the connection closed at earliest oppurtunity
+
+  Writeable - It is possible to write data on the connection
+    Ok    - Accept
+    Wait  - Don't send writeable event to subsequent streams yet
+    End   - Remove this stream from the list, no further events
+    Close - Initiate close sequence for this connection
+    Error - Force the connection closed at earliest oppurtunity
+
+  Closed - Connection is closing
+    Ok    - Remove this stream from the list, no further events
+    Close - Remove this stream from the list, no further events
+    Wait  - Suspend closing temporarily, don't send closing 
+            event to preceeding streams yet.
+    End   - Suspend closing, connection should remain open.
+    Error - Force the connection closed at earliest oppurtunity
+
+* Exec/Process
+  Fork from surrogate process, Fork, Exec
+  (Win32) CreateProcessAsUser
+
+* User
+
+------------------------
+HTTP
+------------------------
+
+* Standards compliant HTTP
+
+* Improved FS synching for http/FS* classes
+  Current FS system may have problems with large directory trees.
+
+* content-encoding: (gzip,compress)
+
+* Module chain -- tree
+
+CHAIN
+. . . 
+
+ConnectionStream    HTTP
+MessageStream       TRANSFER-ENCODING
+
+<filter>
+
+GzipStream          CONTENT-ENCODING
+
+<filter>
+
+GetFileStream       HANDLER
+
+------------------------
+ALL
+------------------------
+
+* Windows installer!
+

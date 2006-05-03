@@ -1,0 +1,96 @@
+
+0.6.0 2006-04-21 Andrew Wedgbury <wedge@sconemad.com>
+	
+	* Beta release.
+	* Implement proper control structures in SconeScript.
+	* Make HTTP module more compliant with HTTP/1.1.
+	* External program execution and streaming.
+	* Execution of CGI programs from HTTP.
+	* Protocol modules for IP, IP6, Bluetooth and Local.
+	* Improve docs and add several example modules.
+
+0.5.9 2005-11-15 Andrew Wedgbury <wedge@sconemad.com>
+	
+	* Test release.
+	* Minor bugs and issues fixed following portability testing.
+
+0.5.8 2005-11-09 Andrew Wedgbury <wedge@sconemad.com>
+	
+	* Test release.
+	* Improved http module structure.
+	* Better debug/assertion handling with logging.
+
+0.5.7 2005-08-14 Andrew Wedgbury <wedge@sconemad.com>
+	
+	* Test release.
+	* Cleaner sconed/sconex structure.
+	* New protocol handlers for simple module.
+	* Fix timezone support.
+
+0.5.6 2005-07-05 Andrew Wedgbury <wedge@sconemad.com>
+	
+	* Test release.
+	* Connection counter in stat module.
+	* Command line options now conform to GNU standards.
+	* HTTP dir/index module for producing directory listings, or
+	  redirecting to index page, if exists.
+	* Put together and expanded documentation, this is all in HTML format.
+	* Tested and improved installer.
+
+0.5.5 2005-06-05 Andrew Wedgbury <wedge@sconemad.com>
+
+	* Test release.
+	* Improve logging subsystem.
+	* Improve SconeScript interpreter.
+
+0.5.4 2005-04-07 Andrew Wedgbury <wedge@sconemad.com>
+
+	* Test release.
+	* Configurable module/log/conf paths for all modules.
+	* Timezone support.
+	* Win32 version runs as service.
+	* Configurable mime module.
+	* SSL improvements - multiple configurable channels.
+
+0.5.3 2005-01-10 Andrew Wedgbury <wedge@sconemad.com>
+
+	* Test release.
+	* SconeScript interface to connection mapper.
+	* Foreground config/test mode.
+
+0.5.2 2004-12-27 Andrew Wedgbury <wedge@sconemad.com>
+
+	* Test release.
+	* Statistics module.
+	* Simple TCP/IP services module.
+
+0.5.1 2004-07-05 Andrew Wedgbury <wedge@sconemad.com>
+
+	* Test release.
+	* Added SconeScript configuration system.
+
+0.5.0 2003-12-22 Andrew Wedgbury <wedge@sconemad.com>
+
+	* Test release.
+	* Project now in GNU style tree, using autoconf, automake and libtool,
+	  which should allow better cross platform support.
+
+0.4 2003-12-22 Andrew Wedgbury <wedge@sconemad.com>
+
+	* Test release.
+	* Better stream event handling.
+
+0.3 2002-07-05 Andrew Wedgbury <wedge@sconemad.com>
+	
+	* Test release.
+	* Working http module.
+	* Runs reasonably well as a web server!
+
+0.2 2002-02-01 Andrew Wedgbury <wedge@sconemad.com>
+
+	* Test release.
+	* Now working on Linux, though not very well.
+
+0.1 2001-11-15 Andrew Wedgbury <wedge@sconemad.com>
+
+	* Test release.

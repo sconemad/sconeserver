@@ -1,0 +1,66 @@
+#!/usr/bin/perl -w
+
+my $CONF_OPTS = $ARGV[0] || '';
+my $BUILDS_DIR = "builds";
+
+if (`hostname` !~ /^([^\.]+)\.?.*$/) {
+  die "Can't determine HOSTNAME";
+}
+my $HOSTNAME = $1;
+chomp $HOSTNAME;
+
+if (`grep AC_INIT configure.in` !~ /AC_INIT\( *([^,]+) *, *([^,]+)/) {
+  die "Can't determine TARGET";
+}
+my ($PACKAGE,$VERSION) = ($1,$2);
+
+print "TESTING $PACKAGE-$VERSION on $HOSTNAME\n";
+
+# Create builds directory
+mkdir $BUILDS_DIR,0777 if (! -d $BUILDS_DIR);
+die "Cannot create $BUILDS_DIR" if (! -d $BUILDS_DIR);
+chdir $BUILDS_DIR;
+
+# Create directory for this build
+mkdir $HOSTNAME,0777;
+chdir $HOSTNAME;
+
+open(LOG,">testbuild.log");
+
+#-------
+
+run_with_checks("configure","../../configure $CONF_OPTS");
+run_with_checks("make","make");
+run_with_checks("check","make check");
+
+#-------
+
+close(LOG);
+print "DONE\n";
+
+
+#==============================================================================
+sub run_with_checks
+{
+  my ($name,$cmd) = @_;
+
+  msg("RUNNING: $cmd\n");
+
+  system("$cmd 2>&1 > $name.log");
+  $status = $? >> 8;
+
+  msg("Code $status\n");
+
+  if ($status) {
+    msg("FAILED: $name (error code $status)\n");
+    exit 1;
+  }
+}
+
+#==============================================================================
+sub msg
+{
+    my ($str) = @_;
+    print LOG $str;
+    print $str;
+}

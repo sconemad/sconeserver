@@ -1,0 +1,32 @@
+<?xml version="1.0" ?>
+<article title="About">
+
+<!-- ----+---------+---------+---------+---------+---------+---------+----- -->
+<content>
+
+<p>
+The goal of the SconeServer project is to provide a framework in which to 
+develop and deploy a series of reusable modules, from which any kind of 
+network server can be constructed.
+</p>
+
+<p>
+A general set of modules is supplied with SconeServer - see the
+<a href='modules/index.html'>Modules</a> page for more details. These can be
+updated, removed, or added to if required. SconeServer modules are implemented
+as Dynamic Shared Objects (Dynamic Link Libraries on Windows systems), so
+they can be added or removed from the SconeServer without the need to
+recompile. In fact they can be added, removed or updated while the server is 
+running.
+</p>
+
+<p>
+The SconeServer framework makes it easy for third parties to develop new
+modules to extend the capabilities of the system. See the
+<a href='develop/index.html'>Development</a> section for more information.
+</p>
+
+</content>
+<!-- ----+---------+---------+---------+---------+---------+---------+----- -->
+
+</article>

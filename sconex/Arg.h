@@ -1,0 +1,204 @@
+/* SconeServer (http://www.sconemad.com)
+
+The basic object types for SconeScript:
+
+* Arg - Abstract base for SconeScript classes
+
+* ArgString - A text string.
+* ArgInt - An integer.
+* ArgReal - A real number.
+* ArgList - A list of 0...n Arg objects.
+* ArgFunction - A callable function.
+* ArgError - An object representing an error condition.
+
+These are created dynamically during expression parsing in ArgProc.
+
+Copyright (c) 2000-2006 Andrew Wedgbury <wedge@sconemad.com>
+
+This program is free software; you can redistribute it and/or modify
+it under the terms of the GNU General Public License as published by
+the Free Software Foundation; either version 2, or (at your option)
+any later version.
+
+This program is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+GNU General Public License for more details.
+
+You should have received a copy of the GNU General Public License
+along with this program (see the file COPYING); if not, write to the
+Free Software Foundation, Inc.,
+59 Temple Place - Suite 330, Boston, MA  02111-1307, USA */
+
+#ifndef Arg_h
+#define Arg_h
+
+#include "sconex/sconex.h"
+#include "sconex/TimeDate.h"
+namespace scx {
+
+//=============================================================================
+class SCONEX_API Arg {
+
+public:
+
+  Arg();
+  Arg(const Arg& c);
+  virtual ~Arg();
+  virtual Arg* new_copy() const =0;
+
+  virtual std::string get_string() const =0;
+  virtual int get_int() const =0;
+
+  enum OpType { Prefix, Postfix, Binary };
+  virtual Arg* op(OpType optype, const std::string& opname, Arg* right=0) =0;
+
+};
+
+//=============================================================================
+class SCONEX_API ArgString : public Arg {
+
+public:
+
+  ArgString(const char* str);
+  ArgString(const std::string& str);
+  ArgString(const ArgString& c);
+  virtual ~ArgString();
+  virtual Arg* new_copy() const;
+
+  virtual std::string get_string() const;
+  virtual int get_int() const;
+
+  virtual Arg* op(OpType optype, const std::string& opname, Arg* right);
+
+protected:
+
+  std::string m_string;
+
+};
+
+
+//=============================================================================
+class SCONEX_API ArgInt : public Arg {
+
+public:
+
+  ArgInt(int value);
+  ArgInt(const ArgInt& c);
+  virtual ~ArgInt();
+  virtual Arg* new_copy() const;
+
+  virtual std::string get_string() const;
+  virtual int get_int() const;
+
+  virtual Arg* op(OpType optype, const std::string& opname, Arg* right);
+
+protected:
+
+  int m_value;
+
+};
+
+
+//=============================================================================
+class SCONEX_API ArgReal : public Arg {
+
+public:
+
+  ArgReal(double value);
+  ArgReal(const ArgReal& c);
+  virtual ~ArgReal();
+  virtual Arg* new_copy() const;
+
+  virtual std::string get_string() const;
+  virtual int get_int() const;
+
+  virtual Arg* op(OpType optype, const std::string& opname, Arg* right);
+
+  double get_real() const;
+
+protected:
+
+  double m_value;
+
+};
+
+
+//=============================================================================
+class SCONEX_API ArgList : public Arg {
+
+public:
+
+  ArgList();
+  ArgList(const ArgList& c);
+  virtual ~ArgList();
+  virtual Arg* new_copy() const;
+
+  virtual std::string get_string() const;
+  virtual int get_int() const;
+
+  virtual Arg* op(OpType optype, const std::string& opname, Arg* right);
+
+  int size() const;
+
+  const Arg* get(int i) const;
+
+  void give(Arg* arg, int pos=-1);
+  Arg* take(int pos);
+
+  //  bool clear(int pos);
+  //  void clear();
+
+protected:
+
+  std::list<Arg*> m_list;
+
+};
+
+
+//=============================================================================
+class SCONEX_API ArgFunction : public Arg {
+
+public:
+
+  ArgFunction(const std::string& name);
+  ArgFunction(const ArgFunction& c);
+  virtual ~ArgFunction();
+  virtual Arg* new_copy() const;
+
+  virtual std::string get_string() const;
+  virtual int get_int() const;
+
+  virtual Arg* op(OpType optype, const std::string& opname, Arg* right);
+
+protected:
+
+  std::string m_name;
+
+};
+
+
+//=============================================================================
+class SCONEX_API ArgError : public Arg {
+
+public:
+
+  ArgError(const char* str);
+  ArgError(const std::string& str);
+  ArgError(const ArgError& c);
+  virtual ~ArgError();
+  virtual Arg* new_copy() const;
+
+  virtual std::string get_string() const;
+  virtual int get_int() const;
+
+  virtual Arg* op(OpType optype, const std::string& opname, Arg* right);
+
+protected:
+
+  std::string m_string;
+
+};
+
+};
+#endif

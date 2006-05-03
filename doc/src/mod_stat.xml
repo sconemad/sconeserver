@@ -1,0 +1,125 @@
+<?xml version="1.0" ?>
+<article short="stat" title="stat - Connection and I/O Statistics">
+
+<description>
+A general statistics module for tracking the number of connections and total
+data transferred.
+<description>
+
+<!-- ----+---------+---------+---------+---------+---------+---------+----- -->
+<content>
+
+<p>
+A general statistics module for tracking the number of connections and total
+data transferred. Named 'channels' can be used to collect statistics for each 
+route chain.
+</p>
+
+<h2>Connections</h2>
+
+  <div class='scr-obj'>
+  <h4>
+  router.&lt;route-name&gt;.add (
+    <span>"stat",</span>
+    <span>channel-name : <em>string</em></span>
+  )
+  </h4>
+  </div>
+
+<p>
+A connection to the stat module will insert a statistics counter into the
+connection stream at this point, which will collect statistics for the
+specified channel. The channel should be created prior to any connections 
+being made (see below).
+</p>
+
+
+<h2>SconeScript Interface</h2>
+
+<p>
+In addition to the standard module interface, it also has the following:
+</p>
+
+  <div class='scr-obj'>
+  <h4>
+  add ( 
+    <span>channel-name : <em>string</em> </span>
+  )
+  </h4>
+  <p>
+  Add a new statistics channel.
+  </p>
+  </div>
+
+  <div class='scr-obj'>
+  <h4>
+  remove ( 
+    <span>channel-name : <em>string</em> </span>
+  )
+  </h4>
+  <p>
+  Remove a statistics channel.
+  </p>
+  </div>
+
+  <div class='scr-obj'>
+  <h4>
+  list : <em>string</em>
+  </h4>
+  <p>
+  Lists all statistics channels.
+  </p>
+  </div>
+
+  <div class='scr-obj'>
+  <h4>
+  &lt;channel-name&gt; : <em>object</em>
+  </h4>
+  <p>
+  Lookup statistics channel given by &lt;channel-name&gt;.
+  </p>
+  </div>
+
+<h3>Statistics Channels</h3>
+
+  <div class='scr-obj'>
+  <h4>
+  connections : <em>int</em>
+  </h4>
+  <p>
+  Number of connections recorded by this channel.
+  </p>
+  </div>
+
+  <div class='scr-obj'>
+  <h4>
+  input : <em>int</em>
+  </h4>
+  <p>
+  Number of input bytes recorded by this channel.
+  </p>
+  </div>
+
+  <div class='scr-obj'>
+  <h4>
+  output : <em>int</em>
+  </h4>
+  <p>
+  Number of output bytes recorded by this channel.
+  </p>
+  </div>
+
+  <div class='scr-obj'>
+  <h4>
+  reset ( )
+  </h4>
+  <p>
+  Resets the channel's counters to zero.
+  </p>
+  </div>
+
+
+</content>
+<!-- ----+---------+---------+---------+---------+---------+---------+----- -->
+
+</article>
