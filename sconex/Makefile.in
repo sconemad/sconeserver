@@ -71,10 +71,11 @@ am_libsconex_la_OBJECTS = main.lo sconex.lo utils.lo Arg.lo \
 	Descriptor.lo File.lo FileDir.lo FilePath.lo FileStat.lo \
 	Kernel.lo LineBuffer.lo ListenerSocket.lo Logger.lo MemFile.lo \
 	MimeType.lo Module.lo ModuleLoader.lo ModuleLoaderDLL.lo \
-	ModuleRef.lo Multiplexer.lo Mutex.lo Response.lo Socket.lo \
-	SocketAddress.lo Stream.lo StreamBuffer.lo StreamDebugger.lo \
-	StreamSocket.lo StreamTokenizer.lo StreamTransfer.lo Thread.lo \
-	TimeDate.lo UnitTester.lo Uri.lo VersionTag.lo
+	ModuleRef.lo Multiplexer.lo Mutex.lo Process.lo Response.lo \
+	Socket.lo SocketAddress.lo Stream.lo StreamBuffer.lo \
+	StreamDebugger.lo StreamSocket.lo StreamTokenizer.lo \
+	StreamTransfer.lo Thread.lo TimeDate.lo UnitTester.lo Uri.lo \
+	VersionTag.lo
 libsconex_la_OBJECTS = $(am_libsconex_la_OBJECTS)
 am_utest_OBJECTS = utest.$(OBJEXT) Buffer_ut.$(OBJEXT) \
 	LineBuffer_ut.$(OBJEXT) MemFile_ut.$(OBJEXT) \
@@ -248,6 +249,7 @@ ModuleLoaderDLL.cpp \
 ModuleRef.cpp \
 Multiplexer.cpp \
 Mutex.cpp \
+Process.cpp \
 Response.cpp \
 Socket.cpp \
 SocketAddress.cpp \
@@ -295,6 +297,7 @@ ModuleLoaderDLL.h \
 ModuleRef.h \
 Multiplexer.h \
 Mutex.h \
+Process.h \
 Response.h \
 Socket.h \
 SocketAddress.h \
@@ -434,6 +437,7 @@ distclean-compile:
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/ModuleRef.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/Multiplexer.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/Mutex.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/Process.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/Response.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/Socket.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/SocketAddress.Plo@am__quote@

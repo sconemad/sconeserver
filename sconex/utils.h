@@ -31,6 +31,9 @@ void SCONEX_API strup(std::string& s);
 void SCONEX_API strlow(std::string& s);
 // Convert string to lowercase
 
+char* SCONEX_API new_c_str(const std::string& str);
+// New up a c style string from a c++ string
+
 };
 
 #endif

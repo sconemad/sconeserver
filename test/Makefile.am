@@ -21,13 +21,14 @@ argtest_LDADD = $(top_builddir)/sconex/libsconex.la
 EXTRA_DIST = \
 test.dsp \
 arg/forloop.test \
-site/index.html \
-site/favicon.ico \
-site/echo.pl \
-site/env.pl \
-site/getform.pl \
-site/postform.pl \
-site/largetext.pl \
+site/html/index.html \
+site/html/favicon.ico \
+site/html/echo.pl \
+site/html/env.pl \
+site/html/getform.pl \
+site/html/postform.pl \
+site/html/largetext.pl \
+site/html_secure/index.html \
 scripts/echo \
 scripts/http-robust \
 scripts/localterm \

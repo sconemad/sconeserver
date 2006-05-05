@@ -223,7 +223,7 @@ RouterListener.h
 
 router_la_LDFLAGS = -module -avoid-version
 sysconf_DATA = router.conf
-EXTRA_DIST = router.dsp
+EXTRA_DIST = $(sysconf_DATA) router.dsp
 all: all-recursive
 
 .SUFFIXES:

@@ -22,7 +22,4 @@ ssl_la_LIBADD = -lssl
 
 sysconf_DATA = ssl.conf
 
-EXTRA_DIST = \
-ssl.dsp \
-certs/default.pub \
-certs/default
+EXTRA_DIST = $(sysconf_DATA) ssl.dsp certs/default.pub certs/default

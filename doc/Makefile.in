@@ -489,9 +489,10 @@ uninstall-info: uninstall-info-recursive
 	tags tags-recursive uninstall uninstall-am uninstall-info-am
 
 
+# Remove subversion dirs when we pull in whole subdirectories
 dist-hook:
-	rm -rf `find $(distdir)/src -name CVS`
-	rm -rf `find $(distdir)/tpl -name CVS`
+	rm -rf `find $(distdir)/src -name .svn`
+	rm -rf `find $(distdir)/tpl -name .svn`
 # Tell versions [3.59,3.63) of GNU make to not export all variables.
 # Otherwise a system limit (for SysV at least) may be exceeded.
 .NOEXPORT:

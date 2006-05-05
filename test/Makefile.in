@@ -217,13 +217,14 @@ argtest_LDADD = $(top_builddir)/sconex/libsconex.la
 EXTRA_DIST = \
 test.dsp \
 arg/forloop.test \
-site/index.html \
-site/favicon.ico \
-site/echo.pl \
-site/env.pl \
-site/getform.pl \
-site/postform.pl \
-site/largetext.pl \
+site/html/index.html \
+site/html/favicon.ico \
+site/html/echo.pl \
+site/html/env.pl \
+site/html/getform.pl \
+site/html/postform.pl \
+site/html/largetext.pl \
+site/html_secure/index.html \
 scripts/echo \
 scripts/http-robust \
 scripts/localterm \
@@ -392,7 +393,7 @@ distclean-tags:
 	-rm -f TAGS ID GTAGS GRTAGS GSYMS GPATH tags
 
 distdir: $(DISTFILES)
-	$(mkdir_p) $(distdir)/arg $(distdir)/scripts $(distdir)/site
+	$(mkdir_p) $(distdir)/arg $(distdir)/scripts $(distdir)/site/html $(distdir)/site/html_secure
 	@srcdirstrip=`echo "$(srcdir)" | sed 's|.|.|g'`; \
 	topsrcdirstrip=`echo "$(top_srcdir)" | sed 's|.|.|g'`; \
 	list='$(DISTFILES)'; for file in $$list; do \

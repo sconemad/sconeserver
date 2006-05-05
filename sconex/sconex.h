@@ -79,7 +79,9 @@ Free Software Foundation, Inc.,
 
 #ifdef HAVE_ERRNO_H
 #  include <errno.h>
-   extern int errno;
+#  ifndef errno
+     extern int errno;
+#  endif
 #endif
 
 #ifdef HAVE_FCNTL_H

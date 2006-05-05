@@ -36,6 +36,7 @@ ModuleLoaderDLL.cpp \
 ModuleRef.cpp \
 Multiplexer.cpp \
 Mutex.cpp \
+Process.cpp \
 Response.cpp \
 Socket.cpp \
 SocketAddress.cpp \
@@ -84,6 +85,7 @@ ModuleLoaderDLL.h \
 ModuleRef.h \
 Multiplexer.h \
 Mutex.h \
+Process.h \
 Response.h \
 Socket.h \
 SocketAddress.h \

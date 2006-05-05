@@ -19,4 +19,4 @@ stat_la_LDFLAGS = -module -avoid-version
 
 sysconf_DATA = stat.conf
 
-EXTRA_DIST = stat.dsp
+EXTRA_DIST = $(sysconf_DATA) stat.dsp

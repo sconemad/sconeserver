@@ -23,9 +23,10 @@ doc_DATA = AUTHORS COPYING INSTALL NEWS README THANKS TODO
 sysconf_DATA = sconeserver.conf
 
 EXTRA_DIST = \
+$(sysconf_DATA) \
 autogen.sh \
 sconeserver.dsw \
 sconed.dsp \
 config_win.h \
 res/sconeserver.rc \
-res/app.ico
+res/app.ico 

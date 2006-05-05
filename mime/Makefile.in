@@ -210,7 +210,7 @@ MIMEModule.h
 
 mime_la_LDFLAGS = -module -avoid-version
 sysconf_DATA = mime.conf
-EXTRA_DIST = mime.dsp
+EXTRA_DIST = $(sysconf_DATA) mime.dsp
 all: all-am
 
 .SUFFIXES:

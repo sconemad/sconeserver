@@ -1,4 +1,10 @@
 
+2006-05-xx Andrew Wedgbury <wedge@sconemad.com>
+
+	* sconex/Process: Factor out code from exec, implement Win32 version.
+	* exec/ExecStream: Use new Process class in sconex.
+	* all: Add sysconf_DATA to EXTRA_DIST in makefiles.
+	
 2006-05-03 Andrew Wedgbury <wedge@sconemad.com>
 
 	* all: Migrate project to subversion.

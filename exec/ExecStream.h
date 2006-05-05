@@ -26,6 +26,8 @@ Free Software Foundation, Inc.,
 #include "sconex/Stream.h"
 #include "sconex/Module.h"
 
+namespace scx { class Process; }
+
 //=========================================================================
 class ExecStream : public scx::Stream {
 
@@ -48,7 +50,7 @@ private:
 
   ExecModule& m_module;
   scx::ArgList* m_args;
-  pid_t m_pid;
+  scx::Process* m_process;
  
 };
 
