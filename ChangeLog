@@ -1,5 +1,5 @@
 
-2006-05-xx Andrew Wedgbury <wedge@sconemad.com>
+2006-05-05 Andrew Wedgbury <wedge@sconemad.com>
 
 	* sconex/Process: Factor out code from exec, implement Win32 version.
 	* exec/ExecStream: Use new Process class in sconex.
