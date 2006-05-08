@@ -149,7 +149,7 @@ bool ExecStream::spawn_process()
   DEBUG_ASSERT(sock,"spawn_process() Bad socket from Process::launch");
   
   // Add debug logging to exec stream
-  sock->add_stream(new scx::StreamDebugger("exec"));
+  // sock->add_stream(new scx::StreamDebugger("exec"));
 
   // Add stream to interpret and pass through HTTP headers
   if (msg) {
