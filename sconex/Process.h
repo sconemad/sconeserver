@@ -27,8 +27,11 @@ Free Software Foundation, Inc.,
 namespace scx {
 
 //============================================================================
-class SCONEX_API Process {
+class SCONEX_API Process : public StreamSocket {
 public:
+
+  static void init();
+  
   Process(
     const std::string& exe
   );	
@@ -41,18 +44,23 @@ public:
   void set_env(const std::string& name, const std::string& value);
   // Set environment variables
   
-  bool launch(StreamSocket*& sock);
+  bool launch();
   // Launch the process
   
   bool kill();
   // Kill the process
   
-protected:
+private:
+
+  Process(const Process& c);
+  // Disallow copying
   
 #ifdef WIN32
   DWORD m_pid;
 #else
   pid_t m_pid;
+  static pid_t s_proxy_pid;
+  static SOCKET s_proxy_sock;
 #endif	
   
   std::string m_exe;

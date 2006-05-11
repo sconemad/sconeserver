@@ -131,6 +131,8 @@ BUILD_ROUTER_LOCAL_FALSE = @BUILD_ROUTER_LOCAL_FALSE@
 BUILD_ROUTER_LOCAL_TRUE = @BUILD_ROUTER_LOCAL_TRUE@
 BUILD_SSL_FALSE = @BUILD_SSL_FALSE@
 BUILD_SSL_TRUE = @BUILD_SSL_TRUE@
+BUILD_TESTBUILDER_FALSE = @BUILD_TESTBUILDER_FALSE@
+BUILD_TESTBUILDER_TRUE = @BUILD_TESTBUILDER_TRUE@
 CC = @CC@
 CCDEPMODE = @CCDEPMODE@
 CFLAGS = @CFLAGS@
@@ -236,7 +238,7 @@ sconed_LDADD = $(top_builddir)/sconex/libsconex.la
 noinst_HEADERS = \
 res/resource.h
 
-MODULES = router http mime simple ssl stat exec test
+MODULES = router http mime simple ssl stat exec test testbuilder
 SUBDIRS = sconex doc $(MODULES)
 docdir = $(datadir)/doc/$(PACKAGE)-$(VERSION)
 doc_DATA = AUTHORS COPYING INSTALL NEWS README THANKS TODO

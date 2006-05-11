@@ -14,7 +14,7 @@ sconed_LDADD = $(top_builddir)/sconex/libsconex.la
 noinst_HEADERS = \
 res/resource.h
 
-MODULES = router http mime simple ssl stat exec test
+MODULES = router http mime simple ssl stat exec test testbuilder
 SUBDIRS = sconex doc $(MODULES)
 
 docdir=$(datadir)/doc/$(PACKAGE)-$(VERSION)

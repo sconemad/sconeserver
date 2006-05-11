@@ -1,4 +1,12 @@
 
+2006-05-11 Andrew Wedgbury <wedge@sconemad.com>
+
+	* sconex/Process: Implement fork+exec process proxy for forking from a 
+	multithreaded SconeServer process. Process is now a socket.
+	* sconex/Kernel: Init process proxy on startup.
+	* exec: Use new Process interface, move signal handler to proxy.
+	* testbuilder: Outlined new module for implementing test build system.
+	
 2006-05-05 Andrew Wedgbury <wedge@sconemad.com>
 
 	* sconex/Process: Factor out code from exec, implement Win32 version.

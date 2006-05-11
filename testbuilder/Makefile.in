@@ -15,9 +15,11 @@
 @SET_MAKE@
 
 # SconeServer (http://www.sconemad.com)
-# automake file for http errorpage module
+# automake file for testbuilder module
 
-SOURCES = $(errorpage_la_SOURCES)
+
+
+SOURCES = $(testbuilder_la_SOURCES)
 
 srcdir = @srcdir@
 top_srcdir = @top_srcdir@
@@ -25,7 +27,7 @@ VPATH = @srcdir@
 pkgdatadir = $(datadir)/@PACKAGE@
 pkglibdir = $(libdir)/@PACKAGE@
 pkgincludedir = $(includedir)/@PACKAGE@
-top_builddir = ../..
+top_builddir = ..
 am__cd = CDPATH="$${ZSH_VERSION+.}$(PATH_SEPARATOR)" && cd
 INSTALL = @INSTALL@
 install_sh_DATA = $(install_sh) -c -m 644
@@ -42,8 +44,9 @@ POST_UNINSTALL = :
 build_triplet = @build@
 host_triplet = @host@
 target_triplet = @target@
-subdir = http/errorpage
-DIST_COMMON = $(srcdir)/Makefile.am $(srcdir)/Makefile.in
+subdir = testbuilder
+DIST_COMMON = $(noinst_HEADERS) $(srcdir)/Makefile.am \
+	$(srcdir)/Makefile.in
 ACLOCAL_M4 = $(top_srcdir)/aclocal.m4
 am__aclocal_m4_deps = $(top_srcdir)/configure.in
 am__configure_deps = $(am__aclocal_m4_deps) $(CONFIGURE_DEPENDENCIES) \
@@ -57,12 +60,13 @@ am__vpath_adj = case $$p in \
     *) f=$$p;; \
   esac;
 am__strip_dir = `echo $$p | sed -e 's|^.*/||'`;
-am__installdirs = "$(DESTDIR)$(pkglibdir)"
+am__installdirs = "$(DESTDIR)$(pkglibdir)" "$(DESTDIR)$(sysconfdir)"
 pkglibLTLIBRARIES_INSTALL = $(INSTALL)
 LTLIBRARIES = $(pkglib_LTLIBRARIES)
-errorpage_la_LIBADD =
-am_errorpage_la_OBJECTS = ErrorPageModule.lo
-errorpage_la_OBJECTS = $(am_errorpage_la_OBJECTS)
+testbuilder_la_LIBADD =
+am_testbuilder_la_OBJECTS = TestBuilderModule.lo BuildProfile.lo \
+	Build.lo
+testbuilder_la_OBJECTS = $(am_testbuilder_la_OBJECTS)
 DEFAULT_INCLUDES = -I. -I$(srcdir) -I$(top_builddir)
 depcomp = $(SHELL) $(top_srcdir)/depcomp
 am__depfiles_maybe = depfiles
@@ -74,8 +78,11 @@ LTCXXCOMPILE = $(LIBTOOL) --tag=CXX --mode=compile $(CXX) $(DEFS) \
 CXXLD = $(CXX)
 CXXLINK = $(LIBTOOL) --tag=CXX --mode=link $(CXXLD) $(AM_CXXFLAGS) \
 	$(CXXFLAGS) $(AM_LDFLAGS) $(LDFLAGS) -o $@
-SOURCES = $(errorpage_la_SOURCES)
-DIST_SOURCES = $(errorpage_la_SOURCES)
+SOURCES = $(testbuilder_la_SOURCES)
+DIST_SOURCES = $(testbuilder_la_SOURCES)
+sysconfDATA_INSTALL = $(INSTALL_DATA)
+DATA = $(sysconf_DATA)
+HEADERS = $(noinst_HEADERS)
 ETAGS = etags
 CTAGS = ctags
 DISTFILES = $(DIST_COMMON) $(DIST_SOURCES) $(TEXINFOS) $(EXTRA_DIST)
@@ -197,12 +204,20 @@ target_cpu = @target_cpu@
 target_os = @target_os@
 target_vendor = @target_vendor@
 AM_CPPFLAGS = -I$(top_srcdir)
-pkglib_LTLIBRARIES = errorpage.la
-errorpage_la_SOURCES = \
-ErrorPageModule.cpp 
+pkglib_LTLIBRARIES = testbuilder.la
+testbuilder_la_SOURCES = \
+TestBuilderModule.cpp \
+BuildProfile.cpp \
+Build.cpp
 
-errorpage_la_LDFLAGS = -module -avoid-version
-EXTRA_DIST = errorpage.dsp
+noinst_HEADERS = \
+TestBuilderModule.h \
+BuildProfile.h \
+Build.h
+
+testbuilder_la_LDFLAGS = -module -avoid-version
+sysconf_DATA = testbuilder.conf
+EXTRA_DIST = $(sysconf_DATA) testbuilder.dsp
 all: all-am
 
 .SUFFIXES:
@@ -216,9 +231,9 @@ $(srcdir)/Makefile.in: @MAINTAINER_MODE_TRUE@ $(srcdir)/Makefile.am  $(am__confi
 	      exit 1;; \
 	  esac; \
 	done; \
-	echo ' cd $(top_srcdir) && $(AUTOMAKE) --gnits  http/errorpage/Makefile'; \
+	echo ' cd $(top_srcdir) && $(AUTOMAKE) --gnits  testbuilder/Makefile'; \
 	cd $(top_srcdir) && \
-	  $(AUTOMAKE) --gnits  http/errorpage/Makefile
+	  $(AUTOMAKE) --gnits  testbuilder/Makefile
 .PRECIOUS: Makefile
 Makefile: $(srcdir)/Makefile.in $(top_builddir)/config.status
 	@case '$?' in \
@@ -263,8 +278,8 @@ clean-pkglibLTLIBRARIES:
 	  echo "rm -f \"$${dir}/so_locations\""; \
 	  rm -f "$${dir}/so_locations"; \
 	done
-errorpage.la: $(errorpage_la_OBJECTS) $(errorpage_la_DEPENDENCIES) 
-	$(CXXLINK) -rpath $(pkglibdir) $(errorpage_la_LDFLAGS) $(errorpage_la_OBJECTS) $(errorpage_la_LIBADD) $(LIBS)
+testbuilder.la: $(testbuilder_la_OBJECTS) $(testbuilder_la_DEPENDENCIES) 
+	$(CXXLINK) -rpath $(pkglibdir) $(testbuilder_la_LDFLAGS) $(testbuilder_la_OBJECTS) $(testbuilder_la_LIBADD) $(LIBS)
 
 mostlyclean-compile:
 	-rm -f *.$(OBJEXT)
@@ -272,7 +287,9 @@ mostlyclean-compile:
 distclean-compile:
 	-rm -f *.tab.c
 
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/ErrorPageModule.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/Build.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/BuildProfile.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/TestBuilderModule.Plo@am__quote@
 
 .cpp.o:
 @am__fastdepCXX_TRUE@	if $(CXXCOMPILE) -MT $@ -MD -MP -MF "$(DEPDIR)/$*.Tpo" -c -o $@ $<; \
@@ -304,6 +321,23 @@ clean-libtool:
 distclean-libtool:
 	-rm -f libtool
 uninstall-info-am:
+install-sysconfDATA: $(sysconf_DATA)
+	@$(NORMAL_INSTALL)
+	test -z "$(sysconfdir)" || $(mkdir_p) "$(DESTDIR)$(sysconfdir)"
+	@list='$(sysconf_DATA)'; for p in $$list; do \
+	  if test -f "$$p"; then d=; else d="$(srcdir)/"; fi; \
+	  f=$(am__strip_dir) \
+	  echo " $(sysconfDATA_INSTALL) '$$d$$p' '$(DESTDIR)$(sysconfdir)/$$f'"; \
+	  $(sysconfDATA_INSTALL) "$$d$$p" "$(DESTDIR)$(sysconfdir)/$$f"; \
+	done
+
+uninstall-sysconfDATA:
+	@$(NORMAL_UNINSTALL)
+	@list='$(sysconf_DATA)'; for p in $$list; do \
+	  f=$(am__strip_dir) \
+	  echo " rm -f '$(DESTDIR)$(sysconfdir)/$$f'"; \
+	  rm -f "$(DESTDIR)$(sysconfdir)/$$f"; \
+	done
 
 ID: $(HEADERS) $(SOURCES) $(LISP) $(TAGS_FILES)
 	list='$(SOURCES) $(HEADERS) $(LISP) $(TAGS_FILES)'; \
@@ -382,9 +416,9 @@ distdir: $(DISTFILES)
 	done
 check-am: all-am
 check: check-am
-all-am: Makefile $(LTLIBRARIES)
+all-am: Makefile $(LTLIBRARIES) $(DATA) $(HEADERS)
 installdirs:
-	for dir in "$(DESTDIR)$(pkglibdir)"; do \
+	for dir in "$(DESTDIR)$(pkglibdir)" "$(DESTDIR)$(sysconfdir)"; do \
 	  test -z "$$dir" || $(mkdir_p) "$$dir"; \
 	done
 install: install-am
@@ -434,7 +468,7 @@ info-am:
 
 install-data-am:
 
-install-exec-am: install-pkglibLTLIBRARIES
+install-exec-am: install-pkglibLTLIBRARIES install-sysconfDATA
 
 install-info: install-info-am
 
@@ -460,7 +494,8 @@ ps: ps-am
 
 ps-am:
 
-uninstall-am: uninstall-info-am uninstall-pkglibLTLIBRARIES
+uninstall-am: uninstall-info-am uninstall-pkglibLTLIBRARIES \
+	uninstall-sysconfDATA
 
 .PHONY: CTAGS GTAGS all all-am check check-am clean clean-generic \
 	clean-libtool clean-pkglibLTLIBRARIES ctags distclean \
@@ -468,12 +503,12 @@ uninstall-am: uninstall-info-am uninstall-pkglibLTLIBRARIES
 	distclean-tags distdir dvi dvi-am html html-am info info-am \
 	install install-am install-data install-data-am install-exec \
 	install-exec-am install-info install-info-am install-man \
-	install-pkglibLTLIBRARIES install-strip installcheck \
-	installcheck-am installdirs maintainer-clean \
+	install-pkglibLTLIBRARIES install-strip install-sysconfDATA \
+	installcheck installcheck-am installdirs maintainer-clean \
 	maintainer-clean-generic mostlyclean mostlyclean-compile \
 	mostlyclean-generic mostlyclean-libtool pdf pdf-am ps ps-am \
 	tags uninstall uninstall-am uninstall-info-am \
-	uninstall-pkglibLTLIBRARIES
+	uninstall-pkglibLTLIBRARIES uninstall-sysconfDATA
 
 # Tell versions [3.59,3.63) of GNU make to not export all variables.
 # Otherwise a system limit (for SysV at least) may be exceeded.

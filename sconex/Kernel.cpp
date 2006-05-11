@@ -22,8 +22,10 @@ Free Software Foundation, Inc.,
 #include "Kernel.h"
 #include "ConfigStream.h"
 #include "Console.h"
+#include "Process.h"
 #include "Logger.h"
 #include "Debug.h"
+
 #include <pwd.h>
 
 namespace scx {
@@ -201,7 +203,7 @@ Kernel::Kernel()
   : Module("sconeserver",scx::version()),
     m_state(Init)
 {
-
+  Process::init();
 }
 
 //=============================================================================

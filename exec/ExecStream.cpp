@@ -136,17 +136,13 @@ bool ExecStream::spawn_process()
     m_process->add_arg( m_args->get(i)->get_string() );
   }
 
-  // Create sconeserver <--> program socket
-  scx::StreamSocket* sock = 0;
-  
   // Launch the new process and connect socket
-  if (!m_process->launch(sock)) {
+  if (!m_process->launch()) {
     DEBUG_LOG("Failed to launch process");
-    delete sock;
     return false;
   }
 
-  DEBUG_ASSERT(sock,"spawn_process() Bad socket from Process::launch");
+  //  DEBUG_ASSERT(sock,"spawn_process() Bad socket from Process::launch");
   
   // Add debug logging to exec stream
   // sock->add_stream(new scx::StreamDebugger("exec"));
@@ -155,11 +151,11 @@ bool ExecStream::spawn_process()
   if (msg) {
     CGIResponseStream* crs = new CGIResponseStream(msg);
     crs->add_module_ref(m_module.ref());
-    sock->add_stream(crs);
+    m_process->add_stream(crs);
   }
   
   // Create sconeserver <-- program transfer stream
-  scx::StreamTransfer* xfer = new scx::StreamTransfer(sock);
+  scx::StreamTransfer* xfer = new scx::StreamTransfer(m_process);
   xfer->set_close_when_finished(true);
   endpoint().add_stream(xfer);
     
@@ -171,11 +167,12 @@ bool ExecStream::spawn_process()
   if (bytes_readable > 0) {
     scx::StreamTransfer* xfer2 =
       new scx::StreamTransfer(&endpoint(),bytes_readable);
-    sock->add_stream(xfer2);
+    m_process->add_stream(xfer2);
   }
   
   // Add socket to Kernel table
-  scx::Kernel::get()->connect(sock,0);
+  scx::Kernel::get()->connect(m_process,0);
+  m_process = 0;
   
   return true;
 }

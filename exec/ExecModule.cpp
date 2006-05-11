@@ -19,8 +19,6 @@ along with this program (see the file COPYING); if not, write to the
 Free Software Foundation, Inc.,
 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA */
 
-#include <sys/wait.h>
-
 #include "ExecModule.h"
 #include "ExecStream.h"
 
@@ -31,21 +29,11 @@ Free Software Foundation, Inc.,
 SCONESERVER_MODULE(ExecModule);
 
 //=========================================================================
-void handleSIGCHLD(int i)
-{
-  //TODO: Put this somewhere more sensible
-  DEBUG_LOG("SIGCHLD");
-  int stat;
-  while(waitpid(-1, &stat, WNOHANG) > 0) {}
-}
-
-//=========================================================================
 ExecModule::ExecModule(
 )
   : scx::Module("exec",scx::version())
 {
-  // Install signal handler to catch exiting processes
-  signal(SIGCHLD, handleSIGCHLD);
+
 }
 
 //=========================================================================
