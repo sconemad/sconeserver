@@ -32,9 +32,7 @@ public:
 
   static void init();
   
-  Process(
-    const std::string& exe
-  );	
+  Process(const std::string& exe);	
 
   ~Process();
   
@@ -49,6 +47,17 @@ public:
   
   bool kill();
   // Kill the process
+
+  bool is_running();
+  // Is the process running
+  
+  bool get_exitcode(int& code);
+  // Get the exitcode
+  
+  void set_detatched(bool onoff);
+  // Set the detatch mode
+
+  enum RunState { Unstarted, Running, Detatched, Terminated };
   
 private:
 
@@ -66,7 +75,8 @@ private:
   std::string m_exe;
   std::list<std::string> m_args;
   std::map<std::string,std::string> m_env;
-  bool m_launched;
+  RunState m_runstate;
+  int m_exitcode;
   
 };
 

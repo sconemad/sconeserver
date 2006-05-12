@@ -364,9 +364,8 @@ private:
   char* m_cur_env_name;
   // Current environment variable name
 
-  enum ProcStatType { Running, Detatched, Terminated };
   typedef struct ProcStat {
-    ProcStatType type;
+    Process::RunState type;
     int code;
   };
   std::map<pid_t,ProcStat> m_stats;
@@ -442,7 +441,7 @@ int Proxy::run()
           m_stats.find(m_packet.get_num_value());
         if (it != m_stats.end()) {
           ProcStat& stat = (*it).second;
-            if (stat.type == Terminated) {
+            if (stat.type == Process::Terminated) {
               packet.set_type(ProxyPacket::CheckedTerminated);
               packet.set_num_value(stat.code);
               m_stats.erase(it);
@@ -456,8 +455,8 @@ int Proxy::run()
           m_stats.find(m_packet.get_num_value());
         if (it != m_stats.end()) {
           ProcStat& stat = (*it).second;
-          if (stat.type == Running) {
-            stat.type = Detatched;
+          if (stat.type == Process::Running) {
+            stat.type = Process::Detatched;
           } else {
             m_stats.erase(it);
           }
@@ -478,15 +477,15 @@ void Proxy::process_terminated(pid_t pid, int code)
   std::map<pid_t,ProcStat>::iterator it = m_stats.find(pid);
   if (it != m_stats.end()) {
     ProcStat& stat = (*it).second;
-    if (stat.type == Running) {
-      stat.type = Terminated;
+    if (stat.type == Process::Running) {
+      stat.type = Process::Terminated;
       stat.code = code;
     } else {
       m_stats.erase(it);
     }
   } else {
     ProcStat& stat = m_stats[pid];
-    stat.type = Terminated;
+    stat.type = Process::Terminated;
     stat.code = code;
   }
 }
@@ -536,7 +535,7 @@ bool Proxy::launch()
     std::map<pid_t,ProcStat>::iterator it = m_stats.find(pid);
     if (it == m_stats.end()) {
       ProcStat& stat = m_stats[pid];
-      stat.type = Running;
+      stat.type = Process::Running;
       stat.code = 0;
     }
     
@@ -650,7 +649,7 @@ Process::Process(
 )	
   : m_pid(-1),
     m_exe(exe),
-    m_launched(false)
+    m_runstate(Unstarted)
 {
   DEBUG_COUNT_CONSTRUCTOR(Process);
 }
@@ -658,27 +657,11 @@ Process::Process(
 //============================================================================
 Process::~Process()
 {
-#if 0
-  ProxyPacket packet;
-  do {
-    packet.set_type(ProxyPacket::CheckPid);
-    packet.set_num_value(m_pid);
-    packet.send(s_proxy_sock);
-    packet.recv(s_proxy_sock);
-    switch (packet.get_type()) {
-      case ProxyPacket::CheckedRunning:
-        DEBUG_LOG("~Process " << m_pid << " still running " << packet.get_num_value());
-        break;
-      case ProxyPacket::CheckedTerminated: 
-        DEBUG_LOG("~Process " << m_pid << " terminated with code " << packet.get_num_value());
-        break;
-      default:
-        DEBUG_LOG("~Process " << m_pid << " state unknown " << packet.get_num_value());
-        break;
-    }
-  } while (packet.get_type() != ProxyPacket::CheckedTerminated);
-#endif
-  if (m_launched) {
+  if (m_runstate == Running) {
+    kill();
+  }
+
+  if (m_runstate != Unstarted) {
     ProxyPacket packet;
     packet.set_type(ProxyPacket::DetatchPid);
     packet.set_num_value(m_pid);
@@ -691,7 +674,7 @@ Process::~Process()
 //============================================================================
 void Process::add_arg(const std::string& arg)
 {
-  DEBUG_ASSERT(!m_launched,"add_arg() Process already launched");
+  DEBUG_ASSERT(m_runstate==Unstarted,"add_arg() Process already launched");
   
   m_args.push_back(arg);
 }
@@ -699,7 +682,7 @@ void Process::add_arg(const std::string& arg)
 //============================================================================
 void Process::set_env(const std::string& name, const std::string& value)
 {
-  DEBUG_ASSERT(!m_launched,"set_env() Process already launched");
+  DEBUG_ASSERT(m_runstate==Unstarted,"add_arg() Process already launched");
   
   m_env[name] = value;
 }
@@ -707,7 +690,7 @@ void Process::set_env(const std::string& name, const std::string& value)
 //============================================================================
 bool Process::launch()
 {
-  DEBUG_ASSERT(!m_launched,"launch() Process already launched");
+  DEBUG_ASSERT(m_runstate != Running,"launch() Process already launched");
   
 #ifdef WIN32
   // TODO: get this working!
@@ -788,8 +771,10 @@ bool Process::launch()
 	      << m_socket << " from process proxy");
   }
 #endif
-  
-  m_launched = true;
+
+  if (m_runstate != Detatched) {
+    m_runstate = Running;
+  }
   return true;
 }
 
@@ -802,5 +787,61 @@ bool Process::kill()
   return (0 == ::kill(m_pid,SIGKILL));
 #endif
 }
+
+//============================================================================
+bool Process::is_running()
+{
+  return (m_runstate == Running);
+}
+
+//============================================================================
+bool Process::get_exitcode(int& code)
+{
+  ProxyPacket packet;
+
+  switch (m_runstate) {
+
+    case Running:
+      packet.set_type(ProxyPacket::CheckPid);
+      packet.set_num_value(m_pid);
+      packet.send(s_proxy_sock);
+      packet.recv(s_proxy_sock);
+      switch (packet.get_type()) {
+        case ProxyPacket::CheckedRunning:
+          DEBUG_LOG("get_exitcode() for pid " << m_pid
+                    << " still running");
+          break;
+        case ProxyPacket::CheckedTerminated: 
+          m_exitcode = packet.get_num_value();
+          m_runstate = Terminated;
+          DEBUG_LOG("get_exitcode() for pid " << m_pid
+                    << ": terminated with code " << m_exitcode);
+          break;
+        default:
+          DEBUG_LOG("get_exitcode() for pid " << m_pid
+                    << ": ERROR");
+          break;
+      }
+      // Intentional fall through...
+    case Terminated:
+      code = m_exitcode;
+      break;
+
+    default:
+      break;
+  }
+  
+  return (m_runstate == Terminated);
+}
+
+//============================================================================
+void Process::set_detatched(bool onoff)
+{
+  if (m_runstate == Unstarted ||
+      m_runstate == Running) {
+    m_runstate = Detatched;
+  }
+}
+
 
 };

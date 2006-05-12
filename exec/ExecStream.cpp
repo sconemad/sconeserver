@@ -135,15 +135,13 @@ bool ExecStream::spawn_process()
   for (int i=0; i<m_args->size(); ++i) {
     m_process->add_arg( m_args->get(i)->get_string() );
   }
-
+  
   // Launch the new process and connect socket
   if (!m_process->launch()) {
     DEBUG_LOG("Failed to launch process");
     return false;
   }
 
-  //  DEBUG_ASSERT(sock,"spawn_process() Bad socket from Process::launch");
-  
   // Add debug logging to exec stream
   // sock->add_stream(new scx::StreamDebugger("exec"));
 
