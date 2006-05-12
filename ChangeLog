@@ -1,4 +1,8 @@
 
+2006-05-12 Andrew Wedgbury <wedge@sconemad.com>
+
+	* sconex/Process: Get process proxy to work on solaris, netbsd, etc.
+	
 2006-05-11 Andrew Wedgbury <wedge@sconemad.com>
 
 	* sconex/Process: Implement fork+exec process proxy for forking from a 

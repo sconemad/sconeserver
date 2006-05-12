@@ -112,7 +112,8 @@ AC_HEADER_STDC
 AC_HEADER_DIRENT
 AC_CHECK_HEADERS([arpa/inet.h errno.h fcntl.h malloc.h netdb.h netinet/in.h])
 AC_CHECK_HEADERS([stdlib.h sys/ioctl.h sys/socket.h sys/stat.h sys/signal.h])
-AC_CHECK_HEADERS([sys/types.h sys/wait.h signal.h stdio.h pthread.h unistd.h])
+AC_CHECK_HEADERS([sys/types.h sys/wait.h sys/uio.h signal.h stdio.h])
+AC_CHECK_HEADERS([pthread.h unistd.h])
 AC_CHECK_HEADERS([string iostream iomanip fstream sstream map list queue stack set])
 
 # Checks for typedefs, structures, and compiler characteristics.
@@ -139,12 +140,18 @@ AC_CHECK_FUNCS([inet_aton inet_pton inet_ntop])
 AC_CACHE_CHECK(
   [for msg_control in msghdr],
   [ol_cv_msghdr_msg_control],
-  [AC_TRY_COMPILE([#include <sys/socket.h>],
-                 [struct msghdr m; m.msg_control=(struct cmsghdr *)0],
-                 [ol_cv_msghdr_msg_control=yes],
-                 [ol_cv_msghdr_msg_control=no]) ])
+  [AC_COMPILE_IFELSE(
+    [#include <sys/types.h>
+     #include <sys/socket.h>
+     int main(int,char**) {
+       struct msghdr m;
+       m.msg_control=(struct cmsghdr *)0;
+     }],
+    [ol_cv_msghdr_msg_control=yes],
+    [ol_cv_msghdr_msg_control=no])])
 if test $ol_cv_msghdr_msg_control = "yes" ; then
-  AC_DEFINE(HAVE_MSGHDR_MSG_CONTROL,1,[define if struct msghdr has msg_control])
+  AC_DEFINE(HAVE_MSGHDR_MSG_CONTROL,1,[define if struct msghdr has msg_control]\
+)
 fi
 
 # Set module build flags

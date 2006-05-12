@@ -26,20 +26,26 @@ Free Software Foundation, Inc.,
 #  include <sys/wait.h>
 #endif
 
-namespace scx {
-
-#ifndef WIN32
-  //#define HAVE_MSGHDR_MSG_CONTROL
-
-#ifdef HAVE_MSGHDR_MSG_CONTROL
-typedef union cmsghdr_control {
-  struct cmsghdr cm;
-  char control[CMSG_SPACE(sizeof(int))];
-};
+#ifdef HAVE_SYS_UIO_H
+#  include <sys/uio.h>
 #endif
 
-//#define PROCESS_DEBUG_LOG(a) std::cerr << "[" << getpid() << "] " << a << "\n"
+namespace scx {
+
 #define PROCESS_DEBUG_LOG(a) 
+
+#ifndef WIN32
+
+#ifndef CMSG_SPACE
+#  if defined(_CMSG_DATA_ALIGN) && defined(_CMSG_HDR_ALIGN)
+#    define CMSG_SPACE(len) \
+       (_CMSG_DATA_ALIGN(len) + _CMSG_DATA_ALIGN(sizeof(struct cmsghdr)))
+#    define CMSG_LEN(len) \
+       (_CMSG_DATA_ALIGN(sizeof(struct cmsghdr)) + (len))
+#  endif
+#endif
+
+//#define PROCESS_DEBUG_LOG(a) std::cerr <<"["<< getpid() <<"]" << a << "\n"
   
 #define PROXY_MAX_STR 8182
   
@@ -157,6 +163,12 @@ bool ProxyPacket::send(SOCKET s)
   unsigned int t = 0;
   int n;
   char* buf = (char*)&m_data;
+  int err = 0;
+
+#ifdef HAVE_MSGHDR_MSG_CONTROL
+  int control_len = CMSG_SPACE(sizeof(int));
+  char* control_buf = new char[control_len];
+#endif
 
   m_data.size = (3 * sizeof(int)) + strlen(m_data.str) + 1;
   PROCESS_DEBUG_LOG("SENDING DATA '" << m_data.str <<  "' SIZE " << m_data.size);
@@ -165,9 +177,9 @@ bool ProxyPacket::send(SOCKET s)
     if (m_fd >= 0 && t == 0) {
       // Sending a file descriptor with the packet
 #ifdef HAVE_MSGHDR_MSG_CONTROL
-      cmsghdr_control control_un;
-      msg.msg_control = control_un.control;
-      msg.msg_controllen = sizeof(control_un.control);
+      msg.msg_controllen = control_len;
+      msg.msg_control = control_buf;
+
       struct cmsghdr* cmptr = CMSG_FIRSTHDR(&msg);
       cmptr->cmsg_len = CMSG_LEN(sizeof(int));
       cmptr->cmsg_level = SOL_SOCKET;
@@ -185,6 +197,7 @@ bool ProxyPacket::send(SOCKET s)
       msg.msg_iovlen = 1;
       
       n = sendmsg(s,&msg,0);
+
     } else {
       n = ::send(s,buf+t,m_data.size-t,0);
     }
@@ -192,12 +205,26 @@ bool ProxyPacket::send(SOCKET s)
     if (n > 0) {
       t += (unsigned int)n;
       
+    } else if (n == 0) {
+      err = 1;
+      break;
+
+    } else if (errno == EINTR) {
+      PROCESS_DEBUG_LOG("ProxyPacket::recv() Interrupted");
+
     } else {
-      PROCESS_DEBUG_LOG("ProxyPacket::send() Error when sending packet");
-      return false;
+      PROCESS_DEBUG_LOG("ProxyPacket::send() Error when sending packet "
+			<< errno);
+      err = errno;
+      break;
     }
   }
-  return true;
+
+#ifdef HAVE_MSGHDR_MSG_CONTROL
+  delete[] control_buf;
+#endif
+
+  return (err == 0);
 }
 
 //============================================================================
@@ -208,55 +235,98 @@ bool ProxyPacket::recv(SOCKET s)
   unsigned int t = 0;
   int n;
   char* buf = (char*)&m_data;
-
-  // First read the data size (and possibly a descriptor)
   m_fd = -1;
-#ifdef HAVE_MSGHDR_MSG_CONTROL
-  cmsghdr_control control_un;
-  struct cmsghdr* cmptr;
-  msg.msg_control = control_un.control;
-  msg.msg_controllen = sizeof(control_un.control);
-#else
-  msg.msg_accrights = (caddr_t)&m_fd;
-  msg.msg_accrightslen = sizeof(int);
-#endif
-  msg.msg_name = 0;
-  msg.msg_namelen = 0;
-  iov[0].iov_base = buf;
-  iov[0].iov_len = (3 * sizeof(int)) + 1;
-  msg.msg_iov = iov;
-  msg.msg_iovlen = 1;
-  
-  n = recvmsg(s,&msg,0);
+  int err = 0;
 
-  if (n <= 0) {
-    PROCESS_DEBUG_LOG("ProxyPacket::recv() Error when recieving packet");
+#ifdef HAVE_MSGHDR_MSG_CONTROL
+  int control_len = CMSG_SPACE(sizeof(int));
+  char* control_buf = new char[control_len];
+#else
+  int recv_fd = -1;
+#endif
+
+  // First read the header
+  unsigned int init_len = (3 * sizeof(int)) + 1;
+  while (t < init_len) {
+
+#ifdef HAVE_MSGHDR_MSG_CONTROL
+    msg.msg_controllen = control_len;
+    msg.msg_control = control_buf;
+#else
+    msg.msg_accrights = (caddr_t)&recv_fd;
+    msg.msg_accrightslen = sizeof(int);
+#endif
+
+    msg.msg_name = 0;
+    msg.msg_namelen = 0;
+    iov[0].iov_base = buf+t;
+    iov[0].iov_len = init_len-t;
+    msg.msg_iov = iov;
+    msg.msg_iovlen = 1;
+    
+    n = recvmsg(s,&msg,0);
+    
+    if (n > 0) {
+      t += (unsigned int)n;
+
+    } else if (n == 0) {
+      err = 1;
+      break;
+
+    } else if (errno == EINTR) {
+      PROCESS_DEBUG_LOG("ProxyPacket::recv() Interrupted");
+
+    } else {
+      PROCESS_DEBUG_LOG("ProxyPacket::recv() Error when recieving packet, errno=" << errno);
+      err = errno;
+      break;
+    }
+  
+#ifdef HAVE_MSGHDR_MSG_CONTROL
+    struct cmsghdr* cmptr = CMSG_FIRSTHDR(&msg);
+    if (cmptr != 0 &&
+	cmptr->cmsg_len == CMSG_LEN(sizeof(int)) &&
+	m_fd == -1) {
+      m_fd = *( (int*)CMSG_DATA(cmptr) );
+    }
+#else
+    if (msg.msg_accrightslen == sizeof(int) &&
+	m_fd == -1) {
+      m_fd == recv_fd;
+    }
+#endif
+
+  } // read header
+
+#ifdef HAVE_MSGHDR_MSG_CONTROL
+  delete[] control_buf;
+#endif
+
+  if (err != 0) {
     return false;
   }
-  
-#ifdef HAVE_MSGHDR_MSG_CONTROL
-  if ( (cmptr = CMSG_FIRSTHDR(&msg)) != 0 &&
-       cmptr->cmsg_len == CMSG_LEN(sizeof(int))) {
-    m_fd = *( (int*)CMSG_DATA(cmptr) );
-  }
-#else
-  if (msg.msg_accrightslen != sizeof(int)) {
-    m_fd = -1;
-  }
-#endif
-  t += (unsigned int)n;
 
   while (t < m_data.size) {
     n = ::recv(s,buf+t,m_data.size-t,0);
     if (n > 0) {
       t += (unsigned int)n;
+
+    } else if (n == 0) {
+      err = 1;
+      break;
+
+    } else if (errno == EINTR) {
+      PROCESS_DEBUG_LOG("ProxyPacket::recv() Interrupted");
+
     } else {
       PROCESS_DEBUG_LOG("ProxyPacket::recv() Error when recieving packet, errno=" << errno);
-      return false;
+      err = errno;
+      break;
     }
   }
   PROCESS_DEBUG_LOG("RECIEVED DATA '" << m_data.str <<  "' SIZE " << m_data.size);
-  return true;
+
+  return (err == 0);
 }
 
 //%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -560,10 +630,12 @@ void Process::init()
     ::dup2(d[1],1);
 
     // Open a log file and redirect stderr
-    //    int errfd = ::open("proxy.log",
-    //                       O_WRONLY | O_CREAT | O_APPEND,
-    //                       S_IRUSR | S_IWUSR | S_IRGRP | S_IROTH);
-    //    ::dup2(errfd,2);
+/*
+    int errfd = ::open("proxy.log",
+		       O_WRONLY | O_CREAT | O_APPEND,
+		       S_IRUSR | S_IWUSR | S_IRGRP | S_IROTH);
+    ::dup2(errfd,2);
+*/
     
     s_proxy = new Proxy();
 
@@ -712,7 +784,8 @@ bool Process::launch()
     m_pid = packet.get_num_value();
     m_socket = packet.get_fd();
     m_state = Descriptor::Connected;
-    DEBUG_LOG("Got pid " << m_pid << " and fd " << m_socket << " from proxy launch");
+    DEBUG_LOG("Got pid " << m_pid << " and fd " 
+	      << m_socket << " from process proxy");
   }
 #endif
   
@@ -723,7 +796,11 @@ bool Process::launch()
 //============================================================================
 bool Process::kill()
 {
+#ifdef WIN32
+  //TODO
+#else 
   return (0 == ::kill(m_pid,SIGKILL));
+#endif
 }
 
 };
