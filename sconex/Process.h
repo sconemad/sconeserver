@@ -26,6 +26,8 @@ Free Software Foundation, Inc.,
 #include "sconex/StreamSocket.h"
 namespace scx {
 
+class Mutex;
+  
 //============================================================================
 class SCONEX_API Process : public StreamSocket {
 public:
@@ -68,8 +70,10 @@ private:
   DWORD m_pid;
 #else
   pid_t m_pid;
+  // Process proxy vars
   static pid_t s_proxy_pid;
   static SOCKET s_proxy_sock;
+  static Mutex* s_proxy_mutex;
 #endif	
   
   std::string m_exe;

@@ -21,6 +21,7 @@ Free Software Foundation, Inc.,
 
 #include "sconex/Process.h"
 #include "sconex/utils.h"
+#include "sconex/Mutex.h"
 
 #ifdef HAVE_SYS_WAIT_H
 #  include <sys/wait.h>
@@ -590,15 +591,15 @@ void Proxy::reset()
 
 pid_t Process::s_proxy_pid = -1;
 int Process::s_proxy_sock = -1;
+Mutex* Process::s_proxy_mutex = 0;
 #endif
   
 //============================================================================
 void Process::init()
 {
 #ifndef WIN32
-  s_proxy_pid = -1;
-  s_proxy_sock = 0;
-
+  DEBUG_ASSERT(s_proxy_pid==-1,"init() Already called");
+  
   int d[2];
   if (socketpair(PF_UNIX,SOCK_STREAM,0,d) < 0) {
     DEBUG_LOG("init() socketpair failed");
@@ -620,6 +621,8 @@ void Process::init()
       DEBUG_LOG("init() fork failed");
     }
 
+    s_proxy_mutex = new Mutex();
+    
   } else {  // ****** Child process ******
 
     // Close the parent's end of the socketpair
@@ -665,7 +668,10 @@ Process::~Process()
     ProxyPacket packet;
     packet.set_type(ProxyPacket::DetatchPid);
     packet.set_num_value(m_pid);
+
+    s_proxy_mutex->lock();
     packet.send(s_proxy_sock);
+    s_proxy_mutex->unlock();
   }
 
   DEBUG_COUNT_DESTRUCTOR(Process);
@@ -731,6 +737,8 @@ bool Process::launch()
   
 #else // *NIX
 
+  s_proxy_mutex->lock();
+  
   ProxyPacket packet;
   packet.set_type(ProxyPacket::LaunchExe);
   packet.set_str_value(m_exe.c_str());
@@ -770,6 +778,8 @@ bool Process::launch()
     DEBUG_LOG("Got pid " << m_pid << " and fd " 
 	      << m_socket << " from process proxy");
   }
+
+  s_proxy_mutex->unlock();
 #endif
 
   if (m_runstate != Detatched) {
@@ -804,8 +814,12 @@ bool Process::get_exitcode(int& code)
     case Running:
       packet.set_type(ProxyPacket::CheckPid);
       packet.set_num_value(m_pid);
+
+      s_proxy_mutex->lock();
       packet.send(s_proxy_sock);
       packet.recv(s_proxy_sock);
+      s_proxy_mutex->unlock();
+
       switch (packet.get_type()) {
         case ProxyPacket::CheckedRunning:
           DEBUG_LOG("get_exitcode() for pid " << m_pid
