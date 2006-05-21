@@ -67,14 +67,14 @@ LTLIBRARIES = $(lib_LTLIBRARIES)
 libsconex_la_LIBADD =
 am_libsconex_la_OBJECTS = main.lo sconex.lo utils.lo Arg.lo \
 	ArgObject.lo ArgProc.lo ArgScript.lo ArgStatement.lo Buffer.lo \
-	ConfigFile.lo ConfigStream.lo Console.lo Debug.lo \
+	ConfigFile.lo ConfigStream.lo Console.lo Date.lo Debug.lo \
 	Descriptor.lo File.lo FileDir.lo FilePath.lo FileStat.lo \
 	Kernel.lo LineBuffer.lo ListenerSocket.lo Logger.lo MemFile.lo \
 	MimeType.lo Module.lo ModuleLoader.lo ModuleLoaderDLL.lo \
 	ModuleRef.lo Multiplexer.lo Mutex.lo Process.lo Response.lo \
 	Socket.lo SocketAddress.lo Stream.lo StreamBuffer.lo \
 	StreamDebugger.lo StreamSocket.lo StreamTokenizer.lo \
-	StreamTransfer.lo Thread.lo TimeDate.lo UnitTester.lo Uri.lo \
+	StreamTransfer.lo Thread.lo Time.lo UnitTester.lo Uri.lo \
 	User.lo VersionTag.lo
 libsconex_la_OBJECTS = $(am_libsconex_la_OBJECTS)
 am_utest_OBJECTS = utest.$(OBJEXT) Buffer_ut.$(OBJEXT) \
@@ -233,6 +233,7 @@ Buffer.cpp \
 ConfigFile.cpp \
 ConfigStream.cpp \
 Console.cpp \
+Date.cpp \
 Debug.cpp \
 Descriptor.cpp \
 File.cpp \
@@ -262,7 +263,7 @@ StreamSocket.cpp \
 StreamTokenizer.cpp \
 StreamTransfer.cpp \
 Thread.cpp \
-TimeDate.cpp \
+Time.cpp \
 UnitTester.cpp \
 Uri.cpp \
 User.cpp \
@@ -281,6 +282,7 @@ Buffer.h \
 ConfigFile.h \
 ConfigStream.h \
 Console.h \
+Date.h \
 Debug.h \
 Descriptor.h \
 File.h \
@@ -311,7 +313,7 @@ StreamSocket.h \
 StreamTokenizer.h \
 StreamTransfer.h \
 Thread.h \
-TimeDate.h \
+Time.h \
 UnitTester.h \
 Uri.h \
 User.h \
@@ -420,6 +422,7 @@ distclean-compile:
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/ConfigFile.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/ConfigStream.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/Console.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/Date.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/Debug.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/Descriptor.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/File.Plo@am__quote@
@@ -452,7 +455,7 @@ distclean-compile:
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/StreamTokenizer.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/StreamTransfer.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/Thread.Plo@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/TimeDate.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/Time.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/TimeDate_ut.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/UnitTester.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/Uri.Plo@am__quote@

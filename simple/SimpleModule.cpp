@@ -24,7 +24,7 @@ Free Software Foundation, Inc.,
 
 #include "sconex/ModuleInterface.h"
 #include "sconex/Socket.h"
-#include "sconex/TimeDate.h"
+#include "sconex/Date.h"
 #include "sconex/Response.h"
 #include "sconex/Arg.h"
 

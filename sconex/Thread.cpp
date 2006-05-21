@@ -61,7 +61,10 @@ bool Thread::start()
 {
   MutexLocker locker(m_mutex);
 
-  DEBUG_ASSERT(!m_running,"start() Thread already running");
+  if (m_running) {
+    DEBUG_LOG("start() Thread already running");
+    return false;
+  }
   
 #ifdef WIN32
   m_thread = CreateThread( 
@@ -73,6 +76,7 @@ bool Thread::start()
     &m_thread_id);  // returns the thread identifier
   
   if (m_thread < 0) {
+    DEBUG_LOG("start() Unable to create thread");
     return false;
   }
 #else
@@ -83,6 +87,7 @@ bool Thread::start()
         &m_attr,
         thread_run,
         this)) {
+    DEBUG_LOG("start() Unable to create thread");
     return false;
   }
 #endif

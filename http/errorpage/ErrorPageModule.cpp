@@ -28,7 +28,6 @@ Free Software Foundation, Inc.,
 #include "sconex/ModuleInterface.h"
 #include "sconex/Module.h"
 #include "sconex/Stream.h"
-#include "sconex/TimeDate.h"
 
 //=========================================================================
 class ErrorPageStream : public scx::Stream {

@@ -28,7 +28,6 @@ Free Software Foundation, Inc.,
 #include "sconex/Module.h"
 #include "sconex/Arg.h"
 #include "sconex/Stream.h"
-#include "sconex/TimeDate.h"
 
 SCONESERVER_MODULE(StatModule);
 

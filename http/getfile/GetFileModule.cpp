@@ -31,7 +31,7 @@ Free Software Foundation, Inc.,
 #include "sconex/File.h"
 #include "sconex/Stream.h"
 #include "sconex/StreamTransfer.h"
-#include "sconex/TimeDate.h"
+#include "sconex/Date.h"
 #include "sconex/Kernel.h"
 
 //=========================================================================

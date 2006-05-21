@@ -34,7 +34,6 @@ Free Software Foundation, Inc.,
 #define Arg_h
 
 #include "sconex/sconex.h"
-#include "sconex/TimeDate.h"
 namespace scx {
 
 //=============================================================================

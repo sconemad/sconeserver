@@ -22,7 +22,7 @@ Free Software Foundation, Inc.,
 #include "sconex/sconex.h"
 #include "sconex/Buffer.h"
 #include "sconex/VersionTag.h"
-#include "sconex/TimeDate.h"
+#include "sconex/Date.h"
 #include "http/MessageStream.h"
 #include "http/ConnectionStream.h"
 #include "http/Request.h"

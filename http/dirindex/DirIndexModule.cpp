@@ -30,7 +30,6 @@ Free Software Foundation, Inc.,
 #include "sconex/ModuleInterface.h"
 #include "sconex/Module.h"
 #include "sconex/Stream.h"
-#include "sconex/TimeDate.h"
 
 //=========================================================================
 class DirIndexStream : public scx::Stream {
@@ -72,11 +71,11 @@ protected:
             "'><a href='" + link +
             "'>" + name + "</a></li>\n");
       
-      if (cur->type() == http::FSNode::Directory) {
-        write("<ul>\n");
-        do_dir((const http::FSDirectory*)cur);      
-        write("</ul>\n");
-      }
+      //      if (cur->type() == http::FSNode::Directory) {
+      //        write("<ul>\n");
+      //        do_dir((const http::FSDirectory*)cur);      
+      //        write("</ul>\n");
+      //      }
       ++it;
     }
   
@@ -151,27 +150,29 @@ protected:
 	msg->set_header("Content-Type","text/html");
 
 	if (req.get_method() == "GET") {
-	  write("<!DOCTYPE html PUBLIC \"-//W3C//DTD XHTML 1.0 Strict//EN\" \"http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd\">");
-	  write("<html>\n");
-	  
-	  write("<head>\n");
-	  write("<title>Directory listing</title>\n");
-	  write("<link rel='stylesheet' href='/dir.css' type='text/css' />");
-	  write("</head>\n");
-	  
-	  write("<body>\n");
-	  write("<h1>Listing of " + node->url() + "</h1>\n");
-	  write("<ul>\n");
+	  write("<!DOCTYPE html PUBLIC \"-//W3C//DTD XHTML 1.0 Strict//EN\" "
+                "\"http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd\">"
+                "<html>\n"
+                "<head>\n"
+                "<title>Directory listing</title>\n"
+                "<link rel='stylesheet' href='/dir.css' type='text/css' />"
+                "</head>\n"
+                "<body>\n"
+                "<h1>Listing of " + node->url() + "</h1>\n"
+                "<div class='box'>\n"
+                "<ul>\n");
+
 	  if (fsdir->parent()) {
 	    write("<li class='parent'><a href='" +
 		  fsdir->parent()->url() +
 		  "'>../ (parent)</a></li>\n");
 	  }
 	  do_dir(fsdir);
-	  write("</ul>\n");
-	  write("</body>\n");
-	  
-	  write("</html>\n");
+                
+	  write("</ul>\n"
+                "</div>\n"
+                "</body>\n"
+                "</html>\n");
 	}
       }
 

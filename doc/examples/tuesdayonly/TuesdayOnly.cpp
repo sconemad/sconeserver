@@ -2,11 +2,11 @@
 
 A very simple module which only allows connections on Tuesdays!
 
-Copyright (c) 2000-2005 Andrew Wedgbury <wedge@sconemad.com> */
+Copyright (c) 2000-2006 Andrew Wedgbury <wedge@sconemad.com> */
 
 #include "sconex/Module.h"
 #include "sconex/ModuleInterface.h"
-#include "sconex/TimeDate.h"
+#include "sconex/Date.h"
 
 //=============================================================================
 // Our module class, which must be derived from scx::Module

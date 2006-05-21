@@ -18,6 +18,7 @@ Buffer.cpp \
 ConfigFile.cpp \
 ConfigStream.cpp \
 Console.cpp \
+Date.cpp \
 Debug.cpp \
 Descriptor.cpp \
 File.cpp \
@@ -47,7 +48,7 @@ StreamSocket.cpp \
 StreamTokenizer.cpp \
 StreamTransfer.cpp \
 Thread.cpp \
-TimeDate.cpp \
+Time.cpp \
 UnitTester.cpp \
 Uri.cpp \
 User.cpp \
@@ -67,6 +68,7 @@ Buffer.h \
 ConfigFile.h \
 ConfigStream.h \
 Console.h \
+Date.h \
 Debug.h \
 Descriptor.h \
 File.h \
@@ -97,7 +99,7 @@ StreamSocket.h \
 StreamTokenizer.h \
 StreamTransfer.h \
 Thread.h \
-TimeDate.h \
+Time.h \
 UnitTester.h \
 Uri.h \
 User.h \

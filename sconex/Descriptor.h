@@ -60,7 +60,7 @@ Free Software Foundation, Inc.,
 #define scxDescriptor_h
 
 #include "sconex/sconex.h"
-#include "sconex/TimeDate.h"
+#include "sconex/Date.h"
 namespace scx {
 
 class Stream;

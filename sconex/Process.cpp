@@ -439,8 +439,8 @@ Proxy::Proxy()
     m_nenv(0),
     m_cur_env_name(0),
     m_dir(0),
-    m_uid(-1),
-    m_gid(-1)
+    m_uid(0),
+    m_gid(0)
 {
 
 }
@@ -616,8 +616,8 @@ bool Proxy::launch()
     ::close(d[1]);
 
     // Set effective user and group ids
-    if (m_uid >= 0) ::seteuid(m_uid);
-    if (m_gid >= 0) ::setegid(m_gid);
+    if (m_uid > 0) ::seteuid(m_uid);
+    if (m_gid > 0) ::setegid(m_gid);
     
     // Duplicate standard descriptors on to our end of the socketpair
     ::dup2(d[0],0);
@@ -926,18 +926,18 @@ bool Process::get_exitcode(int& code)
 
       switch (packet.get_type()) {
         case ProxyPacket::CheckedRunning:
-          //          DEBUG_LOG("get_exitcode() for pid " << m_pid
-          //                    << " still running");
+          DEBUG_LOG("get_exitcode() for pid " << m_pid
+                    << " still running");
           break;
         case ProxyPacket::CheckedTerminated: 
           m_exitcode = packet.get_num_value();
           m_runstate = Terminated;
-          //          DEBUG_LOG("get_exitcode() for pid " << m_pid
-          //                    << ": terminated with code " << m_exitcode);
+          DEBUG_LOG("get_exitcode() for pid " << m_pid
+                    << ": terminated with code " << m_exitcode);
           break;
         default:
-          //          DEBUG_LOG("get_exitcode() for pid " << m_pid
-          //                    << ": ERROR");
+          DEBUG_LOG("get_exitcode() for pid " << m_pid
+                    << ": ERROR");
           break;
       }
       // Intentional fall through...

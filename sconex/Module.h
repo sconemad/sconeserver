@@ -28,7 +28,7 @@ Free Software Foundation, Inc.,
 #include "sconex/Arg.h"
 #include "sconex/ArgObject.h"
 #include "sconex/FilePath.h"
-#include "sconex/TimeDate.h"
+#include "sconex/Date.h"
 
 namespace scx {
 

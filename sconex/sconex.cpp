@@ -21,7 +21,7 @@ Free Software Foundation, Inc.,
 
 #include "sconex/sconex.h"
 #include "sconex/VersionTag.h"
-#include "sconex/TimeDate.h"
+#include "sconex/Date.h"
 namespace scx {
 
 //=========================================================================

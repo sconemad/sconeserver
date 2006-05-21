@@ -25,7 +25,6 @@ Free Software Foundation, Inc.,
 #include "sconex/sconex.h"
 #include "sconex/Descriptor.h"
 #include "sconex/SocketAddress.h"
-#include "sconex/TimeDate.h"
 namespace scx {
 
 //=============================================================================

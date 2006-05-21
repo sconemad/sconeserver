@@ -23,7 +23,7 @@ Free Software Foundation, Inc.,
 #define scxFileStat_h
 
 #include "sconex.h"
-#include "TimeDate.h"
+#include "Date.h"
 
 #include <sys/stat.h>
 #include <sys/types.h>

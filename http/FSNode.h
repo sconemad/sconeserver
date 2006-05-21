@@ -25,7 +25,7 @@ Free Software Foundation, Inc.,
 #include "http/http.h"
 #include "sconex/sconex.h"
 #include "sconex/ArgObject.h"
-#include "sconex/TimeDate.h"
+#include "sconex/Date.h"
 #include "sconex/FilePath.h"
 namespace http {
 
