@@ -78,12 +78,14 @@ bool SimpleModule::connect(
   if ("echo" == service) {
     EchoStream* s = new EchoStream();
     s->add_module_ref(ref());
+    endpoint->set_timeout(scx::Time(60));
     endpoint->add_stream(s);
     return true;
 
   } else if ("discard" == service) {
     DiscardStream* s = new DiscardStream();
     s->add_module_ref(ref());
+    endpoint->set_timeout(scx::Time(60));
     endpoint->add_stream(s);
     return true;
 
@@ -96,6 +98,7 @@ bool SimpleModule::connect(
   } else if ("chargen" == service) {
     ChargenStream* s = new ChargenStream();
     s->add_module_ref(ref());
+    endpoint->set_timeout(scx::Time(60));
     endpoint->add_stream(s);
     return true;
 

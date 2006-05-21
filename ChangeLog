@@ -1,10 +1,8 @@
 
 2006-05-21 Andrew Wedgbury <wedge@sconemad.com>
 
+	* sconex/Descriptor: Make timeout mechanism more usable.
 	* sconex/TimeDate: Split into separate files for Time and Date.
-
-2006-05-21 Andrew Wedgbury <wedge@sconemad.com>
-
 	* sconex/Process: Allow launch directory to be set, improve debug logs.
 	* sconex/FilePath: Add mkdir.
 	* sconex/Module: Recurse get_module calls down the module tree.

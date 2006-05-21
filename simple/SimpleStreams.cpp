@@ -40,7 +40,7 @@ scx::Condition EchoStream::event(scx::Stream::Event e)
 {
   if ((e == scx::Stream::Opening) ||
       (e == scx::Stream::Readable)) {
-    endpoint().reset_timeout(scx::Time(60));
+    endpoint().reset_timeout();
   }
   
   if (e == scx::Stream::Readable) {
@@ -76,7 +76,7 @@ scx::Condition DiscardStream::event(scx::Stream::Event e)
 {
   if ((e == scx::Stream::Opening) ||
       (e == scx::Stream::Readable)) {
-    endpoint().reset_timeout(scx::Time(60));
+    endpoint().reset_timeout();
   }
 
   if (e == scx::Stream::Readable) {
@@ -114,7 +114,7 @@ scx::Condition ChargenStream::event(scx::Stream::Event e)
 {
   if ((e == scx::Stream::Opening) ||
       (e == scx::Stream::Readable)) {
-    endpoint().reset_timeout(scx::Time(60));
+    endpoint().reset_timeout();
   }
 
   if (e == scx::Stream::Readable) {

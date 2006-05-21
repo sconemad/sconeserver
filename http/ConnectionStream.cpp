@@ -64,7 +64,7 @@ scx::Condition ConnectionStream::event(scx::Stream::Event e)
   switch (e) {
     
     case scx::Stream::Opening: { // OPENING
-      endpoint().reset_timeout(scx::Time(15));
+      endpoint().set_timeout(scx::Time(15));
       m_num_connection = (++connection_count);
     } break;
 
@@ -132,7 +132,7 @@ scx::Condition ConnectionStream::process_input()
       m_request->parse_header(line);
     }
     
-    endpoint().reset_timeout(scx::Time(15));
+    endpoint().reset_timeout();
   }
   
   if (c == scx::End && m_seq == http_Request) {

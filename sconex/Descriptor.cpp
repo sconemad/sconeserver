@@ -38,7 +38,7 @@ Descriptor::Descriptor()
     m_uid(++s_des_count)
 {
   DEBUG_COUNT_CONSTRUCTOR(Descriptor);
-  reset_timeout(scx::Time(0));
+  set_timeout(scx::Time(0));
 }
 
 
@@ -219,15 +219,23 @@ bool Descriptor::remove_stream(Stream* stream)
   return false;
 }
 
+  void set_timeout(const Time& t);
+  void reset_timeout();
+
 //=============================================================================
-void Descriptor::reset_timeout(
-  const scx::Time& t
-)
+void Descriptor::set_timeout(const scx::Time& t)
 {
-  if (t.seconds() > 0) {
-    m_timeout = scx::Date::now() + t;
+  m_timeout_interval = t;
+  reset_timeout();
+}
+
+//=============================================================================
+void Descriptor::reset_timeout()
+{
+  if (m_timeout_interval.seconds() > 0) {
+    m_timeout = scx::Date::now() + m_timeout_interval;
   } else {
-    m_timeout=scx::Date();
+    m_timeout = scx::Date();
   }
 }
 

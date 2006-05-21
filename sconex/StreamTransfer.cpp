@@ -160,7 +160,7 @@ StreamTransfer::Status StreamTransfer::transfer()
   }
   m_buffer.pop(bytes_written);
 
-  endpoint().reset_timeout(scx::Time(15));
+  endpoint().reset_timeout();
   TRANSFER_DEBUG_LOG("write " << bytes_written << " bytes");
   return m_status;
 }

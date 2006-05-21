@@ -107,7 +107,8 @@ public:
   bool remove_stream(Stream* stream);
   // Remove stream from the chain
     
-  void reset_timeout(const Time& t);
+  void set_timeout(const Time& t);
+  void reset_timeout();
   // Reset watchdog timeout
   // Specifying 0 will switch off the watchdog
 
@@ -163,6 +164,7 @@ private:
   // Handle the select result and dispatch events
   // Return value indicates whether the socket is to remain open
 
+  Time m_timeout_interval;
   Date m_timeout;
   bool check_timeout() const;
   // Check if the timeout has expired
