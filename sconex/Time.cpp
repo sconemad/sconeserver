@@ -434,81 +434,85 @@ void TimeZone::init_tables()
 {
   if (s_zone_table == 0) {
     s_zone_table = new std::map<std::string,int>;
-#   define ADD_TZ(name,hrs) \
-      (*s_zone_table)[name] = (int)((double)SECONDS_PER_HOUR * hrs);
     
-    ADD_TZ("AKST",-9);
-    ADD_TZ("AKDT",-8);
-    ADD_TZ("PST", -8);
-    ADD_TZ("PDT", -7);
-    ADD_TZ("MST", -7);
-    ADD_TZ("MDT", -6);
-    ADD_TZ("CST", -6);
-    ADD_TZ("CDT", -5);
-    ADD_TZ("EST", -5);
-    ADD_TZ("EDT", -4);
-    ADD_TZ("AST", -4);
-    ADD_TZ("NST", -3.5);
-    ADD_TZ("ADT", -3);
-    ADD_TZ("NDT", -2.5);
+    add_tz("AKST",-9);
+    add_tz("AKDT",-8);
+    add_tz("PST", -8);
+    add_tz("PDT", -7);
+    add_tz("MST", -7);
+    add_tz("MDT", -6);
+    add_tz("CST", -6);
+    add_tz("CDT", -5);
+    add_tz("EST", -5);
+    add_tz("EDT", -4);
+    add_tz("AST", -4);
+    add_tz("NST", -3.5);
+    add_tz("ADT", -3);
+    add_tz("NDT", -2.5);
     
-    ADD_TZ("UT",  0);
-    ADD_TZ("UTC", 0);
-    ADD_TZ("GMT", 0);
-    ADD_TZ("WET", 0);
-    ADD_TZ("BST", 1);
-    ADD_TZ("IST", 1);
-    ADD_TZ("WEDT",1);
-    ADD_TZ("CET", 1);
-    ADD_TZ("CEDT",2);
-    ADD_TZ("EET", 2);
-    ADD_TZ("EEDT",3);
+    add_tz("UT",  0);
+    add_tz("UTC", 0);
+    add_tz("GMT", 0);
+    add_tz("WET", 0);
+    add_tz("BST", 1);
+    add_tz("IST", 1);
+    add_tz("WEDT",1);
+    add_tz("CET", 1);
+    add_tz("CEDT",2);
+    add_tz("EET", 2);
+    add_tz("EEDT",3);
 
-    ADD_TZ("CXT", 7);
-    ADD_TZ("AWST",8);
-    ADD_TZ("JST", 9);
-    ADD_TZ("ACST",9.5);
-    ADD_TZ("AEST",10);
-    ADD_TZ("ACDT",10.5);
+    add_tz("CXT", 7);
+    add_tz("AWST",8);
+    add_tz("JST", 9);
+    add_tz("ACST",9.5);
+    add_tz("AEST",10);
+    add_tz("ACDT",10.5);
 
     // Military
-    ADD_TZ("Y",   -12);
-    ADD_TZ("X",   -11);
-    ADD_TZ("W",   -10);
-    ADD_TZ("V*",  -9.5);
-    ADD_TZ("V",   -9);
-    ADD_TZ("U",   -8);
-    ADD_TZ("T",   -7);
-    ADD_TZ("S",   -6);
-    ADD_TZ("R",   -5);
-    ADD_TZ("Q",   -4);
-    ADD_TZ("P*",  -3.5);
-    ADD_TZ("P",   -3);
-    ADD_TZ("O",   -2);
-    ADD_TZ("N",   -1);
-    ADD_TZ("Z",   0);
-    ADD_TZ("A",   1);
-    ADD_TZ("B",   2);
-    ADD_TZ("C",   3);
-    ADD_TZ("C*",  3.5);
-    ADD_TZ("D",   4);
-    ADD_TZ("D*",  4.5);
-    ADD_TZ("E",   5);
-    ADD_TZ("E*",  5.5);
-    ADD_TZ("F",   6);
-    ADD_TZ("F*",  6.5);
-    ADD_TZ("G",   7);
-    ADD_TZ("H",   8);
-    ADD_TZ("I",   9);
-    ADD_TZ("I*",  9.5);
-    ADD_TZ("K",   10);
-    ADD_TZ("K*",  10.5);
-    ADD_TZ("L",   11);
-    ADD_TZ("L*",  11.5);
-    ADD_TZ("M",   12);
-    ADD_TZ("M*" , 13);
-    ADD_TZ("M**", 14);
+    add_tz("Y",   -12);
+    add_tz("X",   -11);
+    add_tz("W",   -10);
+    add_tz("V*",  -9.5);
+    add_tz("V",   -9);
+    add_tz("U",   -8);
+    add_tz("T",   -7);
+    add_tz("S",   -6);
+    add_tz("R",   -5);
+    add_tz("Q",   -4);
+    add_tz("P*",  -3.5);
+    add_tz("P",   -3);
+    add_tz("O",   -2);
+    add_tz("N",   -1);
+    add_tz("Z",   0);
+    add_tz("A",   1);
+    add_tz("B",   2);
+    add_tz("C",   3);
+    add_tz("C*",  3.5);
+    add_tz("D",   4);
+    add_tz("D*",  4.5);
+    add_tz("E",   5);
+    add_tz("E*",  5.5);
+    add_tz("F",   6);
+    add_tz("F*",  6.5);
+    add_tz("G",   7);
+    add_tz("H",   8);
+    add_tz("I",   9);
+    add_tz("I*",  9.5);
+    add_tz("K",   10);
+    add_tz("K*",  10.5);
+    add_tz("L",   11);
+    add_tz("L*",  11.5);
+    add_tz("M",   12);
+    add_tz("M*" , 13);
+    add_tz("M**", 14);
   }
+}
+
+//=============================================================================
+void TimeZone::add_tz(const std::string& name,double hrs)
+{
+  (*s_zone_table)[name] = (int)((double)SECONDS_PER_HOUR * hrs);
 }
 
 };

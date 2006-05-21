@@ -103,6 +103,7 @@ protected:
   friend class Date;
   
   void init_tables();
+  void add_tz(const std::string& name,double hrs);
   static std::map<std::string,int>* s_zone_table;
 
 };
