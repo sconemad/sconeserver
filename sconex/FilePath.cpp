@@ -135,4 +135,24 @@ bool FilePath::is_root(const std::string& pathstr)
   return false;
 }
 
+//=============================================================================
+bool FilePath::mkdir(const FilePath& path, bool recursive, mode_t mode)
+{
+  const std::string& str = path.path();
+
+  if (recursive) {
+    std::string::size_type i = 0;
+    while (true) {
+      i = str.find(path_sep[0],i);
+      if (i == std::string::npos) {
+        break;
+      }
+      std::string sub = std::string(str,0,i);
+      ::mkdir(sub.c_str(),mode);
+      ++i;
+    }
+  }
+  ::mkdir(str.c_str(),mode);
+}
+
 };

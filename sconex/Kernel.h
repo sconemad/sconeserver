@@ -53,6 +53,11 @@ public:
   virtual Arg* arg_lookup(const std::string& name);
   virtual Arg* arg_function(const std::string& name,Arg* args);
   
+  const std::string& get_system_nodename() const;
+  const std::string& get_system_version() const;
+  const std::string& get_system_hardware() const;
+  // Some system info
+  
 protected:
 
   Kernel();
@@ -66,6 +71,10 @@ private:
 
   Multiplexer m_spinner;
 
+  std::string m_system_nodename;
+  std::string m_system_version;
+  std::string m_system_hardware;
+  
   static Kernel* s_kernel;
   
 };

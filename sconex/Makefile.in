@@ -75,7 +75,7 @@ am_libsconex_la_OBJECTS = main.lo sconex.lo utils.lo Arg.lo \
 	Socket.lo SocketAddress.lo Stream.lo StreamBuffer.lo \
 	StreamDebugger.lo StreamSocket.lo StreamTokenizer.lo \
 	StreamTransfer.lo Thread.lo TimeDate.lo UnitTester.lo Uri.lo \
-	VersionTag.lo
+	User.lo VersionTag.lo
 libsconex_la_OBJECTS = $(am_libsconex_la_OBJECTS)
 am_utest_OBJECTS = utest.$(OBJEXT) Buffer_ut.$(OBJEXT) \
 	LineBuffer_ut.$(OBJEXT) MemFile_ut.$(OBJEXT) \
@@ -265,6 +265,7 @@ Thread.cpp \
 TimeDate.cpp \
 UnitTester.cpp \
 Uri.cpp \
+User.cpp \
 VersionTag.cpp
 
 sconexincludedir = $(includedir)/sconex
@@ -313,6 +314,7 @@ Thread.h \
 TimeDate.h \
 UnitTester.h \
 Uri.h \
+User.h \
 VersionTag.h
 
 libsconex_la_LDFLAGS = -version-info 0:0:0
@@ -455,6 +457,7 @@ distclean-compile:
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/UnitTester.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/Uri.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/Uri_ut.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/User.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/VersionTag.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/VersionTag_ut.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/main.Plo@am__quote@

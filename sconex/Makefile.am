@@ -50,6 +50,7 @@ Thread.cpp \
 TimeDate.cpp \
 UnitTester.cpp \
 Uri.cpp \
+User.cpp \
 VersionTag.cpp
 
 sconexincludedir = $(includedir)/sconex
@@ -99,6 +100,7 @@ Thread.h \
 TimeDate.h \
 UnitTester.h \
 Uri.h \
+User.h \
 VersionTag.h
 
 libsconex_la_LDFLAGS = -version-info 0:0:0

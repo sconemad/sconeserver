@@ -174,8 +174,13 @@ public:
 
   std::string string() const;
   std::string ansi_string() const;
+  
   std::string code() const;
+  // "YYYY-MM-DD hh:mm:ss +zhzm"
 
+  std::string dcode() const;
+  // "YYYYMMDDhhmmss"
+    
   const bool is_local() const;
   void set_local(bool yesno);
 

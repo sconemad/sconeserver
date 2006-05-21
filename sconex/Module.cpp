@@ -111,6 +111,10 @@ ModuleRef Module::get_module(const std::string& name)
   if (loader) {
     return loader->ref();
   }
+
+  if (m_parent) {
+    return m_parent->get_module(name);
+  }
   
   return ModuleRef();
 }

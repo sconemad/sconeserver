@@ -25,8 +25,9 @@ Free Software Foundation, Inc.,
 #include "Process.h"
 #include "Logger.h"
 #include "Debug.h"
+#include "User.h"
 
-#include <pwd.h>
+#include <sys/utsname.h>
 
 namespace scx {
 
@@ -160,20 +161,19 @@ Arg* Kernel::arg_function(
   }
 
   if ("set_user" == name) {
-    struct passwd* pwent = 0;
+    User user;
     const scx::ArgString* a_name =
       dynamic_cast<const scx::ArgString*>(l->get(0));
     const scx::ArgInt* a_uid =
       dynamic_cast<const scx::ArgInt*>(l->get(0));
+
     if (a_name) {
-      pwent = getpwnam(a_name->get_string().c_str());
-      if (!pwent) {
+      if (!user.set_user_name(a_name->get_string())) {
         return new ArgError("set_user() Unknown username '" +
                             a_name->get_string() + "'");
       }
     } else if (a_uid) {
-      pwent = getpwuid(a_uid->get_int());
-      if (!pwent) {
+      if (!user.set_user_id(a_uid->get_int())) {
         return new ArgError("set_user() Unknown user id '" +
                             a_uid->get_string() + "'");
       }
@@ -183,14 +183,11 @@ Arg* Kernel::arg_function(
 
     std::ostringstream oss;
     oss << "Setting effective user and group ids to " << 
-      pwent->pw_uid << ":" << pwent->pw_gid;
+      user.get_user_id() << ":" << user.get_group_id();
     log(oss.str());
-    
-    if (0 != ::seteuid(pwent->pw_uid)) {
-      log("Cannot set user id",Logger::Error);
-    }
-    if (0 != ::setegid(pwent->pw_gid)) {
-      log("Cannot set group id",Logger::Error);
+
+    if (!user.set_effective()) {
+      return new ArgError("set_user() Unable to set user/group ids");
     }
     return 0;
   }
@@ -199,10 +196,47 @@ Arg* Kernel::arg_function(
 }
 
 //=============================================================================
+const std::string& Kernel::get_system_nodename() const
+{
+  return m_system_nodename;
+}
+
+//=============================================================================
+const std::string& Kernel::get_system_version() const
+{
+  return m_system_version;
+}
+
+//=============================================================================
+const std::string& Kernel::get_system_hardware() const
+{
+  return m_system_hardware;
+}
+
+
+//=============================================================================
 Kernel::Kernel() 
   : Module("sconeserver",scx::version()),
     m_state(Init)
 {
+
+#ifdef WIN32
+  const unsigned int MAX_HOSTNAME = 256;
+  char name[MAX_HOSTNAME];
+  if (0 == ::GetComputerNameEx(ComputerNameDnsDomain,name,MAX_HOSTNAME)) {
+    m_system_nodename = name;
+  }
+  m_system_version = "Win32";
+  m_system_hardware = "x86";
+  
+#else
+  struct utsname sysinf;
+  if (::uname(&sysinf) != -1) {
+    m_system_nodename = sysinf.nodename;
+    m_system_version = std::string(sysinf.sysname) + " " + sysinf.release;
+    m_system_hardware = sysinf.machine;
+  }
+#endif  
   Process::init();
 }
 

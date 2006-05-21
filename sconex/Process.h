@@ -24,6 +24,8 @@ Free Software Foundation, Inc.,
 
 #include "sconex/sconex.h"
 #include "sconex/StreamSocket.h"
+#include "sconex/FilePath.h"
+#include "sconex/User.h"
 namespace scx {
 
 class Mutex;
@@ -37,13 +39,19 @@ public:
   Process(const std::string& exe);	
 
   ~Process();
-  
+
   void add_arg(const std::string& arg);
   // Add an argument to the list
   
   void set_env(const std::string& name, const std::string& value);
   // Set environment variables
   
+  void set_dir(const FilePath& dir);
+  // Set working directory for process
+
+  void set_user(const User& user);
+  // Set user to run process as
+
   bool launch();
   // Launch the process
   
@@ -79,6 +87,8 @@ private:
   std::string m_exe;
   std::list<std::string> m_args;
   std::map<std::string,std::string> m_env;
+  FilePath m_dir;
+  User m_user;
   RunState m_runstate;
   int m_exitcode;
   

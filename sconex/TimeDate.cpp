@@ -901,11 +901,11 @@ std::string Date::string() const
   oss << std::setw(3) << day << ", "
       << std::setfill('0') << std::setw(2) << tms.tm_mday << " "
       << std::setw(3) << month << " "
-      << std::setw(4) << (1900+tms.tm_year) << " "
-      << std::setfill('0') << std::setw(2) << tms.tm_hour << ":"
+      << std::setw(4) << (1900+tms.tm_year) << " ";
+  oss << std::setfill('0') << std::setw(2) << tms.tm_hour << ":"
       << std::setfill('0') << std::setw(2) << tms.tm_min << ":"
-      << std::setfill('0') << std::setw(2) << tms.tm_sec << " "
-      << timezone().string();
+      << std::setfill('0') << std::setw(2) << tms.tm_sec << " ";
+  oss << timezone().string();
 
   return oss.str();
 }
@@ -931,11 +931,30 @@ std::string Date::code() const
   std::ostringstream oss;
   oss << std::setw(4) << (1900+tms.tm_year) << "-"
       << std::setfill('0') << std::setw(2) << (1+tms.tm_mon) << "-"
-      << std::setfill('0') << std::setw(2) << tms.tm_mday << " "
-      << std::setfill('0') << std::setw(2) << tms.tm_hour << ":"
+      << std::setfill('0') << std::setw(2) << tms.tm_mday << " ";
+  oss << std::setfill('0') << std::setw(2) << tms.tm_hour << ":"
       << std::setfill('0') << std::setw(2) << tms.tm_min << ":"
       << std::setfill('0') << std::setw(2) << tms.tm_sec << " "
       << timezone().string();
+
+  return oss.str();
+}
+
+//=============================================================================
+std::string Date::dcode() const
+{
+  struct tm tms;
+  if (!get_tms(tms)) {
+    return std::string("ERROR");
+  }
+
+  std::ostringstream oss;
+  oss << std::setw(4) << (1900+tms.tm_year)
+      << std::setfill('0') << std::setw(2) << (1+tms.tm_mon)
+      << std::setfill('0') << std::setw(2) << tms.tm_mday;
+  oss << std::setfill('0') << std::setw(2) << tms.tm_hour
+      << std::setfill('0') << std::setw(2) << tms.tm_min
+      << std::setfill('0') << std::setw(2) << tms.tm_sec;
 
   return oss.str();
 }

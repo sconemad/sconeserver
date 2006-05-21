@@ -1,6 +1,6 @@
 /* SconeServer (http://www.sconemad.com)
 
-File path
+User
 
 Copyright (c) 2000-2006 Andrew Wedgbury <wedge@sconemad.com>
 
@@ -19,45 +19,54 @@ along with this program (see the file COPYING); if not, write to the
 Free Software Foundation, Inc.,
 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA */
 
-#ifndef scxFilePath_h
-#define scxFilePath_h
+#ifndef scxUser_h
+#define scxUser_h
 
 #include "sconex/sconex.h"
+
+#include <pwd.h>
+
 namespace scx {
 
 //=============================================================================
-class SCONEX_API FilePath {
+class SCONEX_API User {
 
 public:
 
-  FilePath(const std::string& path = "");
-  FilePath(const char* path);
-  FilePath(const FilePath& c);
-    
-  ~FilePath();
+  User();
+  User(const std::string& user_name);
+  User(uid_t user_id); 
 
-  const std::string& path() const;
+  ~User();
 
-  FilePath& operator=(const FilePath& a);
+  bool set_effective();
   
-  FilePath operator+(const FilePath& a) const;
-  bool operator==(const FilePath& a) const;
-
-  void operator+=(const FilePath& a);
+  bool is_valid() const;
   
-  static void normalize(std::string& path);
-  static bool is_root(const std::string& path);
+  bool set_user_name(const std::string& user_name);
+  bool set_user_id(uid_t user_id);
 
-  static bool mkdir(const FilePath& path, bool recursive, mode_t mode);
+  const std::string& get_user_name() const;
+  
+  uid_t get_user_id() const;
+  gid_t get_group_id() const;
   
 protected:
 
-  std::string m_path;
-
 private:
 
-};
+  bool set_from_passwd(const struct passwd* pwent);
+  
+  std::string m_user_name;
 
+#ifdef WIN32
+
+#else
+  uid_t m_user_id;
+  gid_t m_group_id;
+#endif
+  
+};
 
 };
 #endif

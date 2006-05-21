@@ -33,8 +33,6 @@ Free Software Foundation, Inc.,
 
 namespace scx {
 
-#define PROCESS_DEBUG_LOG(a) 
-
 #ifndef WIN32
 
 #ifndef CMSG_SPACE
@@ -46,7 +44,12 @@ namespace scx {
 #  endif
 #endif
 
+// Uncomment to enable debug logging
 //#define PROCESS_DEBUG_LOG(a) std::cerr <<"["<< getpid() <<"]" << a << "\n"
+  
+#ifndef PROCESS_DEBUG_LOG
+#  define PROCESS_DEBUG_LOG(a)
+#endif
   
 #define PROXY_MAX_STR 8182
   
@@ -56,7 +59,10 @@ class ProxyPacket {
 public:
   enum Type {
     Invalid,
-    LaunchExe, LaunchArg, LaunchEnvName, LaunchEnvValue, LaunchReady,
+    LaunchExe, LaunchArg,
+    LaunchEnvName, LaunchEnvValue,
+    LaunchDir, LaunchUser, LaunchGroup,
+    LaunchReady,
     LaunchedOk, LaunchedError,
     CheckPid, DetatchPid,
     CheckedRunning, CheckedTerminated
@@ -79,6 +85,8 @@ public:
   
   bool send(SOCKET s);
   bool recv(SOCKET s);
+
+  std::string get_type_str(Type t);
   
 private:
   struct {
@@ -172,7 +180,11 @@ bool ProxyPacket::send(SOCKET s)
 #endif
 
   m_data.size = (3 * sizeof(int)) + strlen(m_data.str) + 1;
-  PROCESS_DEBUG_LOG("SENDING DATA '" << m_data.str <<  "' SIZE " << m_data.size);
+  PROCESS_DEBUG_LOG("SEND {"
+                    << m_data.size << ","
+                    << get_type_str((Type)m_data.type) << ","
+                    << m_data.num << ",'"
+                    << m_data.str <<  "'}");
   while (t < m_data.size) {
 
     if (m_fd >= 0 && t == 0) {
@@ -325,10 +337,37 @@ bool ProxyPacket::recv(SOCKET s)
       break;
     }
   }
-  PROCESS_DEBUG_LOG("RECIEVED DATA '" << m_data.str <<  "' SIZE " << m_data.size);
-
+  PROCESS_DEBUG_LOG("RECV {"
+                    << m_data.size << ","
+                    << get_type_str((Type)m_data.type) << ","
+                    << m_data.num << ",'"
+                    << m_data.str <<  "'}");
   return (err == 0);
 }
+
+//============================================================================
+std::string ProxyPacket::get_type_str(Type t)
+{
+  switch (t) {
+    case Invalid:           return "INVALID";
+    case LaunchExe:         return "LAUNCH:EXE"; 
+    case LaunchArg:         return "LAUNCH:ARG"; 
+    case LaunchEnvName:     return "LAUNCH:ENV-NAME"; 
+    case LaunchEnvValue:    return "LAUNCH:ENV-VALUE"; 
+    case LaunchDir:         return "LAUNCH:DIR"; 
+    case LaunchUser:        return "LAUNCH:USER"; 
+    case LaunchGroup:       return "LAUNCH:GROUP"; 
+    case LaunchReady:       return "LAUNCH:READY"; 
+    case LaunchedOk:        return "LAUNCHED:OK"; 
+    case LaunchedError:     return "LAUNCHED:ERROR"; 
+    case CheckPid:          return "CHECK"; 
+    case DetatchPid:        return "DETATCH"; 
+    case CheckedRunning:    return "RUNNING"; 
+    case CheckedTerminated: return "TERMINATED"; 
+  }
+  return "UNKNOWN";
+}
+
 
 //%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 class Proxy {
@@ -361,10 +400,17 @@ private:
   char* m_exec_envp[256];
   int m_nenv;
   // Environment vector and size
-  
+
   char* m_cur_env_name;
   // Current environment variable name
 
+  char* m_dir;
+  // Working directory
+
+  uid_t m_uid;
+  gid_t m_gid;
+  // User/group to run process as
+  
   typedef struct ProcStat {
     Process::RunState type;
     int code;
@@ -382,7 +428,7 @@ void handleSIGCHLD(int i)
   int pid;
   while ( (pid = waitpid(-1, &stat, WNOHANG)) > 0) {
     PROCESS_DEBUG_LOG("SIGCHLD PID " << pid << " TERMINATED");
-    if (s_proxy) s_proxy->process_terminated(pid,stat);
+    if (s_proxy) s_proxy->process_terminated(pid,stat/256);
   }
 }
 
@@ -391,7 +437,10 @@ Proxy::Proxy()
   : m_prog(0),
     m_narg(0),
     m_nenv(0),
-    m_cur_env_name(0)
+    m_cur_env_name(0),
+    m_dir(0),
+    m_uid(-1),
+    m_gid(-1)
 {
 
 }
@@ -408,7 +457,6 @@ int Proxy::run()
       PROCESS_DEBUG_LOG("PROXY TERMINATING");
       return 1;
     }
-    PROCESS_DEBUG_LOG("RECIEVED packet type " << m_packet.get_type());
     
     switch (m_packet.get_type()) {
 
@@ -428,6 +476,18 @@ int Proxy::run()
       
       case ProxyPacket::LaunchEnvValue: {
         add_env(m_cur_env_name,m_packet.get_str_value());
+      } break;
+
+      case ProxyPacket::LaunchDir: {
+        m_dir = m_packet.copy_str_value();
+      } break;
+
+      case ProxyPacket::LaunchUser: {
+        m_uid = m_packet.get_num_value();
+      } break;
+
+      case ProxyPacket::LaunchGroup: {
+        m_gid = m_packet.get_num_value();
       } break;
 
       case ProxyPacket::LaunchReady: {
@@ -554,10 +614,18 @@ bool Proxy::launch()
     
     // Close sconeserver end of the socketpair  
     ::close(d[1]);
+
+    // Set effective user and group ids
+    if (m_uid >= 0) ::seteuid(m_uid);
+    if (m_gid >= 0) ::setegid(m_gid);
     
     // Duplicate standard descriptors on to our end of the socketpair
     ::dup2(d[0],0);
     ::dup2(d[0],1);
+    ::dup2(d[0],2);
+
+    // Change to the specified working directory
+    ::chdir(m_dir);
     
     // Launch the program
     ::execve(m_prog,m_exec_args,m_exec_envp);
@@ -587,6 +655,9 @@ void Proxy::reset()
   
   delete[] m_prog;
   m_prog = 0;
+
+  delete[] m_dir;
+  m_dir = 0;
 }
 
 pid_t Process::s_proxy_pid = -1;
@@ -688,9 +759,25 @@ void Process::add_arg(const std::string& arg)
 //============================================================================
 void Process::set_env(const std::string& name, const std::string& value)
 {
-  DEBUG_ASSERT(m_runstate==Unstarted,"add_arg() Process already launched");
+  DEBUG_ASSERT(m_runstate==Unstarted,"set_env() Process already launched");
   
   m_env[name] = value;
+}
+
+//============================================================================
+void Process::set_dir(const FilePath& dir)
+{
+  DEBUG_ASSERT(m_runstate==Unstarted,"set_dir() Process already launched");
+
+  m_dir = dir;
+}
+
+//============================================================================
+void Process::set_user(const User& user)
+{
+  DEBUG_ASSERT(m_runstate==Unstarted,"set_user() Process already launched");
+
+  m_user = user;
 }
 
 //============================================================================
@@ -764,6 +851,18 @@ bool Process::launch()
     packet.send(s_proxy_sock);    
   }
 
+  packet.set_type(ProxyPacket::LaunchDir);
+  packet.set_str_value(m_dir.path().c_str());
+  packet.send(s_proxy_sock);
+
+  packet.set_type(ProxyPacket::LaunchUser);
+  packet.set_num_value(m_user.get_user_id());
+  packet.send(s_proxy_sock);
+
+  packet.set_type(ProxyPacket::LaunchGroup);
+  packet.set_num_value(m_user.get_group_id());
+  packet.send(s_proxy_sock);
+  
   // Tell the proxy to launch
   packet.set_type(ProxyPacket::LaunchReady);
   packet.set_str_value("");
@@ -774,9 +873,14 @@ bool Process::launch()
   if (packet.get_type() == ProxyPacket::LaunchedOk) {
     m_pid = packet.get_num_value();
     m_socket = packet.get_fd();
+    event_create();
     m_state = Descriptor::Connected;
-    DEBUG_LOG("Got pid " << m_pid << " and fd " 
-	      << m_socket << " from process proxy");
+
+    m_addr_local = new AnonSocketAddress("process");
+    m_addr_remote = new AnonSocketAddress(m_exe);
+     
+    PROCESS_DEBUG_LOG("Got pid " << m_pid << " and fd " 
+                      << m_socket << " from process proxy");
   }
 
   s_proxy_mutex->unlock();
@@ -822,18 +926,18 @@ bool Process::get_exitcode(int& code)
 
       switch (packet.get_type()) {
         case ProxyPacket::CheckedRunning:
-          DEBUG_LOG("get_exitcode() for pid " << m_pid
-                    << " still running");
+          //          DEBUG_LOG("get_exitcode() for pid " << m_pid
+          //                    << " still running");
           break;
         case ProxyPacket::CheckedTerminated: 
           m_exitcode = packet.get_num_value();
           m_runstate = Terminated;
-          DEBUG_LOG("get_exitcode() for pid " << m_pid
-                    << ": terminated with code " << m_exitcode);
+          //          DEBUG_LOG("get_exitcode() for pid " << m_pid
+          //                    << ": terminated with code " << m_exitcode);
           break;
         default:
-          DEBUG_LOG("get_exitcode() for pid " << m_pid
-                    << ": ERROR");
+          //          DEBUG_LOG("get_exitcode() for pid " << m_pid
+          //                    << ": ERROR");
           break;
       }
       // Intentional fall through...

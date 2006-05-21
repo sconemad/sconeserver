@@ -1,4 +1,14 @@
 
+2006-05-21 Andrew Wedgbury <wedge@sconemad.com>
+
+	* sconex/Process: Allow launch directory to be set, improve debug logs.
+	* sconex/FilePath: Add mkdir.
+	* sconex/Module: Recurse get_module calls down the module tree.
+	* sconex/Process: Call event_create when process socketpair connects.
+	* sconex/Kernel: Add system info methods.
+	* sconex/TimeDate: Add dcode() method.
+	* sconex/User: New class to represent a system user.
+
 2006-05-12 Andrew Wedgbury <wedge@sconemad.com>
 
 	* sconex/Process: Get process proxy to work on solaris, netbsd, etc.
