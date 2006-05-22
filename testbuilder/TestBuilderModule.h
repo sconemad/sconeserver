@@ -24,8 +24,11 @@ Free Software Foundation, Inc.,
 
 #include "sconex/Module.h"
 #include "sconex/Thread.h"
+#include "sconex/Mutex.h"
+#include "sconex/User.h"
 
 class BuildProfile;
+class Build;
 
 //#########################################################################
 class TestBuilderModule : public scx::Module, public scx::Thread {
@@ -47,12 +50,55 @@ public:
   virtual scx::Arg* arg_lookup(const std::string& name);
   virtual scx::Arg* arg_function(const std::string& name,scx::Arg* args);
 
+  BuildProfile* lookup_profile(const std::string& name);
+
+  const scx::FilePath& get_dir() const;
+  // Get the testbuilder directory
+
+  const scx::User& get_build_user() const;
+  // Get the user to run builds as
+  
+  std::string submit_build(const std::string& profile);
+  // Submit a new build using the specified profile
+  // Returns the created build ID
+
+  bool abort_build(const std::string& id);
+  // Abort build specified by id
+
+  bool remove_build(const std::string& id);
+  // Remove build specified by id
+  
+  bool add_profile(const std::string& profile);
+  bool remove_profile(const std::string& profile);
+  // Add/remove a profile
+
+  bool save_profiles();
+  // Save profiles into a file
+  
 protected:
   
 private:
 
   std::map<std::string,BuildProfile*> m_profiles;
   // Test build profiles
+
+  std::map<std::string,std::string> m_source_methods;
+  // Source methods
+  
+  std::list<Build*> m_builds;
+  // Test builds
+  
+  scx::Mutex m_builds_mutex;
+  // Mutex for accessing build array
+
+  scx::FilePath m_dir;
+  // Root directory for test builds
+
+  scx::User m_build_user;
+  // User to run builds as
+
+  int m_max_running;
+  // Maximum number of running builds allowed
   
 };
 

@@ -67,8 +67,8 @@ LTLIBRARIES = $(pkglib_LTLIBRARIES)
 http_la_LIBADD =
 am_http_la_OBJECTS = ConnectionStream.lo DocRoot.lo FSDirectory.lo \
 	FSFile.lo FSLink.lo FSNode.lo HeaderTable.lo Host.lo \
-	HostMapper.lo MessageStream.lo Request.lo HTTPModule.lo \
-	Status.lo
+	HostMapper.lo MessageStream.lo Request.lo ResponseStream.lo \
+	HTTPModule.lo Status.lo
 http_la_OBJECTS = $(am_http_la_OBJECTS)
 DEFAULT_INCLUDES = -I. -I$(srcdir) -I$(top_builddir)
 depcomp = $(SHELL) $(top_srcdir)/depcomp
@@ -229,6 +229,7 @@ Host.cpp \
 HostMapper.cpp \
 MessageStream.cpp \
 Request.cpp \
+ResponseStream.cpp \
 HTTPModule.cpp \
 Status.cpp
 
@@ -244,6 +245,7 @@ HeaderTable.h \
 Host.h \
 HostMapper.h \
 Request.h \
+ResponseStream.h \
 MessageStream.h \
 http.h \
 HTTPModule.h \
@@ -333,6 +335,7 @@ distclean-compile:
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/HostMapper.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/MessageStream.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/Request.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/ResponseStream.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/Status.Plo@am__quote@
 
 .cpp.o:

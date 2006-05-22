@@ -1,4 +1,11 @@
 
+2006-05-22 Andrew Wedgbury <wedge@sconemad.com>
+
+	* testbuilder: Fully integrate new module into sconeserver tree.
+	* http/FSDirectory: Add parameters.
+	* dirindex: Use default_page parameter on FSDirectory.
+	* http/ResponseStream: New HTTP response base/util class.
+
 2006-05-21 Andrew Wedgbury <wedge@sconemad.com>
 
 	* sconex/Descriptor: Make timeout mechanism more usable.

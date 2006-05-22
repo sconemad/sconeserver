@@ -218,7 +218,7 @@ SSLChannel.h
 ssl_la_LDFLAGS = -module -avoid-version
 ssl_la_LIBADD = -lssl
 sysconf_DATA = ssl.conf
-EXTRA_DIST = $(sysconf_DATA) ssl.dsp certs/default.pub certs/default
+EXTRA_DIST = $(sysconf_DATA) ssl.dsp
 all: all-am
 
 .SUFFIXES:
@@ -389,7 +389,6 @@ distclean-tags:
 	-rm -f TAGS ID GTAGS GRTAGS GSYMS GPATH tags
 
 distdir: $(DISTFILES)
-	$(mkdir_p) $(distdir)/certs
 	@srcdirstrip=`echo "$(srcdir)" | sed 's|.|.|g'`; \
 	topsrcdirstrip=`echo "$(top_srcdir)" | sed 's|.|.|g'`; \
 	list='$(DISTFILES)'; for file in $$list; do \

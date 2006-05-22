@@ -926,18 +926,18 @@ bool Process::get_exitcode(int& code)
 
       switch (packet.get_type()) {
         case ProxyPacket::CheckedRunning:
-          DEBUG_LOG("get_exitcode() for pid " << m_pid
-                    << " still running");
+          //          DEBUG_LOG("get_exitcode() for pid " << m_pid
+          //                    << " still running");
           break;
         case ProxyPacket::CheckedTerminated: 
           m_exitcode = packet.get_num_value();
           m_runstate = Terminated;
-          DEBUG_LOG("get_exitcode() for pid " << m_pid
-                    << ": terminated with code " << m_exitcode);
+          //          DEBUG_LOG("get_exitcode() for pid " << m_pid
+          //                    << ": terminated with code " << m_exitcode);
           break;
         default:
-          DEBUG_LOG("get_exitcode() for pid " << m_pid
-                    << ": ERROR");
+          //          DEBUG_LOG("get_exitcode() for pid " << m_pid
+          //                    << ": ERROR");
           break;
       }
       // Intentional fall through...

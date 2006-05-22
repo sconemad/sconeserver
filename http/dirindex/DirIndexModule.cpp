@@ -106,13 +106,18 @@ protected:
       if (node->type() == http::FSNode::Directory) {
         const http::FSDirectory* fsdir = (const http::FSDirectory*)node;
 
+        const scx::Arg* a_default_page = fsdir->get_param("default_page");
+        std::string s_default_page =
+          (a_default_page ? a_default_page->get_string() : "index.html");
+        
         std::string url = uri.get_string();
         std::string path = uri.get_path();
         
-        if (fsdir->lookup("index.html")) {
+        if (fsdir->lookup(s_default_page)) {
           if (url[url.size()-1] != '/') url += "/";
-          m_module.log("Redirect '" + url + "' to '" + url + "index.html'"); 
-          url += "index.html";
+          m_module.log("Redirect '" + url + "' to '" +
+                       url + s_default_page + "'"); 
+          url += s_default_page;
 
 	  msg->set_status(http::Status::Found);
 	  msg->set_header("Content-Type","text/html");

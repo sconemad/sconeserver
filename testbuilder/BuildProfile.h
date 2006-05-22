@@ -22,9 +22,13 @@ Free Software Foundation, Inc.,
 #ifndef testbuilderBuildProfile_h
 #define testbuilderBuildProfile_h
 
+#include "TestBuilderModule.h"
+
 #include "sconex/Stream.h"
 #include "sconex/Module.h"
 #include "sconex/ArgObject.h"
+
+class Build;
 
 //#########################################################################
 class BuildProfile : public scx::ArgObjectInterface {
@@ -32,6 +36,7 @@ class BuildProfile : public scx::ArgObjectInterface {
 public:
 
   BuildProfile(
+    TestBuilderModule& module,
     const std::string& name
   );
 
@@ -41,9 +46,36 @@ public:
   virtual scx::Arg* arg_lookup(const std::string& name);
   virtual scx::Arg* arg_function(const std::string& name,scx::Arg* args);
 
+  const std::string& get_name() const;
+  // Get profile name (cannot be set once constructed)
+  
+  const std::string& get_source_method() const;
+  void set_source_method(const std::string& source_method);
+  // Get/set source method
+  
+  const std::string& get_source_uri() const;
+  void set_source_uri(const std::string& source_uri);
+  // Get/set source URI
+
+  const std::string& get_configure_command() const;
+  void set_configure_command(const std::string& configure_command);
+  // Get/set configure command
+  
+  std::string get_make_targets() const;
+  void set_make_targets(const std::string& make_targets);
+  // Get/set make targets
+
+  Build* create_build(const scx::FilePath& root_dir);
+  // Create a runnable build object from this profile
+
+  void save(scx::Descriptor& d);
+  // Save the config to the specified descriptor
+  
 protected:
 
 private:
+
+  TestBuilderModule& m_module;
 
   std::string m_name;
 

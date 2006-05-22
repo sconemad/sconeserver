@@ -39,13 +39,19 @@ FSDirectory::FSDirectory(
 //=============================================================================
 FSDirectory::~FSDirectory()
 {
-  std::list<FSNode*>::iterator it = m_dir.begin();
-
-  while (it != m_dir.end()) {
-    delete (*it);
-    it++;
+  for (std::list<FSNode*>::iterator it_d = m_dir.begin();
+       it_d != m_dir.end();
+       it_d++) {
+    delete (*it_d);
   }
 
+  for (std::map<std::string,scx::Arg*>::const_iterator it_p =
+         m_params.begin();
+       it_p != m_params.end();
+       it_p++) {
+    delete (*it_p).second;
+  }
+  
   DEBUG_COUNT_DESTRUCTOR(FSDirectory);
 }
 
@@ -127,6 +133,25 @@ const FSNode* FSDirectory::lookup(const std::string& name) const
 }
 
 //=============================================================================
+const scx::Arg* FSDirectory::get_param(const std::string& name) const
+{
+  std::map<std::string,scx::Arg*>::const_iterator it =
+    m_params.find(name);
+  if (it != m_params.end()) {
+    return (*it).second;
+  }
+  return 0;
+}
+
+//=============================================================================
+void FSDirectory::set_param(const std::string& name, scx::Arg* value)
+{
+  const scx::Arg* existing_value = get_param(name);
+  delete existing_value;
+  m_params[name] = value;
+}
+
+//=============================================================================
 bool FSDirectory::build()
 {
   std::list<FSNode*> exist;
@@ -191,7 +216,8 @@ scx::Arg* FSDirectory::arg_lookup(const std::string& name)
 {
   // Methods
   if ("map" == name ||
-      "lookup" == name) {
+      "lookup" == name ||
+      "set_param" == name) {
     return new scx::ArgObjectFunction(new scx::ArgObject(this),name);
   }
 
@@ -237,7 +263,21 @@ scx::Arg* FSDirectory::arg_function(
 
     return new scx::ArgObject((FSNode*)lookup(s_pattern));
   }
-  
+
+  if ("set_param" == name) {
+    const scx::ArgString* a_name =
+      dynamic_cast<const scx::ArgString*>(l->get(0));
+    if (!a_name) {
+      return new scx::ArgError("set_param() No parameter name specified");
+    }
+    std::string s_name = a_name->get_string();
+
+    scx::Arg* value = l->take(1);
+    set_param(s_name,value);
+
+    return 0;
+  }
+
   return FSNode::arg_function(name,args);
 }
 

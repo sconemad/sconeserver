@@ -64,8 +64,9 @@ am__installdirs = "$(DESTDIR)$(pkglibdir)" "$(DESTDIR)$(sysconfdir)"
 pkglibLTLIBRARIES_INSTALL = $(INSTALL)
 LTLIBRARIES = $(pkglib_LTLIBRARIES)
 testbuilder_la_LIBADD =
-am_testbuilder_la_OBJECTS = TestBuilderModule.lo BuildProfile.lo \
-	Build.lo
+am_testbuilder_la_OBJECTS = TestBuilderControlStream.lo \
+	TestBuilderModule.lo BuildProfile.lo Build.lo \
+	BuildProcessStream.lo BuildStep.lo
 testbuilder_la_OBJECTS = $(am_testbuilder_la_OBJECTS)
 DEFAULT_INCLUDES = -I. -I$(srcdir) -I$(top_builddir)
 depcomp = $(SHELL) $(top_srcdir)/depcomp
@@ -206,14 +207,20 @@ target_vendor = @target_vendor@
 AM_CPPFLAGS = -I$(top_srcdir)
 pkglib_LTLIBRARIES = testbuilder.la
 testbuilder_la_SOURCES = \
+TestBuilderControlStream.cpp \
 TestBuilderModule.cpp \
 BuildProfile.cpp \
-Build.cpp
+Build.cpp \
+BuildProcessStream.cpp \
+BuildStep.cpp
 
 noinst_HEADERS = \
+TestBuilderControlStream.h \
 TestBuilderModule.h \
 BuildProfile.h \
-Build.h
+Build.h \
+BuildProcessStream.h \
+BuildStep.h
 
 testbuilder_la_LDFLAGS = -module -avoid-version
 sysconf_DATA = testbuilder.conf
@@ -288,7 +295,10 @@ distclean-compile:
 	-rm -f *.tab.c
 
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/Build.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/BuildProcessStream.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/BuildProfile.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/BuildStep.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/TestBuilderControlStream.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/TestBuilderModule.Plo@am__quote@
 
 .cpp.o:

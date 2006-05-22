@@ -46,6 +46,9 @@ public:
   virtual std::string lookup_mod(const std::string& name) const;
   // Lookup a module to handle this file name
 
+  const scx::Arg* get_param(const std::string& name) const;
+  void set_param(const std::string& name, scx::Arg* value);
+  
   virtual bool build();
 
   // ArgObject interface:
@@ -57,6 +60,8 @@ protected:
   std::list<FSNode*> m_dir;
   
   std::map<std::string,std::string> m_mods;
+
+  std::map<std::string,scx::Arg*> m_params;
   
 };
 

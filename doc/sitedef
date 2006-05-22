@@ -17,5 +17,5 @@ $site->{copyright}="Copyright (c) 2000-2005 Andrew Wedgbury";
 $site->{description} = "Manual for $package version $version";
 
 $site->{HEAD} = "";
-$site->{HEAD} .= "<link rel='stylesheet' href='/style/print.css' media='print' type='text/css' />\n";
-$site->{HEAD} .= "<link rel='stylesheet' href='/style/main.css' media='screen' type='text/css' />\n";
+$site->{HEAD} .= "<link rel='stylesheet' href='print.css' media='print' type='text/css' />\n";
+$site->{HEAD} .= "<link rel='stylesheet' href='main.css' media='screen' type='text/css' />\n";
