@@ -1,4 +1,11 @@
 
+2006-05-23 Andrew Wedgbury <wedge@sconemad.com>
+
+	* sconex/FilePath: Add chown method.
+	* testbuilder/Build: Chown build directory to build user.
+	* exec/ExecStream: Set user when launching process.
+	* sconex/Process: Use setuid/setgid to set user/group.
+
 2006-05-22 Andrew Wedgbury <wedge@sconemad.com>
 
 	* testbuilder: Fully integrate new module into sconeserver tree.

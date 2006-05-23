@@ -39,7 +39,11 @@ public:
 
   ~User();
 
+  bool set_real();
+  // Set real user ID for this process
+  
   bool set_effective();
+  // Set effective user ID for this process
   
   bool is_valid() const;
   

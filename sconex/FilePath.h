@@ -25,6 +25,8 @@ Free Software Foundation, Inc.,
 #include "sconex/sconex.h"
 namespace scx {
 
+class User;
+  
 //=============================================================================
 class SCONEX_API FilePath {
 
@@ -49,6 +51,7 @@ public:
   static bool is_root(const std::string& path);
 
   static bool mkdir(const FilePath& path, bool recursive, mode_t mode);
+  static bool chown(const FilePath& path, const User& user);
   
 protected:
 

@@ -615,9 +615,9 @@ bool Proxy::launch()
     // Close sconeserver end of the socketpair  
     ::close(d[1]);
 
-    // Set effective user and group ids
-    if (m_uid > 0) ::seteuid(m_uid);
-    if (m_gid > 0) ::setegid(m_gid);
+    // Set user and group ids
+    if (m_uid > 0) ::setuid(m_uid);
+    if (m_gid > 0) ::setgid(m_gid);
     
     // Duplicate standard descriptors on to our end of the socketpair
     ::dup2(d[0],0);

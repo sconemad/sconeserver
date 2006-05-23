@@ -48,8 +48,9 @@ Build::Build(
   m_id = scx::Date::now().dcode();
   m_dir = m_module.get_dir() + "builds" + m_id;
 
-  // Create working directory for this build
+  // Create working directory for this build and set ownership
   scx::FilePath::mkdir(m_dir,true,0770);
+  scx::FilePath::chown(m_dir,m_module.get_build_user());
 }
 
 //=========================================================================

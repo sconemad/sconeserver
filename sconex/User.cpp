@@ -51,6 +51,18 @@ User::~User()
 }
 
 //=============================================================================
+bool User::set_real()
+{
+  if (0 != ::setuid(m_user_id)) {
+    return false;
+  }
+  if (0 != ::setgid(m_group_id)) {
+    return false;
+  }
+  return true;
+}
+
+//=============================================================================
 bool User::set_effective()
 {
   if (0 != ::seteuid(m_user_id)) {

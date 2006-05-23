@@ -23,6 +23,7 @@ Free Software Foundation, Inc.,
 #define execModule_h
 
 #include "sconex/Module.h"
+#include "sconex/User.h"
 
 //#########################################################################
 class ExecModule : public scx::Module {
@@ -42,7 +43,7 @@ public:
 protected:
 
 private:
- 
+
 };
 
 #endif

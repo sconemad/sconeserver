@@ -33,6 +33,7 @@ Free Software Foundation, Inc.,
 #include "sconex/StreamTransfer.h"
 #include "sconex/StreamDebugger.h"
 #include "sconex/Process.h"
+#include "sconex/User.h"
 
 //=========================================================================
 ExecStream::ExecStream(
@@ -135,6 +136,9 @@ bool ExecStream::spawn_process()
   for (int i=0; i<m_args->size(); ++i) {
     m_process->add_arg( m_args->get(i)->get_string() );
   }
+
+  // Set user to exec as
+  m_process->set_user(scx::User("nobody"));
   
   // Launch the new process and connect socket
   if (!m_process->launch()) {

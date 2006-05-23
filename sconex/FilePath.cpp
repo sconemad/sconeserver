@@ -20,6 +20,7 @@ Free Software Foundation, Inc.,
 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA */
 
 #include "sconex/FilePath.h"
+#include "sconex/User.h"
 namespace scx {
 
 #ifdef WIN32
@@ -152,7 +153,15 @@ bool FilePath::mkdir(const FilePath& path, bool recursive, mode_t mode)
       ++i;
     }
   }
-  ::mkdir(str.c_str(),mode);
+  return (0 == ::mkdir(str.c_str(),mode));
+}
+
+//=============================================================================
+bool chown(const FilePath& path, const User& user)
+{
+  return (0 == ::chown(path.path().c_str(),
+                       user.get_user_id(),
+                       user.get_group_id()));
 }
 
 };
