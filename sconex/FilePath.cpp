@@ -157,7 +157,7 @@ bool FilePath::mkdir(const FilePath& path, bool recursive, mode_t mode)
 }
 
 //=============================================================================
-bool chown(const FilePath& path, const User& user)
+bool FilePath::chown(const FilePath& path, const User& user)
 {
   return (0 == ::chown(path.path().c_str(),
                        user.get_user_id(),
