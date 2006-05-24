@@ -26,7 +26,7 @@ module, as well as a standard SconeScript interface.
 <h3>Profiles</h3>
 <p>
 Before you start a test build, you must first define a profile. A profile
-specifies exactly what steps you want to be performed by the test build. 
+specifies exactly what steps you want the test build to perform. 
 Profiles can be saved and reused, so you can start another test build sometime 
 in the future with exactly the same settings, and you can list all the test 
 builds that have been performed with a particular profile. You may find there 
@@ -81,7 +81,7 @@ command can be omitted completely if its not required.
 
 <h4>Make targets</h4>
 <p>
-This is a space-seperated list of targets on which to call the "make" command.
+This is a space-separated list of targets on which to call the "make" command.
 "all" is probably a good choice here, followed  by "check" or "distcheck",
 depending on what you want it to do. For most source distributions, the 
 "check" target will build and run all its automated tests.
@@ -357,7 +357,7 @@ In addition to the standard module interface, it also has the following:
   </h4>
   <p>
   Sets the targets to make during this test build. Individual targets should
-  be seperated with spaced.
+  be separated with spaced.
   </p>
   </div>
 

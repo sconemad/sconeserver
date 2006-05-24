@@ -13,7 +13,7 @@ print ">>> $title <<<\n";
 $site->{title}=$title;
 $site->{webmaster}=$email;
 $site->{author}="Andrew Wedgbury";
-$site->{copyright}="Copyright (c) 2000-2005 Andrew Wedgbury";
+$site->{copyright}="Copyright (c) 2000-2006 Andrew Wedgbury";
 $site->{description} = "Manual for $package version $version";
 
 $site->{HEAD} = "";
