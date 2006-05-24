@@ -8,6 +8,7 @@ mod_simple
 mod_stat
 mod_http
 mod_ssl
+mod_testbuilder
 </subs>
 
 <!-- ----+---------+---------+---------+---------+---------+---------+----- -->

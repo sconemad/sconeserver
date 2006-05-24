@@ -21,7 +21,7 @@ Handling <a href='/config.html#commandline'>command line options</a>.
 </li>
 
 <li>
-Creating the root module <a href='/modules/sconeserver.html'>sconeserver</a>,
+Creating the root module <a href='/mod_sconeserver.html'>sconeserver</a>,
 which loads its configuration file, along with any sub-modules, to get 
 SconeServer into a state where it is ready to run.
 </li>

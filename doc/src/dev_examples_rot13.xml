@@ -107,7 +107,7 @@ every time SconeServer starts.
 <p>
 The module will act as a filter to any module(s) following it in its route 
 chain. To test it, we can create a chain and add our module followed by the
-<a href="/modules/simple.html">simple</a> module's echo service (which echoes
+<a href="/mod_simple.html">simple</a> module's echo service (which echoes
 back whatever it receives):
 </p>
 

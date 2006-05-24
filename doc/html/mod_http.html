@@ -40,6 +40,7 @@
 <li><a href='./mod_http_getfile.html'>getfile</a></li>
 </ul>
 <li><a href='./mod_ssl.html'>ssl</a></li>
+<li><a href='./mod_testbuilder.html'>testbuilder</a></li>
 </ul>
 <li><a href='./develop.html'>Development</a></li>
 <ul>
@@ -65,6 +66,211 @@
 The http module aims to implement a fully-functional and extensible HTTP/1.1 
 compliant web server. 
 </p>
+
+<h2>Connections</h2>
+
+  <div class='scr-obj'>
+  <h4>
+  router.&lt;route-name&gt;.add (
+    <span>"http",</span>
+    <span>profile-name : <em>string</em></span>
+  )
+  </h4>
+  </div>
+
+<p>
+A connection to the http module will insert an HTTP stream into the connection 
+stream at this point. This will in turn create HTTP message streams to handle 
+each HTTP request as it is recieved. The message streams map each request to 
+the appropriate module to generate the response.
+</p>
+
+<h2>Hosts and the Host Mapper</h2>
+
+<p>
+The first stage in handling an HTTP request is to determine what <em>host</em>
+is should be mapped to. The http module allows multiple hosts to be configured, 
+allowing many different web sites to be served up by the same sever. The host
+to which the request should be directed is determined by examining the request 
+URI and the "Host:" HTTP header, if present.
+</p>
+
+<p>
+This host name is then matched with one of the configured hosts by the 
+<em>Host Mapper</em>. If no match can be found, then an error response is
+generated. It is possible to avoid this and match any host name using a 
+wildcard match of "*" in the host mapper. It is also possible to match any 
+subdomain, e.g. "*.sconemad.com" would match "jam.sconemad.com" and 
+"cheese.sconemad.com". Note that, from a caching point of view, it is
+generally better to use redirects than have multiple URLs mapping to the same
+entity in this way.
+</p>
+
+
+<h2>Profiles</h2>
+
+<p>
+You may have noticed the <em>profile-name</em> parameter in the router chain 
+configuration above. This is passed through from the router chain, and can be
+used to select different files to be served depending on the method of 
+connecion, for example, on diferent TCP/IP ports. A common use for this is to
+serve a different set of files for insecure (http) and secure (https) 
+connections.
+</p>
+
+
+<h2>HTTP Sub-Modules</h2>
+
+<p>
+Any module can be used to generate an HTTP response, but modules for which 
+this is their primary purpose should be defined as sub-modules of the http 
+module.
+</p>
+
+<p>
+The following HTTP sub-modules are available:
+</p>
+
+  <h3><a href='./mod_http_getfile.html'>getfile</a></h3>
+  <p>
+  Sends the requested file back to the client.
+  </p>
+
+  <h3>dirindex</h3>
+  <p>
+  If a directory is requested, redirect to a default page or return a
+  directory listing.
+  </p>
+
+  <h3>errorpage</h3>
+  <p>
+  Return an error response page.
+  </p>
+
+
+
+<h2>SconeScript Interface</h2>
+
+<p>
+In addition to the standard module interface, it also has the following:
+</p>
+
+  <div class='scr-obj'>
+  <h4>
+  hosts : <em>object</em>
+  </h4>
+  <p>
+  The Host Mapper.
+  </p>
+  </div>
+
+<h3>Host Mapper</h3>
+
+  <div class='scr-obj'>
+  <h4>
+  add ( 
+    <span>host-name : <em>string</em>, </span>
+    <span>path : <em>string</em> </span>
+  )
+  </h4>
+  <p>
+  Add a new HTTP host.
+  </p>
+  </div>
+
+  <div class='scr-obj'>
+  <h4>
+  remove ( 
+    <span>host-name : <em>string</em> </span>
+  )
+  </h4>
+  <p>
+  Remove a HTTP host.
+  </p>
+  </div>
+
+  <div class='scr-obj'>
+  <h4>
+  map ( 
+    <span>pattern : <em>string</em>, </span>
+    <span>host-name : <em>string</em> </span>
+  )
+  </h4>
+  <p>
+  Map a pattern to an an HTTP host.
+  </p>
+  </div>
+
+  <div class='scr-obj'>
+  <h4>
+  list
+  </h4>
+  <p>
+  List the HTTP hosts.
+  </p>
+  </div>
+
+  <div class='scr-obj'>
+  <h4>
+  lsmap
+  </h4>
+  <p>
+  List the host mappings.
+  </p>
+  </div>
+
+  <div class='scr-obj'>
+  <h4>
+  &lt;host-name&gt; : <em>object</em>
+  </h4>
+  <p>
+  Lookup HTTP host given by &lt;host-name&gt;.
+  </p>
+  </div>
+
+<h3>Hosts</h3>
+
+  <div class='scr-obj'>
+  <h4>
+  add ( 
+    <span>profile-name : <em>string</em>, </span>
+    <span>path : <em>string</em> </span>
+  )
+  </h4>
+  <p>
+  Add a profile to this host with the specified path (which can be
+  relative to the host path).
+  </p>
+  </div>
+
+  <div class='scr-obj'>
+  <h4>
+  remove ( 
+    <span>profile-name : <em>string</em> </span>
+  )
+  </h4>
+  <p>
+  Remove a profile from this host.
+  </p>
+  </div>
+
+  <div class='scr-obj'>
+  <h4>
+  list
+  </h4>
+  <p>
+  List the profiles for this host.
+  </p>
+  </div>
+
+  <div class='scr-obj'>
+  <h4>
+  &lt;profile-name&gt; : <em>object</em>
+  </h4>
+  <p>
+  Lookup profile given by &lt;profile-name&gt;.
+  </p>
+  </div>
 </div>
 
 <address>

@@ -91,6 +91,9 @@ scx::Condition TestBuilderControlStream::send()
 {
   http::MessageStream* msg = 
     dynamic_cast<http::MessageStream*>(find_stream("http:message"));
+  if (!msg) {
+    return scx::Close;
+  }
   const http::Request& req = msg->get_request();
   const scx::Uri& uri = req.get_uri();
   std::string base = "/" + uri.get_path();
@@ -281,7 +284,12 @@ scx::Condition TestBuilderControlStream::send()
           scx::Kernel::get()->get_system_version() + "</td> </tr>\n"
           "<tr> <td>Hardware:</td> <td>" +
           scx::Kernel::get()->get_system_hardware() + "</td> </tr>\n"
-          "</table>\n");
+          "</table>\n"
+          "<ul>\n"
+          "<li><a href='doc/mod_testbuilder.html'>TestBuilder docs</a></li>\n"
+          "<li><a href='doc/index.html'>SconeServer docs</a></li>\n"
+          "<li><a href='http://sconeserver.sourceforge.net'>SconeServer web site</a></li>\n"
+          "</ul>\n");
 
     write("<h2>Profiles</h2>\n"
           "<form method='get' action = '" + base + "'>\n"

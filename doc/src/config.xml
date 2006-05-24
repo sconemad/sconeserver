@@ -32,7 +32,7 @@ module's documentation.
 On startup, the root module sconeserver reads its configuration from the 
 file "<em>prefix</em>/etc/sconeserver.conf", unless an alternative path has 
 been specified on the <a href='#commandline'>command line</a>.
-The <a href="modules/sconeserver.html">sconeserver root module</a> page has
+The <a href="mod_sconeserver.html">sconeserver root module</a> page has
 more information on the configuration options available here.
 </p>
 

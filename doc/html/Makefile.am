@@ -39,6 +39,7 @@ mod_sconeserver.html \
 mod_simple.html \
 mod_ssl.html \
 mod_stat.html \
+mod_testbuilder.html \
 modules.html \
 overview.png \
 print.css \

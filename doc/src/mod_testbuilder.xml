@@ -1,0 +1,163 @@
+<?xml version="1.0" ?>
+<article short="testbuilder" title="testbuilder - Test Builder System">
+
+<description>
+An automated system for downloading, building, and running automated test 
+suites on software source distributions. Including a web interface.
+<description>
+
+<!-- ----+---------+---------+---------+---------+---------+---------+----- -->
+<content>
+
+<p>
+The TestBuilder module implements a fully-functional automated system for
+downloading, building, and running automated test suites on software source
+distributions. It has a web based interface, utilising SconeServer's http
+module, as well as a standard SconeScript interface.
+</p>
+
+<h2>Overview</h2>
+<p>
+This is a quick guide to using TestBuilder via the web interface.
+</p>
+
+<h3>Profiles</h3>
+<p>
+Before you start a test build, you must first define a profile. A profile
+specifies exactly what steps you want to be performed by the test build. 
+Profiles can be saved and reused, so you can start another test sometime in 
+the future with exactly the same settings, and you can list all the test builds
+that have been performed with a particular profile. You may find there are
+already some profiles defined. These are listed under the "Profiles" heading 
+on the left of the page.
+</p>
+
+<p>
+To create a new profile, enter a suitable name in the box on the left (under 
+the "Profiles" heading), and click the "New" button. The profile should 
+appear in the list on the left, and the profile configuration should be 
+displayed. Note: the name of the profile may contain only letters, numbers
+and underscores, and must start with a letter.
+</p>
+
+<p>
+The configuration options for profiles are as follows:
+</p>
+
+<h4>Source method and Source location</h4>
+<p>
+These options define how the system should obtain the source to test. 
+Currently there are three options:
+</p>
+<ul>
+<li>
+Distribution tarball - In this case the Source location should be a URL from 
+which to download the distribution tarball (or zip) file. The URL can be in 
+the form "http://..." "ftp://..." "file://..." or simply a local path e.g. 
+"/incoming/file.tar.gz" - this is useful if the file is already on the machine.
+The file must be a source distribution of the standard type (usually generated
+by "make dist"), and can be in gzip (tar.gz), bzip2 (tar.bz2) or zip format.
+</li>
+<li>
+Subversion checkout - In this case the Source location should be the full URL 
+of the Subversion repository and branch to checkout. It must be possible to
+access the repository anonymously. 
+</li>
+<li>
+CVS checkout -  In this case the Source location should be in the form:
+"server path module", for example: "sconeserver.cvs.sourceforge.net /cvsroot/sconeserver sconeserver". Again, it must be possible to login anonymously. 
+</li>
+</ul>
+
+
+
+
+<h2>SconeScript Interface</h2>
+
+<p>
+In addition to the standard module interface, it also has the following:
+</p>
+
+  <div class='scr-obj'>
+  <h4>
+  add ( 
+    <span>channel-name : <em>string</em> </span>
+  )
+  </h4>
+  <p>
+  Add a new statistics channel.
+  </p>
+  </div>
+
+  <div class='scr-obj'>
+  <h4>
+  remove ( 
+    <span>channel-name : <em>string</em> </span>
+  )
+  </h4>
+  <p>
+  Remove a statistics channel.
+  </p>
+  </div>
+
+  <div class='scr-obj'>
+  <h4>
+  list : <em>string</em>
+  </h4>
+  <p>
+  Lists all statistics channels.
+  </p>
+  </div>
+
+  <div class='scr-obj'>
+  <h4>
+  &lt;channel-name&gt; : <em>object</em>
+  </h4>
+  <p>
+  Lookup statistics channel given by &lt;channel-name&gt;.
+  </p>
+  </div>
+
+<h3>Statistics Channels</h3>
+
+  <div class='scr-obj'>
+  <h4>
+  connections : <em>int</em>
+  </h4>
+  <p>
+  Number of connections recorded by this channel.
+  </p>
+  </div>
+
+  <div class='scr-obj'>
+  <h4>
+  input : <em>int</em>
+  </h4>
+  <p>
+  Number of input bytes recorded by this channel.
+  </p>
+  </div>
+
+  <div class='scr-obj'>
+  <h4>
+  output : <em>int</em>
+  </h4>
+  <p>
+  Number of output bytes recorded by this channel.
+  </p>
+  </div>
+
+  <div class='scr-obj'>
+  <h4>
+  reset ( )
+  </h4>
+  <p>
+  Resets the channel's counters to zero.
+  </p>
+  </div>
+
+
+</content>
+<!-- ----+---------+---------+---------+---------+---------+---------+----- -->
+
+</article>

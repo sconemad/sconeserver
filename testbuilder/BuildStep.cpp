@@ -210,7 +210,7 @@ bool BuildStep::launch()
     if (end == std::string::npos) {
       token = std::string(m_command,start);
     } else {
-      token = std::string(m_command,start,end);
+      token = std::string(m_command,start,end-start);
     }
     if (!ntok) {
       process = new scx::Process(token);

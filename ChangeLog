@@ -1,6 +1,13 @@
 
 2006-05-23 Andrew Wedgbury <wedge@sconemad.com>
 
+	* http/ResponseStream: Check HTTP Message is valid.
+	* testbuilder/ControlStream: Check HTTP Message is valid, add doc link.
+	* testbuilder/BuildStrep: Fix command argument parsing error.
+	* doc: Fix some broken links, improve http, add testbuilder section.
+
+2006-05-23 Andrew Wedgbury <wedge@sconemad.com>
+
 	* sconex/FilePath: Add chown method.
 	* testbuilder/Build: Chown build directory to build user.
 	* exec/ExecStream: Set user when launching process.

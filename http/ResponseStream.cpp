@@ -100,6 +100,9 @@ scx::Condition ResponseStream::decode_opts()
 {
   http::MessageStream* msg = 
     dynamic_cast<http::MessageStream*>(find_stream("http:message"));
+  if (!msg) {
+    return scx::Close;
+  }
   const http::Request& req = msg->get_request();
   const scx::Uri& uri = req.get_uri();
   
