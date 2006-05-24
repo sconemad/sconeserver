@@ -194,6 +194,7 @@ scx::Arg* TestBuilderModule::arg_lookup(const std::string& name)
   }
 
   if ("builds" == name) {
+    m_builds_mutex.lock();
     std::ostringstream oss;
     for (std::list<Build*>::reverse_iterator it = m_builds.rbegin();
 	 it != m_builds.rend();
@@ -203,6 +204,7 @@ scx::Arg* TestBuilderModule::arg_lookup(const std::string& name)
           << build->get_profile() << " "
           << Build::get_state_str(build->get_state()) << "\n";
     }
+    m_builds_mutex.unlock();
     return new scx::ArgString(oss.str());
   }
 

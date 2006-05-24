@@ -16,20 +16,22 @@ distributions. It has a web based interface, utilising SconeServer's http
 module, as well as a standard SconeScript interface.
 </p>
 
+
 <h2>Overview</h2>
 <p>
-This is a quick guide to using TestBuilder via the web interface.
+<em>Using TestBuilder via the web interface.</em>
 </p>
+
 
 <h3>Profiles</h3>
 <p>
 Before you start a test build, you must first define a profile. A profile
 specifies exactly what steps you want to be performed by the test build. 
-Profiles can be saved and reused, so you can start another test sometime in 
-the future with exactly the same settings, and you can list all the test builds
-that have been performed with a particular profile. You may find there are
-already some profiles defined. These are listed under the "Profiles" heading 
-on the left of the page.
+Profiles can be saved and reused, so you can start another test build sometime 
+in the future with exactly the same settings, and you can list all the test 
+builds that have been performed with a particular profile. You may find there 
+are already some profiles defined. These are listed under the "Profiles" 
+heading on the left of the page.
 </p>
 
 <p>
@@ -53,7 +55,7 @@ Currently there are three options:
 <li>
 Distribution tarball - In this case the Source location should be a URL from 
 which to download the distribution tarball (or zip) file. The URL can be in 
-the form "http://..." "ftp://..." "file://..." or simply a local path e.g. 
+the form "http://...", "ftp://...", "file://...", or simply a local path e.g. 
 "/incoming/file.tar.gz" - this is useful if the file is already on the machine.
 The file must be a source distribution of the standard type (usually generated
 by "make dist"), and can be in gzip (tar.gz), bzip2 (tar.bz2) or zip format.
@@ -69,8 +71,74 @@ CVS checkout -  In this case the Source location should be in the form:
 </li>
 </ul>
 
+<h4>Configure command</h4>
+<p>
+This is usually "./configure" (a script supplied with the distribution that
+generates the required Makefiles for the build system). It is possible to give
+arguments, if required, e.g. to include or exclude specific options, or the
+command can be omitted completely if its not required.
+</p>
+
+<h4>Make targets</h4>
+<p>
+This is a space-seperated list of targets on which to call the "make" command.
+"all" is probably a good choice here, followed  by "check" or "distcheck",
+depending on what you want it to do. For most source distributions, the 
+"check" target will build and run all its automated tests.
+</p>
+
+<h4>Saving and removing profiles</h4>
+<p>
+The "Save profile" and "Remove profile" buttons do exactly what they say.
+Saved profiles will be remembered even if the machine is powered down. Note
+that removing a profile will not remove any builds assoicated with it.
+</p>
+
+<h4>Starting a build</h4>
+<p>
+Pressing the "Start build" button will cause a build to be created and 
+submitted to the system using the current profile. The next section will go 
+into the specifics of builds.
+</p>
 
 
+<h3>Builds</h3>
+<p>
+when a build is submitted, it is put on the end of a queue to be run by the
+testbuilder. The amount of time it has to wait to be run will depend on how 
+many other builds are queued ahead of it, and how many builds the system is 
+allowed to run simultaneously (see later section on configuration).
+</p>
+
+<h4>Results</h4>
+<p>
+When each step of the build is completed, the exitcode of the command is
+checked. The status is updated accordingly and will be visible on the web 
+page. A nonzero exitcode is taken as a failure, and any failing step will 
+cause the test build as a whole to fail, stopping at that point. Only when
+all the steps of the test build pass will the test build be marked as passed.
+</p> 
+
+<h4>Aborted builds</h4>
+<p>
+If the build is aborted, either manually by pushing the "Abort build" button,
+or if the system is shutdown while the build is running, the build step that
+was running will be marked as "ABORTED", as will the build as a whole. Any 
+previously passed steps will still be visible. Any unstarted builds that are
+in existance when the system shuts down will be rescheduled when the system
+is restarted.
+</p> 
+
+<h4>Monitoring builds</h4>
+<p>
+Once the build has started running, it is possible to browse the files in
+the build directory using the web interface by clicking on "View files".
+It is also possible to view the log files that are output for each build
+step once it has started running. Using the "View" options on the left, it is
+possible to list all builds in a particular state.
+</p>
+
+<!-- ----+---------+---------+---------+---------+---------+---------+----- -->
 
 <h2>SconeScript Interface</h2>
 
@@ -81,81 +149,217 @@ In addition to the standard module interface, it also has the following:
   <div class='scr-obj'>
   <h4>
   add ( 
-    <span>channel-name : <em>string</em> </span>
+    <span>profile-name : <em>string</em> </span>
   )
   </h4>
   <p>
-  Add a new statistics channel.
+  Add a new test builder profile.
   </p>
   </div>
 
   <div class='scr-obj'>
   <h4>
   remove ( 
-    <span>channel-name : <em>string</em> </span>
+    <span>profile-name : <em>string</em> </span>
   )
   </h4>
   <p>
-  Remove a statistics channel.
+  Remove a test builder profile.
   </p>
   </div>
 
   <div class='scr-obj'>
   <h4>
-  list : <em>string</em>
+  submit_build ( 
+    <span>profile-name : <em>string</em> </span>
+  ) : <em>string</em>x
   </h4>
   <p>
-  Lists all statistics channels.
+  Submit a test build using the specified profile. 
+  Returns the ID of the newly created build, if successful.
   </p>
   </div>
 
   <div class='scr-obj'>
   <h4>
-  &lt;channel-name&gt; : <em>object</em>
+  abort_build ( 
+    <span>build-id : <em>string</em> </span>
+  )
   </h4>
   <p>
-  Lookup statistics channel given by &lt;channel-name&gt;.
-  </p>
-  </div>
-
-<h3>Statistics Channels</h3>
-
-  <div class='scr-obj'>
-  <h4>
-  connections : <em>int</em>
-  </h4>
-  <p>
-  Number of connections recorded by this channel.
+  Abort a test build. If the build is running, any currently executing steps
+  are immediately terminated. If the build is running or is unstarted, it is
+  marked as aborted. If it has already finished running, nothing is done.
   </p>
   </div>
 
   <div class='scr-obj'>
   <h4>
-  input : <em>int</em>
+  remove_build ( 
+    <span>build-id : <em>string</em> </span>
+  )
   </h4>
   <p>
-  Number of input bytes recorded by this channel.
+  Remove a test build along with all associated files. If the build is 
+  currently running, it is first aborted as above.
   </p>
   </div>
 
   <div class='scr-obj'>
   <h4>
-  output : <em>int</em>
+  set_dir ( 
+    <span>path : <em>string</em> </span>
+  )
   </h4>
   <p>
-  Number of output bytes recorded by this channel.
+  Sets the directory for the testbuilder system to use. This is where saved
+  profiles, scripts and builds are stored.
   </p>
   </div>
 
   <div class='scr-obj'>
   <h4>
-  reset ( )
+  set_max_running ( 
+    <span>num : <em>int</em> </span>
+  )
   </h4>
   <p>
-  Resets the channel's counters to zero.
+  Sets the maximum number of builds that will be permitted to run
+  simultaneously. This defaults to 1, i.e. builds are run one at a time.
   </p>
   </div>
 
+  <div class='scr-obj'>
+  <h4>
+  set_build_user ( 
+    <span>user-name : <em>string</em> </span>
+  )
+  </h4>
+  <p>
+  Sets the user to run the test builds as. This defaults to "nobody", but it
+  is a good idea to have a dedicated user and group for this purpose, for
+  security reasons.
+  </p>
+  </div>
+
+  <div class='scr-obj'>
+  <h4>
+  add_source_method ( 
+    <span>method-name : <em>string</em>, </span>
+    <span>method-description : <em>string</em> </span>
+  )
+  </h4>
+  <p>
+  Registers a source method with the system. The method-name should correspond
+  to a script in the <em>build_dir</em>/scripts/ directory. Registered methods
+  will appear in the option list on the web interface.
+  </p>
+  </div>
+
+  <div class='scr-obj'>
+  <h4>
+  load_profiles ()
+  </h4>
+  <p>
+  Load any previously saved profiles from disk.
+  </p>
+  </div>
+
+  <div class='scr-obj'>
+  <h4>
+  save_profiles ()
+  </h4>
+  <p>
+  Save all currently defined profiles to disk.
+  </p>
+  </div>
+
+  <div class='scr-obj'>
+  <h4>
+  start ()
+  </h4>
+  <p>
+  Starts the testbuilder module's build scheduler.
+  </p>
+  </div>
+
+  <div class='scr-obj'>
+  <h4>
+  stop ()
+  </h4>
+  <p>
+  Stops the testbuilder module's build scheduler.
+  </p>
+  </div>
+
+  <div class='scr-obj'>
+  <h4>
+  builds : <em>string</em>
+  </h4>
+  <p>
+  List builds.
+  </p>
+  </div>
+
+  <div class='scr-obj'>
+  <h4>
+  &lt;profile-name&gt; : <em>object</em>
+  </h4>
+  <p>
+  Lookup profile given by &lt;profile-name&gt;.
+  </p>
+  </div>
+
+<h3>Profiles</h3>
+
+  <div class='scr-obj'>
+  <h4>
+  set_source_method ( 
+    <span>method-name : <em>string</em> </span>
+  )
+  </h4>
+  <p>
+  Sets the source method for this profile. This should be one of the methods
+  registered with the testbuilder system.
+  </p>
+  </div>
+
+  <div class='scr-obj'>
+  <h4>
+  set_source_uri ( 
+    <span>source-uri : <em>string</em> </span>
+  )
+  </h4>
+  <p>
+  Sets the source URI for this profile. This will be passed to the source
+  method script, so the exact format depends on the method being used.
+  </p>
+  </div>
+
+  <div class='scr-obj'>
+  <h4>
+  set_configure_command ( 
+    <span>configure-command : <em>string</em> </span>
+  )
+  </h4>
+  <p>
+  Sets the configure command for this profile. This gets issued in the
+  source directory once the source has been obtained and unpacked. It can
+  be left empty if not required.
+  </p>
+  </div>
+
+  <div class='scr-obj'>
+  <h4>
+  set_make_targets ( 
+    <span>make-targets : <em>string</em> </span>
+  )
+  </h4>
+  <p>
+  Sets the targets to make during this test build. Individual targets should
+  be seperated with spaced.
+  </p>
+  </div>
 
 </content>
 <!-- ----+---------+---------+---------+---------+---------+---------+----- -->
