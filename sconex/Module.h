@@ -113,7 +113,7 @@ protected:
   void remove_module(ModuleLoader* loader);
   ModuleLoader* find_module(const std::string& name);
 
-  bool load_config_file(const FilePath& path = FilePath());
+  bool load_config_file(FilePath path = FilePath());
   
 private:
 

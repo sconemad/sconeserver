@@ -33,6 +33,7 @@ Free Software Foundation, Inc.,
 #include "sconex/StreamTransfer.h"
 #include "sconex/Date.h"
 #include "sconex/Kernel.h"
+#include "sconex/MimeType.h"
 
 //=========================================================================
 class GetFileStream : public scx::Stream {
@@ -106,15 +107,21 @@ protected:
       msg->set_header("Content-Length",oss.str());
 
       // Lookup MIME type for file
-      std::string cmd = "mime.lookup(\"" + path.path() + "\")";
-      scx::Arg* ret = m_module.arg_eval(cmd);
-      if (ret) {
-	msg->set_header("Content-Type",ret->get_string());
-	delete ret;
+      scx::ModuleRef mime = scx::Kernel::get()->get_module("mime");
+      if (mime.valid()) {
+        scx::ArgList args;
+        args.give( new scx::ArgString(path.path()) );
+        scx::Arg* ret = mime.module()->arg_function("lookup",&args);
+        scx::MimeType* mimetype = 0;
+        if (ret && (mimetype = dynamic_cast<scx::MimeType*>(ret))) {
+          msg->set_header("Content-Type",mimetype->get_string());
+        }
+        delete ret;
       }
 
       if (req.get_method() == "HEAD") {
 	// Don't actually send the file, just the headers
+        m_module.log("Sending headers for '" + path.path() + "'"); 
 	delete file;
 	return scx::Close;
       }

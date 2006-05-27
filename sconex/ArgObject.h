@@ -112,6 +112,8 @@ public:
   
   virtual Arg* op(OpType optype, const std::string& opname, Arg* right);
 
+  Arg* call(Arg* args);
+  
 protected:
 
   ArgObject* m_obj;

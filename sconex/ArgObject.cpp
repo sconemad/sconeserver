@@ -42,11 +42,20 @@ void ArgObjectInterface::log(
   Logger::Level level
 )
 {
-  ArgObject ctx(this);
-  ArgProc proc(&ctx);
-  std::ostringstream oss;
-  oss << "log(\"{" << name() << "} " << message << "\"," << (int)level << ")";
-  delete proc.evaluate(oss.str());
+  Arg* a_logger = arg_resolve("log");
+  if (a_logger) {
+
+    ArgObjectFunction* logger = dynamic_cast<ArgObjectFunction*>(a_logger);
+    if (logger) {
+      ArgList args;
+      args.give( new ArgString(message) );
+      args.give( new ArgInt((int)level) );
+      
+      Arg* ret = logger->call(&args);
+      delete ret;
+    }
+    delete a_logger;
+  }
 }
 
 //=============================================================================
@@ -198,17 +207,22 @@ Arg* ArgObjectFunction::op(
   Arg* right
 )
 {
-  ArgObjectInterface* obj = m_obj->get_object();
-  if (obj) {
-    // Only allow binary ( operator - object method call
-    if (Arg::Binary == optype &&
-        "(" == opname) {
-      return obj->arg_function(m_name,right);
-    }
+  // Only allow binary ( operator - object method call
+  if (Arg::Binary == optype && "(" == opname) {
+    return call(right);
   }
   
   return 0;
 }
 
+//=============================================================================
+Arg* ArgObjectFunction::call(Arg* args)
+{
+  ArgObjectInterface* obj = m_obj->get_object();
+  if (obj) {
+    return obj->arg_function(m_name,args);
+  }
+  return 0;
+}
 
 };

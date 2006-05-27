@@ -249,12 +249,7 @@ Arg* Module::arg_lookup(const std::string& name)
 //=============================================================================
 Arg* Module::arg_resolve(const std::string& name)
 {
-  Arg* a = ArgObjectInterface::arg_resolve(name);
-  if ( m_parent && (a==0 || (dynamic_cast<ArgError*>(a)!=0)) ) {
-    delete a;
-    return m_parent->arg_resolve(name);
-  }
-  return a;
+  return ArgObjectInterface::arg_resolve(name);
 }
 
 //=============================================================================
@@ -458,16 +453,39 @@ ModuleLoader* Module::find_module(const std::string& name)
 }
 
 //=============================================================================
-bool Module::load_config_file(const FilePath& path)
+bool Module::load_config_file(FilePath path)
 {
-  std::string p = path.path();
-  if (p.empty()) {
-    std::string file = m_name + ".conf";
-    FilePath default_path(get_conf_path() + file);
-    p = default_path.path();
+  if (path.path().empty()) {
+    // Look for config file in standard locations
+    int i=0;
+    do {
+      switch (++i) {
+        case 1:
+          // confpath/module.conf
+          path = get_conf_path() +
+                 FilePath(m_name + ".conf");
+          break;
+        case 2:
+          // confpath/module/module.conf (DEV)
+          path = get_conf_path() +
+                 FilePath(m_name) + 
+                 FilePath(m_name + ".conf");
+          break;
+        case 3:
+          // confpath/parent/module/module.conf (DEV)
+          if (!m_parent) continue;
+          path = get_conf_path() +
+                 FilePath(m_parent->name()) + 
+                 FilePath(m_name) + 
+                 FilePath(m_name + ".conf");
+          break;
+          
+        default: return false; // Can't find conf file
+      }
+    } while (!FileStat(path).is_file());
   }
 
-  ConfigFile config(p);
+  ConfigFile config(path);
   ModuleRef modref = ref();
   ArgModule* ctx = new ArgModule(modref);
   return config.load(ctx);

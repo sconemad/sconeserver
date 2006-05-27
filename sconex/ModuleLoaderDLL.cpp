@@ -61,34 +61,49 @@ void ModuleLoaderDLL::load_module()
     switch (++i) {
 #ifdef WIN32
       case 1:
-        path = get_path() + FilePath(m_name + ".dll");
+        // modpath\module.dll
+        path = get_path() +
+               FilePath(m_name + ".dll");
         break;
+
       case 2:
-        path = FilePath(m_name) + FilePath(m_name + ".dll");
+        // modpath\module\module.dll (DEV)
+        path = get_path() +
+               FilePath(m_name) +
+               FilePath(m_name + ".dll");
         break;
+
       case 3:
-        path = get_path() + FilePath(m_name) + FilePath(m_name + ".dll");
+        // modpath\parent\module\module.dll (DEV)
+        if (!m_parent) continue;
+        path = get_path() +
+               FilePath(m_parent->name()) +
+               FilePath(m_name) +
+               FilePath(m_name + ".dll");
         break;
 #else
       case 1:
-        path = get_path() + FilePath(m_name);
+        // modpath/module.so
+        path = get_path() +
+               FilePath(m_name + ".so");
         break;
+
       case 2:
-        path = FilePath(m_name) + FilePath(".libs") + FilePath(m_name);
+        // modpath/module/.libs/module.so (DEV)
+        path = get_path() +
+               FilePath(m_name) +
+               FilePath(".libs") +
+               FilePath(m_name + ".so");
         break;
+        
       case 3:
-        path = get_path() + FilePath(m_name) +
-               FilePath(".libs") + FilePath(m_name);
-        break;
-      case 4:
-        path = get_path() + FilePath(m_name + ".so");
-        break;
-      case 5:
-        path = FilePath(m_name) + FilePath(".libs") + FilePath(m_name + ".so");
-        break;
-      case 6:
-        path = get_path() + FilePath(m_name) +
-               FilePath(".libs") + FilePath(m_name + ".so");
+        // modpath/parent/module/.libs/module.so (DEV)
+        if (!m_parent) continue;
+        path = get_path() +
+               FilePath(m_parent->name()) +
+               FilePath(m_name) +
+               FilePath(".libs") +
+               FilePath(m_name + ".so");
         break;
 #endif
       default: return; // Can't find it anywhere

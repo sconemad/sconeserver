@@ -48,11 +48,13 @@ bool ConfigFile::load(
   ArgObject* ctx
 )
 {
+  ctx->log("LOAD " + m_filename.path());
   File conf;
   conf.open(m_filename,File::Read);
   ArgScript* script = new ArgScript(ctx);
   conf.add_stream(script);
   script->event(Stream::Readable);
+  ctx->log("DONE " + m_filename.path());
 
   return true;
 }

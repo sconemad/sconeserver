@@ -1,4 +1,12 @@
 
+2006-05-27 Andrew Wedgbury <wedge@sconemad.com>
+	
+	* sconex/ModuleLoaderDLL: Rationalise module search paths.
+	* sconex/Module: Look in several places for module config file.
+	* sconex/Module: Don't allow resolve calls to descend module trees.
+	* sconex/ArgObject: Improve structure of function and log methods.
+	* getfile: Access mime module via kernel instead of evaluation.
+
 2006-05-23 Andrew Wedgbury <wedge@sconemad.com>
 
 	* http/ResponseStream: Check HTTP Message is valid.
@@ -56,7 +64,7 @@
 	
 2006-05-03 Andrew Wedgbury <wedge@sconemad.com>
 
-	* getfile: Send Forbidden" if file cannot be opened.
+	* getfile: Send Forbidden if file cannot be opened.
 	* sconex/Kernel: Add set_user method to set effective user/group ids.
 	
 2006-05-01 Andrew Wedgbury <wedge@sconemad.com>
