@@ -224,7 +224,13 @@ BuildStep.h
 
 testbuilder_la_LDFLAGS = -module -avoid-version
 sysconf_DATA = testbuilder.conf
-EXTRA_DIST = $(sysconf_DATA) testbuilder.dsp
+EXTRA_DIST = $(sysconf_DATA) testbuilder.dsp \
+scripts/cvs \
+scripts/make \
+scripts/remove \
+scripts/svn \
+scripts/tarball
+
 all: all-am
 
 .SUFFIXES:
@@ -398,6 +404,7 @@ distclean-tags:
 	-rm -f TAGS ID GTAGS GRTAGS GSYMS GPATH tags
 
 distdir: $(DISTFILES)
+	$(mkdir_p) $(distdir)/scripts
 	@srcdirstrip=`echo "$(srcdir)" | sed 's|.|.|g'`; \
 	topsrcdirstrip=`echo "$(top_srcdir)" | sed 's|.|.|g'`; \
 	list='$(DISTFILES)'; for file in $$list; do \

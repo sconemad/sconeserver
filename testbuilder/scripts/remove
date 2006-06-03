@@ -1,0 +1,15 @@
+#!/usr/bin/perl -w
+#
+# SconeServer (http://www.sconemad.com)
+# Copyright (c) 2000-2006 Andrew Wedgbury <wedge@sconemad.com>
+#
+# TestBuilder remove script
+#
+
+my $dir = $ARGV[0];
+
+# Make files writable
+system("chmod","-R","u+w",$dir);
+
+# Remove
+exit (system("rm","-rf",$dir) >> 8);

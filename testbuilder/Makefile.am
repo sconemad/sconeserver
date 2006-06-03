@@ -25,4 +25,9 @@ testbuilder_la_LDFLAGS = -module -avoid-version
 
 sysconf_DATA = testbuilder.conf
 
-EXTRA_DIST = $(sysconf_DATA) testbuilder.dsp
+EXTRA_DIST = $(sysconf_DATA) testbuilder.dsp \
+scripts/cvs \
+scripts/make \
+scripts/remove \
+scripts/svn \
+scripts/tarball

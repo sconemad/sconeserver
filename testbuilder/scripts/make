@@ -1,0 +1,12 @@
+#!/usr/bin/perl -w
+#
+# SconeServer (http://www.sconemad.com)
+# Copyright (c) 2000-2006 Andrew Wedgbury <wedge@sconemad.com>
+#
+# TestBuilder make script
+#
+
+# Change this to correspond to the 'make' command on your system:
+my $MAKE = "/usr/bin/make";
+
+exit (system($MAKE,$ARGV[0]) >> 8);

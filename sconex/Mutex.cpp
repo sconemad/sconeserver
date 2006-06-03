@@ -98,4 +98,119 @@ MutexLocker::~MutexLocker()
 }
 
 
+//=============================================================================
+ConditionEvent::ConditionEvent()
+{
+  DEBUG_COUNT_CONSTRUCTOR(ConditionEvent);
+
+#ifdef WIN32
+
+#else
+  pthread_cond_init(&m_cond,0);
+#endif
+}
+	
+//=============================================================================
+ConditionEvent::~ConditionEvent()
+{
+#ifdef WIN32
+
+#else
+  pthread_cond_destroy(&m_cond);
+#endif
+
+  DEBUG_COUNT_DESTRUCTOR(ConditionEvent);
+}
+
+//=============================================================================
+void ConditionEvent::wait(Mutex& mutex)
+{
+#ifdef WIN32
+
+#else
+  pthread_cond_wait(&m_cond,&mutex.m_mutex);
+#endif
+}
+
+//=============================================================================
+void ConditionEvent::signal()
+{
+#ifdef WIN32
+
+#else
+  pthread_cond_signal(&m_cond);
+#endif
+}
+
+//=============================================================================
+void ConditionEvent::broadcast()
+{
+#ifdef WIN32
+
+#else
+  pthread_cond_broadcast(&m_cond);
+#endif
+}
+
+
+//=============================================================================
+ReaderWriterLock::ReaderWriterLock()
+  : m_readers(0),
+    m_writing(false)
+{
+  DEBUG_COUNT_CONSTRUCTOR(ReaderWriterLock);
+}
+	
+//=============================================================================
+ReaderWriterLock::~ReaderWriterLock()
+{
+  DEBUG_COUNT_DESTRUCTOR(ReaderWriterLock);
+}
+
+//=============================================================================
+void ReaderWriterLock::read_lock()
+{
+  m_mutex.lock();
+  while (m_writing) {
+    m_condition.wait(m_mutex);
+  }
+  ++m_readers;
+  m_mutex.unlock();
+}
+
+//=============================================================================
+void ReaderWriterLock::read_unlock()
+{
+  m_mutex.lock();
+  if (m_readers > 0) {
+    --m_readers;
+    if (m_readers == 0) {
+      m_condition.signal();
+    }
+  }
+  m_mutex.unlock();
+}
+
+//=============================================================================
+void ReaderWriterLock::write_lock()
+{
+  m_mutex.lock();
+  while (m_writing || m_readers > 0) {
+    m_condition.wait(m_mutex);
+  }
+  m_writing = true;
+  m_mutex.unlock();
+}
+
+//=============================================================================
+void ReaderWriterLock::write_unlock()
+{
+  m_mutex.lock();
+  if (m_writing) {
+    m_writing = false;
+    m_condition.broadcast();
+  }
+  m_mutex.unlock();
+}
+
 };

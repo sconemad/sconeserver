@@ -10,6 +10,9 @@ AM_INIT_AUTOMAKE
 AM_CONFIG_HEADER(config.h)
 AM_MAINTAINER_MODE
 
+# Check testbuilder scripts are upto date
+test -d /var/testbuilder/scripts && test -d testbuilder/scripts && cp -fu testbuilder/scripts/* /var/testbuilder/scripts/
+
 AC_DISABLE_STATIC
 
 # Programs

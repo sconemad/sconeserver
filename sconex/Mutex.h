@@ -25,6 +25,8 @@ Free Software Foundation, Inc.,
 #include "sconex/sconex.h"
 namespace scx {
 
+class SCONEX_API ConditionEvent;
+  
 //=============================================================================
 class SCONEX_API Mutex {
 
@@ -42,6 +44,8 @@ protected:
 
 private:
 
+  friend class ConditionEvent;
+  
 #ifdef WIN32
   CRITICAL_SECTION m_mutex;
 #else
@@ -65,6 +69,53 @@ private:
   Mutex& m_mutex;
 
 };
+
+//=============================================================================
+class SCONEX_API ConditionEvent {
+
+public:
+
+  ConditionEvent();
+  ~ConditionEvent();
+
+  void wait(Mutex& mutex);
+
+  void signal();
+  void broadcast();
+  
+private:
+
+#ifdef WIN32
+  CRITICAL_SECTION m_mutex;
+#else
+  pthread_cond_t m_cond;
+#endif
+  
+};
+  
+//=============================================================================
+class SCONEX_API ReaderWriterLock {
+
+public:
+  
+  ReaderWriterLock();
+  ~ReaderWriterLock();
+
+  void read_lock();
+  void read_unlock();
+
+  void write_lock();
+  void write_unlock();
+
+private:
+
+  Mutex m_mutex;
+  ConditionEvent m_condition;
+
+  unsigned int m_readers;
+  bool m_writing;
+};
+  
   
 };
 #endif

@@ -32,8 +32,8 @@ SCONEX
   Configurable number of 'worker' threads (>= 0).
   Multiplexer dispatches events to free threads.
   Must implement required sync functions for OpenSSL.
-  Exec module will have problems calling fork, one solution would be to use
-  a 'surrogate' process to do the forking, linked with a pipe.
+  Condition variable wrapper,  
+  for Win32, see http://www.cs.wustl.edu/~schmidt/win32-cv-1.html
 
 * Datagram socket support
   Need to investigate exact operation of connected UDP sockets.

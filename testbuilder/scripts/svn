@@ -1,0 +1,20 @@
+#!/usr/bin/perl -w
+#
+# SconeServer (http://www.sconemad.com)
+# Copyright (c) 2000-2006 Andrew Wedgbury <wedge@sconemad.com>
+#
+# TestBuilder Subversion source script
+#
+
+my ($uri) = @ARGV;
+die("SVN location not specified") if !defined $uri;
+
+$ENV{'HOME'} = "/var/testbuilder";
+system_checkfail("svn","checkout","--non-interactive",$uri,".");
+
+sub system_checkfail
+{
+  print("RUNNING: " . join(" ",@_) . "\n");
+  my $err = system(@_);
+  exit($err >> 8) if ($err != 0);
+}

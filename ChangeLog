@@ -1,4 +1,10 @@
 
+2006-06-03 Andrew Wedgbury <wedge@sconemad.com>
+
+	* doc: Fix doctype headers and image links.
+	* sconex/Mutex: Add ConditionEvent, ReaderWriterLock (Win32 TODO).
+	* testbuilder: Add testbuilder scripts.
+	
 2006-05-27 Andrew Wedgbury <wedge@sconemad.com>
 	
 	* sconex/ModuleLoaderDLL: Rationalise module search paths.

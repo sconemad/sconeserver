@@ -1,0 +1,36 @@
+#!/usr/bin/perl -w
+#
+# SconeServer (http://www.sconemad.com)
+# Copyright (c) 2000-2006 Andrew Wedgbury <wedge@sconemad.com>
+#
+# TestBuilder CVS source script
+#
+
+my ($server,$path,$module) = @ARGV;
+die("CVS server location not specified") if !defined $server;
+die("CVS path not specified") if !defined $path;
+die("Module not specified") if !defined $module;
+
+my $d = "-d:pserver:anonymous\@$server:$path";
+
+# Login to CVS server
+system_checkfail("echo \"\n\" > CVS_PASS");
+system_checkfail("cvs $d login < CVS_PASS");
+
+# Checkout code
+system_checkfail("cvs","-z3",$d,"co","-P",$module);
+
+# Move everything out of the module dir into current dir
+system_checkfail("mv $module/* .");
+
+# Remove module dir
+system_checkfail("rm","-rf",$module);
+
+exit(0);
+
+sub system_checkfail
+{
+  print("RUNNING: " . join(" ",@_) . "\n");
+  my $err = system(@_);
+  exit($err >> 8) if ($err != 0);
+}

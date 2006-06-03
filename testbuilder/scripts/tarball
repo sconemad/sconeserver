@@ -1,0 +1,71 @@
+#!/usr/bin/perl -w
+#
+# SconeServer (http://www.sconemad.com)
+# Copyright (c) 2000-2006 Andrew Wedgbury <wedge@sconemad.com>
+#
+# TestBuilder tarball source script
+#
+
+my ($uri) = @ARGV;
+die("Tarball location not specified") if !defined $uri;
+
+if ($uri !~ /(^|\/)([^\/]+)$/) {
+  exit(1);
+}
+my $archive_file = $2;
+my $archive_path;
+
+# Obtain source archive
+
+if ($uri =~ /^(http|ftp)\:/) {
+  system_checkfail("wget",$uri);
+  $archive_path = $archive_file;
+
+} elsif ($uri =~ /^(file:\/\/)?(\/.+)$/) {
+  $archive_path = $2;
+
+} else {
+  print STDERR "Unknown source URI '$uri'\n";
+  exit(1);
+}
+
+# Unpack source
+
+my $src_path;
+if ($archive_file =~ /^(.+)\.(tar\.gz|tgz)$/) {
+  $src_path = $1;
+  system_checkfail("tar","-zxvf",$archive_path);
+
+} elsif ($archive_file =~ /^(.+)\.tar\.bz2$/) {
+  $src_path = $1;
+  system_checkfail("tar","-jxvf",$archive_path);
+
+} elsif ($archive_file =~ /^(.+)\.zip$/) {
+  $src_path = $1;
+  system_checkfail("unzip",$archive_path);
+
+} else {
+  print STDERR "Unknown file format '$archive_file'\n";
+  exit(1);
+}
+
+if (-d $src_path) {
+  # Move everything out of the unpack dir into current dir
+  system_checkfail("mv $src_path/* .");
+
+  # Remove unpack dir
+  system_checkfail("rm","-rf",$src_path);
+}
+
+# Remove archive file if it was downloaded
+if ($archive_path eq $archive_file) {
+  system_checkfail("rm",$archive_file);
+}
+
+sub system_checkfail
+{
+  print("RUNNING: " . join(" ",@_) . "\n");
+  my $err = system(@_);
+  exit($err >> 8) if ($err != 0);
+}
+
