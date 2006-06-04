@@ -1,4 +1,8 @@
 
+2006-06-04 Andrew Wedgbury <wedge@sconemad.com>
+
+	* sconex/Arg: Guard against integer divide by zero in ArgInt.
+	
 2006-06-03 Andrew Wedgbury <wedge@sconemad.com>
 
 	* doc: Fix doctype headers and image links.

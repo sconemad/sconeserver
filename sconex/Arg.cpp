@@ -170,7 +170,11 @@ Arg* ArgInt::op(OpType optype, const std::string& opname, Arg* right)
           return new ArgInt(m_value * rvalue);
 
         } else if ("/"==opname) { // Divide
-          return new ArgInt(m_value / rvalue);
+          if (rvalue != 0) {
+            return new ArgInt(m_value / rvalue);
+          } else {
+            return new ArgError("Divide by zero");
+          }
 
         } else if (">"==opname) { // Greater than
           return new ArgInt(m_value > rvalue);
