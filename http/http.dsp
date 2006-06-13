@@ -92,6 +92,14 @@ LINK32=link.exe
 # PROP Default_Filter "cpp;c;cxx;rc;def;r;odl;idl;hpj;bat"
 # Begin Source File
 
+SOURCE=.\ConnectionStream.cpp
+# End Source File
+# Begin Source File
+
+SOURCE=.\DocRoot.cpp
+# End Source File
+# Begin Source File
+
 SOURCE=.\FSDirectory.cpp
 # End Source File
 # Begin Source File
@@ -105,6 +113,10 @@ SOURCE=.\FSLink.cpp
 # Begin Source File
 
 SOURCE=.\FSNode.cpp
+# End Source File
+# Begin Source File
+
+SOURCE=.\HeaderTable.cpp
 # End Source File
 # Begin Source File
 
@@ -124,7 +136,15 @@ SOURCE=.\HTTPStream.cpp
 # End Source File
 # Begin Source File
 
+SOURCE=.\MessageStream.cpp
+# End Source File
+# Begin Source File
+
 SOURCE=.\Request.cpp
+# End Source File
+# Begin Source File
+
+SOURCE=.\ResponseStream.cpp
 # End Source File
 # Begin Source File
 
@@ -134,6 +154,14 @@ SOURCE=.\Status.cpp
 # Begin Group "Header Files"
 
 # PROP Default_Filter "h;hpp;hxx;hm;inl"
+# Begin Source File
+
+SOURCE=.\ConnectionStream.h
+# End Source File
+# Begin Source File
+
+SOURCE=.\DocRoot.h
+# End Source File
 # Begin Source File
 
 SOURCE=.\FSDirectory.h
@@ -149,6 +177,10 @@ SOURCE=.\FSLink.h
 # Begin Source File
 
 SOURCE=.\FSNode.h
+# End Source File
+# Begin Source File
+
+SOURCE=.\HeaderTable.h
 # End Source File
 # Begin Source File
 
@@ -172,7 +204,15 @@ SOURCE=.\HTTPStream.h
 # End Source File
 # Begin Source File
 
+SOURCE=.\MessageStream.h
+# End Source File
+# Begin Source File
+
 SOURCE=.\Request.h
+# End Source File
+# Begin Source File
+
+SOURCE=.\ResponseStream.h
 # End Source File
 # Begin Source File
 
