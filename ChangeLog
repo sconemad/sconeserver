@@ -1,5 +1,5 @@
 
-2006-06-xx Andrew Wedgbury <wedge@sconemad.com>
+2006-06-13 Andrew Wedgbury <wedge@sconemad.com>
 
 	* all: Update Win32 project files.
 	* sconex/Process: Some Win32 updates.
