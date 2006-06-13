@@ -23,8 +23,9 @@ Free Software Foundation, Inc.,
 #define scxDebug_h
 
 // THIS TURNS DEBUGGING ON AND OFF
-#define _DEBUG
-
+#ifndef WIN32
+#  define _DEBUG
+#endif
 
 #include "sconex/sconex.h"
 namespace scx {

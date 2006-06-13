@@ -76,6 +76,7 @@ private:
   
 #ifdef WIN32
   DWORD m_pid;
+  HANDLE m_hprocess;
 #else
   pid_t m_pid;
   // Process proxy vars

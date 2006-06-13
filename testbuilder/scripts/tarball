@@ -38,7 +38,10 @@ if ($archive_file =~ /^(.+)\.(tar\.gz|tgz)$/) {
 
 } elsif ($archive_file =~ /^(.+)\.tar\.bz2$/) {
   $src_path = $1;
-  system_checkfail("tar","-jxvf",$archive_path);
+  system_checkfail("bunzip2","-k",$archive_path);
+  $tar_file = "$src_path.tar";
+  system_checkfail("tar","-xvf",$tar_file);
+  system_checkfail("rm",$tar_file);
 
 } elsif ($archive_file =~ /^(.+)\.zip$/) {
   $src_path = $1;

@@ -616,8 +616,8 @@ bool Proxy::launch()
     ::close(d[1]);
 
     // Set user and group ids
-    if (m_uid > 0) ::setuid(m_uid);
     if (m_gid > 0) ::setgid(m_gid);
+    if (m_uid > 0) ::setuid(m_uid);
     
     // Duplicate standard descriptors on to our end of the socketpair
     ::dup2(d[0],0);
@@ -735,6 +735,10 @@ Process::~Process()
     kill();
   }
 
+#ifdef WIN32
+  CloseHandle(m_hprocess);
+  
+#else
   if (m_runstate != Unstarted) {
     ProxyPacket packet;
     packet.set_type(ProxyPacket::DetatchPid);
@@ -744,7 +748,7 @@ Process::~Process()
     packet.send(s_proxy_sock);
     s_proxy_mutex->unlock();
   }
-
+#endif
   DEBUG_COUNT_DESTRUCTOR(Process);
 }
 
@@ -820,7 +824,7 @@ bool Process::launch()
   
   // Don't need these handles any more
   CloseHandle(proc_info.hThread);
-  CloseHandle(proc_info.hProcess);
+  m_hprocess = proc_info.hProcess;
   
 #else // *NIX
 
@@ -896,7 +900,7 @@ bool Process::launch()
 bool Process::kill()
 {
 #ifdef WIN32
-  //TODO
+  return (0 != ::TerminateProcess(m_hprocess,0));
 #else 
   return (0 == ::kill(m_pid,SIGKILL));
 #endif
@@ -911,6 +915,10 @@ bool Process::is_running()
 //============================================================================
 bool Process::get_exitcode(int& code)
 {
+#ifdef WIN32
+  return (0 != ::GetExitCodeProcess(m_hprocess,&code));
+  
+#else
   ProxyPacket packet;
 
   switch (m_runstate) {
@@ -950,6 +958,7 @@ bool Process::get_exitcode(int& code)
   }
   
   return (m_runstate == Terminated);
+#endif
 }
 
 //============================================================================

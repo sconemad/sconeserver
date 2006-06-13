@@ -149,19 +149,32 @@ bool FilePath::mkdir(const FilePath& path, bool recursive, mode_t mode)
         break;
       }
       std::string sub = std::string(str,0,i);
+#ifdef WIN32
+      ::CreateDirectory(sub.c_str(),0);
+#else
       ::mkdir(sub.c_str(),mode);
+#endif
       ++i;
     }
   }
+  
+#ifdef WIN32
+  return (0 != ::CreateDirectory(sub.c_str(),0));
+#else
   return (0 == ::mkdir(str.c_str(),mode));
+#endif
 }
 
 //=============================================================================
 bool FilePath::chown(const FilePath& path, const User& user)
 {
+#ifdef WIN32
+  return true;
+#else
   return (0 == ::chown(path.path().c_str(),
                        user.get_user_id(),
                        user.get_group_id()));
+#endif
 }
 
 };

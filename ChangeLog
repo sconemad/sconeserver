@@ -1,4 +1,12 @@
 
+2006-06-xx Andrew Wedgbury <wedge@sconemad.com>
+
+	* all: Update Win32 project files.
+	* sconex/Process: Some Win32 updates.
+	* testbuilder/scripts: Make tarball script work on OpenBSD.
+	* sconex/Process: Reverse setuid/setgid order so the second call works.
+	* sconex/User: Reverse setuid/setgid order so the second call works.
+
 2006-06-04 Andrew Wedgbury <wedge@sconemad.com>
 
 	* sconex/Arg: Guard against integer divide by zero in ArgInt.

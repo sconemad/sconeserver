@@ -3,6 +3,18 @@ Microsoft Developer Studio Workspace File, Format Version 6.00
 
 ###############################################################################
 
+Project: "bluetooth"=.\router\bluetooth\bluetooth.dsp - Package Owner=<4>
+
+Package=<5>
+{{{
+}}}
+
+Package=<4>
+{{{
+}}}
+
+###############################################################################
+
 Project: "dirindex"=.\http\dirindex\dirindex.dsp - Package Owner=<4>
 
 Package=<5>
@@ -68,6 +80,42 @@ Package=<4>
     Begin Project Dependency
     Project_Dep_Name sconex
     End Project Dependency
+}}}
+
+###############################################################################
+
+Project: "ip"=.\router\ip\ip.dsp - Package Owner=<4>
+
+Package=<5>
+{{{
+}}}
+
+Package=<4>
+{{{
+}}}
+
+###############################################################################
+
+Project: "ip6"=.\router\ip6\ip6.dsp - Package Owner=<4>
+
+Package=<5>
+{{{
+}}}
+
+Package=<4>
+{{{
+}}}
+
+###############################################################################
+
+Project: "local"=.\router\local\local.dsp - Package Owner=<4>
+
+Package=<5>
+{{{
+}}}
+
+Package=<4>
+{{{
 }}}
 
 ###############################################################################
@@ -185,6 +233,18 @@ Package=<4>
     Begin Project Dependency
     Project_Dep_Name sconex
     End Project Dependency
+}}}
+
+###############################################################################
+
+Project: "testbuilder"=.\testbuilder\testbuilder.dsp - Package Owner=<4>
+
+Package=<5>
+{{{
+}}}
+
+Package=<4>
+{{{
 }}}
 
 ###############################################################################
