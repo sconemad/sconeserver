@@ -63,13 +63,8 @@ private:
   
   std::string m_user_name;
 
-#ifdef WIN32
-
-#else
   uid_t m_user_id;
   gid_t m_group_id;
-#endif
-  
 };
 
 };

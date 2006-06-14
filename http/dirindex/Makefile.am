@@ -10,4 +10,3 @@ DirIndexModule.cpp
 
 dirindex_la_LDFLAGS = -module -avoid-version
 
-EXTRA_DIST = dirindex.dsp

@@ -1,7 +1,7 @@
 Welcome to SconeServer!
 
 SconeServer is a modular, object-orientated and extremely versatile network 
-server framework for GNU/Linux, UNIX and Windows platforms.
+server framework for UNIX-like platforms.
 
 SconeServer is open source software, and is released under the terms of the 
 GNU General Public Licence, see the 'COPYING' file for more details.

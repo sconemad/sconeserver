@@ -16,4 +16,3 @@ LocalSocketAddress.h
 
 local_la_LDFLAGS = -module -avoid-version
 
-EXTRA_DIST = local.dsp

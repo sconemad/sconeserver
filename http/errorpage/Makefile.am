@@ -10,4 +10,3 @@ ErrorPageModule.cpp
 
 errorpage_la_LDFLAGS = -module -avoid-version
 
-EXTRA_DIST = errorpage.dsp

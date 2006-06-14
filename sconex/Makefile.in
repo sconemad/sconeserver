@@ -65,8 +65,8 @@ am__installdirs = "$(DESTDIR)$(libdir)" \
 libLTLIBRARIES_INSTALL = $(INSTALL)
 LTLIBRARIES = $(lib_LTLIBRARIES)
 libsconex_la_LIBADD =
-am_libsconex_la_OBJECTS = main.lo sconex.lo utils.lo Arg.lo \
-	ArgObject.lo ArgProc.lo ArgScript.lo ArgStatement.lo Buffer.lo \
+am_libsconex_la_OBJECTS = sconex.lo utils.lo Arg.lo ArgObject.lo \
+	ArgProc.lo ArgScript.lo ArgStatement.lo Buffer.lo \
 	ConfigFile.lo ConfigStream.lo Console.lo Date.lo Debug.lo \
 	Descriptor.lo File.lo FileDir.lo FilePath.lo FileStat.lo \
 	Kernel.lo LineBuffer.lo ListenerSocket.lo Logger.lo MemFile.lo \
@@ -221,7 +221,6 @@ target_vendor = @target_vendor@
 AM_CPPFLAGS = -I$(top_srcdir)
 lib_LTLIBRARIES = libsconex.la
 libsconex_la_SOURCES = \
-main.cpp \
 sconex.cpp \
 utils.cpp \
 Arg.cpp \
@@ -332,7 +331,6 @@ VersionTag_ut.cpp
 
 utest_LDADD = libsconex.la
 TESTS = utest
-EXTRA_DIST = sconex.dsp
 all: all-am
 
 .SUFFIXES:
@@ -463,7 +461,6 @@ distclean-compile:
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/User.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/VersionTag.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/VersionTag_ut.Po@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/main.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/sconex.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/utest.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/utils.Plo@am__quote@

@@ -11,9 +11,6 @@ bin_PROGRAMS = sconed
 sconed_SOURCES = main.cpp
 sconed_LDADD = $(top_builddir)/sconex/libsconex.la
 
-noinst_HEADERS = \
-res/resource.h
-
 MODULES = router http mime simple ssl stat exec test testbuilder
 SUBDIRS = sconex doc $(MODULES)
 
@@ -24,9 +21,4 @@ sysconf_DATA = sconeserver.conf
 
 EXTRA_DIST = \
 $(sysconf_DATA) \
-autogen.sh \
-sconeserver.dsw \
-sconed.dsp \
-config_win.h \
-res/sconeserver.rc \
-res/app.ico 
+autogen.sh

@@ -46,4 +46,4 @@ http_la_LDFLAGS = -module -avoid-version
 
 sysconf_DATA = http.conf
 
-EXTRA_DIST = $(sysconf_DATA) http.dsp
+EXTRA_DIST = $(sysconf_DATA)

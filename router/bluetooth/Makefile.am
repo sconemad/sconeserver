@@ -17,5 +17,3 @@ BluetoothSocketAddress.h
 bluetooth_la_LDFLAGS = -module -avoid-version
 bluetooth_la_LIBADD = -lbluetooth
 
-
-EXTRA_DIST = bluetooth.dsp

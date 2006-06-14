@@ -219,24 +219,12 @@ Kernel::Kernel()
   : Module("sconeserver",scx::version()),
     m_state(Init)
 {
-
-#ifdef WIN32
-  const unsigned int MAX_HOSTNAME = 256;
-  char name[MAX_HOSTNAME];
-  if (0 == ::GetComputerNameEx(ComputerNameDnsDomain,name,MAX_HOSTNAME)) {
-    m_system_nodename = name;
-  }
-  m_system_version = "Win32";
-  m_system_hardware = "x86";
-  
-#else
   struct utsname sysinf;
   if (::uname(&sysinf) != -1) {
     m_system_nodename = sysinf.nodename;
     m_system_version = std::string(sysinf.sysname) + " " + sysinf.release;
     m_system_hardware = sysinf.machine;
   }
-#endif  
   Process::init();
 }
 

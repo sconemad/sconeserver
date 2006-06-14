@@ -46,13 +46,8 @@ private:
 
   friend class ConditionEvent;
   
-#ifdef WIN32
-  CRITICAL_SECTION m_mutex;
-#else
   pthread_mutex_t m_mutex;
   pthread_mutexattr_t m_attr;
-#endif
-  
 };
 
 //=============================================================================
@@ -85,12 +80,7 @@ public:
   
 private:
 
-#ifdef WIN32
-  CRITICAL_SECTION m_mutex;
-#else
   pthread_cond_t m_cond;
-#endif
-  
 };
   
 //=============================================================================

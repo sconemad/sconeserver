@@ -27,24 +27,16 @@ Mutex::Mutex()
 {
   DEBUG_COUNT_CONSTRUCTOR(Mutex);
 
-#ifdef WIN32
-  InitializeCriticalSection(&m_mutex);
-#else
   pthread_mutexattr_init(&m_attr);
   pthread_mutexattr_settype(&m_attr,PTHREAD_MUTEX_RECURSIVE);
   pthread_mutex_init(&m_mutex,&m_attr);
-#endif
 }
 	
 //=============================================================================
 Mutex::~Mutex()
 {
-#ifdef WIN32
-  DeleteCriticalSection(&m_mutex);
-#else
   pthread_mutex_destroy(&m_mutex);
   pthread_mutexattr_destroy(&m_attr);
-#endif
 
   DEBUG_COUNT_DESTRUCTOR(Mutex);
 }
@@ -52,33 +44,19 @@ Mutex::~Mutex()
 //=============================================================================
 bool Mutex::lock()
 {
-#ifdef WIN32
-  EnterCriticalSection(&m_mutex);
-  return true;
-#else
   return (0 == pthread_mutex_lock(&m_mutex));
-#endif
 }
 
 //=============================================================================
 bool Mutex::try_lock()
 {
-#ifdef WIN32
-  return (0 != TryEnterCriticalSection(&m_mutex));
-#else
   return (0 == pthread_mutex_trylock(&m_mutex));
-#endif
 }
 
 //=============================================================================
 bool Mutex::unlock()
 {
-#ifdef WIN32
-  LeaveCriticalSection(&m_mutex);
-  return true;
-#else
   return (0 == pthread_mutex_unlock(&m_mutex));
-#endif
 }
 
 
@@ -103,21 +81,13 @@ ConditionEvent::ConditionEvent()
 {
   DEBUG_COUNT_CONSTRUCTOR(ConditionEvent);
 
-#ifdef WIN32
-
-#else
   pthread_cond_init(&m_cond,0);
-#endif
 }
 	
 //=============================================================================
 ConditionEvent::~ConditionEvent()
 {
-#ifdef WIN32
-
-#else
   pthread_cond_destroy(&m_cond);
-#endif
 
   DEBUG_COUNT_DESTRUCTOR(ConditionEvent);
 }
@@ -125,31 +95,19 @@ ConditionEvent::~ConditionEvent()
 //=============================================================================
 void ConditionEvent::wait(Mutex& mutex)
 {
-#ifdef WIN32
-
-#else
   pthread_cond_wait(&m_cond,&mutex.m_mutex);
-#endif
 }
 
 //=============================================================================
 void ConditionEvent::signal()
 {
-#ifdef WIN32
-
-#else
   pthread_cond_signal(&m_cond);
-#endif
 }
 
 //=============================================================================
 void ConditionEvent::broadcast()
 {
-#ifdef WIN32
-
-#else
   pthread_cond_broadcast(&m_cond);
-#endif
 }
 
 

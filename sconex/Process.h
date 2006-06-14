@@ -74,16 +74,11 @@ private:
   Process(const Process& c);
   // Disallow copying
   
-#ifdef WIN32
-  DWORD m_pid;
-  HANDLE m_hprocess;
-#else
   pid_t m_pid;
   // Process proxy vars
   static pid_t s_proxy_pid;
   static SOCKET s_proxy_sock;
   static Mutex* s_proxy_mutex;
-#endif	
   
   std::string m_exe;
   std::list<std::string> m_args;

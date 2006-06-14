@@ -15,4 +15,3 @@ SimpleStreams.h
 
 simple_la_LDFLAGS = -module -avoid-version
 
-EXTRA_DIST = simple.dsp

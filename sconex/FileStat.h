@@ -71,10 +71,6 @@ private:
 
   void become(struct stat* a);
   
-#ifdef WIN32
-  void become(WIN32_FIND_DATA* a);
-#endif
-
   int m_type;
   long m_size;
   Date m_time;

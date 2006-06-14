@@ -202,7 +202,6 @@ getfile_la_SOURCES = \
 GetFileModule.cpp 
 
 getfile_la_LDFLAGS = -module -avoid-version
-EXTRA_DIST = getfile.dsp
 all: all-am
 
 .SUFFIXES:

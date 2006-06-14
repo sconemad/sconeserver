@@ -23,25 +23,12 @@ Free Software Foundation, Inc.,
 #include "sconex/Thread.h"
 namespace scx {
 
-#ifdef WIN32
-  
-//=============================================================================
-// Static thread startup proc for Win32 threads
-static DWORD WINAPI thread_run(void* data)
-{
-  return (DWORD) ((Thread*)data)->run();
-}
-  
-#else
-  
 //=============================================================================
 // Static thread startup proc for POSIX threads
 static void* thread_run(void* data)
 {
   return (void*) ((Thread*)data)->run();
 }
-
-#endif
 
 //=============================================================================
 Thread::Thread()
@@ -66,20 +53,6 @@ bool Thread::start()
     return false;
   }
   
-#ifdef WIN32
-  m_thread = CreateThread( 
-    NULL,           // no security attributes 
-    0,              // use default stack size  
-    thread_run,     // thread function 
-    this,           // argument to thread function 
-    0,              // use default creation flags 
-    &m_thread_id);  // returns the thread identifier
-  
-  if (m_thread < 0) {
-    DEBUG_LOG("start() Unable to create thread");
-    return false;
-  }
-#else
   pthread_attr_init(&m_attr);
   pthread_attr_setdetachstate(&m_attr,PTHREAD_CREATE_DETACHED);
   if (pthread_create(
@@ -90,7 +63,6 @@ bool Thread::start()
     DEBUG_LOG("start() Unable to create thread");
     return false;
   }
-#endif
 
   m_running = true;
   
@@ -106,16 +78,12 @@ bool Thread::stop()
     return false;
   }
 
-#ifdef WIN32
-  CloseHandle(m_thread);
-#else
   if (current()) {
     pthread_exit(0);
   } else {
     //    pthread_kill(m_thread,SIGKILL);
     pthread_cancel(m_thread);
   }
-#endif
 
   m_running = false;
   
@@ -139,11 +107,7 @@ bool Thread::current() const
     return false;
   }
   
-#ifdef WIN32
-  return (m_thread_id == GetCurrentThreadId());
-#else
   return pthread_equal(m_thread,pthread_self());
-#endif
 }
 
 

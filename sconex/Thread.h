@@ -60,14 +60,8 @@ private:
   
   mutable Mutex m_mutex;
   
-#ifdef WIN32
-  HANDLE m_thread; 
-  DWORD m_thread_id; 
-#else
   pthread_t m_thread;
   pthread_attr_t m_attr;
-#endif
-  
 };
 
 };

@@ -10,4 +10,3 @@ GetFileModule.cpp
 
 getfile_la_LDFLAGS = -module -avoid-version
 
-EXTRA_DIST = getfile.dsp

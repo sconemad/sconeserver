@@ -28,11 +28,7 @@ FileDir::FileDir(const FilePath& root)
     m_state(0)
 {
   DEBUG_COUNT_CONSTRUCTOR(FileDir);
-#ifdef WIN32
-  m_hsearch = INVALID_HANDLE_VALUE;
-#else
   m_dir = 0;
-#endif
 }
 
 //=============================================================================
@@ -45,47 +41,15 @@ FileDir::~FileDir()
 //=============================================================================
 void FileDir::reset()
 {
-#ifdef WIN32
-  if (m_hsearch != INVALID_HANDLE_VALUE) {
-    FindClose(m_hsearch);
-  }
-#else
   if (m_dir) {
     closedir(m_dir);
   }
-#endif
   m_state = 0;
 }
 
 //=============================================================================
 bool FileDir::next()
 {
-#ifdef WIN32
-  WIN32_FIND_DATA data;
-
-  if (m_state == 0) {
-    FilePath search = m_root + "*.*";
-    m_hsearch = FindFirstFile(search.path().c_str(),&data);
-    int i=0;
-    if (m_hsearch != INVALID_HANDLE_VALUE) {
-      m_state = 1;
-      m_current_name = data.cFileName;
-      m_current_stat.become(&data);
-      return true;
-    }
-  }
-  
-  if (m_state == 1) {
-    if (FindNextFile(m_hsearch,&data)) {
-      m_current_name = data.cFileName;
-      m_current_stat.become(&data);
-      return true;
-    }
-  }
-
-  m_state = 2;
-  return false;
-#else
   if (m_state == 0) {
     m_dir = opendir(m_root.path().c_str());
     if (m_dir) {
@@ -104,7 +68,6 @@ bool FileDir::next()
 
   m_state = 2;
   return false;
-#endif
 }
 
 //=============================================================================

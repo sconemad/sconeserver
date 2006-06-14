@@ -34,21 +34,8 @@ Free Software Foundation, Inc.,
 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA */
 
 
-#ifdef WIN32
-// Also put in a simple DllMain on Win32
-#  define SCONESERVER_MODULE(MODULE) \
-     extern "C" __declspec(dllexport) scx::Module* SconeServer_module() \
-     { \
-       return new MODULE(); \
-     } \
-     BOOL APIENTRY DllMain(HANDLE,DWORD,LPVOID) \
-     { \
-       return 1; \
-     }
-#else
-#  define SCONESERVER_MODULE(MODULE) \
-     extern "C" scx::Module* SconeServer_module() \
-     { \
-       return new MODULE(); \
-     }
-#endif
+#define SCONESERVER_MODULE(MODULE) \
+   extern "C" scx::Module* SconeServer_module() \
+   { \
+     return new MODULE(); \
+   }

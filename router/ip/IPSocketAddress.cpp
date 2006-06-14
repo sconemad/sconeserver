@@ -22,11 +22,7 @@ Free Software Foundation, Inc.,
 #include "IPSocketAddress.h"
 namespace scx {
 
-#ifdef WIN32
-#define m_s_addr m_addr.sin_addr.S_un.S_addr
-#else
 #define m_s_addr m_addr.sin_addr.s_addr
-#endif
 
 #ifndef HAVE_INET_PTON
 //=============================================================================
@@ -46,7 +42,7 @@ int inet_pton(
     }
     return 0;
 #else
-    // We'll just have to use the crap one on WIN32
+    // We'll just have to use the crap one
     *((unsigned long*)addrptr) = inet_addr(strptr);
     // (hope in worked!)
     return 1;

@@ -6,7 +6,6 @@ AM_CPPFLAGS = -I$(top_srcdir)
 lib_LTLIBRARIES = libsconex.la
 
 libsconex_la_SOURCES = \
-main.cpp \
 sconex.cpp \
 utils.cpp \
 Arg.cpp \
@@ -126,5 +125,3 @@ utest_LDADD = libsconex.la
 
 TESTS = utest
 
-
-EXTRA_DIST = sconex.dsp

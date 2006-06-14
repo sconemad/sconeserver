@@ -71,11 +71,7 @@ Condition File::open(
   
   if (flags & Create) {
     f_flags |= O_CREAT;
-#ifdef WIN32
-    f_mode = S_IREAD | S_IWRITE;
-#else
     f_mode = S_IRUSR | S_IWUSR | S_IRGRP | S_IROTH;
-#endif
   }
 
   if (flags & Truncate) {

@@ -91,11 +91,7 @@ void Debug::dbg_assert(
     
     if (m_stop_on_assert) {
       // Issue a debug breakpoint if required
-#ifdef WIN32
-      DebugBreak();
-#else
       abort();
-#endif
     }
     
   }

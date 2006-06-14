@@ -19,7 +19,6 @@ ArgTest.cpp
 argtest_LDADD = $(top_builddir)/sconex/libsconex.la
 
 EXTRA_DIST = \
-test.dsp \
 arg/forloop.test \
 site/html/index.html \
 site/html/favicon.ico \

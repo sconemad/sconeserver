@@ -210,7 +210,6 @@ noinst_HEADERS = \
 IPSocketAddress.h
 
 ip_la_LDFLAGS = -module -avoid-version
-EXTRA_DIST = ip.dsp
 all: all-am
 
 .SUFFIXES:

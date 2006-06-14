@@ -24,14 +24,11 @@ Free Software Foundation, Inc.,
 #include "sconex/FileStat.h"
 #include "sconex/FilePath.h"
 
-#ifndef WIN32
-  #include <dlfcn.h>
-  #include <sys/types.h>
-#endif
+#include <dlfcn.h>
+#include <sys/types.h>
+
 namespace scx {
 
-  //#define MOD_EXTENSION ""
-  
 typedef Module* (*PROC_SCONESERVER_MODULE) (void);
 const char* SCONESERVER_PROC_NAME = "SconeServer_module";
 
@@ -59,29 +56,7 @@ void ModuleLoaderDLL::load_module()
   int i=0;
   do {
     switch (++i) {
-#ifdef WIN32
-      case 1:
-        // modpath\module.dll
-        path = get_path() +
-               FilePath(m_name + ".dll");
-        break;
 
-      case 2:
-        // modpath\module\module.dll (DEV)
-        path = get_path() +
-               FilePath(m_name) +
-               FilePath(m_name + ".dll");
-        break;
-
-      case 3:
-        // modpath\parent\module\module.dll (DEV)
-        if (!m_parent) continue;
-        path = get_path() +
-               FilePath(m_parent->name()) +
-               FilePath(m_name) +
-               FilePath(m_name + ".dll");
-        break;
-#else
       case 1:
         // modpath/module.so
         path = get_path() +
@@ -105,7 +80,7 @@ void ModuleLoaderDLL::load_module()
                FilePath(".libs") +
                FilePath(m_name + ".so");
         break;
-#endif
+
       default: return; // Can't find it anywhere
     }
   } while (!FileStat(path).is_file());
@@ -148,11 +123,7 @@ bool ModuleLoaderDLL::load_dll(
     return false;
   }
 
-  #ifdef WIN32	
-    m_dll = LoadLibrary(filename.c_str());
-  #else
-    m_dll = dlopen(filename.c_str(),RTLD_LAZY | RTLD_GLOBAL); //RTLD_NOW);
-  #endif
+  m_dll = dlopen(filename.c_str(),RTLD_LAZY | RTLD_GLOBAL); //RTLD_NOW);
 
   if (m_dll==0) {
     return false;
@@ -169,12 +140,7 @@ bool ModuleLoaderDLL::unload_dll()
     return false;
   }
 
-  #ifdef WIN32	
-    FreeLibrary(m_dll);
-  #else
-    dlclose(m_dll);
-  #endif
-
+  dlclose(m_dll);
   m_dll=0;
 
   return true;
@@ -187,11 +153,7 @@ void* ModuleLoaderDLL::locate_symbol(
 {
   DEBUG_ASSERT(m_dll!=0,"locate_symbol() no module loaded");
 
-  #ifdef WIN32	
-    return (void*)GetProcAddress(m_dll,name.c_str());
-  #else
-    return (void*)dlsym(m_dll,name.c_str());
-  #endif
+  return (void*)dlsym(m_dll,name.c_str());
 }
 
 };

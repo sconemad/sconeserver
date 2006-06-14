@@ -202,7 +202,6 @@ dirindex_la_SOURCES = \
 DirIndexModule.cpp 
 
 dirindex_la_LDFLAGS = -module -avoid-version
-EXTRA_DIST = dirindex.dsp
 all: all-am
 
 .SUFFIXES:

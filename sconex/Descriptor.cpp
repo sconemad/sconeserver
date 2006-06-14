@@ -118,21 +118,11 @@ std::string Descriptor::describe() const
 //=============================================================================
 Descriptor::Error Descriptor::error() const
 {
-
-#ifdef WIN32
-  switch (WSAGetLastError()) {
-    case 0:	return Ok;
-    case WSAEWOULDBLOCK: return Wait;
-    default: return Fatal;
-  }
-#else
   switch (errno) {
     case 0:	return Ok;
     case EWOULDBLOCK: return Wait;
     default: return Fatal;
   }
-#endif
-
   return Ok;
 }
 
@@ -512,10 +502,6 @@ bool Descriptor::check_timeout() const
 void Descriptor::set_blocking(bool onoff)
 {
   // Set non-blocking mode
-#ifdef WIN32
-  unsigned long argp=!onoff;
-  if (ioctlsocket(fd(),FIONBIO,&argp) < 0) {
-#else
   int flags = fcntl(fd(),F_GETFL);
   if (onoff) {
     flags &= ~O_NONBLOCK;
@@ -523,7 +509,6 @@ void Descriptor::set_blocking(bool onoff)
     flags |= O_NONBLOCK;
   }
   if (fcntl(fd(),F_SETFL,flags) < 0) {
-#endif
     DESCRIPTOR_DEBUG_LOG("set_blocking() could not change mode");
   }
 }

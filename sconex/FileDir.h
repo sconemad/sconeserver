@@ -71,13 +71,7 @@ private:
   // Details for current file
   
   int m_state;
-  
-#ifdef WIN32
-  HANDLE m_hsearch;
-#else
   DIR* m_dir;
-#endif
-
 };
 
 

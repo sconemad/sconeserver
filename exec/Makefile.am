@@ -18,5 +18,3 @@ CGIResponseStream.h
 exec_la_LDFLAGS = -module -avoid-version
 
 #sysconf_DATA = ../etc/exec.conf
-
-#EXTRA_DIST = exec.dsp

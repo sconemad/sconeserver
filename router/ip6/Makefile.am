@@ -16,4 +16,3 @@ IP6SocketAddress.h
 
 ip6_la_LDFLAGS = -module -avoid-version
 
-EXTRA_DIST = ip6.dsp

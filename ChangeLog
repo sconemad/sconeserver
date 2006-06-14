@@ -1,4 +1,8 @@
 
+2006-06-14 Andrew Wedgbury <wedge@sconemad.com>
+
+	* all: Strip out all Win32 code - this is no longer a supported platform.
+	
 2006-06-13 Andrew Wedgbury <wedge@sconemad.com>
 
 	* all: Update Win32 project files.

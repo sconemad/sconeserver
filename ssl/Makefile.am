@@ -22,4 +22,4 @@ ssl_la_LIBADD = -lssl
 
 sysconf_DATA = ssl.conf
 
-EXTRA_DIST = $(sysconf_DATA) ssl.dsp
+EXTRA_DIST = $(sysconf_DATA)

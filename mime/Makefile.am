@@ -15,4 +15,4 @@ mime_la_LDFLAGS = -module -avoid-version
 
 sysconf_DATA = mime.conf
 
-EXTRA_DIST = $(sysconf_DATA) mime.dsp
+EXTRA_DIST = $(sysconf_DATA)

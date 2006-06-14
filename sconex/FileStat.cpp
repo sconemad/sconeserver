@@ -102,18 +102,10 @@ void FileStat::become(struct stat* a)
     return;
   }
 
-#ifdef WIN32
-  if (_S_IFREG & a->st_mode) {
-#else
   if (S_ISREG(a->st_mode)) {
-#endif
     m_type = StatTypeFile;
     
-#ifdef WIN32
-  } else if (_S_IFDIR & a->st_mode) {
-#else
   } else if (S_ISDIR(a->st_mode)) {
-#endif
     m_type = StatTypeDir;
     
   } else {
@@ -123,30 +115,5 @@ void FileStat::become(struct stat* a)
   m_size = (long)a->st_size;
   m_time = Date(a->st_mtime);
 }
-
-#ifdef WIN32
-//=============================================================================
-void FileStat::become(WIN32_FIND_DATA* a)
-{
-  if (a==0) {
-    m_type = StatTypeInvalid;
-    return;
-  }
-
-  if (a->dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY) {
-    m_type = StatTypeDir;
-    
-  } else {
-    m_type = StatTypeFile;
-  }
-  
-  m_size = (long)((a->nFileSizeHigh * MAXDWORD) + a->nFileSizeLow);
-
-  SYSTEMTIME st;
-  if (FileTimeToSystemTime(&a->ftLastWriteTime,&st)) {
-    m_time = Date(st.wYear,st.wMonth,st.wDay,st.wHour,st.wMinute,st.wSecond);
-  }
-}
-#endif
 
 };

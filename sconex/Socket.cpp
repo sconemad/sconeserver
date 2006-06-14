@@ -51,13 +51,7 @@ void Socket::close()
 //
 {
   if (m_socket >= 0) {
-    
-#ifdef WIN32
-    closesocket(m_socket);
-#else
     ::close(m_socket);
-#endif
-
     m_socket = -1;
     m_state = Descriptor::Closed;
   }

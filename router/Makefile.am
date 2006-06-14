@@ -21,4 +21,4 @@ router_la_LDFLAGS = -module -avoid-version
 
 sysconf_DATA = router.conf
 
-EXTRA_DIST = $(sysconf_DATA) router.dsp
+EXTRA_DIST = $(sysconf_DATA)

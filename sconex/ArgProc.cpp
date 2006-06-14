@@ -341,11 +341,7 @@ void ArgProc::next()
 
   // Operator
   int maxop=2;
-#ifdef WIN32
-  for (int ol=__min(len - m_pos,maxop); ol>0; --ol) {
-#else
   for (int ol=std::min(len - m_pos,maxop); ol>0; --ol) {
-#endif
     m_name = m_expr.substr(m_pos,ol);
     if (s_binary_ops->count(m_name) ||
         s_prefix_ops->count(m_name) ||

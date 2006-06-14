@@ -63,15 +63,10 @@ void StreamSocket::pair(
   DEBUG_ASSERT(b==0,"pair() socket b already exists");
   
   int d[2];
-#ifdef WIN32
-  //TODO: Implement windows socketpair
-  return;
-#else
   if (socketpair(PF_UNIX,SOCK_STREAM,0,d) < 0) {
     DEBUG_LOG("pair() socketpair failed");
     return;
   }
-#endif
   
   a = new StreamSocket();
   a->m_state = Socket::Connected;

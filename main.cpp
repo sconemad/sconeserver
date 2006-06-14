@@ -2,7 +2,7 @@
 
 SconeServer daemon entry point
 
-Copyright (c) 2000-2005 Andrew Wedgbury <wedge@sconemad.com>
+Copyright (c) 2000-2006 Andrew Wedgbury <wedge@sconemad.com>
 
 This program is free software; you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -68,9 +68,7 @@ int run()
 
     // Connect console if running in foreground
     if (opt_foreground) {
-#ifndef WIN32
       kernel->connect_config_console();
-#endif
     }
 
     // Run server
@@ -86,26 +84,6 @@ int run()
 
   return 0;
 }
-
-#ifdef WIN32
-
-// Globals
-char* szServiceName = "SconeServer";
-char* szServiceDesc = "An object orientated network server framework.";
-char* szRegKey = "Software\\SconeMAD\\SconeServer";
-
-// Service data
-SERVICE_STATUS service_status;
-SERVICE_STATUS_HANDLE service_status_handle;
-HANDLE hThread;
-HWND hWndMain;
-
-// Prototypes
-void WINAPI Service_Main(DWORD argc,LPTSTR *argv);
-void WINAPI Service_Ctrl(DWORD opcode);
-void load_registry();
-
-#endif
 
 //=============================================================================
 int main(int argc,char* argv[])
@@ -148,10 +126,6 @@ int main(int argc,char* argv[])
 
   }
 
-#ifndef WIN32
-
-  // POSIX startup
-
   int c;
   extern char* optarg;
   while ((c = getopt(argc,argv,"fnc:m:l:")) >= 0) {
@@ -182,279 +156,5 @@ int main(int argc,char* argv[])
   signal(SIGHUP,SIG_IGN);
   signal(SIGPIPE,SIG_IGN);
   
-  err = run();
-  
-#else
-
-  // WIN32 startup
-
-  // Read options from registry
-  load_registry();
-  
- 
-  if (arg == "-s") {
-
-    // Start system service (called from SCM)
-
-    SERVICE_TABLE_ENTRY dispatch_table[] = {
-      {szServiceName,Service_Main},
-      {0,0}
-    };
-
-    if (!StartServiceCtrlDispatcher(dispatch_table)) {
-      std::cerr << "ERROR: Unable to start service\n";
-
-    } else {
-      err=0;
-    }
-
-  } else if (arg == "-f") {
-
-    // Just run it as a regular process
-
-    opt_foreground = true;
-    err = run();
-
-  } else {
- 
-    // Start/create/delete system service
-
-    SC_HANDLE schSCManager = OpenSCManager(0,0,SC_MANAGER_CREATE_SERVICE);
-    if (!schSCManager) {
-      std::cerr << "ERROR: Unable to open service control manager\n";
-
-    } else {
-
-      // Try opening the service
-      SC_HANDLE schService = OpenService(
-        schSCManager,
-        szServiceName,
-        SERVICE_ALL_ACCESS);
-
-      if (arg == "-d") {
-
-        // Delete the service
-        if (!schService) {
-          std::cerr
-            << "ERROR: Unable to open service, or service does not exist\n";
-
-        } else {
-          if (!DeleteService(schService)) {
-            std::cerr << "ERROR: Unable to delete service\n";
-
-          } else {
-            std::cout << "Service deleted\n";
-            err=0;
-          }
-        }
-
-      } else if (arg == "-x") {
-
-        // Stop the service
-        if (!schService) {
-          std::cerr
-            << "ERROR: Unable to open service, or service does not exist\n";
-
-        } else {
-          std::cout << "Stopping service...\n";
-          SERVICE_STATUS ss;
-          if (!ControlService(schService,SERVICE_CONTROL_STOP,&ss)) {
-            std::cerr << "ERROR: Unable to stop service\n";
-
-          } else {
-            std::cout << "done\n";
-            err=0;
-          }
-        }
-
-      } else {
-
-        // Create/start the service
-        if (schService == NULL) {
-
-          // Create the service as it doesn't already exist
-          std::cout << "Service does not exist, creating...\n";
-
-          std::string path = argv[0];
-          path += " -s";
-
-          schService = CreateService( 
-            schSCManager,
-            szServiceName,
-            szServiceName,
-            SERVICE_ALL_ACCESS,
-            SERVICE_WIN32_OWN_PROCESS,
-            SERVICE_DEMAND_START,
-            SERVICE_ERROR_NORMAL,
-            path.c_str(),
-            NULL,
-            NULL,
-            NULL,                      // no dependencies 
-            NULL,
-            NULL);
-
-          if (!schService) {
-            std::cerr << "ERROR: Unable to create service\n";
-
-          } else {
-            // Set additional info (description)
-            SERVICE_DESCRIPTION sdesc;
-            sdesc.lpDescription = szServiceDesc;
-            ChangeServiceConfig2(schService,SERVICE_CONFIG_DESCRIPTION,&sdesc);
-          }
-        }
-
-        if (schService) {
-
-          // Start the service
-          std::cout << "Starting service...\n";
-          if (!StartService(schService,0,0)) {
-            std::cerr << "ERROR: Unable to start service\n";
-
-          } else {
-            std::cout << "done\n";
-            err=0;
-          }
-        }
-      }
-
-      if (schService) {
-        CloseServiceHandle(schService);
-      }
-
-      CloseServiceHandle(schSCManager);
-    }
-  }
-
-#endif
-  
-  return err;
+  return run();
 }
-
-#ifdef WIN32
-
-//===========================================================================
-void WINAPI Service_Main(DWORD argc, LPTSTR *argv)
-{
-  DWORD status;
-  DWORD specificError=0;
-
-  service_status.dwServiceType = SERVICE_WIN32;
-  service_status.dwCurrentState = SERVICE_START_PENDING;
-  service_status.dwControlsAccepted =
-    SERVICE_ACCEPT_STOP | SERVICE_ACCEPT_PAUSE_CONTINUE;
-  service_status.dwWin32ExitCode = 0;
-  service_status.dwServiceSpecificExitCode = 0;
-  service_status.dwCheckPoint = 0;
-  service_status.dwWaitHint = 0;
-
-  service_status_handle = RegisterServiceCtrlHandler(
-    szServiceName,Service_Ctrl);
-
-  if (service_status_handle == 0) {
-    return;
-  }
-
-  // Initialization
-  status = 0;
-
-  if (status != NO_ERROR) {
-    // Unable to start service
-    service_status.dwCurrentState = SERVICE_STOPPED;
-    service_status.dwCheckPoint = 0;
-    service_status.dwWaitHint = 0;
-    service_status.dwWin32ExitCode = status;
-    service_status.dwServiceSpecificExitCode = specificError;
-    SetServiceStatus (service_status_handle, &service_status);
-    return;
-  }
-
-  // Initialization complete - report running status.
-  service_status.dwCurrentState       = SERVICE_RUNNING;
-  service_status.dwCheckPoint         = 0;
-  service_status.dwWaitHint           = 0;
-  if (!SetServiceStatus(service_status_handle,&service_status)) {
-    status = GetLastError();
-  }
-
-  // Run service
-  specificError = run();
-
-  // Stopped again
-  service_status.dwCurrentState = SERVICE_STOPPED;
-  service_status.dwCheckPoint = 0;
-  service_status.dwWaitHint = 0;
-  service_status.dwWin32ExitCode = status;
-  service_status.dwServiceSpecificExitCode = specificError;
-  SetServiceStatus (service_status_handle, &service_status);
-
-  return;
-}
-
-//===========================================================================
-void WINAPI Service_Ctrl(DWORD Opcode)
-{
-  switch(Opcode) {
-
-    case SERVICE_CONTROL_PAUSE:
-      // PAUSE
-      //      paused=1;
-
-      service_status.dwCurrentState = SERVICE_PAUSED;
-      break;
-
-    case SERVICE_CONTROL_CONTINUE:
-      // CONTINUE
-      //      paused=0;
-
-      service_status.dwCurrentState = SERVICE_RUNNING;
-      break;
-
-    case SERVICE_CONTROL_STOP:
-      // STOP
-      SendMessage(hWndMain,WM_CLOSE,0,0);
-
-      service_status.dwWin32ExitCode = 0;
-      service_status.dwCurrentState = SERVICE_STOPPED;
-      service_status.dwCheckPoint = 0;
-      service_status.dwWaitHint = 0;
-      break;
-  }
-
-  // Send current status.
-  SetServiceStatus(service_status_handle,&service_status);
-  return;
-}
-
-//===========================================================================
-void load_registry()
-{
-  HKEY key=0;
-  RegOpenKeyEx(HKEY_LOCAL_MACHINE,szRegKey,0,KEY_READ,&key);
-  DWORD type;
-  char buffer[MAX_PATH];
-  unsigned long size;
-  
-  size = sizeof(buffer);
-  if (ERROR_SUCCESS ==
-      RegQueryValueEx(key,"conf_path",0,&type,(BYTE*)buffer,&size)) {
-    conf_path = buffer;
-  }
-
-  size = sizeof(buffer);
-  if (ERROR_SUCCESS ==
-      RegQueryValueEx(key,"mod_path",0,&type,(BYTE*)buffer,&size)) {
-    mod_path = buffer;
-  }
-
-  size = sizeof(buffer);
-  if (ERROR_SUCCESS ==
-      RegQueryValueEx(key,"var_path",0,&type,(BYTE*)buffer,&size)) {
-    var_path = buffer;
-  }
-
-  RegCloseKey(key);
-}
-
-
-#endif

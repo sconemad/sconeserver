@@ -22,16 +22,7 @@ Free Software Foundation, Inc.,
 #ifndef http_h
 #define http_h
 
-#ifdef WIN32
-  #pragma warning (disable : 4786)
-  #ifdef HTTP_EXPORTS
-    #define HTTP_API __declspec(dllexport)
-  #else
-    #define HTTP_API __declspec(dllimport)
-  #endif
-#else
-  #define HTTP_API
-#endif
+#define HTTP_API 
 
 #include <string>
 #include <map>

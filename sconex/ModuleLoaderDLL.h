@@ -53,12 +53,8 @@ private:
   // Locate the named symbol, returning a pointer to
   // its entry point
   
-  // Instance handle of the module
-#ifdef WIN32
-  HINSTANCE m_dll;
-#else
+  // Module handle
   void* m_dll;
-#endif
 
 };
 

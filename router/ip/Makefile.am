@@ -16,4 +16,3 @@ IPSocketAddress.h
 
 ip_la_LDFLAGS = -module -avoid-version
 
-EXTRA_DIST = ip.dsp

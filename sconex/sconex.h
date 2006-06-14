@@ -24,11 +24,7 @@ Free Software Foundation, Inc.,
 
 #ifdef HAVE_CONFIG_H
 #  include "config.h"
-#else
-#  include "config_win.h"
 #endif
-
-#ifndef WIN32
 
    // POSIX specifics
 #  define SCONEX_API
@@ -40,36 +36,6 @@ Free Software Foundation, Inc.,
 #  define _MAX_PATH 1024
 #  define DIR_SEPARATOR "/"
 #  define SCXBASE scx::
-
-#else
-
-   // WIN32 specifics
-#  pragma warning (disable : 4786)
-#  pragma warning (disable : 4251)
-#  define WIN32_LEAN_AND_MEAN
-#  define _WIN32_WINNT 0x0400
-#  define WINVER 0x0400
-#  define socklen_t int
-#  define DIR_SEPARATOR "\\"
-#  define SCXBASE
-#  define uint32_t u_long
-
-   // Standard WIN32 headers
-#  define HAVE_WINDOWS_H
-#  define HAVE_WINSOCK_H
-#  define HAVE_IO_H
-//#  define HAVE_SYS_STAT_H
-//#  define HAVE_SYS_TYPES_H
-//#  define HAVE_FCNTL_H
-
-   // WIN32 DLL import/export
-#  ifdef SCONEX_EXPORTS 
-#    define SCONEX_API __declspec(dllexport)
-#  else
-#    define SCONEX_API __declspec(dllimport)
-#  endif
-
-#endif
 
 // Standard headers
 
@@ -146,14 +112,6 @@ Free Software Foundation, Inc.,
 
 #ifdef HAVE_UNISTD_H
 #  include <unistd.h>
-#endif
-
-#ifdef HAVE_WINDOWS_H
-#  include <windows.h>
-#endif
-
-#ifdef HAVE_WINSOCK_H
-#  include <winsock.h>
 #endif
 
 // iostream

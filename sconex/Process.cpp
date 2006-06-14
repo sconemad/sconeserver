@@ -33,8 +33,6 @@ Free Software Foundation, Inc.,
 
 namespace scx {
 
-#ifndef WIN32
-
 #ifndef CMSG_SPACE
 #  if defined(_CMSG_DATA_ALIGN) && defined(_CMSG_HDR_ALIGN)
 #    define CMSG_SPACE(len) \
@@ -663,12 +661,10 @@ void Proxy::reset()
 pid_t Process::s_proxy_pid = -1;
 int Process::s_proxy_sock = -1;
 Mutex* Process::s_proxy_mutex = 0;
-#endif
   
 //============================================================================
 void Process::init()
 {
-#ifndef WIN32
   DEBUG_ASSERT(s_proxy_pid==-1,"init() Already called");
   
   int d[2];
@@ -714,7 +710,6 @@ void Process::init()
 
     exit(s_proxy->run());
   }
-#endif
 }
   
 //============================================================================
@@ -735,10 +730,6 @@ Process::~Process()
     kill();
   }
 
-#ifdef WIN32
-  CloseHandle(m_hprocess);
-  
-#else
   if (m_runstate != Unstarted) {
     ProxyPacket packet;
     packet.set_type(ProxyPacket::DetatchPid);
@@ -748,7 +739,7 @@ Process::~Process()
     packet.send(s_proxy_sock);
     s_proxy_mutex->unlock();
   }
-#endif
+
   DEBUG_COUNT_DESTRUCTOR(Process);
 }
 
@@ -789,45 +780,6 @@ bool Process::launch()
 {
   DEBUG_ASSERT(m_runstate != Running,"launch() Process already launched");
   
-#ifdef WIN32
-  // TODO: get this working!
-  std::string cmd_line;
-  
-  STARTUPINFO start_info;
-  ZeroMemory(&start_info,sizeof(STARTUPINFO));
-  start_info.cb = sizeof(STARTUPINFO);
-  start_info.dwFlags = STARTF_USESTDHANDLES;
-  start_info.wShowWindow = SW_SHOWDEFAULT;
-  start_info.hStdInput;
-  start_info.hStdOutput;
-  start_info.hStdError;
-  
-  PROCESS_INFORMATION proc_info;
-  
-  if (0 == CreateProcess(
-        m_exe.c_str(),
-        LPTSTR lpCommandLine,
-        NULL,
-        NULL,
-        FALSE,
-        DETACHED_PROCESS,
-        LPVOID lpEnvironment,
-        NULL,
-        &start_info,
-        &proc_info)) {
-    // failed
-    return false;
-  }
-  
-  // Save process id
-  m_pid = proc_info.dwProcessId;
-  
-  // Don't need these handles any more
-  CloseHandle(proc_info.hThread);
-  m_hprocess = proc_info.hProcess;
-  
-#else // *NIX
-
   s_proxy_mutex->lock();
   
   ProxyPacket packet;
@@ -888,7 +840,6 @@ bool Process::launch()
   }
 
   s_proxy_mutex->unlock();
-#endif
 
   if (m_runstate != Detatched) {
     m_runstate = Running;
@@ -899,11 +850,7 @@ bool Process::launch()
 //============================================================================
 bool Process::kill()
 {
-#ifdef WIN32
-  return (0 != ::TerminateProcess(m_hprocess,0));
-#else 
   return (0 == ::kill(m_pid,SIGKILL));
-#endif
 }
 
 //============================================================================
@@ -915,10 +862,6 @@ bool Process::is_running()
 //============================================================================
 bool Process::get_exitcode(int& code)
 {
-#ifdef WIN32
-  return (0 != ::GetExitCodeProcess(m_hprocess,&code));
-  
-#else
   ProxyPacket packet;
 
   switch (m_runstate) {
@@ -958,7 +901,6 @@ bool Process::get_exitcode(int& code)
   }
   
   return (m_runstate == Terminated);
-#endif
 }
 
 //============================================================================
