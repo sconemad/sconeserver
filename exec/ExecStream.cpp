@@ -137,8 +137,7 @@ bool ExecStream::spawn_process()
     m_process->add_arg( m_args->get(i)->get_string() );
   }
 
-  // Set user to exec as
-  m_process->set_user(scx::User("nobody"));
+  m_process->set_user(m_module.get_exec_user());
   
   // Launch the new process and connect socket
   if (!m_process->launch()) {

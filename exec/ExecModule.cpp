@@ -31,9 +31,15 @@ SCONESERVER_MODULE(ExecModule);
 //=========================================================================
 ExecModule::ExecModule(
 )
-  : scx::Module("exec",scx::version())
+  : scx::Module("exec",scx::version()),
+    m_exec_user(scx::User::current())
 {
-
+  // Default to "nobody" if running as root
+  if (m_exec_user.get_user_id() == 0) {
+    if (!m_exec_user.set_user_name("nobody")) {
+      DEBUG_LOG("Failed to set user");
+    }
+  }
 }
 
 //=========================================================================
@@ -73,4 +79,46 @@ bool ExecModule::connect(
 
   endpoint->add_stream(s);
   return true;
+}
+
+//=============================================================================
+scx::Arg* ExecModule::arg_lookup(const std::string& name)
+{
+  // Methods
+
+  if ("set_exec_user" == name) {
+    return new scx::ArgObjectFunction(
+      new scx::ArgModule(ref()),name);
+  }      
+
+  return SCXBASE Module::arg_lookup(name);
+}
+
+//=============================================================================
+scx::Arg* ExecModule::arg_function(
+  const std::string& name,
+  scx::Arg* args
+)
+{
+  scx::ArgList* l = dynamic_cast<scx::ArgList*>(args);
+
+  if ("set_exec_user" == name) {
+    const scx::ArgString* a_user =
+      dynamic_cast<const scx::ArgString*>(l->get(0));
+    if (!a_user) {
+      return new scx::ArgError("exec::set_exec_user() "
+                               "Username must be specified");
+    }
+    m_exec_user = scx::User(a_user->get_string());
+
+    return 0;
+  }
+  
+  return SCXBASE Module::arg_function(name,args);
+}
+
+//=============================================================================
+const scx::User& ExecModule::get_exec_user() const
+{
+  return m_exec_user;
 }

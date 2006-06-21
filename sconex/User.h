@@ -33,6 +33,9 @@ class SCONEX_API User {
 
 public:
 
+  static User current();
+  // Get the current user
+  
   User();
   User(const std::string& user_name);
   User(uid_t user_id); 

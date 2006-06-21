@@ -50,6 +50,11 @@ namespace scx {
 #endif
   
 #define PROXY_MAX_STR 8182
+
+// Only allow process launching where the user and group ids are at least
+// equal to these values:
+#define MIN_LAUNCH_GROUP 10
+#define MIN_LAUNCH_USER  10
   
 //%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 class ProxyPacket {
@@ -489,7 +494,11 @@ int Proxy::run()
       } break;
 
       case ProxyPacket::LaunchReady: {
-        launch();
+        if (!launch()) {
+          ProxyPacket packet;
+          packet.set_type(ProxyPacket::LaunchedError);
+          packet.send(0);
+        }
         reset();
       } break;
 
@@ -569,14 +578,23 @@ bool Proxy::launch()
 {
   // Terminate arg and env vectors
   m_exec_args[m_narg] = 0;
-  m_exec_envp[m_nenv]=0;
-  
-  int d[2];
-  if (socketpair(PF_UNIX,SOCK_STREAM,0,d) < 0) {
-    PROCESS_DEBUG_LOG("Socketpair failed");
+  m_exec_envp[m_nenv] = 0;
+
+  if (m_gid < MIN_LAUNCH_GROUP) {
+    PROCESS_DEBUG_LOG("ERROR Not allowed to launch with group id " <<  m_gid);
+    return false;
+  }
+  if (m_uid < MIN_LAUNCH_USER) {
+    PROCESS_DEBUG_LOG("ERROR Not allowed to launch with user id " << m_uid);
     return false;
   }
   
+  int d[2];
+  if (socketpair(PF_UNIX,SOCK_STREAM,0,d) < 0) {
+    PROCESS_DEBUG_LOG("Socketpair failed, err=" << errno);
+    return false;
+  }
+ 
   // Fork the process
   pid_t pid = ::fork();
   
@@ -586,7 +604,7 @@ bool Proxy::launch()
     ::close(d[0]);
     
     if (pid < 0) {
-      PROCESS_DEBUG_LOG("Fork failed");
+      PROCESS_DEBUG_LOG("Fork failed, err=" << errno);
       return false;
     }
 
@@ -614,21 +632,40 @@ bool Proxy::launch()
     ::close(d[1]);
 
     // Set user and group ids
-    if (m_gid > 0) ::setgid(m_gid);
-    if (m_uid > 0) ::setuid(m_uid);
+    if (::setgid(m_gid) < 0) {
+      PROCESS_DEBUG_LOG("FAILED to set process group id, err=" << errno);
+      _exit(1);
+    }
+    if (::setuid(m_uid) < 0) {
+      PROCESS_DEBUG_LOG("FAILED to set process user id, err=" << errno);
+      _exit(1);
+    }
     
     // Duplicate standard descriptors on to our end of the socketpair
-    ::dup2(d[0],0);
-    ::dup2(d[0],1);
-    ::dup2(d[0],2);
+    if (::dup2(d[0],0) < 0) {
+      PROCESS_DEBUG_LOG("FAILED to redirect process stdout, err=" << errno);
+      _exit(1);
+    }
+    if (::dup2(d[0],1) < 0) {
+      PROCESS_DEBUG_LOG("FAILED to redirect process stdin, err=" << errno);
+      _exit(1);
+    }
+    if (::dup2(d[0],2) < 0) {
+      PROCESS_DEBUG_LOG("FAILED to redirect process stderr, err=" << errno);
+      _exit(1);
+    }
 
     // Change to the specified working directory
-    ::chdir(m_dir);
+    if (m_dir && m_dir[0] != '\0' && ::chdir(m_dir) < 0) {
+      PROCESS_DEBUG_LOG("FAILED to change process working directory, err=" << errno);
+      _exit(1);
+    }
     
     // Launch the program
     ::execve(m_prog,m_exec_args,m_exec_envp);
     
     // If we get here, something's gone wrong
+    PROCESS_DEBUG_LOG("FAILED to exec process, err=" << errno);
     _exit(1);
   }
   
@@ -779,7 +816,8 @@ void Process::set_user(const User& user)
 bool Process::launch()
 {
   DEBUG_ASSERT(m_runstate != Running,"launch() Process already launched");
-  
+
+  bool ret = false;
   s_proxy_mutex->lock();
   
   ProxyPacket packet;
@@ -823,7 +861,7 @@ bool Process::launch()
   packet.set_type(ProxyPacket::LaunchReady);
   packet.set_str_value("");
   packet.send(s_proxy_sock);
-
+  
   // Recieve resulting pid and socket from proxy
   packet.recv(s_proxy_sock);
   if (packet.get_type() == ProxyPacket::LaunchedOk) {
@@ -837,19 +875,28 @@ bool Process::launch()
      
     PROCESS_DEBUG_LOG("Got pid " << m_pid << " and fd " 
                       << m_socket << " from process proxy");
+
+    if (m_runstate != Detatched) {
+      m_runstate = Running;
+    }
+    ret = true;
+    
+  } else {
+    PROCESS_DEBUG_LOG("FAILED to launch process"); 
+    m_runstate = Terminated;
+    ret = false;
   }
 
   s_proxy_mutex->unlock();
-
-  if (m_runstate != Detatched) {
-    m_runstate = Running;
-  }
-  return true;
+  return ret;
 }
 
 //============================================================================
 bool Process::kill()
 {
+  if (m_runstate != Running || m_pid < 0) {
+    return false;
+  }
   return (0 == ::kill(m_pid,SIGKILL));
 }
 

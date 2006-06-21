@@ -1,7 +1,15 @@
 
+2006-06-21 Andrew Wedgbury <wedge@sconemad.com>
+
+	* sconex/User: Add static current() method to get current user.
+	* sconex/Process: Enforce minimum UID & GID when launching processes.
+	* exec/ExecStream: Set appropriate user for process launch.
+	* configure: Make sure socklen_t is present [Darwin].
+	
 2006-06-14 Andrew Wedgbury <wedge@sconemad.com>
 
-	* all: Strip out all Win32 code - this is no longer a supported platform.
+	* all: Strip out all Win32 code - this is no longer a supported 
+	platform.
 	
 2006-06-13 Andrew Wedgbury <wedge@sconemad.com>
 

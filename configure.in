@@ -157,6 +157,21 @@ if test $ol_cv_msghdr_msg_control = "yes" ; then
 )
 fi
 
+AC_CACHE_CHECK(
+  [for socklen_t],
+  [ac_cv_c_socklen_t],
+  [AC_COMPILE_IFELSE(
+    [#include <sys/types.h>
+     #include <sys/socket.h>
+     int main(int,char**) {
+       socklen_t sl;
+     }],
+    [ac_cv_c_socklen_t=yes],
+    [ac_cv_c_socklen_t=no])])
+if test $ac_cv_c_socklen_t = "no" ; then
+  AC_DEFINE(socklen_t,unsigned int,[define socklen_t to unsigned int if not present])
+fi
+
 # Set module build flags
 AM_CONDITIONAL(BUILD_ROUTER_IP, test x$ROUTER_IP = xyes)
 AM_CONDITIONAL(BUILD_ROUTER_IP6, test x$ROUTER_IP6 = xyes)

@@ -266,5 +266,8 @@
 /* Define to `unsigned' if <sys/types.h> does not define. */
 #undef size_t
 
+/* define socklen_t to unsigned int if not present */
+#undef socklen_t
+
 /* Define as `fork' if `vfork' does not work. */
 #undef vfork
