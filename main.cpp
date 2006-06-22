@@ -101,7 +101,7 @@ int main(int argc,char* argv[])
       scx::Kernel* kernel = scx::Kernel::get();
       std::cout << kernel->name()
                 << "-" << kernel->version().get_string()
-                << " #" << scx::internal_revision() << "\n";
+                << "\n";
 
       if (opt_version) {
         std::cout << "Built for " << scx::build_type()

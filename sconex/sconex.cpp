@@ -45,15 +45,4 @@ Date& build_time()
   return s_build_time;
 }
 
-//=========================================================================
-int internal_revision()
-{
-  static int s_revision = -1;
-  if (s_revision < 0) {
-    const char *str = SVN_REVISION;
-    s_revision = atoi(str+5);
-  }
-  return s_revision;
-}
-
 };

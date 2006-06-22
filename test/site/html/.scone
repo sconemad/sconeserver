@@ -1,5 +1,5 @@
 
-map("*","getfile")
-map(".","dirindex")
-map("!","errorpage")
-map("*.pl","exec")
+map("*","getfile");
+map(".","dirindex");
+map("!","errorpage");
+map("*.pl","exec");
