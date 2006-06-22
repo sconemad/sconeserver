@@ -176,5 +176,8 @@ SCONEX_API std::string& build_type();
 SCONEX_API Date& build_time();
 // Get sconex build time
 
+SCONEX_API unsigned int internal_revision();
+// Get sconex internal revision number  
+
 };
 #endif

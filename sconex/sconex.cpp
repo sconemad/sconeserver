@@ -44,5 +44,16 @@ Date& build_time()
   static Date s_build_time(__DATE__" "__TIME__,true);
   return s_build_time;
 }
-  
+
+//=========================================================================
+unsigned int internal_revision()
+{
+  static unsigned int s_revision = -1;
+  if (s_revision < 0) {
+    const char* str = SVN_REVISION;
+    s_revision = atoi(str[5]);
+  }
+  return s_revision;
+}
+
 };

@@ -245,6 +245,9 @@
 /* Define to 1 if you have the ANSI C header files. */
 #undef STDC_HEADERS
 
+/* "Subversion revision */
+#undef SVN_REVISION
+
 /* Target Architecture */
 #undef TARGET
 
