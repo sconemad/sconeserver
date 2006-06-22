@@ -39,6 +39,32 @@ void VersionTag_ut()
   UTEST(vp2.get_minor() == 202);
   UTEST(vp2.get_sub() == 303);
 
+  UTMSG("with args and extra");
+  UTCOD(VersionTag vp3(8,9,10,"-ABCD"));
+  UTEST(vp3.get_major() == 8);
+  UTEST(vp3.get_minor() == 9);
+  UTEST(vp3.get_sub() == 10);
+  UTEST(vp3.get_extra() == "-ABCD");
+
+  UTSEC("from string");
+  
+  UTCOD(VersionTag vp4("1.2.3"));
+  UTEST(vp4.get_major() == 1);
+  UTEST(vp4.get_minor() == 2);
+  UTEST(vp4.get_sub() == 3);
+  UTEST(vp4.get_extra() == "");
+
+  UTCOD(VersionTag vp5("55.72323--bonus"));
+  UTEST(vp5.get_major() == 55);
+  UTEST(vp5.get_minor() == 72323);
+  UTEST(vp5.get_sub() == -1);
+  UTEST(vp5.get_extra() == "--bonus");
+  
+  UTCOD(VersionTag vp6("1.2.3very_special"));
+  UTEST(vp6.get_major() == 1);
+  UTEST(vp6.get_minor() == 2);
+  UTEST(vp6.get_sub() == 3);
+  UTEST(vp6.get_extra() == "very_special");
 
   UTSEC("operators");
 

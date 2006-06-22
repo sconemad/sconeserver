@@ -31,7 +31,13 @@ class SCONEX_API VersionTag : public Arg {
 
 public:
 
-  VersionTag(int major=-1,int minor=-1,int sub=-1);
+  VersionTag(
+    int major = -1,
+    int minor = -1,
+    int sub = -1,
+    const std::string& extra = ""
+  );
+  
   VersionTag(const std::string& str);
   VersionTag(Arg* args);
   VersionTag(const VersionTag& c);
@@ -41,6 +47,7 @@ public:
   int get_major() const;
   int get_minor() const;
   int get_sub() const;
+  const std::string& get_extra() const;
 
   virtual std::string get_string() const;
   virtual int get_int() const;
@@ -61,7 +68,7 @@ protected:
   int m_major;
   int m_minor;
   int m_sub;
-
+  std::string m_extra;
 };
 
 };

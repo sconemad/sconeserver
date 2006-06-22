@@ -23,28 +23,34 @@ Free Software Foundation, Inc.,
 namespace scx {
 
 //=============================================================================
-VersionTag::VersionTag(int major,int minor, int sub) 
+VersionTag::VersionTag(
+  int major,
+  int minor,
+  int sub,
+  const std::string& extra
+) 
   : m_major(major),
     m_minor(minor),
-    m_sub(sub)
+    m_sub(sub),
+    m_extra(extra)
 {
   
 }
 
 //=============================================================================
 VersionTag::VersionTag(const std::string& str) 
-  : m_major(0),
-    m_minor(0),
-    m_sub(0)
+  : m_major(-1),
+    m_minor(-1),
+    m_sub(-1)
 {
   from_string(str);
 }
 
 //=============================================================================
 VersionTag::VersionTag(Arg* args)
-  : m_major(0),
-    m_minor(0),
-    m_sub(0)
+  : m_major(-1),
+    m_minor(-1),
+    m_sub(-1)
 {
   ArgList* l = dynamic_cast<ArgList*>(args);
 
@@ -64,13 +70,17 @@ VersionTag::VersionTag(Arg* args)
 
   const ArgInt* v3 = dynamic_cast<const ArgInt*>(l->get(2));
   m_sub = v3 ? v3->get_int() : 0;
+
+  const ArgString* v4 = dynamic_cast<const ArgString*>(l->get(3));
+  m_extra = v4 ? v4->get_string() : "";
 }
 
 //=============================================================================
 VersionTag::VersionTag(const VersionTag& c)
   : m_major(c.m_major),
     m_minor(c.m_minor),
-    m_sub(c.m_sub)
+    m_sub(c.m_sub),
+    m_extra(c.m_extra)
 {
 
 }
@@ -106,6 +116,12 @@ int VersionTag::get_sub() const
 }
 
 //=============================================================================
+const std::string& VersionTag::get_extra() const
+{
+  return m_extra;
+}
+
+//=============================================================================
 std::string VersionTag::get_string() const
 {
   std::ostringstream oss;
@@ -117,6 +133,9 @@ std::string VersionTag::get_string() const
         oss << "." << m_sub;
       }
     }
+  }
+  if (!m_extra.empty()) {
+    oss << m_extra;
   }
   return oss.str();
 }
@@ -166,13 +185,19 @@ Arg* VersionTag::op(OpType optype, const std::string& opname, Arg* right)
 //=============================================================================
 bool VersionTag::operator==(const VersionTag& v) const
 {
-  return m_major==v.m_major && m_minor==v.m_minor && m_sub==v.m_sub;
+  return (m_major==v.m_major &&
+          m_minor==v.m_minor &&
+          m_sub==v.m_sub &&
+          m_extra==v.m_extra);
 }
 
 //=============================================================================
 bool VersionTag::operator!=(const VersionTag& v) const
 {
-  return m_major!=v.m_major || m_minor!=v.m_minor || m_sub!=v.m_sub;
+  return (m_major!=v.m_major ||
+          m_minor!=v.m_minor ||
+          m_sub!=v.m_sub ||
+          m_extra!=v.m_extra);
 }
 
 //=============================================================================
@@ -233,11 +258,18 @@ void VersionTag::from_string(const std::string& str)
     std::string::size_type end = str.find(".",start);
     tok = std::string(str,start,end-start);
     start = end + (end==std::string::npos ? 0 : 1);
-    int value = atoi(tok.c_str());
+    char* cend = 0;
+    const char* cstart = tok.c_str();
+    int value = strtol(cstart,&cend,0);
     switch (++i) {
       case 1: m_major = value; break;
       case 2: m_minor = value; break;
       case 3: m_sub   = value; break;
+    }
+    int extralen = tok.length() - (cend-cstart);
+    if (extralen > 0) {
+      m_extra = std::string(cend,extralen);
+      break;
     }
   }
 }

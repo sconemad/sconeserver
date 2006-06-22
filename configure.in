@@ -1,7 +1,9 @@
-AC_INIT(SconeServer,0.6.0,wedge@sconemad.com)
+AC_INIT([SconeServer],[0.6.0-dev],[wedge@sconemad.com])
 
 AC_PREREQ(2.57)
 AC_CONFIG_SRCDIR([sconex/sconex.h])
+
+AC_DEFINE([SVN_REVISION],[$Rev$],["Subversion revision])
 
 AC_CANONICAL_TARGET
 AC_DEFINE_UNQUOTED([TARGET],["$target"],[Target Architecture])

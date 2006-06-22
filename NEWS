@@ -1,13 +1,15 @@
 
-0.6.0 2006-04-21 Andrew Wedgbury <wedge@sconemad.com>
+0.6.0 2006-06-21 Andrew Wedgbury <wedge@sconemad.com>
 	
-	* Beta release.
 	* Implement proper control structures in SconeScript.
 	* Make HTTP module more compliant with HTTP/1.1.
+	* Add HTTP profiles, can map different ports to different doc trees.
 	* External program execution and streaming.
 	* Execution of CGI programs from HTTP.
 	* Protocol modules for IP, IP6, Bluetooth and Local.
 	* Improve docs and add several example modules.
+	* Add testbuilder module - an automated test build system with web 
+	interface.
 
 0.5.9 2005-11-15 Andrew Wedgbury <wedge@sconemad.com>
 	
