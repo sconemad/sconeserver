@@ -99,12 +99,13 @@ int main(int argc,char* argv[])
 
     if (opt_version || opt_help) {
       scx::Kernel* kernel = scx::Kernel::get();
-      std::cout << kernel->name() << "-"
-                << kernel->version().get_string() << "\n";
+      std::cout << kernel->name()
+                << "-" << kernel->version().get_string()
+                << " #" << scx::internal_revision() << "\n";
 
       if (opt_version) {
-        std::cout << "Built on " << scx::build_time().code()
-                  << " for " << scx::build_type() << "\n";
+        std::cout << "Built for " << scx::build_type()
+                  << " on " << scx::build_time().code() << "\n";
       }
 
       if (opt_help) {

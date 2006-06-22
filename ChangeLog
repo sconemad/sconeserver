@@ -1,4 +1,10 @@
 
+2006-06-22 Andrew Wedgbury <wedge@sconemad.com>
+
+	* sconex/Kernel: Add internal_revision, set from svn revision number.
+	* sconex/VersionTag: Support extra info in version tags.
+	
+
 2006-06-21 Andrew Wedgbury <wedge@sconemad.com>
 
 	* sconex/User: Add static current() method to get current user.

@@ -51,13 +51,7 @@ Condition ConfigStream::event(Stream::Event e)
   switch (e) {
     
     case Stream::Opening: { // OPENING
-      std::string desc =
-	std::string("SconeServer-") +
-	version().get_string() +
-	" " + scx::build_type() +
-	" built " + scx::build_time().code() + "\n";      
-      Stream::write(desc);
-      Stream::write("Configuration console\n\n");
+      Stream::write("* SconeServer configuration console *\n\n");
       
       Stream::write(m_prompt); 
     } break;

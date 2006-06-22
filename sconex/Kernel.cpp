@@ -55,9 +55,12 @@ int Kernel::init()
   // Set default logger
   FilePath path = get_var_path() + std::string(name() + ".log");
   set_logger(new scx::Logger(path.path()));
-  
-  log("Init " + name() + "-" + version().get_string() + " "
-      + scx::build_type() + " built " + scx::build_time().code());
+
+  std::ostringstream oss;
+  oss << "Init " << name() << "-" << version().get_string() 
+      << " #" << scx::internal_revision();
+  log(oss.str());
+  log("Built for " + scx::build_type() + " on " + scx::build_time().code());
   
   Module::init();
   
@@ -135,6 +138,9 @@ Arg* Kernel::arg_lookup(const std::string& name)
   }
   if ("root" == name) {
     return new scx::ArgInt(geteuid() == 0);
+  }
+  if ("internal_revision" == name) {
+    return new scx::ArgInt(scx::internal_revision());
   }
   
   return Module::arg_lookup(name);

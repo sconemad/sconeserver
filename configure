@@ -1527,7 +1527,7 @@ ac_compiler_gnu=$ac_cv_c_compiler_gnu
 
 
 cat >>confdefs.h <<\_ACEOF
-#define SVN_REVISION $Rev: 31 $
+#define SVN_REVISION "$Rev: 32 $"
 _ACEOF
 
 

@@ -46,12 +46,12 @@ Date& build_time()
 }
 
 //=========================================================================
-unsigned int internal_revision()
+int internal_revision()
 {
-  static unsigned int s_revision = -1;
+  static int s_revision = -1;
   if (s_revision < 0) {
-    const char* str = SVN_REVISION;
-    s_revision = atoi(str[5]);
+    const char *str = SVN_REVISION;
+    s_revision = atoi(str+5);
   }
   return s_revision;
 }
