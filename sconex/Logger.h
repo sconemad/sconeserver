@@ -24,6 +24,7 @@ Free Software Foundation, Inc.,
 
 #include "sconex/sconex.h"
 #include "sconex/File.h"
+#include "sconex/Mutex.h"
 namespace scx {
 
 //=============================================================================
@@ -47,6 +48,7 @@ public:
 protected:
 
   File m_file;
+  Mutex m_mutex;
 
 private:
 	

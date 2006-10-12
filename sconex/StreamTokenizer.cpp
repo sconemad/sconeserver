@@ -62,7 +62,7 @@ Condition StreamTokenizer::tokenize(std::string& token)
 
     int nr=0;
     Condition c = Stream::read(m_buffer.tail(),avail,nr);
-    //    set_event(Stream::SendReadable,m_buffer.used()); 
+    enable_event(Stream::SendReadable,m_buffer.used()); 
     if (nr <= 0) {
       // No more bytes available from source
       token = std::string();
@@ -90,7 +90,7 @@ Condition StreamTokenizer::tokenize(std::string& token)
 
   token = std::string((char*)m_buffer.head()+pre_skip,token_len);
   m_buffer.pop(pre_skip+token_len+post_skip);
-  //  set_event(Stream::SendReadable,m_buffer.used()); 
+  enable_event(Stream::SendReadable,m_buffer.used()); 
 
   if (prev_overflow) {
     if (found_token) {

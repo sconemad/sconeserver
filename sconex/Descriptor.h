@@ -2,14 +2,14 @@
 
 Descriptor
 
-This is the base class for readable/writable endpoints, which may represent files,
-network connections, terminals, etc.
+This is the base class for readable/writable endpoints, which may represent
+files, network connections, terminals, etc.
 
-Descriptors can contain streams, which are arranged in a chain and act as filters on any
-data read to, or written from, the descriptor. Streams can also elect to recieve event
-notifications from the descriptor, indicating the presence of data to be read, or free
-buffer space to write data. To recieve events, the descriptor must be added to the
-SconeServer Kernel using connect();
+Descriptors can contain streams, which are arranged in a chain and act as
+filters on any data read to, or written from, the descriptor. Streams can also
+elect to recieve event notifications from the descriptor, indicating the
+presence of data to be read, or free buffer space to write data. To recieve
+events, the descriptor must be added to the SconeServer Kernel using connect();
 
 For example, here is a descriptor containing two streams:
 
@@ -28,14 +28,15 @@ For example, here is a descriptor containing two streams:
           |                                                       |
           +-------------------------------------------------------+
 
-As the above diagram indicates, any calls to the desriptor's public read() or write()
-methods will result in a read or write through the chain of streams, until the endpoint
-methods are reached. If there are no streams present, then the public read() and write()
-calls will call the endpoint methods directly.
+As the above diagram indicates, any calls to the desriptor's public read() or
+write() methods will result in a read or write through the chain of streams,
+until the endpoint methods are reached. If there are no streams present, then
+the public read() and write() calls will call the endpoint methods directly.
 
-Events are sent out to streams individually, with most events being passed in turn along the
-chain of streams. The only exception to this is the Closing event, which is passed starting
-at the end of the stream chain, to allow a sensible shutdown sequence to occur.
+Events are sent out to streams individually, with most events being passed in
+turn along the chain of streams. The only exception to this is the Closing
+event, which is passed starting at the end of the stream chain, to allow a
+sensible shutdown sequence to occur.
 
 See the Stream class for a more details on events.
           
@@ -64,7 +65,8 @@ Free Software Foundation, Inc.,
 namespace scx {
 
 class Stream;
-
+class DescriptorThread;
+  
 enum Condition { Ok, Wait, End, Close, Error };
 
 //=============================================================================
@@ -141,29 +143,24 @@ private:
 
   friend class Multiplexer;
   friend class Stream;
+  friend class DescriptorThread;
  
   std::list<Stream*> m_streams;
   // Stream list
 
   void link_streams();
   // Link up the stream list
-  
-  int setup_select(
-    int* maxfd,
-    fd_set* read_set,
-    fd_set* write_set,
-    fd_set* except_set
-  );
-  // Add descriptor to select sets we are interested in
 
-  int dispatch(
-    fd_set* read_set,
-    fd_set* write_set,
-    fd_set* except_set
-  );
-  // Handle the select result and dispatch events
+  int get_event_mask();
+  // Get a bitmask representing the enabled events
+
+  int dispatch(int events);
+  // Dispatch events to this descriptor
   // Return value indicates whether the socket is to remain open
 
+  enum RunState { Select, Run, Cycle, Purge };
+  RunState m_runstate;
+  
   Time m_timeout_interval;
   Date m_timeout;
   bool check_timeout() const;

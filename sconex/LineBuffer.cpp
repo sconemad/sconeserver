@@ -27,7 +27,8 @@ LineBuffer::LineBuffer(
   const std::string& stream_name,
   int buffer_size
 )
-  : StreamTokenizer(stream_name,buffer_size)
+  : StreamTokenizer(stream_name,buffer_size),
+    m_prev_char('\0')
 {
   DEBUG_COUNT_CONSTRUCTOR(LineBuffer);
 }
@@ -48,10 +49,16 @@ bool LineBuffer::next_token(
 {
   int i=0;
   int max = buffer.used();
-  
+
   for (i=pre_skip; i<max; ++i) {
     char c = *((char*)buffer.head()+i);
 
+    if (m_prev_char == '\r' && c == '\n') {
+      ++pre_skip;
+      m_prev_char = '\0';
+      continue;
+    }
+    
     if (c=='\r' || c=='\n') {
       ++post_skip;
       if (i+1<max) {
@@ -60,7 +67,8 @@ bool LineBuffer::next_token(
           ++post_skip;
         }
       } else {
-        // next char could be a rogue one.
+        // next char could be a rogue one - save for later check
+        m_prev_char = c;
       }
       break;
     }

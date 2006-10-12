@@ -1,4 +1,14 @@
 
+2006-10-12 Andrew Wedgbury <wedge@sconemad.com>
+
+	* exec/ExecStream: Fix leak of m_args.
+	* sconex/LineBuffer: Fix bug when breaking between \r and \n pairs.
+	* sconex/Logger: Make logging thread safe using a mutex.
+	* sconex/Stream: Streamline event mask system.
+	* sconex/Descriptor: Streamline new event mask system.
+	* sconex/DescriptorThread: New descriptor event dispatch thread.
+	* sconex/Multiplexer: Use new multi-threaded event dispatch system.
+	
 2006-06-22 Andrew Wedgbury <wedge@sconemad.com>
 
 	* sconex/VersionTag: Support extra info in version tags.

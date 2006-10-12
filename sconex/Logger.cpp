@@ -60,11 +60,14 @@ void Logger::log(
   }
   std::string entry = Date::now(true).code() + " " +
     lcode + " " + message + "\n";
+
+  m_mutex.lock();
   if (m_file.is_open()) {
     m_file.write(entry.c_str(),entry.size(),na);
   } else {
     std::cout << entry;
   }
+  m_mutex.unlock();
 }
 
 };

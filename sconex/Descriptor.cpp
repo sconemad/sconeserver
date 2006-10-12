@@ -255,6 +255,25 @@ void Descriptor::link_streams()
 }
 
 //=============================================================================
+int Descriptor::get_event_mask()
+{
+  int event_mask = 0;
+
+  if (m_state != Closed && fd() >= 0) {
+
+    std::list<Stream*>::const_iterator it = m_streams.begin();
+    while (it != m_streams.end()) {
+      const Stream* stream = (*it);
+      event_mask |= stream->m_events;
+      ++it;
+    }
+  }
+  
+  return event_mask;
+}
+
+/*
+//=============================================================================
 int Descriptor::setup_select(int* maxfd, fd_set* read_set, fd_set* write_set, fd_set* except_set)
 {
   int num = 0;
@@ -289,9 +308,10 @@ int Descriptor::setup_select(int* maxfd, fd_set* read_set, fd_set* write_set, fd
   
   return num;
 }
+*/
 
 //=============================================================================
-int Descriptor::dispatch(fd_set* read_set,fd_set* write_set,fd_set* except_set)
+int Descriptor::dispatch(int events)
 {
   if (state() == Closed) {
     // Closed by some other means
@@ -306,8 +326,8 @@ int Descriptor::dispatch(fd_set* read_set,fd_set* write_set,fd_set* except_set)
   }
 
   bool event_opened    = (state() == Connected);
-  bool event_readable  = (0 != FD_ISSET(fd(),read_set));
-  bool event_writeable = (0 != FD_ISSET(fd(),write_set));
+  bool event_readable  = events & (1<<Stream::Readable); 
+  bool event_writeable = events & (1<<Stream::Writeable);
 //  bool event_except    = FD_ISSET(fd(),except_set);
   
   bool remove,error,close,open_wait;

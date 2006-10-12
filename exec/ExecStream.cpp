@@ -55,6 +55,7 @@ ExecStream::~ExecStream()
     m_process->kill();
     delete m_process;
   }
+  delete m_args;
 }
 
 //=========================================================================
@@ -94,6 +95,23 @@ bool ExecStream::spawn_process()
     msg->set_header("Content-Type","text/html");
     msg->set_header("Connection","close");
 
+    // Other environmnt variables required to fully comply with CGI spec:
+    // AUTH_TYPE
+    // DOCUMENT_ROOT
+    // GATEWAY_INTERFACE (CGI/1.1)
+    // HTTP_ACCEPT
+    // HTTP_FROM (obsolete)
+    // HTTP_REFERER
+    // HTTP_USER_AGENT
+    // PATH_INFO
+    // PATH_TRANSLATED (local path incl doc root)
+    // REMOTE_ADDR (ip)
+    // REMOTE_HOST (hotname)
+    // REMOTE_IDENT (obsolete)
+    // SERVER_PROTOCOL (HTTP/1.1)
+    // SERVER_SOFTWARE (NCSA/1.5)
+    // SERVER_ADMIN (email)
+    
     m_process->set_env("SERVER_NAME",uri.get_host());
 
     std::ostringstream oss; oss << uri.get_port();

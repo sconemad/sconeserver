@@ -20,6 +20,7 @@ Console.cpp \
 Date.cpp \
 Debug.cpp \
 Descriptor.cpp \
+DescriptorThread.cpp \
 File.cpp \
 FileDir.cpp \
 FilePath.cpp \
@@ -70,6 +71,7 @@ Console.h \
 Date.h \
 Debug.h \
 Descriptor.h \
+DescriptorThread.h \
 File.h \
 FileDir.h \
 FilePath.h \

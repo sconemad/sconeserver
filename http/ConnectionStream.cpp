@@ -104,7 +104,7 @@ scx::Condition ConnectionStream::process_input()
   std::string line;
   
   while ( (c=tokenize(line)) == scx::Ok ) {
-    
+
     if (line.empty() && m_request) { // ACTION STAGE
       
       if (!process_request(m_request)) {
@@ -113,6 +113,7 @@ scx::Condition ConnectionStream::process_input()
 	std::string str = std::string("HTTP/1.0 " + status.string() +
 				      "\r\n\r\n");
 	endpoint().add_stream( new scx::Response(str) );
+        m_seq = http_Request;
 	return scx::End;
       }
       m_seq = http_Body;

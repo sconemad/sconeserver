@@ -23,6 +23,7 @@ Free Software Foundation, Inc.,
 #define scxMultiplexer_h
 
 #include "sconex/sconex.h"
+#include "sconex/Mutex.h"
 namespace scx {
 
 class Descriptor;
@@ -48,7 +49,22 @@ protected:
 
 private:
 
-  std::list<Descriptor*> m_descriptors;
+  friend class DescriptorThread;
+
+  //TODO: Implement these
+  bool allocate_job(Descriptor* d, int events);
+  bool finished_job(DescriptorThread* dt, Descriptor* d, int retval);
+  
+  std::list<Descriptor*> m_des;
+  std::list<Descriptor*> m_des_new;
+
+  std::list<DescriptorThread*> m_threads_pool;
+  std::list<DescriptorThread*> m_threads_busy;
+  
+  mutable Mutex m_job_mutex;
+  ConditionEvent m_job_condition;
+  
+  Mutex m_new_mutex;
 
 };
 

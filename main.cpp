@@ -89,7 +89,6 @@ int run()
 int main(int argc,char* argv[])
 {
   std::string arg;
-  int err=1;
   
   // Look for version/help options initially as a special case
   if (argc == 2) {

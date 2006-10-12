@@ -1,8 +1,8 @@
 /* SconeServer (http://www.sconemad.com)
 
-Line buffer - tokenizer to split lines
+Descriptor Thread - A thread for dispatching events to descriptors
 
-Copyright (c) 2000-2004 Andrew Wedgbury <wedge@sconemad.com>
+Copyright (c) 2000-2006 Andrew Wedgbury <wedge@sconemad.com>
 
 This program is free software; you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -19,37 +19,40 @@ along with this program (see the file COPYING); if not, write to the
 Free Software Foundation, Inc.,
 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA */
 
-#ifndef scxLineBuffer_h
-#define scxLineBuffer_h
+#ifndef scxDescriptorThread_h
+#define scxDescriptorThread_h
 
 #include "sconex/sconex.h"
-#include "sconex/StreamTokenizer.h"
+#include "sconex/Thread.h"
 namespace scx {
 
+class Descriptor;
+class Multiplexer;
+  
 //=============================================================================
-class SCONEX_API LineBuffer : public StreamTokenizer {
+class SCONEX_API DescriptorThread : public Thread {
 
 public:
 
-  LineBuffer(
-    const std::string& stream_name,
-    int buffer_size = StreamTokenizer_DEFAULT_BUFFER
-  );
+  DescriptorThread(Multiplexer& multiplexer);
+  virtual ~DescriptorThread();
 
-  virtual ~LineBuffer();
+  virtual void* run();
+  // Thread entry point
 
+  bool allocate_job(Descriptor* descriptor, int events);
+  
 protected:
-
-  virtual bool next_token(
-    const Buffer& buffer,
-    int& pre_skip,
-    int& length,
-    int& post_skip
-  );
 
 private:
 
-  char m_prev_char;
+  Multiplexer& m_multiplexer;
+  
+  Descriptor* m_descriptor;
+  int m_events;
+
+  Mutex m_job_mutex;
+  ConditionEvent m_job_condition;
   
 };
 

@@ -68,14 +68,14 @@ libsconex_la_LIBADD =
 am_libsconex_la_OBJECTS = sconex.lo utils.lo Arg.lo ArgObject.lo \
 	ArgProc.lo ArgScript.lo ArgStatement.lo Buffer.lo \
 	ConfigFile.lo ConfigStream.lo Console.lo Date.lo Debug.lo \
-	Descriptor.lo File.lo FileDir.lo FilePath.lo FileStat.lo \
-	Kernel.lo LineBuffer.lo ListenerSocket.lo Logger.lo MemFile.lo \
-	MimeType.lo Module.lo ModuleLoader.lo ModuleLoaderDLL.lo \
-	ModuleRef.lo Multiplexer.lo Mutex.lo Process.lo Response.lo \
-	Socket.lo SocketAddress.lo Stream.lo StreamBuffer.lo \
-	StreamDebugger.lo StreamSocket.lo StreamTokenizer.lo \
-	StreamTransfer.lo Thread.lo Time.lo UnitTester.lo Uri.lo \
-	User.lo VersionTag.lo
+	Descriptor.lo DescriptorThread.lo File.lo FileDir.lo \
+	FilePath.lo FileStat.lo Kernel.lo LineBuffer.lo \
+	ListenerSocket.lo Logger.lo MemFile.lo MimeType.lo Module.lo \
+	ModuleLoader.lo ModuleLoaderDLL.lo ModuleRef.lo Multiplexer.lo \
+	Mutex.lo Process.lo Response.lo Socket.lo SocketAddress.lo \
+	Stream.lo StreamBuffer.lo StreamDebugger.lo StreamSocket.lo \
+	StreamTokenizer.lo StreamTransfer.lo Thread.lo Time.lo \
+	UnitTester.lo Uri.lo User.lo VersionTag.lo
 libsconex_la_OBJECTS = $(am_libsconex_la_OBJECTS)
 am_utest_OBJECTS = utest.$(OBJEXT) Buffer_ut.$(OBJEXT) \
 	LineBuffer_ut.$(OBJEXT) MemFile_ut.$(OBJEXT) \
@@ -235,6 +235,7 @@ Console.cpp \
 Date.cpp \
 Debug.cpp \
 Descriptor.cpp \
+DescriptorThread.cpp \
 File.cpp \
 FileDir.cpp \
 FilePath.cpp \
@@ -284,6 +285,7 @@ Console.h \
 Date.h \
 Debug.h \
 Descriptor.h \
+DescriptorThread.h \
 File.h \
 FileDir.h \
 FilePath.h \
@@ -423,6 +425,7 @@ distclean-compile:
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/Date.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/Debug.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/Descriptor.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/DescriptorThread.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/File.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/FileDir.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/FilePath.Plo@am__quote@
