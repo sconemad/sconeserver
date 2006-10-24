@@ -299,7 +299,7 @@ void Multiplexer::check_thread_pool()
     } else {
       // Decrease size of thread pool if possible, by eliminating idle threads
       unsigned int del = cur_threads - m_num_threads;
-      del = std::min(del,m_threads_pool.size());
+      del = std::min(del,(unsigned int)m_threads_pool.size());
       for (unsigned int i=0; i<del; ++i) {
 	DescriptorThread* dt = m_threads_pool.front();
 	m_threads_pool.pop_front();
