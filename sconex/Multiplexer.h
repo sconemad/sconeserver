@@ -44,6 +44,10 @@ public:
 
   std::string describe() const;
   // Get description of the current descriptors
+
+  void set_num_threads(unsigned int n);
+  unsigned int get_num_threads() const;
+  // Set/get the number of threads used in the thread pool
   
 protected:
 
@@ -51,15 +55,17 @@ private:
 
   friend class DescriptorThread;
 
-  //TODO: Implement these
   bool allocate_job(Descriptor* d, int events);
   bool finished_job(DescriptorThread* dt, Descriptor* d, int retval);
   
+  void check_thread_pool();
+
   std::list<Descriptor*> m_des;
   std::list<Descriptor*> m_des_new;
 
   std::list<DescriptorThread*> m_threads_pool;
   std::list<DescriptorThread*> m_threads_busy;
+  unsigned int m_num_threads;
   
   mutable Mutex m_job_mutex;
   ConditionEvent m_job_condition;

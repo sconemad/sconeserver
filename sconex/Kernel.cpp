@@ -123,7 +123,8 @@ Arg* Kernel::arg_lookup(const std::string& name)
 
   if ("restart" == name ||
       "shutdown" == name ||
-      "set_user" == name) {
+      "set_user" == name ||
+      "set_thread_pool" == name) {
     return new ArgObjectFunction(
       new ArgModule(ref()),name);
   }      
@@ -135,6 +136,9 @@ Arg* Kernel::arg_lookup(const std::string& name)
   }
   if ("root" == name) {
     return new scx::ArgInt(geteuid() == 0);
+  }
+  if ("thread_pool" == name) {
+    return new scx::ArgInt(m_spinner.get_num_threads());
   }
   
   return Module::arg_lookup(name);
@@ -189,6 +193,20 @@ Arg* Kernel::arg_function(
     if (!user.set_effective()) {
       return new ArgError("set_user() Unable to set user/group ids");
     }
+    return 0;
+  }
+
+  if ("set_thread_pool" == name) {
+    const scx::ArgInt* a_threads =
+      dynamic_cast<const scx::ArgInt*>(l->get(0));
+    if (!a_threads) {
+      return new ArgError("set_thread_pool() Must specify number of threads");
+    }
+    int n_threads = a_threads->get_int();
+    if (n_threads < 0) {
+      return new ArgError("set_thread_pool() Must specify >= 0 threads");
+    }
+    m_spinner.set_num_threads((unsigned int)n_threads);
     return 0;
   }
   

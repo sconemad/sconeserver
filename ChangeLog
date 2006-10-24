@@ -1,4 +1,12 @@
 
+2006-10-24 Andrew Wedgbury <wedge@sconemad.com>
+
+	* sconex/Multiplexer: Allow resizing thread pool, and switching back 
+	into single threaded (multiplexed) operation. 
+	* sconex/Kernel: Add thread pool configuration.
+	* sconex/Multiplexer: Do immediate select when send events are present.
+	* doc; Add set_user and set_thread_pool to kernel module docs.
+	
 2006-10-12 Andrew Wedgbury <wedge@sconemad.com>
 
 	* exec/ExecStream: Fix leak of m_args.

@@ -55,6 +55,29 @@ In addition to the standard module interface, it also has the following:
   </p>
   </div>
 
+  <div class='scr-obj'>
+  <h4>
+  set_user (
+    <span>user : <em>string (username) or int (user id)</em> </span>
+  )
+  </h4>
+  <p>
+  Set the user to run as.
+  </p>
+  </div>
+
+  <div class='scr-obj'>
+  <h4>
+  set_thread_pool (
+    <span>threads : <em>int</em> </span>
+  )
+  </h4>
+  <p>
+  Set the number of threads to use. If this is zero, then SconeServer will
+  run in single threaded (Multiplexed) mode, which is the default.
+  </p>
+  </div>
+
 </content>
 <!-- ----+---------+---------+---------+---------+---------+---------+----- -->
 

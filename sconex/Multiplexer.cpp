@@ -27,6 +27,7 @@ namespace scx {
 
 //=============================================================================
 Multiplexer::Multiplexer()
+  : m_num_threads(0)
 {
   DEBUG_COUNT_CONSTRUCTOR(Multiplexer);
 }
@@ -62,15 +63,10 @@ int Multiplexer::spin()
 
   int num_added=0;
   int maxfd=0;
+
+  check_thread_pool();
   
   m_job_mutex.lock();
-
-  // Allocate thread pool if not already done
-  if (m_threads_pool.empty() && m_threads_busy.empty()) {
-    for (int i=0; i<5; ++i) {
-      m_threads_pool.push_back( new DescriptorThread(*this) );
-    }
-  }  
 
   // Insert any new descriptors
   m_new_mutex.lock();
@@ -79,6 +75,8 @@ int Multiplexer::spin()
     m_des_new.pop_front();
   }
   m_new_mutex.unlock();
+
+  bool immediate = false;
  
   for (it = m_des.begin();
        it != m_des.end();
@@ -101,6 +99,14 @@ int Multiplexer::spin()
         ++num_added;
       }
 
+      if (0 != (mask & (1<<Stream::SendReadable)) ||
+	  0 != (mask & (1<<Stream::SendWriteable))) {
+	// These events can be sent immediately, so put the
+	// select into immediate mode.
+	immediate = true;
+      }
+
+
       maxfd = std::max(maxfd,fd);
     }
   }
@@ -108,13 +114,17 @@ int Multiplexer::spin()
 
   if (num_added==0) {
     return 1;
-    //    return -1;
   }
 
-  // Using a timeval of 0,0 causes select to go non-blocking
   timeval time;
-  time.tv_usec = 1;
-  time.tv_sec = 0;
+  if (immediate) {
+    // Do a non-blocking select to immediately check if there are
+    // any events to send
+    time.tv_usec = 0; time.tv_sec = 0;
+  } else {
+    // Wait upto the specified timeout for an event
+    time.tv_usec = 1; time.tv_sec = 0;
+  }
 
   // Select
   int num = select(maxfd+1, &fds_read, &fds_write, &fds_except, &time);
@@ -197,21 +207,55 @@ std::string Multiplexer::describe() const
 }
 
 //=============================================================================
+void Multiplexer::set_num_threads(unsigned int n)
+{
+  m_job_mutex.lock();
+  m_num_threads = n;
+  m_job_mutex.unlock();
+
+  check_thread_pool();
+}
+
+//=============================================================================
+unsigned int Multiplexer::get_num_threads() const
+{
+  m_job_mutex.lock();
+  unsigned int n = m_num_threads;
+  m_job_mutex.unlock();
+  return n;
+}
+
+//=============================================================================
 bool Multiplexer::allocate_job(Descriptor* d, int events)
 {
   m_job_mutex.lock();
 
-  // Wait for a thread to become available
-  while (m_threads_pool.empty()) {
-    m_job_condition.wait(m_job_mutex);
-  }
+  if (m_num_threads == 0) {
+    
+    // Single threaded mode - dispatch event in this thread
+    d->m_runstate = Descriptor::Run;
+    if (d->dispatch(events)) {
+      d->m_runstate = Descriptor::Purge;
+    } else {
+      d->m_runstate = Descriptor::Cycle;
+    }
 
-  DescriptorThread* dt = m_threads_pool.front();
-  m_threads_pool.pop_front();
-  m_threads_busy.push_back(dt);
-  
-  d->m_runstate = Descriptor::Run;
-  dt->allocate_job(d,events);
+  } else {
+   
+    // Multithreaded mode - wait for a thread to become available and 
+    // allocate the job to it
+    while (m_threads_pool.empty()) {
+      m_job_condition.wait(m_job_mutex);
+    }
+    
+    DescriptorThread* dt = m_threads_pool.front();
+    m_threads_pool.pop_front();
+    m_threads_busy.push_back(dt);
+    
+    d->m_runstate = Descriptor::Run;
+    dt->allocate_job(d,events);
+    
+  }
 
   m_job_mutex.unlock();
   return true;
@@ -238,5 +282,34 @@ bool Multiplexer::finished_job(DescriptorThread* dt, Descriptor* d, int retval)
   m_job_mutex.unlock();
   return true;
 }
+
+//=============================================================================
+void Multiplexer::check_thread_pool()
+{
+  m_job_mutex.lock();
+
+  unsigned int cur_threads = m_threads_pool.size() + m_threads_busy.size();
+  if (cur_threads != m_num_threads) {
+    // Thread pool needs resizing
+    if (m_num_threads > cur_threads) {
+      // Increase size of thread pool by creating more threads
+      for (unsigned int i=cur_threads; i<m_num_threads; ++i) {
+	m_threads_pool.push_back( new DescriptorThread(*this) );
+      }
+    } else {
+      // Decrease size of thread pool if possible, by eliminating idle threads
+      unsigned int del = cur_threads - m_num_threads;
+      del = std::min(del,m_threads_pool.size());
+      for (unsigned int i=0; i<del; ++i) {
+	DescriptorThread* dt = m_threads_pool.front();
+	m_threads_pool.pop_front();
+	delete dt;
+      }
+    }
+  }
+
+  m_job_mutex.unlock();
+}
+
 
 };
