@@ -178,7 +178,9 @@ void IP6SocketAddress::set_address(
 		
   } else {
     // ip6 address string (xxxx:xxxx:xxxx:xxxx:xxxx:xxxx:xxxx:xxxx)
-    if (inet_pton(AF_INET6, addr.c_str(), &m_addr.sin6_addr) < 1) {
+    if (inet_pton(AF_INET6, addr.c_str(), &m_addr.sin6_addr) > 0) {
+      m_valid = true;
+    } else {
       // Its not a valid ip address, so assume it is a host name and 
       // try and resolve it.
       hostent* phe = gethostbyname2(addr.c_str(),AF_INET6);

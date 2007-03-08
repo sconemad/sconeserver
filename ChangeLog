@@ -1,4 +1,14 @@
 
+2007-03-08 Andrew Wedgbury <wedge@sconemad.com>
+
+	* sconex/Kernel: Add script interface to system information.
+	* bluetooth: Fix channel number setting.
+	* ip+ip6: Fix setting address from string validity.
+	* sconex/Descriptor: Add event_connecting and handle connecting state.
+	* sconex/Socket: Determine local addr when connecting.
+	* sconex/StreamSocket: Allow non-blocking connects.
+	* forward: New module - connection forwarding.
+	
 2006-10-24 Andrew Wedgbury <wedge@sconemad.com>
 
 	* sconex/Multiplexer: Allow resizing thread pool, and switching back 

@@ -140,6 +140,15 @@ Arg* Kernel::arg_lookup(const std::string& name)
   if ("thread_pool" == name) {
     return new scx::ArgInt(m_spinner.get_num_threads());
   }
+  if ("system_nodename" == name) {
+    return new scx::ArgString(get_system_nodename());
+  }
+  if ("system_version" == name) {
+    return new scx::ArgString(get_system_version());
+  }
+  if ("system_hardware" == name) {
+    return new scx::ArgString(get_system_hardware());
+  }
   
   return Module::arg_lookup(name);
 }
@@ -206,6 +215,12 @@ Arg* Kernel::arg_function(
     if (n_threads < 0) {
       return new ArgError("set_thread_pool() Must specify >= 0 threads");
     }
+
+    std::ostringstream oss;
+    oss << "Setting thread pool to " << n_threads
+        << (n_threads ? "" : " (multiplexed mode)");
+    log(oss.str());
+
     m_spinner.set_num_threads((unsigned int)n_threads);
     return 0;
   }

@@ -46,7 +46,7 @@ StreamSocket::~StreamSocket()
 //=============================================================================
 std::string StreamSocket::describe() const
 {
-  return Socket::describe() + " - (" +
+  return Socket::describe() + " --> (" +
     (m_addr_remote!=0 ? m_addr_remote->get_string() : "") +
     ")";
 }
@@ -89,56 +89,58 @@ Condition StreamSocket::connect(
   DEBUG_ASSERT(state()==Descriptor::Closed,"connect() called on open socket");
 
   if (addr==0 || !addr->valid_for_connect()) {
+    if (addr) {
+      STREAMSOCKET_DEBUG_LOG("connect() address (" <<
+                             addr->get_string() << ") invalid for connect");
+    } else {
+      STREAMSOCKET_DEBUG_LOG("connect() null address!");
+    }
     return scx::Error;
   }
 
-  delete m_addr_local;
-  m_addr_local = dynamic_cast<SocketAddress*> (addr->new_copy());
-  DEBUG_ASSERT(m_addr_local!=0,"connect() SocketAddress cast failed");
-
+  // Copy address into our local and remote addresses, local address will be
+  // determined on connection, but we want to ensure we have an address object
+  // of the correct class.
+  if (addr != m_addr_local) {
+    delete m_addr_local;
+    m_addr_local = dynamic_cast<SocketAddress*> (addr->new_copy());
+    DEBUG_ASSERT(m_addr_local!=0,"connect() SocketAddress cast failed");
+  }
+  if (addr != m_addr_remote) {
+    delete m_addr_remote;
+    m_addr_remote = dynamic_cast<SocketAddress*> (addr->new_copy());
+    DEBUG_ASSERT(m_addr_remote!=0,"connect() SocketAddress cast failed");
+  }
+  
   if (create_socket()) {
+    STREAMSOCKET_DEBUG_LOG("connect() failed to create socket");
     return scx::Error;
   }
 
   const struct sockaddr* sa = addr->get_sockaddr();
   socklen_t sa_size = addr->get_sockaddr_size();
-  
+
   // Call connect
-  if ( ::connect(m_socket,sa,sa_size) <= 0) {
+  if ( ::connect(m_socket,sa,sa_size) < 0) {
     switch (error()) {
     
       case Descriptor::Wait:
-        m_state=Socket::Connecting;
+        // Non-blocking connect
+        STREAMSOCKET_DEBUG_LOG("connect() waiting for connection");
+        m_state=Descriptor::Connecting;
         return scx::Ok;
 
       default:
-        STREAMSOCKET_DEBUG_LOG("connect() could not connect");
+        STREAMSOCKET_DEBUG_LOG("connect() could not connect, error=" << (int)errno);
         close();
         return scx::Error;
     } 
   }
 
-  delete m_addr_remote;
-  m_addr_remote = dynamic_cast<SocketAddress*> (addr->new_copy());
-  DEBUG_ASSERT(m_addr_remote!=0,"connect() SocketAddress cast failed");
+  // Connection occured straight away, probably a blocking connect
+  STREAMSOCKET_DEBUG_LOG("connect() connected straight away");
 
-  // Determine local address
-  char* sa_local_buffer = new char[sa_size];
-  memset(sa_local_buffer,0,sa_size);
-  struct sockaddr* sa_local = (struct sockaddr*)sa_local_buffer;
-  
-  if (::getpeername(m_socket,sa_local,&sa_size) != 0) {
-    STREAMSOCKET_DEBUG_LOG("accept() Could not determine local address");
-    delete [] sa_local_buffer;
-    return scx::Error;
-  }
-
-  m_addr_local->set_sockaddr(sa_local);
-  delete [] sa_local_buffer;
-
-  m_state = Descriptor::Connected;
-  
-  return scx::Ok;
+  return (event_connecting() == 0) ? scx::Ok : scx::Error;
 }
 
 //=============================================================================

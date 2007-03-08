@@ -176,8 +176,7 @@ void BluetoothSocketAddress::set_channel(
   short channel
 )
 {
-  //  m_addr.rc_channel = htobs(channel);
-  m_addr.rc_channel = htobs(4);
+  m_addr.rc_channel = htobs(channel);
 }
 
 //=============================================================================

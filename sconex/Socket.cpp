@@ -94,6 +94,48 @@ int Socket::event_create()
 }
 
 //=============================================================================
+int Socket::event_connecting()
+{
+  int so_err = 0;
+  socklen_t so_len = sizeof(so_err);
+
+  int err = ::getsockopt(m_socket,SOL_SOCKET,SO_ERROR,&so_err,&so_len);
+
+  if (err != 0) {
+    // Couldn't tell
+    DESCRIPTOR_DEBUG_LOG("Unable to determine connection state, error " << err);
+    return 1;
+    
+  } else if (so_err != 0) {
+    // Connection failed
+    DESCRIPTOR_DEBUG_LOG("Connection failed with socket error " << so_err);
+    return 1;
+  }    
+
+  // Succesful connection
+  m_state = Connected;
+
+  // Determine local address if required
+  if (m_addr_local) {
+    socklen_t sa_size = m_addr_local->get_sockaddr_size();
+    char* sa_local_buffer = new char[sa_size];
+    memset(sa_local_buffer,0,sa_size);
+    struct sockaddr* sa_local = (struct sockaddr*)sa_local_buffer;
+    
+    if (::getsockname(m_socket,sa_local,&sa_size) != 0) {
+      DESCRIPTOR_DEBUG_LOG("event_connecting() Could not determine local address");
+      delete [] sa_local_buffer;
+      return 0;
+    }
+    
+    m_addr_local->set_sockaddr(sa_local);
+    delete [] sa_local_buffer;
+  }
+
+  return 0;
+}
+
+//=============================================================================
 int Socket::create_socket()
 {
   DEBUG_ASSERT(m_socket==-1,"create_socket() socket already in use");

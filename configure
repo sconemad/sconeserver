@@ -25171,6 +25171,8 @@ CPPFLAGS="$CPPFLAGS -Wall"
 
           ac_config_files="$ac_config_files exec/Makefile"
 
+          ac_config_files="$ac_config_files forward/Makefile"
+
           ac_config_files="$ac_config_files test/Makefile"
 
           ac_config_files="$ac_config_files testbuilder/Makefile"
@@ -25809,6 +25811,7 @@ do
   "http/dirindex/Makefile" ) CONFIG_FILES="$CONFIG_FILES http/dirindex/Makefile" ;;
   "http/errorpage/Makefile" ) CONFIG_FILES="$CONFIG_FILES http/errorpage/Makefile" ;;
   "exec/Makefile" ) CONFIG_FILES="$CONFIG_FILES exec/Makefile" ;;
+  "forward/Makefile" ) CONFIG_FILES="$CONFIG_FILES forward/Makefile" ;;
   "test/Makefile" ) CONFIG_FILES="$CONFIG_FILES test/Makefile" ;;
   "testbuilder/Makefile" ) CONFIG_FILES="$CONFIG_FILES testbuilder/Makefile" ;;
   "depfiles" ) CONFIG_COMMANDS="$CONFIG_COMMANDS depfiles" ;;
@@ -26725,6 +26728,7 @@ The following modules will be built:
     + errorpage    yes
   + ssl            $SSL
   + exec           yes
+  + forward        yes
   + test           yes
   + examples       $EXAMPLES
   + testbuilder    $TESTBUILDER
@@ -26752,6 +26756,7 @@ The following modules will be built:
     + errorpage    yes
   + ssl            $SSL
   + exec           yes
+  + forward        yes
   + test           yes
   + examples       $EXAMPLES
   + testbuilder    $TESTBUILDER

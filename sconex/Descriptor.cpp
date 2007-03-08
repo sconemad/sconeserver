@@ -121,6 +121,7 @@ Descriptor::Error Descriptor::error() const
   switch (errno) {
     case 0:	return Ok;
     case EWOULDBLOCK: return Wait;
+    case EINPROGRESS: return Wait;
     default: return Fatal;
   }
   return Ok;
@@ -242,6 +243,13 @@ int Descriptor::event_create()
 }
 
 //=============================================================================
+int Descriptor::event_connecting()
+{
+  m_state = Connected;
+  return 0;
+}
+
+//=============================================================================
 void Descriptor::link_streams()
 {
   Stream* prev=0;
@@ -259,7 +267,12 @@ int Descriptor::get_event_mask()
 {
   int event_mask = 0;
 
-  if (m_state != Closed && fd() >= 0) {
+  if (m_state == Connecting) {
+    // Non-blocking connect in progress, wait for writeable
+    // as that will indicate a connection has ocurred
+    event_mask = (1<<Stream::Writeable);
+    
+  } else if (m_state != Closed && fd() >= 0) {
 
     std::list<Stream*>::const_iterator it = m_streams.begin();
     while (it != m_streams.end()) {
@@ -271,44 +284,6 @@ int Descriptor::get_event_mask()
   
   return event_mask;
 }
-
-/*
-//=============================================================================
-int Descriptor::setup_select(int* maxfd, fd_set* read_set, fd_set* write_set, fd_set* except_set)
-{
-  int num = 0;
-
-  if (m_state == Closed || fd() < 0) {
-    return 0;
-  }
-
-  std::list<Stream*>::const_iterator it = m_streams.begin();
-  while (it != m_streams.end()) {
-    const Stream* stream = (*it);
-
-    if (stream->event_enabled(Stream::Readable)) {
-      FD_SET(fd(),read_set);
-      ++num;
-    }
-    
-    if (stream->event_enabled(Stream::Writeable)) {
-      FD_SET(fd(),write_set);
-      ++num;
-    }
-    
-    ++it;
-  }
-  
-  // FD_SET(fd,except_set);
-
-  // Accumulate max fd for select call
-  if (num && maxfd && fd() > *maxfd) {
-    *maxfd = fd();
-  }
-  
-  return num;
-}
-*/
 
 //=============================================================================
 int Descriptor::dispatch(int events)
@@ -329,6 +304,16 @@ int Descriptor::dispatch(int events)
   bool event_readable  = events & (1<<Stream::Readable); 
   bool event_writeable = events & (1<<Stream::Writeable);
 //  bool event_except    = FD_ISSET(fd(),except_set);
+
+  if (state() == Connecting) {
+    // Result of a non-blocking connect
+    if (event_writeable) {
+      if (event_connecting() != 0) {
+        return 1;
+      }
+    }
+    return 0;
+  }
   
   bool remove,error,close,open_wait;
 

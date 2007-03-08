@@ -54,6 +54,9 @@ protected:
   virtual int event_create();
   // This fires when a socket gets created
 
+  virtual int event_connecting();
+  // This fires when a socket is connecting
+  
   int create_socket();
   // Create a socket
 

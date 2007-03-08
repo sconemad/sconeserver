@@ -237,7 +237,9 @@ void IPSocketAddress::set_address(
 		
   } else {
     // ip address string (xxx.xxx.xxx.xxx)
-    if (inet_pton(AF_INET, addr.c_str(), &m_s_addr) < 1) {
+    if (inet_pton(AF_INET, addr.c_str(), &m_s_addr) > 0) {
+      m_valid = true;
+    } else {
       // Its not a valid ip address, so assume it is a host name and 
       // try and resolve it.
       hostent* phe = gethostbyname(addr.c_str());

@@ -126,6 +126,10 @@ protected:
   // Called after descriptor is created to allow any options to
   // be set
   
+  virtual int event_connecting();
+  // Called when events are recieved while in connecting state
+  // Should return nonzero to indicate an error has occured.
+  
   virtual Condition endpoint_read(void* buffer,int n,int& na) =0;
   virtual Condition endpoint_write(const void* buffer,int n,int& na) =0;
   // Implement in derived classes to provide I/O direct to the
