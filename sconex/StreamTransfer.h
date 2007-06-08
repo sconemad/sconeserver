@@ -59,6 +59,8 @@ public:
 
   virtual Condition event(Event e);
 
+  virtual std::string stream_status() const;
+  
   Status transfer();
 
   void set_close_when_finished(bool onoff);
@@ -75,6 +77,12 @@ protected:
   Buffer m_buffer;
 
   bool m_close_when_finished;
+
+  int m_uid;
+  // Unique ID for this transfer
+
+  static int s_tra_count;
+  // Transfer count, used to generate UIDs.
   
 };
 
@@ -88,6 +96,8 @@ public:
 
   virtual Condition event(Event e);
 
+  virtual std::string stream_status() const;
+  
 protected:
 
   friend class StreamTransfer;
@@ -95,6 +105,8 @@ protected:
 
   StreamTransfer* m_dest;
   bool m_close;
+
+  int m_dest_uid;
 
 };
 

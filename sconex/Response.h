@@ -37,6 +37,8 @@ public:
 
   virtual Condition event(Stream::Event e);
 
+  virtual std::string stream_status() const;
+  
 protected:
 
 private:

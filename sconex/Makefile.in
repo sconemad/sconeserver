@@ -74,8 +74,8 @@ am_libsconex_la_OBJECTS = sconex.lo utils.lo Arg.lo ArgObject.lo \
 	ModuleLoader.lo ModuleLoaderDLL.lo ModuleRef.lo Multiplexer.lo \
 	Mutex.lo Process.lo Response.lo Socket.lo SocketAddress.lo \
 	Stream.lo StreamBuffer.lo StreamDebugger.lo StreamSocket.lo \
-	StreamTokenizer.lo StreamTransfer.lo Thread.lo Time.lo \
-	UnitTester.lo Uri.lo User.lo VersionTag.lo
+	StreamTokenizer.lo StreamTransfer.lo TermBuffer.lo Thread.lo \
+	Time.lo UnitTester.lo Uri.lo User.lo VersionTag.lo
 libsconex_la_OBJECTS = $(am_libsconex_la_OBJECTS)
 am_utest_OBJECTS = utest.$(OBJEXT) Buffer_ut.$(OBJEXT) \
 	LineBuffer_ut.$(OBJEXT) MemFile_ut.$(OBJEXT) \
@@ -262,6 +262,7 @@ StreamDebugger.cpp \
 StreamSocket.cpp \
 StreamTokenizer.cpp \
 StreamTransfer.cpp \
+TermBuffer.cpp \
 Thread.cpp \
 Time.cpp \
 UnitTester.cpp \
@@ -313,6 +314,7 @@ StreamDebugger.h \
 StreamSocket.h \
 StreamTokenizer.h \
 StreamTransfer.h \
+TermBuffer.h \
 Thread.h \
 Time.h \
 UnitTester.h \
@@ -455,6 +457,7 @@ distclean-compile:
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/StreamSocket.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/StreamTokenizer.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/StreamTransfer.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/TermBuffer.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/Thread.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/Time.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/TimeDate_ut.Po@am__quote@

@@ -188,6 +188,22 @@ scx::Condition MessageStream::write(const void* buffer,int n,int& na)
 }
 
 //=============================================================================
+std::string MessageStream::stream_status() const
+{
+  std::ostringstream oss;
+  oss << m_status.code();
+  if (m_headers_sent) oss << " HDRS";
+  if (m_write_chunked) {
+    oss << " chunk-rem:" << m_write_remaining;
+  }
+  if (m_finished) oss << " FIN";
+  oss << " w:" << m_bytes_written;
+  oss << " r:" << m_bytes_read << "/" << m_bytes_readable;
+  if (m_buffer) oss << " buf:" << m_buffer->status_string() << " ";
+  return oss.str();
+}
+
+//=============================================================================
 void MessageStream::set_version(const scx::VersionTag& version)
 {
   m_version = version;

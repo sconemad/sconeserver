@@ -50,6 +50,8 @@ public:
 
   virtual scx::Condition event(scx::Stream::Event e);
 
+  virtual std::string stream_status() const;
+  
   scx::Condition process_input();
 
   bool process_request(Request*& request);

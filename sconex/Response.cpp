@@ -65,5 +65,11 @@ Condition Response::event(Stream::Event e)
   return c;
 }
 
+//=============================================================================
+std::string Response::stream_status() const
+{
+  return m_write_buffer.status_string();
+}
+
 };
 

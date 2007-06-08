@@ -78,3 +78,9 @@ scx::Condition RouterListener::event(scx::Stream::Event e)
   
   return scx::Ok;
 }
+
+//=============================================================================
+std::string RouterListener::stream_status() const
+{
+  return m_route;
+}

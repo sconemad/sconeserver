@@ -38,6 +38,8 @@ public:
   virtual Condition read(void* buffer,int n,int& na);
   virtual Condition write(const void* buffer,int n,int& na);
 
+  virtual std::string stream_status() const;
+  
   std::string get_cond_str(Condition c);
 
 protected:

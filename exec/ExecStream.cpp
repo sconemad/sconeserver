@@ -35,6 +35,7 @@ Free Software Foundation, Inc.,
 #include "sconex/Process.h"
 #include "sconex/User.h"
 
+
 //=========================================================================
 ExecStream::ExecStream(
   ExecModule& module,
@@ -43,7 +44,9 @@ ExecStream::ExecStream(
   : scx::Stream("exec"),
     m_module(module),
     m_args(args),
-    m_process(0)
+    m_process(0),
+    m_cgi_mode(false),
+    m_launched(0)
 {
 
 }
@@ -80,6 +83,7 @@ bool ExecStream::spawn_process()
     dynamic_cast<http::MessageStream*>(find_stream("http:message"));
   if (msg) {
     // We're part of an HTTP request chain
+    m_cgi_mode = true;
     const http::Request& req = msg->get_request();
     const http::FSNode* node = msg->get_node();
     const scx::Uri& uri = req.get_uri();
@@ -159,10 +163,12 @@ bool ExecStream::spawn_process()
   
   // Launch the new process and connect socket
   if (!m_process->launch()) {
+    m_launched = -1;
     DEBUG_LOG("Failed to launch process");
     return false;
   }
-
+  m_launched = 1;
+  
   // Add debug logging to exec stream
   // sock->add_stream(new scx::StreamDebugger("exec"));
 
@@ -194,4 +200,20 @@ bool ExecStream::spawn_process()
   m_process = 0;
   
   return true;
+}
+
+//=========================================================================
+std::string ExecStream::stream_status() const
+{
+  std::ostringstream oss;
+  if (m_cgi_mode) oss << "CGI ";
+  if (m_launched > 0) oss << "LAUNCHED "; 
+  if (m_launched < 0) oss << "FAILED "; 
+
+  if (m_args->size() > 0) {
+    oss << m_args->get(0)->get_string();
+  } else {
+    oss << "(no exe)";
+  }
+  return oss.str();
 }

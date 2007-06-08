@@ -39,6 +39,8 @@ public:
 
   virtual scx::Condition event(scx::Stream::Event e);
 
+  virtual std::string stream_status() const;
+  
 protected:
 
 private:

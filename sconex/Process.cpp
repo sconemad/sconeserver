@@ -869,9 +869,11 @@ bool Process::launch()
     m_socket = packet.get_fd();
     event_create();
     m_state = Descriptor::Connected;
-
-    m_addr_local = new AnonSocketAddress("process");
-    m_addr_remote = new AnonSocketAddress(m_exe);
+    std::ostringstream oss;
+    oss << "exec:" << m_exe << ":" << m_pid;
+  
+    m_addr_local = new AnonSocketAddress("pipe");
+    m_addr_remote = new AnonSocketAddress(oss.str());
      
     PROCESS_DEBUG_LOG("Got pid " << m_pid << " and fd " 
                       << m_socket << " from process proxy");
@@ -958,6 +960,5 @@ void Process::set_detatched(bool onoff)
     m_runstate = Detatched;
   }
 }
-
 
 };

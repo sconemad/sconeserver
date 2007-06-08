@@ -62,7 +62,33 @@ scx::Condition StatStream::write(const void* buffer,int n,int& na)
 }
 
 //=========================================================================
+std::string StatStream::stream_status() const
+{
+  std::ostringstream oss;
+  oss << m_channel;
+
+  StatStream* unc = const_cast<StatStream*>(this);
+  StatChannel* channel = unc->m_mod.find_channel(m_channel);
+  if (channel) {
+    scx::Arg* a = channel->arg_lookup("connections");
+    oss << " con:" << (a ? a->get_string() : "?");
+    delete a;
+
+    a = channel->arg_lookup("input");
+    oss << " r:" << (a ? a->get_string() : "?");
+    delete a;
+
+    a = channel->arg_lookup("output");
+    oss << " w:" << (a ? a->get_string() : "?");
+    delete a;
+  }
+  
+  return oss.str();
+}
+
+//=========================================================================
 void StatStream::add_stats(StatChannel::StatType type,long count)
 {
   m_mod.add_stats(m_channel,type,count);
 }
+

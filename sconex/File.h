@@ -55,6 +55,9 @@ public:
   virtual std::string describe() const;
   // Describe the socket
 
+  const FilePath& path() const;
+  // Get the file path
+  
   virtual int fd();
   
   Condition seek(

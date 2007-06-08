@@ -188,6 +188,14 @@ scx::Condition SSLStream::event(scx::Stream::Event e)
 }
 
 //=============================================================================
+std::string SSLStream::stream_status() const
+{
+  std::ostringstream oss;
+  oss << m_channel << " seq:" << m_seq;
+  return oss.str();
+}
+
+//=============================================================================
 void SSLStream::set_last_read_cond(scx::Condition c)
 {
   m_last_read_cond=c;

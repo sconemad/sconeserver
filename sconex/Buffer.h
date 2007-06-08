@@ -47,6 +47,7 @@ public:
   ~Buffer();
 
   const void* head() const;
+  void* head();
   // Don't copy more than used() from head()
   
   void* tail();
@@ -58,6 +59,12 @@ public:
   int pop_to(void* a, int n);
   int push_from(const void* a, int n);
   int push_string(const std::string& s);
+
+  int insert_from(const void* a, int p, int n);
+  // Insert n bytes into the buffer at position p
+  
+  int remove(int p, int n);
+  // Remove n bytes from the buffer from position p
   
   int size() const;
   int free() const;
@@ -66,6 +73,9 @@ public:
 
   void compact();
   // Rearrange buffer to remove any wasted space.
+
+  std::string status_string() const;
+  // Get a string representing the status of this buffer, for debugging/info
   
 protected:
 

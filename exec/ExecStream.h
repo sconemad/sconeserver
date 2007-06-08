@@ -44,6 +44,8 @@ protected:
 
   virtual scx::Condition event(scx::Stream::Event e);
 
+  virtual std::string stream_status() const;
+  
   bool ExecStream::spawn_process();
   
 private:
@@ -51,7 +53,9 @@ private:
   ExecModule& m_module;
   scx::ArgList* m_args;
   scx::Process* m_process;
- 
+
+  bool m_cgi_mode;
+  int m_launched;
 };
 
 #endif

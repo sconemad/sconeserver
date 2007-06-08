@@ -28,6 +28,8 @@ namespace scx {
 #ifndef TRANSFER_DEBUG_LOG
 #  define TRANSFER_DEBUG_LOG(m)
 #endif
+
+int StreamTransfer::s_tra_count = 0;
   
 //=============================================================================
 StreamTransfer::StreamTransfer(
@@ -36,7 +38,8 @@ StreamTransfer::StreamTransfer(
 ) : Stream("transfer"),
     m_status(StreamTransfer::Transfer),
     m_buffer(buffer_size),
-    m_close_when_finished(false)
+    m_close_when_finished(false),
+    m_uid(++s_tra_count)
 {
   DEBUG_COUNT_CONSTRUCTOR(StreamTransfer);
 
@@ -109,6 +112,15 @@ Condition StreamTransfer::event(Event e)
   }
   
   return scx::Ok;
+}
+
+//=============================================================================
+std::string StreamTransfer::stream_status() const
+{
+  std::ostringstream oss;
+  oss << "<-[" << m_uid << "] buf:" << m_buffer.status_string();
+  if (m_close_when_finished) oss << " AUTOCLOSE";
+  return oss.str();
 }
 
 //=============================================================================
@@ -195,10 +207,15 @@ StreamTransferSource::StreamTransferSource(
   StreamTransfer* dest					   
 ) : Stream("transfer-src"),
     m_dest(dest),
-    m_close(false)
+    m_close(false),
+    m_dest_uid(0)
 {
   DEBUG_COUNT_CONSTRUCTOR(StreamTransferSource);
 
+  if (m_dest) {
+    m_dest_uid = m_dest->m_uid;
+  }
+  
   enable_event(Stream::Readable,true);
   enable_event(Stream::Opening,true);
 }
@@ -239,6 +256,14 @@ Condition StreamTransferSource::event(Stream::Event e)
   }
 
   return scx::Ok;
+}
+
+//=============================================================================
+std::string StreamTransferSource::stream_status() const
+{
+  std::ostringstream oss;
+  oss << "->[" << m_dest_uid << "]";
+  return oss.str();
 }
 
 //=============================================================================

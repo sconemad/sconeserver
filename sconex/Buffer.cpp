@@ -48,6 +48,12 @@ const void* Buffer::head() const
 }
 
 //=============================================================================
+void* Buffer::head()
+{
+  return &m_buffer[m_head];
+}
+
+//=============================================================================
 void* Buffer::tail()
 {
   return &m_buffer[m_tail];
@@ -76,7 +82,7 @@ void Buffer::pop(int n)
 int Buffer::pop_to(void* a, int n)
 {
   int na = (n > used() ? used() : n);
-  memcpy(a, head(), na);
+  memcpy(a, &m_buffer[m_head], na);
   pop(na);
   return na;
 }
@@ -85,7 +91,7 @@ int Buffer::pop_to(void* a, int n)
 int Buffer::push_from(const void* a, int n)
 {
   int na = (n > free() ? free() : n);
-  memcpy(tail(), a, na);
+  memcpy(&m_buffer[m_tail], a, na);
   push(na);
   return na;
 }
@@ -95,11 +101,48 @@ int Buffer::push_string(const std::string& s)
 {
   int n = s.length();
   int na = (n > free() ? free() : n);
-  memcpy(tail(), s.c_str(), na);
+  memcpy(&m_buffer[m_tail], s.c_str(), na);
   push(na);
   return na;
 }
+
+//=============================================================================
+int Buffer::insert_from(const void* a, int p, int n)
+{
+  DEBUG_ASSERT(p <= used(),"insert_from() Bad position");
+  // Pack down if we are running out of space
+  if (n > free()) {
+    compact();
+  }
+  DEBUG_ASSERT(n <= free(),"insert_from() Buffer overflow");
+
+  int toend = used() - p;
+  if (toend > 0) {
+    memmove(&m_buffer[m_head+p+n], &m_buffer[m_head+p], toend);
+  }
+  m_tail += n;
+
+  // Copy into the space we made
+  memcpy(&m_buffer[m_head+p], a, n);
   
+  return n;
+}
+
+//=============================================================================
+int Buffer::remove(int p, int n)
+{
+  DEBUG_ASSERT(p <= used(),"remove() Buffer underflow");
+  DEBUG_ASSERT(p+n <= used(),"remove() Buffer underflow");
+
+  int toend = used() - p - n;
+  DEBUG_ASSERT(toend >= 0,"remove() Buffer underflow");
+  if (toend > 0) {
+    memmove(&m_buffer[m_head+p], &m_buffer[m_head+p+n], toend);
+  }
+  m_tail -= n;
+  return n;
+}
+
 //=============================================================================
 int Buffer::size() const
 {
@@ -138,5 +181,14 @@ void Buffer::compact()
     }
   }
 }
+
+//=============================================================================
+std::string Buffer::status_string() const
+{
+  std::ostringstream oss;
+  oss << wasted() << "|" << used() << "|" << free();
+  return oss.str();
+}
+
 
 };

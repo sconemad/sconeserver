@@ -2,6 +2,8 @@
 0.7.0 2006-06-24 Andrew Wedgbury <wedge@sconemad.com>
 
 	* Multi-threaded event dispatch
+	* Non-blocking outgoing connect calls
+	* Connection forwarding module
 
 0.6.0 2006-06-21 Andrew Wedgbury <wedge@sconemad.com>
 	

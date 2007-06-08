@@ -1,6 +1,6 @@
 /* SconeServer (http://www.sconemad.com)
 
-Statistics Stream
+Terminal buffer - tokenizer to split lines
 
 Copyright (c) 2000-2004 Andrew Wedgbury <wedge@sconemad.com>
 
@@ -19,43 +19,38 @@ along with this program (see the file COPYING); if not, write to the
 Free Software Foundation, Inc.,
 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA */
 
-#ifndef statStream_h
-#define statStream_h
+#ifndef scxTermBuffer_h
+#define scxTermBuffer_h
 
-#include "StatModule.h"
+#include "sconex/sconex.h"
 #include "sconex/Stream.h"
-#include "sconex/Module.h"
 
-//=========================================================================
-class StatStream : public scx::Stream {
+#include <termios.h>
+
+namespace scx {
+
+//=============================================================================
+class SCONEX_API TermBuffer : public Stream {
 
 public:
 
-  StatStream(
-    StatModule& mod,
-    const std::string& channel
+  TermBuffer(
+    const std::string& stream_name
   );
 
-  ~StatStream();
+  virtual ~TermBuffer();
+
+  virtual Condition read(void* buffer,int n,int& na);
+
+  virtual Condition event(Stream::Event e);
   
 protected:
 
-  //  virtual scx::Condition event(int type);
-
-  virtual scx::Condition read(void* buffer,int n,int& na);
-  virtual scx::Condition write(const void* buffer,int n,int& na);
-
-  virtual std::string stream_status() const;
-  
 private:
 
-  void add_stats(
-    StatChannel::StatType type,
-    long count
-  );
-  
-  StatModule& m_mod;
-  std::string m_channel;  
+  termios m_saved_termios;
+  int m_prev;
 };
 
+};
 #endif

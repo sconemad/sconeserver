@@ -1,4 +1,10 @@
 
+2007-06-08 Andrew Wedgbury <wedge@sconemad.com>
+
+	* sconex/Buffer: Add some useful insertion/deletion methods.
+	* sconex/Stream: Add stream_status(), allowing streams to report.
+	* sconex/TermBuffer: Experimental new termios buffer (not working yet).
+
 2007-03-08 Andrew Wedgbury <wedge@sconemad.com>
 
 	* sconex/Kernel: Add script interface to system information.

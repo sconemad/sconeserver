@@ -116,5 +116,12 @@ void StreamDebugger::write_header(const std::string& message)
   m_file.write(oss.str());
 }
 
+//=============================================================================
+std::string StreamDebugger::stream_status() const
+{
+  return m_file.path().path();
+}
+
+
 };
 

@@ -87,7 +87,13 @@ public:
   
   const std::string& stream_name() const;
   // Get the name of the stream
-      
+
+  virtual std::string stream_status() const;
+  // Get current status of the stream (if any) for debugging or
+  // informational purposes. Derived classes can override this if
+  // they wish to supply status information which might be useful
+  // for debugging.
+  
 protected:
 
   friend class Descriptor;

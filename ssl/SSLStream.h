@@ -49,6 +49,8 @@ public:
 
   virtual scx::Condition event(scx::Stream::Event e);
 
+  virtual std::string stream_status() const;
+  
   void set_last_read_cond(scx::Condition c);
   void set_last_write_cond(scx::Condition c);
 

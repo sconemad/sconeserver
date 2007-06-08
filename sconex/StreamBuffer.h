@@ -63,6 +63,8 @@ public:
 
   virtual Condition event(Event e);
 
+  virtual std::string stream_status() const;
+  
 protected:
 
   Condition write_through(const void* buffer,int n,int& na);

@@ -53,6 +53,8 @@ public:
   virtual scx::Condition read(void* buffer,int n,int& na);
   virtual scx::Condition write(const void* buffer,int n,int& na);
 
+  virtual std::string stream_status() const;
+  
   void set_version(const scx::VersionTag& ver);
   const scx::VersionTag& get_version() const;
   

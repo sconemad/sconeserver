@@ -4,7 +4,7 @@ use IO::Socket;
 use IO::Select;
 
 my $HOSTNAME = "localhost";
-my $PORT = 9080;
+my $PORT = 8080;
 
 my $scd = IO::Socket::INET->new(
   PeerAddr => $HOSTNAME,
@@ -20,6 +20,7 @@ if (!$scd->connected()) {
 
 my $read_set = IO::Select->new;
 $read_set->add($scd);
+
 
 test_req(
   "GET /index.html HTTP/1.1",
@@ -53,6 +54,7 @@ sub test_req
 	print $scd "$line\r\n";
     }
     print "<=\n";
+    sleep(1);
   }
     while (my $line = <$scd>) { 
 	chomp $line;

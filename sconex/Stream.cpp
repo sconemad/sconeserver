@@ -130,6 +130,12 @@ const std::string& Stream::stream_name() const
 }
 
 //=============================================================================
+std::string Stream::stream_status() const
+{
+  return "";
+}
+
+//=============================================================================
 bool Stream::event_enabled(Event e) const
 {
   return 0 != (m_events & (1 << e));

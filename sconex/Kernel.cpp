@@ -21,6 +21,7 @@ Free Software Foundation, Inc.,
 
 #include "Kernel.h"
 #include "ConfigStream.h"
+#include "TermBuffer.h"
 #include "Console.h"
 #include "Process.h"
 #include "Logger.h"
@@ -94,6 +95,7 @@ int Kernel::run()
 void Kernel::connect_config_console()
 {
   Console* c = new Console();
+  //  c->add_stream( new TermBuffer("term") );
   c->add_stream( new ConfigStream(ref(),true) );
   connect(c,0);
 }

@@ -138,6 +138,15 @@ Condition StreamTokenizer::write(const void* buffer,int n,int& na)
 }
 
 //=============================================================================
+std::string StreamTokenizer::stream_status() const
+{
+  std::ostringstream oss;
+  oss << "tok:" << m_buffer.status_string();
+  if (m_overflow) oss << " OF!";
+  return oss.str();
+}
+
+//=============================================================================
 bool StreamTokenizer::overflow()
 {
   return m_overflow;

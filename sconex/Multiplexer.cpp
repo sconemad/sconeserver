@@ -197,7 +197,8 @@ std::string Multiplexer::describe() const
     
     std::list<Stream*>::const_iterator its = d->m_streams.begin();
     while (its != d->m_streams.end()) {
-      oss << "      " << (*its)->stream_name() << "\n";
+      oss << "      " << (*its)->stream_name()
+          << " " << (*its)->stream_status() << "\n";
       its++;
     }
   }

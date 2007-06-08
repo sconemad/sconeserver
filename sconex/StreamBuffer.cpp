@@ -227,4 +227,13 @@ Condition StreamBuffer::write_through(
   return Ok;
 }
 
+//=============================================================================
+std::string StreamBuffer::stream_status() const
+{
+  std::ostringstream oss;
+  oss << "r:" << m_read_buffer.status_string()
+      <<  " w:" << m_write_buffer.status_string();
+  return oss.str();
+}
+
 };

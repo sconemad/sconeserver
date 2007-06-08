@@ -47,6 +47,7 @@ StreamDebugger.cpp \
 StreamSocket.cpp \
 StreamTokenizer.cpp \
 StreamTransfer.cpp \
+TermBuffer.cpp \
 Thread.cpp \
 Time.cpp \
 UnitTester.cpp \
@@ -99,6 +100,7 @@ StreamDebugger.h \
 StreamSocket.h \
 StreamTokenizer.h \
 StreamTransfer.h \
+TermBuffer.h \
 Thread.h \
 Time.h \
 UnitTester.h \

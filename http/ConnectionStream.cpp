@@ -41,7 +41,7 @@ int connection_count=0;
 ConnectionStream::ConnectionStream(
   HTTPModule& module,
   const std::string& profile
-) : scx::LineBuffer("http",1024),
+) : scx::LineBuffer("http:connection",1024),
     m_module(module),
     m_request(0),
     m_profile(profile),
@@ -89,6 +89,23 @@ scx::Condition ConnectionStream::event(scx::Stream::Event e)
   }
   
   return scx::Ok;
+}
+
+//=============================================================================
+std::string ConnectionStream::stream_status() const
+{
+  std::ostringstream oss;
+  oss << scx::StreamTokenizer::stream_status()
+      << " " << m_num_connection << "-" << m_num_request
+      << " prf:" << m_profile
+      << " seq:";
+  switch (m_seq) {
+    case http_Request: oss << "REQUEST"; break;
+    case http_Headers: oss << "HEADERS"; break;
+    case http_Body: oss << "BODY"; break;
+    default: oss << "UNKNOWN!"; break;
+  }
+  return oss.str();
 }
 
 //=============================================================================

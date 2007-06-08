@@ -47,6 +47,8 @@ public:
   virtual Condition read(void* buffer,int n,int& na);
   virtual Condition write(const void* buffer,int n,int& na);
 
+  virtual std::string stream_status() const;
+  
   bool overflow();
   // Has the buffer overflown?
 

@@ -68,7 +68,7 @@ public:
   // Set the detatch mode
 
   enum RunState { Unstarted, Running, Detatched, Terminated };
-  
+
 private:
 
   Process(const Process& c);
