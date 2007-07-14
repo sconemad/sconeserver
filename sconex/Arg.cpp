@@ -85,9 +85,19 @@ int ArgString::get_int() const
 //===========================================================================
 Arg* ArgString::op(OpType optype, const std::string& opname, Arg* right)
 {
-  if (opname=="+") {
-    return new ArgString(m_string + right->get_string());
+  if (optype == Arg::Binary) {
+
+    if ("+"==opname) { // Concatenate
+      return new ArgString(m_string + right->get_string());
+      
+    } else if ("=="==opname) { // Equal to
+      return new ArgInt(m_string == right->get_string());
+      
+    } else if ("!="==opname) { // Not equal to
+      return new ArgInt(m_string != right->get_string());
+    }
   }
+
   return 0;
 }
 
@@ -335,8 +345,8 @@ ArgList::ArgList()
 //===========================================================================
 ArgList::ArgList(const ArgList& c)
 {
-  std::list<Arg*>::iterator iter = m_list.begin();
-  while (iter != m_list.end()) {
+  std::list<Arg*>::const_iterator iter = c.m_list.begin();
+  while (iter != c.m_list.end()) {
     m_list.push_back( (*iter)->new_copy() );
     ++iter;
   }

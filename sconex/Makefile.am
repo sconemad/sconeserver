@@ -116,6 +116,7 @@ check_PROGRAMS = utest
 
 utest_SOURCES = \
 utest.cpp \
+Arg_ut.cpp \
 Buffer_ut.cpp \
 LineBuffer_ut.cpp \
 MemFile_ut.cpp \
