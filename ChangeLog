@@ -1,4 +1,8 @@
 
+2007-07-14 Andrew Wedgbury <wedge@sconemad.com>
+
+	* sconex/Arg: Add missing ops and unit tests.
+
 2007-06-08 Andrew Wedgbury <wedge@sconemad.com>
 
 	* sconex/Buffer: Add some useful insertion/deletion methods.
