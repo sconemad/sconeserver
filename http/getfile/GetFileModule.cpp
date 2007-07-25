@@ -75,10 +75,6 @@ protected:
       if (file->open(path,scx::File::Read) != scx::Ok) {
         m_module.log("Cannot open file '" + path.path() + "'"); 
         msg->set_status(http::Status::Forbidden);
-        write("<html>\n");
-        write("<head><title>Forbidden</title></head>\n");
-        write("<body><h1>Forbidden</h1></body>\n");
-        write("</html>\n");
         delete file;
 	return scx::Close;
       } 

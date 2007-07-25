@@ -29,16 +29,19 @@ Free Software Foundation, Inc.,
 namespace http {
 
 //===========================================================================
-Request::Request()
+Request::Request(const std::string& profile)
+  : m_profile(profile)
 {
-
+  
 }
 
 //===========================================================================
 Request::Request(const Request& c)
   : m_method(c.m_method),
     m_uri(c.m_uri),
-    m_version(c.m_version)
+    m_version(c.m_version),
+    m_headers(c.m_headers),
+    m_profile(c.m_profile)
 {
 
 }
@@ -166,6 +169,12 @@ bool Request::parse_header(const std::string& str)
   }
 
   return true;
+}
+
+//=============================================================================
+const std::string& Request::get_profile() const
+{
+  return m_profile;
 }
 
 //=============================================================================

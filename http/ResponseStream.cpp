@@ -68,9 +68,16 @@ std::string ResponseStream::html_esc(
 scx::Condition ResponseStream::event(scx::Stream::Event e) 
 {
   if (e == scx::Stream::Writeable) {
-    scx::Condition c = decode_opts();
+    
+    http::MessageStream* msg = 
+      dynamic_cast<http::MessageStream*>(find_stream("http:message"));
+    if (!msg) {
+      return scx::Close;
+    }
+    
+    scx::Condition c = decode_opts(*msg);
     if (c == scx::Ok) {
-      c = send();
+      c = send(*msg);
     }
     return c;
   }
@@ -96,21 +103,16 @@ std::string ResponseStream::get_opt(const std::string& name) const
 }
 
 //=========================================================================
-scx::Condition ResponseStream::decode_opts()
+scx::Condition ResponseStream::decode_opts(http::MessageStream& msg)
 {
-  http::MessageStream* msg = 
-    dynamic_cast<http::MessageStream*>(find_stream("http:message"));
-  if (!msg) {
-    return scx::Close;
-  }
-  const http::Request& req = msg->get_request();
+  const http::Request& req = msg.get_request();
   const scx::Uri& uri = req.get_uri();
   
   if (req.get_method() != "GET" &&
       req.get_method() != "HEAD" &&
       req.get_method() != "POST") {
     // Don't understand the method
-    msg->set_status(http::Status::NotImplemented);
+    msg.set_status(http::Status::NotImplemented);
     return scx::Close;
   }
     

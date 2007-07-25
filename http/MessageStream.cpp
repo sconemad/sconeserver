@@ -19,28 +19,37 @@ along with this program (see the file COPYING); if not, write to the
 Free Software Foundation, Inc.,
 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA */
 
-#include "sconex/sconex.h"
-#include "sconex/Buffer.h"
-#include "sconex/VersionTag.h"
-#include "sconex/Date.h"
 #include "http/MessageStream.h"
 #include "http/ConnectionStream.h"
 #include "http/Request.h"
 #include "http/FSNode.h"
-namespace http {
+#include "http/HostMapper.h"
+#include "http/Host.h"
+#include "http/DocRoot.h"
 
+#include "sconex/sconex.h"
+#include "sconex/Buffer.h"
+#include "sconex/VersionTag.h"
+#include "sconex/Date.h"
+#include "sconex/StreamSocket.h"
+
+namespace http {
+  
 const char* CRLF = "\r\n";
 
 //=============================================================================
 MessageStream::MessageStream(
+  HTTPModule& module,
   ConnectionStream& httpstream,
   Request* request
 )
   : scx::Stream("http:message"),
+    m_module(module),
     m_httpstream(httpstream),
     m_request(request),
     m_status(Status::Ok),
     m_headers_sent(false),
+    m_error_response(false),
     m_buffer(0),
     m_node(0),
     m_write_chunked(false),
@@ -70,10 +79,23 @@ scx::Condition MessageStream::event(scx::Stream::Event e)
 {
   switch (e) {
 
+    case scx::Stream::Opening: {
+      if (!connect_request_module()) {
+        return scx::Close;
+      }
+    } break;
+    
     case scx::Stream::Closing: {
     
       if (!m_headers_sent) {
         if (!m_buffer) {
+          if (!m_error_response) {
+            m_error_response = true;
+            if (connect_request_module()) {
+              // Cancel shutdown for now
+              return scx::End;
+            }
+          }
           build_header();
           m_finished = true;
         }
@@ -249,15 +271,107 @@ const Request& MessageStream::get_request() const
 }
 
 //===========================================================================
-void MessageStream::set_node(const FSNode* node)
-{
-  m_node = node;
-}
-
-//===========================================================================
 const FSNode* MessageStream::get_node() const
 {
   return m_node;
+}
+
+//===========================================================================
+const FSDirectory* MessageStream::get_dir_node() const
+{
+  return m_dir_node;
+}
+
+//=============================================================================
+bool MessageStream::connect_request_module()
+{
+  const scx::Uri& uri = m_request->get_uri();
+  
+  // Log request
+  std::ostringstream oss;
+  oss << m_httpstream.get_num_connection() << "-"
+      << m_httpstream.get_num_request();
+  const std::string& id = oss.str();
+  
+  const scx::StreamSocket* sock =
+    dynamic_cast<const scx::StreamSocket*>(&endpoint());
+  const scx::SocketAddress* addr = sock->get_remote_addr();
+
+  if (!m_error_response) {
+    m_module.log(id + " " + addr->get_string() + " " +
+                 m_request->get_method() + " " + uri.get_string());
+    
+    const std::string& referer = m_request->get_header("Referer");
+    if (!referer.empty()) {
+      m_module.log(id + " Referer: " + referer);
+    }
+    
+    const std::string& useragent = m_request->get_header("User-Agent");
+    if (!useragent.empty()) {
+    m_module.log(id + " User-Agent: " + useragent);
+    }
+  }
+  
+  // Lookup host object
+  Host* host = m_module.get_host_mapper().host_lookup(uri.get_host());
+  if (host==0) {
+    // This is bad, user should have setup a default host
+    m_module.log(id + " Unknown host '" + uri.get_host() + "'",
+                 scx::Logger::Error);
+    return false;
+  }
+
+  // Lookup resource node
+  std::string path = uri.get_path();
+  if (path.empty()) path = "/";
+  DocRoot* docroot = host->get_docroot(m_request->get_profile());
+  if (docroot==0) {
+    // Profile is unknown within this host, can't do anything
+    m_module.log(id + " Unknown profile '" + m_request->get_profile() +
+                 "' for host '" + uri.get_host() + "'",
+                 scx::Logger::Error);
+    return false;
+  }
+
+  // Lookup the node
+  m_node = docroot->lookup(path);
+
+  if (!m_node) {
+    m_dir_node = docroot;
+    set_status(http::Status::NotFound);
+  } else {
+    m_dir_node = m_node->parent();
+    if (!m_dir_node) {
+      m_dir_node = docroot;
+    }
+  }
+
+  
+  std::string modname;
+  if (m_node && !m_error_response) {
+    if (m_node->type() == FSNode::Directory) {
+      // Use the directory module
+      modname = ((FSDirectory*)m_node)->lookup_mod(".");
+    } else {
+      modname = m_node->parent()->lookup_mod(m_node->name());
+    }
+  } else {
+    // Use the error module
+    modname = docroot->lookup_mod("!");
+  }
+
+  // Construct args
+  scx::ArgList args;
+
+  // Lookup module
+  scx::ModuleRef ref = m_module.get_module(modname.c_str());
+  if (!ref.valid()) {
+    m_module.log("No module found to handle request",scx::Logger::Error);
+    return false;
+  }
+
+  // Connect module
+  return ref.module()->connect(&endpoint(),&args);
 }
 
 //=============================================================================

@@ -87,20 +87,15 @@ std::string html_navlink(
 }
 
 //=========================================================================
-scx::Condition TestBuilderControlStream::send()
+scx::Condition TestBuilderControlStream::send(http::MessageStream& msg)
 {
-  http::MessageStream* msg = 
-    dynamic_cast<http::MessageStream*>(find_stream("http:message"));
-  if (!msg) {
-    return scx::Close;
-  }
-  const http::Request& req = msg->get_request();
+  const http::Request& req = msg.get_request();
   const scx::Uri& uri = req.get_uri();
   std::string base = "/" + uri.get_path();
 
-  msg->set_header("Content-Type","text/html");
-  msg->set_header("Cache-Control","no-cache");
-  msg->set_header("Last-Modified",scx::Date::now().string());
+  msg.set_header("Content-Type","text/html");
+  msg.set_header("Cache-Control","no-cache");
+  msg.set_header("Last-Modified",scx::Date::now().string());
   
   // Get the profile name, if any
   std::string profile = get_opt("profile");

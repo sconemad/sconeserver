@@ -38,7 +38,7 @@ public:
   
 protected:
 
-  virtual scx::Condition send();
+  virtual scx::Condition send(http::MessageStream& msg);
 
 private:
   

@@ -25,6 +25,7 @@ Free Software Foundation, Inc.,
 #include "sconex/sconex.h"
 #include "sconex/ModuleRef.h"
 #include "sconex/FilePath.h"
+#include "sconex/Mutex.h"
 namespace scx {
 
 class Logger;
@@ -64,6 +65,8 @@ protected:
   bool m_autoload_config;
 
   Module* m_module;
+
+  Mutex m_mutex;
 
   void log(const std::string& message);
 

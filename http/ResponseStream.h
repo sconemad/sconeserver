@@ -24,6 +24,7 @@ Free Software Foundation, Inc.,
 
 #include "sconex/Stream.h"
 #include "http/http.h"
+#include "http/MessageStream.h"
 
 namespace http {
 
@@ -43,14 +44,14 @@ protected:
 
   virtual scx::Condition event(scx::Stream::Event e);
 
-  virtual scx::Condition send() =0;
+  virtual scx::Condition send(http::MessageStream& msg) =0;
 
   bool is_opt(const std::string& name) const;
   std::string get_opt(const std::string& name) const;
   
 private:
 
-  scx::Condition decode_opts();
+  scx::Condition decode_opts(http::MessageStream& msg);
   bool decode_opts_string(const char* cstr,int cstr_len);
   
   std::map<std::string,std::string> m_opts;

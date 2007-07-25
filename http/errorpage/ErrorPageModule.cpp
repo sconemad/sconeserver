@@ -28,6 +28,68 @@ Free Software Foundation, Inc.,
 #include "sconex/ModuleInterface.h"
 #include "sconex/Module.h"
 #include "sconex/Stream.h"
+#include "sconex/StreamTransfer.h"
+#include "sconex/Kernel.h"
+#include "sconex/LineBuffer.h"
+
+//=========================================================================
+class VarSubstStream : public scx::LineBuffer {
+
+public:
+  VarSubstStream(http::MessageStream* msg)
+    : scx::LineBuffer("http:errorpage:varsubst"),
+      m_pos(0),
+      m_msg(msg)
+  {
+    m_vars["status"] = m_msg->get_status().string();
+    m_vars["method"] = m_msg->get_request().get_method();
+    m_vars["uri"] = m_msg->get_request().get_uri().get_string();
+    m_vars["httpversion"] = m_msg->get_request().get_version().get_string();
+  };
+  
+  virtual ~VarSubstStream()
+  {
+  };
+
+  virtual scx::Condition read(void* buffer,int n,int& na)
+  {
+    scx::Condition c = scx::Ok;
+    if (m_pos == 0) {
+      c = tokenize(m_line);
+      if (c == scx::Ok) m_line += "\n";
+      std::string::size_type start=0;
+      std::string::size_type end=0;
+      while (std::string::npos != (start = m_line.find("<?",end))) {
+        end = m_line.find("?>",start);
+        int toklen = end-start-2;
+        std::string tok = std::string(m_line,start+2,toklen);
+        std::string rep;
+        std::map<std::string,std::string>::const_iterator iter = m_vars.find(tok);
+        if (iter!=m_vars.end()) {
+          rep = (*iter).second;
+        }
+        m_line.erase(start,toklen+4);
+        m_line.insert(start,rep);
+        end = start - toklen - 4 + rep.size();
+      }
+    }
+
+    na = std::min(n,(int)m_line.size() - m_pos);
+    memcpy(buffer,m_line.c_str()+m_pos,na);
+    m_pos += n;
+    if (m_pos >= (int)m_line.size()) m_pos = 0;
+    
+    return c;
+  };
+  
+private:
+  
+  std::string m_line;
+  int m_pos;
+  http::MessageStream* m_msg;
+  std::map<std::string,std::string> m_vars;
+  
+};
 
 //=========================================================================
 class ErrorPageStream : public scx::Stream {
@@ -37,9 +99,10 @@ public:
   ErrorPageStream(
     scx::Module& module
   ) : Stream("http:errorpage"),
-      m_module(module)
+      m_module(module),
+      m_file_mode(false)
   {
-    enable_event(scx::Stream::Writeable,true);
+
   }
 
   ~ErrorPageStream()
@@ -47,51 +110,133 @@ public:
 
   }
 
-  
 protected:
 
   virtual scx::Condition event(scx::Stream::Event e) 
   {
-    if (e == scx::Stream::Writeable) {
-      http::MessageStream* msg = 
-	dynamic_cast<http::MessageStream*>(find_stream("http:message"));
-      const http::Request& req = msg->get_request();
+    if (e == scx::Stream::Opening) {
 
+      http::MessageStream* msg = 
+        dynamic_cast<http::MessageStream*>(find_stream("http:message"));
+      const http::Request& req = msg->get_request();
+      
       if (req.get_method() != "GET" && 
 	  req.get_method() != "HEAD" ) {
 	// Don't understand the method
-	msg->set_status(http::Status::NotImplemented);
 	return scx::Close;
       }
 
-      m_module.log("Not found '" + req.get_uri().get_string() + "'"); 
-
-      msg->set_status(http::Status::NotFound);
       msg->set_header("Content-Type","text/html");
 
       if (req.get_method() == "GET") {
 	// Only need to send the message body if method is GET
-	write("<html>\n");
-	write("<head><title>404 Not Found</title></head>\n");
-	write("<body>\n");
-	write("<h1>404 Not Found</h1>\n");
-	write("<p>The requested page '<em>" +
-	      req.get_uri().get_path() +
-	      "</em>' could not be found on this server.</p>\n");
-	write("</body>\n");
-	write("</html>\n");
-      }
+        const http::FSDirectory* dir = msg->get_dir_node();
+        const scx::Arg* a_error_page = dir->get_param("error_page");
+        if (a_error_page) {
+          std::string s_error_page = a_error_page->get_string();
+          scx::FilePath path = dir->path() + s_error_page;
+          
+          scx::File* file = new scx::File();
+          if (file->open(path,scx::File::Read) == scx::Ok) {
+            m_file_mode = true;
 
-      return scx::Close;
+            m_module.log("Sending '" + msg->get_status().string() +
+                         "' response using template file mode"); 
+            
+            VarSubstStream* varsubst = new VarSubstStream(msg);
+            file->add_stream(varsubst);
+            
+            int clength = file->size();
+            const int MAX_BUFFER_SIZE = 65536;
+            
+            scx::StreamTransfer* xfer =
+              new scx::StreamTransfer(file,std::min(clength,MAX_BUFFER_SIZE));
+            xfer->set_close_when_finished(true);
+            endpoint().add_stream(xfer);
+            
+            // Add file to kernel
+            scx::Kernel::get()->connect(file,0);
+          } else {
+            delete file;
+          }
+        }
+
+        if (m_file_mode == false) {
+          m_module.log("Sending '" + msg->get_status().string() +
+                       "' response using basic mode"); 
+          enable_event(scx::Stream::Writeable,true);
+        }
+        
+      } else {
+        m_module.log("Sending '" + msg->get_status().string() +
+                     "' header-only response"); 
+      }
+    }
+    
+    if (e == scx::Stream::Writeable) {
+
+      if (!m_file_mode) {
+        send_basic_page();
+        return scx::Close;
+      }
     }
     
     return scx::Ok;
   };
 
+  void send_basic_page()
+  {
+    http::MessageStream* msg = 
+      dynamic_cast<http::MessageStream*>(find_stream("http:message"));
+    const http::Request& req = msg->get_request();
+    const http::Status& status = msg->get_status();
+
+    std::ostringstream oss;
+    oss << "<html>"
+        << "<head>"
+        << "<title>"
+        << status.string()
+        << "</title>"
+        << "</head>"
+        << "<body>"
+        << "<h1>"
+        << status.string()
+        << "</h1>";
+    
+    switch (status.code()) {
+      
+      case http::Status::Found:
+        oss << "<p>"
+            << "Redirecting to '<em>"
+            << msg->get_header("Location")
+            << "</em>'"
+            << "</p>\n";
+        break;
+        
+      case http::Status::NotFound:
+        oss << "<p>"
+            << "The requested page '<em>"
+            << req.get_uri().get_path()
+            << "</em>' could not be found on this server."
+            << "</p>\n";
+        break;
+        
+      default:
+        break;
+    }
+    
+    oss << "</body>"
+        << "</html>";
+    
+    Stream::write(oss.str());
+  };
+  
 private:
     
   scx::Module& m_module;
 
+  bool m_file_mode;
+  
 };
 
 

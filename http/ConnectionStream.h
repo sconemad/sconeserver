@@ -57,6 +57,10 @@ public:
   bool process_request(Request*& request);
 
   void set_persist(bool persist);
+  bool get_persist() const;
+
+  int get_num_connection() const;
+  int get_num_request() const;
   
 private:
 

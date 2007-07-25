@@ -64,6 +64,8 @@ FilePath ModuleLoader::get_path() const
 //=============================================================================
 ModuleRef ModuleLoader::ref()
 {
+  MutexLocker locker(m_mutex);
+  
   if (m_module==0) {
   
     load_module();

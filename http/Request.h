@@ -23,6 +23,7 @@ Free Software Foundation, Inc.,
 #define httpRequest_h
 
 #include "http/HeaderTable.h"
+#include "http/DocRoot.h"
 #include "sconex/Arg.h"
 #include "sconex/VersionTag.h"
 #include "sconex/Uri.h"
@@ -33,7 +34,7 @@ class HTTP_API Request : public scx::Arg {
 
 public:
 
-  Request();
+  Request(const std::string& profile);
   Request(const Request& c);
   
   virtual ~Request();
@@ -48,6 +49,8 @@ public:
   std::string get_header(const std::string& name) const;
   bool parse_header(const std::string& str);
 
+  const std::string& get_profile() const;
+  
   // Arg methods
   virtual std::string get_string() const;
   virtual int get_int() const;
@@ -63,6 +66,7 @@ protected:
   scx::Uri m_uri;
   scx::VersionTag m_version;
   HeaderTable m_headers;
+  std::string m_profile;
   
 private:
 

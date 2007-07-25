@@ -103,6 +103,8 @@ void ModuleLoaderDLL::load_module()
 //=============================================================================
 void ModuleLoaderDLL::unload_module()
 {
+  MutexLocker locker(m_mutex);
+  
   if (m_module) {
     DEBUG_ASSERT(m_module->get_num_refs() == 0,
                 "unload_module() Deleting referenced module");

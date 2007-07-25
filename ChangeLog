@@ -1,4 +1,16 @@
 
+2007-07-25 Andrew Wedgbury <wedge@sconemad.com>
+
+	* sconex/ModuleLoader: Make module ref/load/unloading threadsafe.
+	* http/ConnectionStream: Move request module handing to MessageStream.
+	* http/MessageStream: Load req module, fall back to error module.
+	* http/Request: Store profile name as MessageStream needs it.
+	* http/ResponseStream: Pass MessageStream to send method.
+	* getfile: Don't write error html, errorpage now does this.
+	* dirindex: Don't write error html, errorpage now does this.
+	            Use 'allow_list' param to enable/disable dir listings.
+	* errorpage: Generate error page html based on templates.
+	
 2007-07-14 Andrew Wedgbury <wedge@sconemad.com>
 
 	* sconex/Arg: Add missing ops and unit tests.
@@ -25,7 +37,7 @@
 	into single threaded (multiplexed) operation. 
 	* sconex/Kernel: Add thread pool configuration.
 	* sconex/Multiplexer: Do immediate select when send events are present.
-	* doc; Add set_user and set_thread_pool to kernel module docs.
+	* doc: Add set_user and set_thread_pool to kernel module docs.
 	
 2006-10-12 Andrew Wedgbury <wedge@sconemad.com>
 

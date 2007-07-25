@@ -24,11 +24,7 @@ Free Software Foundation, Inc.,
 #include "http/Request.h"
 #include "http/MessageStream.h"
 #include "http/Status.h"
-#include "http/HostMapper.h"
-#include "http/Host.h"
-#include "http/DocRoot.h"
 
-#include "sconex/StreamSocket.h"
 #include "sconex/Logger.h"
 #include "sconex/Response.h"
 #include "sconex/VersionTag.h"
@@ -115,6 +111,24 @@ void ConnectionStream::set_persist(bool persist)
 }
 
 //=============================================================================
+bool ConnectionStream::get_persist() const
+{
+  return m_persist;
+}
+
+//=============================================================================
+int ConnectionStream::get_num_connection() const
+{
+  return m_num_connection;
+}
+
+//=============================================================================
+int ConnectionStream::get_num_request() const
+{
+  return m_num_request;
+}
+
+//=============================================================================
 scx::Condition ConnectionStream::process_input()
 {
   scx::Condition c;
@@ -139,7 +153,7 @@ scx::Condition ConnectionStream::process_input()
     } else if (m_seq == http_Request) { // REQUEST STAGE
 
       delete m_request;
-      m_request = new Request();
+      m_request = new Request(m_profile);
       if (m_request->parse_request(line,0!=find_stream("ssl"))) {
 	m_seq = http_Headers;
 	++m_num_request;
@@ -165,90 +179,14 @@ bool ConnectionStream::process_request(Request*& request)
 {
   DEBUG_ASSERT(request,"ConnectionStream::process_request() NULL request object");
 
-  const scx::Uri& uri = request->get_uri();
-  
-  // Log request
-  std::ostringstream oss;
-  oss << m_num_connection << "-" << m_num_request;
-  const std::string& id = oss.str();
-  
-  const scx::StreamSocket* sock =
-    dynamic_cast<const scx::StreamSocket*>(&endpoint());
-  const scx::SocketAddress* addr = sock->get_remote_addr();
-
-  m_module.log(id + " " + addr->get_string() + " " +
-               request->get_method() + " " + uri.get_string());
-
-  const std::string& referer = request->get_header("Referer");
-  if (!referer.empty()) {
-    m_module.log(id + " Referer: " + referer);
-  }
-
-  const std::string& useragent = request->get_header("User-Agent");
-  if (!useragent.empty()) {
-    m_module.log(id + " User-Agent: " + useragent);
-  }
-  
-  // Lookup host object
-  Host* host = m_module.get_host_mapper().host_lookup(uri.get_host());
-  if (host==0) {
-    // This is bad, user should have setup a default host
-    m_module.log(id + " Unknown host '" + uri.get_host() + "'",
-                 scx::Logger::Error);
-    delete request;
-    request = 0;
-    return false;
-  }
-
-  // Lookup resource node
-  std::string path = uri.get_path();
-  if (path.empty()) path = "/";
-  DocRoot* docroot = host->get_docroot(m_profile);
-  if (docroot==0) {
-    // Profile is unknown within this host, can't do anything
-    m_module.log(id + " Unknown profile '" + m_profile +
-                 "' for host '" + uri.get_host() + "'",
-                 scx::Logger::Error);
-    delete request;
-    request = 0;
-    return false;
-  }
-
-  const FSNode* node = docroot->lookup(path);
-  std::string modname;
-  if (node) {
-    if (node->type() == FSNode::Directory) {
-      // Use the directory module
-      modname = ((FSDirectory*)node)->lookup_mod(".");
-    } else {
-      modname = node->parent()->lookup_mod(node->name());
-    }
-  } else {
-    // Use the error module
-    modname = docroot->lookup_mod("!");
-  }
-
-  // Construct args
-  scx::ArgList args;
-
-  // Lookup module
-  scx::ModuleRef ref = m_module.get_module(modname.c_str());
-  if (!ref.valid()) {
-    m_module.log("No module found to handle request",scx::Logger::Error);
-    request = 0;
-    return false;
-  }
-
   // Create and add the message stream
-  MessageStream* msg = new MessageStream(*this,request);
+  MessageStream* msg = new MessageStream(m_module,*this,request);
   msg->add_module_ref(m_module.ref());
-  msg->set_node(node);
   endpoint().add_stream(msg);
 
   request = 0;
 
-  // Connect module
-  return ref.module()->connect(&endpoint(),&args);
+  return true;
 }
 
 };

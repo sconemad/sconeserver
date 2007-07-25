@@ -26,22 +26,22 @@ Free Software Foundation, Inc.,
 #include "http/MessageStream.h"
 #include "http/Status.h"
 #include "http/FSNode.h"
+#include "http/ResponseStream.h"
 
 #include "sconex/ModuleInterface.h"
 #include "sconex/Module.h"
-#include "sconex/Stream.h"
 
 //=========================================================================
-class DirIndexStream : public scx::Stream {
+class DirIndexStream : public http::ResponseStream {
 
 public:
 
   DirIndexStream(
     scx::Module& module
-  ) : Stream("http:dirindex"),
+  ) : http::ResponseStream("http:dirindex"),
       m_module(module)
   {
-    enable_event(scx::Stream::Writeable,true);
+
   }
 
   ~DirIndexStream()
@@ -82,80 +82,69 @@ protected:
   
   };
 
-  virtual scx::Condition event(scx::Stream::Event e) 
+  virtual scx::Condition send(http::MessageStream& msg) 
   {
-    if (e == scx::Stream::Writeable) {
+    const http::Request& req = msg.get_request();
+    const scx::Uri& uri = req.get_uri();
 
-      http::MessageStream* msg = 
-	dynamic_cast<http::MessageStream*>(find_stream("http:message"));
-      const http::Request& req = msg->get_request();
-      const scx::Uri& uri = req.get_uri();
-
-      if (req.get_method() != "GET" && 
-	  req.get_method() != "HEAD" ) {
-	// Don't understand the method
-	msg->set_status(http::Status::NotImplemented);
-	return scx::Close;
-      }
+    if (req.get_method() != "GET" && 
+        req.get_method() != "HEAD" ) {
+      // Don't understand the method
+      msg.set_status(http::Status::NotImplemented);
+      return scx::Close;
+    }
       
-      const http::FSNode* node = msg->get_node();
-      if (!node) {
+    const http::FSNode* node = msg.get_node();
+    if (!node) {
+      return scx::Close;
+    }
+
+    if (node->type() == http::FSNode::Directory) {
+      const http::FSDirectory* fsdir = (const http::FSDirectory*)node;
+      
+      const scx::Arg* a_default_page = fsdir->get_param("default_page");
+      std::string s_default_page =
+        (a_default_page ? a_default_page->get_string() : "index.html");
+      
+      std::string url = uri.get_string();
+      std::string path = uri.get_path();
+      
+      if (fsdir->lookup(s_default_page)) {
+        // Redirect to default page
+        if (url[url.size()-1] != '/') url += "/";
+        m_module.log("Redirect '" + url + "' to '" +
+                     url + s_default_page + "'"); 
+        url += s_default_page;
+        
+        msg.set_status(http::Status::Found);
+        msg.set_header("Content-Type","text/html");
+        msg.set_header("Location",url);
         return scx::Close;
       }
-
-      if (node->type() == http::FSNode::Directory) {
-        const http::FSDirectory* fsdir = (const http::FSDirectory*)node;
-
-        const scx::Arg* a_default_page = fsdir->get_param("default_page");
-        std::string s_default_page =
-          (a_default_page ? a_default_page->get_string() : "index.html");
+      
+      if (!path.empty() && path[path.size()-1] != '/') {
+        // Redirect to directory URL ending in '/'
+        m_module.log("Redirect '" + url + "' to '" + url + "/'"); 
+        url += "/";
         
-        std::string url = uri.get_string();
-        std::string path = uri.get_path();
-        
-        if (fsdir->lookup(s_default_page)) {
-          if (url[url.size()-1] != '/') url += "/";
-          m_module.log("Redirect '" + url + "' to '" +
-                       url + s_default_page + "'"); 
-          url += s_default_page;
-
-	  msg->set_status(http::Status::Found);
-	  msg->set_header("Content-Type","text/html");
-	  msg->set_header("Location",url);
-
-	  if (req.get_method() == "GET") {
-	    write("<html>\n");
-	    write("<head><title>303 Redirect</title></head>\n");
-	    write("<body><h1>303 Redirect</h1></body>\n");
-	    write("</html>\n");
-	  }
-          return scx::Close;
-        }
-        
-        if (!path.empty() && path[path.size()-1] != '/') {
-          m_module.log("Redirect '" + url + "' to '" + url + "/'"); 
-          url += "/";
-
-	  msg->set_status(http::Status::Found);
-	  msg->set_header("Content-Type","text/html");
-	  msg->set_header("Location",url);
-
-	  if (req.get_method() == "GET") {
-	    write("<html>\n");
-	    write("<head><title>303 Redirect</title></head>\n");
-	    write("<body><h1>303 Redirect</h1></body>\n");
-	    write("</html>\n");
-	  }
-	  return scx::Close;
-        }
-
+        msg.set_status(http::Status::Found);
+        msg.set_header("Content-Type","text/html");
+        msg.set_header("Location",url);
+        return scx::Close;
+      }
+      
+      const scx::Arg* a_allow_list = fsdir->get_param("allow_list");
+      bool allow_list = (a_allow_list ? a_allow_list->get_int() : false);
+      
+      if (allow_list) {
+        // Send directory listing if allowed
         m_module.log("Listing directory '" + url + "'"); 
-
-	msg->set_status(http::Status::Ok);
-	msg->set_header("Content-Type","text/html");
-
-	if (req.get_method() == "GET") {
-	  write("<!DOCTYPE html PUBLIC \"-//W3C//DTD XHTML 1.0 Strict//EN\" "
+        
+        msg.set_status(http::Status::Ok);
+        msg.set_header("Content-Type","text/html");
+        
+        if (req.get_method() == "GET") {
+          write("<!DOCTYPE html PUBLIC \"-//W3C//DTD XHTML 1.0 Strict//EN\" "
                 "\"http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd\">"
                 "<html>\n"
                 "<head>\n"
@@ -166,25 +155,29 @@ protected:
                 "<h1>Listing of " + node->url() + "</h1>\n"
                 "<div class='box'>\n"
                 "<ul>\n");
-
-	  if (fsdir->parent()) {
-	    write("<li class='parent'><a href='" +
-		  fsdir->parent()->url() +
-		  "'>../ (parent)</a></li>\n");
-	  }
-	  do_dir(fsdir);
-                
-	  write("</ul>\n"
+          
+          if (fsdir->parent()) {
+            write("<li class='parent'><a href='" +
+                  fsdir->parent()->url() +
+                  "'>../ (parent)</a></li>\n");
+          }
+          do_dir(fsdir);
+          
+          write("</ul>\n"
                 "</div>\n"
                 "</body>\n"
                 "</html>\n");
-	}
+        }
+        return scx::Close;
       }
-
+      
+      // Otherwise respond unauthorised
+      msg.set_status(http::Status::Unauthorized);
       return scx::Close;
+      
     }
-    
-    return scx::Ok;
+
+    return scx::Close;
   };
 
 private:

@@ -25,6 +25,7 @@ Free Software Foundation, Inc.,
 #ifndef httpMessageStream_h
 #define httpMessageStream_h
 
+#include "http/HTTPModule.h"
 #include "http/Status.h"
 #include "http/HeaderTable.h"
 #include "sconex/Stream.h"
@@ -36,12 +37,14 @@ namespace http {
 class ConnectionStream;
 class Request;
 class FSNode;
-
+class FSDirectory;
+  
 //=============================================================================
 class HTTP_API MessageStream : public scx::Stream {
 public:
 
   MessageStream(
+    HTTPModule& module,
     ConnectionStream& httpstream,
     Request* request
   );
@@ -69,14 +72,17 @@ public:
 
   const Request& get_request() const;
 
-  void set_node(const FSNode* node);
   const FSNode* get_node() const;
+  const FSDirectory* get_dir_node() const;
 
 private:
 
+  bool connect_request_module();
+  
   bool build_header();
   scx::Condition write_header();
   
+  HTTPModule& m_module;
   ConnectionStream& m_httpstream;
   Request* m_request;
 
@@ -84,8 +90,10 @@ private:
   Status m_status;
   HeaderTable m_headers;
   bool m_headers_sent;
+  bool m_error_response;
   scx::Buffer* m_buffer;
   const FSNode* m_node;
+  const FSDirectory* m_dir_node;
 
   // Chunked
   bool m_write_chunked;
