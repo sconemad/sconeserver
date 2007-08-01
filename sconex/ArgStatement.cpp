@@ -32,6 +32,13 @@ ArgStatement::ArgStatement()
 }
 
 //=============================================================================
+ArgStatement::ArgStatement(const ArgStatement& c)
+  : m_parent(c.m_parent)
+{
+  DEBUG_COUNT_CONSTRUCTOR(ArgStatement)
+}
+  
+//=============================================================================
 ArgStatement::~ArgStatement()
 {
   DEBUG_COUNT_DESTRUCTOR(ArgStatement);
@@ -79,7 +86,6 @@ void ArgStatement::set_parent(ArgObjectInterface* parent)
   m_parent = parent;
 }
 
-
 //=============================================================================
 ArgStatementExpr::ArgStatementExpr(const std::string& expr)
   : m_expr(expr)
@@ -88,9 +94,23 @@ ArgStatementExpr::ArgStatementExpr(const std::string& expr)
 }
 
 //=============================================================================
+ArgStatementExpr::ArgStatementExpr(const ArgStatementExpr& c)
+  : ArgStatement(c),
+    m_expr(c.m_expr)
+{
+  DEBUG_COUNT_CONSTRUCTOR(ArgStatementExpr);
+}
+
+//=============================================================================
 ArgStatementExpr::~ArgStatementExpr()
 {
   DEBUG_COUNT_DESTRUCTOR(ArgStatementExpr);
+}
+
+//=============================================================================
+ArgStatement* ArgStatementExpr::new_copy() const
+{
+  return new ArgStatementExpr(*this);
 }
 
 //=============================================================================
@@ -103,13 +123,11 @@ ArgStatement::ParseResult ArgStatementExpr::parse(
 }
 
 //=============================================================================
-bool ArgStatementExpr::run(ArgProc& proc)
+Arg* ArgStatementExpr::run(ArgProc& proc)
 {
   ArgObject ctx(this);
   proc.set_ctx(&ctx);
-  Arg* result = proc.evaluate(m_expr);
-  delete result;
-  return true;
+  return proc.evaluate(m_expr);
 }
 
 
@@ -120,10 +138,44 @@ ArgStatementGroup::ArgStatementGroup()
 }
 
 //=============================================================================
+ArgStatementGroup::ArgStatementGroup(const ArgStatementGroup& c)
+  : ArgStatement(c)
+{
+  DEBUG_COUNT_CONSTRUCTOR(ArgStatementGroup);
+
+  for (std::list<ArgStatement*>::const_iterator it = c.m_statements.begin();
+       it != c.m_statements.end();
+       ++it) {
+    ArgStatement* ac = (*it)->new_copy();
+    ac->set_parent(this);
+    m_statements.push_back(ac);
+  }
+
+  for (std::map<std::string,Arg*>::const_iterator it_v = c.m_vars.begin();
+       it_v!= c.m_vars.end();
+       ++it_v) {
+    m_vars[(*it_v).first] = ((*it_v).second)->new_copy();
+  }
+}
+
+//=============================================================================
 ArgStatementGroup::~ArgStatementGroup()
 {
   clear();
+
+  for (std::map<std::string,Arg*>::iterator it_v = m_vars.begin();
+       it_v != m_vars.end();
+       ++it_v) {
+    delete (*it_v).second;
+  }
+  
   DEBUG_COUNT_DESTRUCTOR(ArgStatementGroup);
+}
+
+//=============================================================================
+ArgStatement* ArgStatementGroup::new_copy() const
+{
+  return new ArgStatementGroup(*this);
 }
 
 //=============================================================================
@@ -147,30 +199,34 @@ ArgStatement::ParseResult ArgStatementGroup::parse(
 }
 
 //=============================================================================
-bool ArgStatementGroup::run(ArgProc& proc)
+Arg* ArgStatementGroup::run(ArgProc& proc)
 {
-  std::list<ArgStatement*>::iterator it = m_statements.begin();
-  while (it != m_statements.end()) {
-    if (!(*it)->run(proc)) {
-      return false;
+  Arg* ret=0;
+  
+  for (std::list<ArgStatement*>::iterator it = m_statements.begin();
+       it != m_statements.end();
+       ++it) {
+    delete ret;
+    ret = (*it)->run(proc);
+    if (ret && dynamic_cast<ArgError*>(ret) != 0) {
+      return ret;
     }
-    ++it;
   }
-  return true;
+  
+  return ret;
 }
 
 //=============================================================================
 Arg* ArgStatementGroup::arg_lookup(const std::string& name)
 {
-  if ("set" == name ||
-      "var" == name) {
+  if ("var" == name) {
     return new ArgObjectFunction(new ArgObject(this),name);
   }
 
   std::map<std::string,Arg*>::const_iterator it = m_vars.find(name);
   if (it != m_vars.end()) {
     Arg* var = (*it).second;
-    return var->new_copy();
+    return var->var_copy();
   }
 
   return ArgObjectInterface::arg_lookup(name);
@@ -181,26 +237,21 @@ Arg* ArgStatementGroup::arg_function(const std::string& name, Arg* args)
 {
   ArgList* l = dynamic_cast<ArgList*> (args);
   
-  if ("set" == name) {
-    const ArgString* a_var = dynamic_cast<const ArgString*> (l->get(0));
-    if (a_var) {
-      std::map<std::string,Arg*>::iterator it =
-        m_vars.find(a_var->get_string());
-      if (it != m_vars.end()) {
-        (*it).second = l->take(1);
-        return 0;
-      } else if (m_parent) {
-        // Cascade to parent
-        return m_parent->arg_function(name,args);
-      }
-    }
-    return 0;
-  }
-
   if ("var" == name) {
     const ArgString* a_var = dynamic_cast<const ArgString*> (l->get(0));
     if (a_var) {
-      m_vars[a_var->get_string()] = l->take(1);
+      std::string var_name = a_var->get_string();
+      // Check if the variable is already declared
+      std::map<std::string,Arg*>::const_iterator it = m_vars.find(var_name);
+      if (it != m_vars.end()) {
+        return new ArgError("var: Redefinition of local variable " + var_name);
+      }
+      Arg* a_val = l->take(1);
+      // If no initialiser was given, default to integer 0
+      if (a_val == 0) {
+        a_val = new ArgInt(0);
+      }
+      m_vars[var_name] = a_val;
     }
     return 0;
   }
@@ -231,11 +282,39 @@ ArgStatementConditional::ArgStatementConditional(const std::string& condition)
 }
 
 //=============================================================================
+ArgStatementConditional::ArgStatementConditional(const ArgStatementConditional& c)
+  : ArgStatement(c),
+    m_seq(c.m_seq),
+    m_condition(c.m_condition),
+    m_true_statement(0),
+    m_false_statement(0)
+    
+{
+  DEBUG_COUNT_CONSTRUCTOR(ArgStatementConditional);
+  
+  if (c.m_true_statement) {
+    m_true_statement = c.m_true_statement->new_copy();
+    m_true_statement->set_parent(this);
+  }
+
+  if (c.m_false_statement) {
+    m_false_statement = c.m_false_statement->new_copy();
+    m_false_statement->set_parent(this);
+  }
+}
+
+//=============================================================================
 ArgStatementConditional::~ArgStatementConditional()
 {
   delete m_true_statement;
   delete m_false_statement;
   DEBUG_COUNT_DESTRUCTOR(ArgStatementConditional);
+}
+
+//=============================================================================
+ArgStatement* ArgStatementConditional::new_copy() const
+{
+  return new ArgStatementConditional(*this);
 }
 
 //=============================================================================
@@ -290,7 +369,7 @@ ArgStatement::ParseMode ArgStatementConditional::parse_mode() const
 }
 
 //=============================================================================
-bool ArgStatementConditional::run(ArgProc& proc)
+Arg* ArgStatementConditional::run(ArgProc& proc)
 {
   // Evaluate the condition
   ArgObject ctx(this);
@@ -299,16 +378,13 @@ bool ArgStatementConditional::run(ArgProc& proc)
   bool cond = (0 != result->get_int());
   delete result;
 
-  // "if"...
   if (cond) {
-    // Condition is true
     if (m_true_statement) return m_true_statement->run(proc);
-    return true;
+  } else {
+    if (m_false_statement) return m_false_statement->run(proc);
   }
-
-  // "else"...
-  if (m_false_statement) return m_false_statement->run(proc);
-  return true;
+  
+  return 0;
 }
 
 
@@ -322,10 +398,31 @@ ArgStatementWhile::ArgStatementWhile(const std::string& condition)
 }
 
 //=============================================================================
+ArgStatementWhile::ArgStatementWhile(const ArgStatementWhile& c)
+  : ArgStatement(c),
+    m_seq(c.m_seq),
+    m_condition(c.m_condition),
+    m_body(0)
+{
+  DEBUG_COUNT_CONSTRUCTOR(ArgStatementWhile);
+
+  if (c.m_body) {
+    m_body = c.m_body->new_copy();
+    m_body->set_parent(this);
+  }
+}
+
+//=============================================================================
 ArgStatementWhile::~ArgStatementWhile()
 {
   delete m_body;
   DEBUG_COUNT_DESTRUCTOR(ArgStatementWhile);
+}
+
+//=============================================================================
+ArgStatement* ArgStatementWhile::new_copy() const
+{
+  return new ArgStatementWhile(*this);
 }
 
 //=============================================================================
@@ -362,8 +459,9 @@ ArgStatement::ParseMode ArgStatementWhile::parse_mode() const
 }
 
 //=============================================================================
-bool ArgStatementWhile::run(ArgProc& proc)
+Arg* ArgStatementWhile::run(ArgProc& proc)
 {
+  Arg* ret=0;
   ArgObject ctx(this);
   
   while (true) {
@@ -378,12 +476,16 @@ bool ArgStatementWhile::run(ArgProc& proc)
       break;
     }
 
-    if (m_body && !m_body->run(proc)) {
-      return false;
+    if (m_body) {
+      delete ret;
+      ret = m_body->run(proc);
+      if (dynamic_cast<ArgError*>(ret) != 0) {
+        break;
+      }
     }
   }
 
-  return true;
+  return ret;
 }
 
 
@@ -396,10 +498,33 @@ ArgStatementFor::ArgStatementFor()
 }
 
 //=============================================================================
+ArgStatementFor::ArgStatementFor(const ArgStatementFor& c)
+  : ArgStatement(c),
+    m_seq(c.m_seq),
+    m_initialiser(c.m_initialiser),
+    m_condition(c.m_condition),
+    m_increment(c.m_increment),
+    m_body(0)
+{
+  DEBUG_COUNT_CONSTRUCTOR(ArgStatementFor);
+
+  if (c.m_body) {
+    m_body = c.m_body->new_copy();
+    m_body->set_parent(this);
+  }
+}
+
+//=============================================================================
 ArgStatementFor::~ArgStatementFor()
 {
   delete m_body;
   DEBUG_COUNT_DESTRUCTOR(ArgStatementFor);
+}
+
+//=============================================================================
+ArgStatement* ArgStatementFor::new_copy() const
+{
+  return new ArgStatementFor(*this);
 }
 
 //=============================================================================
@@ -440,8 +565,9 @@ ArgStatement::ParseMode ArgStatementFor::parse_mode() const
 }
 
 //=============================================================================
-bool ArgStatementFor::run(ArgProc& proc)
+Arg* ArgStatementFor::run(ArgProc& proc)
 {
+  Arg* ret=0;
   ArgObject ctx(this);
   proc.set_ctx(&ctx);
   
@@ -461,8 +587,12 @@ bool ArgStatementFor::run(ArgProc& proc)
       break;
     }
 
-    if (m_body && !m_body->run(proc)) {
-      return false;
+    if (m_body) {
+      delete ret;
+      ret = m_body->run(proc);
+      if (dynamic_cast<ArgError*>(ret) != 0) {
+        break;
+      }
     }
 
     // Evaluate the increment
@@ -471,7 +601,170 @@ bool ArgStatementFor::run(ArgProc& proc)
     delete result;
   }
 
-  return true;
+  return ret;
+}
+
+
+//=============================================================================
+ArgStatementVar::ArgStatementVar(const std::string& name)
+  : m_seq(0),
+    m_name(name)
+{
+  DEBUG_COUNT_CONSTRUCTOR(ArgStatementVar);
+}
+
+//=============================================================================
+ArgStatementVar::ArgStatementVar(const ArgStatementVar& c)
+  : ArgStatement(c),
+    m_seq(c.m_seq),
+    m_name(c.m_name),
+    m_initialiser(c.m_initialiser)
+{
+  DEBUG_COUNT_CONSTRUCTOR(ArgStatementVar);
+}
+
+//=============================================================================
+ArgStatementVar::~ArgStatementVar()
+{
+  DEBUG_COUNT_DESTRUCTOR(ArgStatementVar);
+}
+
+//=============================================================================
+ArgStatement* ArgStatementVar::new_copy() const
+{
+  return new ArgStatementVar(*this);
+}
+
+//=============================================================================
+ArgStatement::ParseResult ArgStatementVar::parse(
+  ArgScript& script,
+  const std::string& token
+)
+{
+  switch (++m_seq) {
+    case 1: {
+      m_name = token;
+    } break;
+
+    case 2: {
+      if (!token.empty()) {
+        m_initialiser = token.substr(1);
+      }
+    } break;
+
+    default: {
+      return ArgStatement::Pop;
+    }
+  }
+
+  return ArgStatement::Continue;
+}
+
+//=============================================================================
+ArgStatement::ParseMode ArgStatementVar::parse_mode() const
+{
+  return (m_seq==0 ?
+          ArgStatement::Name :
+          ArgStatement::SemicolonTerminated);
+}
+
+//=============================================================================
+Arg* ArgStatementVar::run(ArgProc& proc)
+{
+  Arg* initialiser=0;
+  if (!m_initialiser.empty()) {
+    ArgObject ctx(this);
+    proc.set_ctx(&ctx);
+    initialiser = proc.evaluate(m_initialiser);
+  }
+
+  ArgList args;
+  args.give(new ArgString(m_name));
+  if (initialiser) args.give(initialiser);
+  
+  return m_parent->arg_function("var",&args);
+}
+
+
+//=============================================================================
+ArgStatementSub::ArgStatementSub(const std::string& name)
+  : m_seq(0),
+    m_name(name),
+    m_body(0)
+{ 
+  DEBUG_COUNT_CONSTRUCTOR(ArgStatementSub);
+}
+
+//=============================================================================
+ArgStatementSub::ArgStatementSub(const ArgStatementSub& c)
+  : ArgStatement(c),
+    m_seq(c.m_seq),
+    m_name(c.m_name),
+    m_body(0)
+{
+  DEBUG_COUNT_CONSTRUCTOR(ArgStatementSub);
+
+  if (c.m_body) {
+    m_body = c.m_body->new_copy();
+    m_body->set_parent(this);
+  }
+}
+
+//=============================================================================
+ArgStatementSub::~ArgStatementSub()
+{
+  delete m_body;
+  DEBUG_COUNT_DESTRUCTOR(ArgStatementSub);
+}
+
+//=============================================================================
+ArgStatement* ArgStatementSub::new_copy() const
+{
+  return new ArgStatementSub(*this);
+}
+
+//=============================================================================
+ArgStatement::ParseResult ArgStatementSub::parse(
+  ArgScript& script,
+  const std::string& token
+)
+{
+  switch (++m_seq) {
+    case 1: {
+      m_name = token;
+    } break;
+
+    case 2: {
+      delete m_body;
+      m_body = script.parse_token(token);
+      m_body->set_parent(m_parent);
+    } break;
+
+    default: {
+      return ArgStatement::Pop;
+    }
+  }
+
+  return ArgStatement::Continue;
+}
+
+//=============================================================================
+ArgStatement::ParseMode ArgStatementSub::parse_mode() const
+{
+  return (m_seq==0 ?
+          ArgStatement::Name :
+          ArgStatement::SemicolonTerminated);
+}
+
+//=============================================================================
+Arg* ArgStatementSub::run(ArgProc& proc)
+{
+  ArgList args;
+  args.give(new ArgString(m_name));
+  args.give(new ArgSub(m_name,m_body,proc));
+  m_body = 0;
+
+  return m_parent->arg_function("var",&args);
 }
 
 

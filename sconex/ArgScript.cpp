@@ -37,7 +37,8 @@ ArgScript::ArgScript(
   ArgObject* ctx
 )
   : StreamTokenizer("ArgScript",4096),
-    m_ctx(ctx)
+    m_ctx(ctx),
+    m_error_des(0)
 {
   DEBUG_COUNT_CONSTRUCTOR(ArgScript);
 
@@ -95,7 +96,11 @@ Condition ArgScript::event(Stream::Event e)
 
       if (m_stack.top() == m_root || c==End) {
         ArgScript_DEBUG_LOG("event: Run");
-        m_root->run(m_proc);
+        Arg* ret = m_root->run(m_proc);
+        if (ret && m_error_des) {
+          m_error_des->write(ret->get_string() + "\n");
+        }
+        delete ret;
         m_root->clear();
       }
     }
@@ -127,6 +132,14 @@ ArgStatement* ArgScript::parse_token(const std::string& token)
     ArgScript_DEBUG_LOG("parse_token: New for loop");
     s = new ArgStatementFor();
 
+  } else if (token == "var") {
+    ArgScript_DEBUG_LOG("parse_token: New variable declaration");
+    s = new ArgStatementVar();
+
+  } else if (token == "sub") {
+    ArgScript_DEBUG_LOG("parse_token: New subroutine declaration");
+    s = new ArgStatementSub();
+    
   } else {
     ArgScript_DEBUG_LOG("parse_token: New expression");
     s = new ArgStatementExpr(token);
@@ -164,80 +177,95 @@ bool ArgScript::next_token(
   int in_bracket = 0;
   
   for ( ; cur<end; ++cur) {
-    if (pmode == ArgStatement::SemicolonTerminated) {
-      // SEMICOLON TERMINATED parse mode
-      
-      std::string str(start,length);
-      if (str == "if" ||
-          str == "else" ||
-          str == "while" ||
-          str == "for" ||
-          str == "{" ||
-          str == "}") {
-        return true;
-      }
-      
-      if (in_dquote) {
-        // Ignore everything until end quote
-        if ((*cur) == '"') {
-          in_dquote = false;
-        }
+    switch (pmode) {
+
+      case ArgStatement::SemicolonTerminated: {
+        // SEMICOLON TERMINATED parse mode
         
-      } else if (in_comment) {
-      // Ignore everything until end of line
-        while ((*cur) == '\r' || (*cur) == '\n') {
-          in_comment = false;
-          ++post_skip;
-          ++cur;
-        }
-        if (!in_comment) {
+        std::string str(start,length);
+        if (str == "if" ||
+            str == "else" ||
+            str == "while" ||
+            str == "for" ||
+            str == "var" ||
+            str == "sub" ||
+            str == "{" ||
+            str == "}") {
           return true;
         }
         
-      } else {
-        switch (*cur) {
-          case ';':
+        if (in_dquote) {
+          // Ignore everything until end quote
+          if ((*cur) == '"') {
+            in_dquote = false;
+          }
+          
+        } else if (in_comment) {
+          // Ignore everything until end of line
+          while ((*cur) == '\r' || (*cur) == '\n') {
+            in_comment = false;
             ++post_skip;
+            ++cur;
+          }
+          if (!in_comment) {
             return true;
-          case '"':
-            in_dquote = true;
-            break;
-          case '#':
-            in_comment = true;
-            break;
-        }      
-      }
-
-    } else {
-      // BRACKETED parse mode
-
-      if (in_dquote) {
-        // Ignore everything until end quote
-        if ((*cur) == '"') {
-          in_dquote = false;
-        }
-        
-      } else {
-        switch (*cur) {
-          case '"':
-            in_dquote = true;
-            break;
-          case '(':
-            if (in_bracket==0) {
-              ++pre_skip;
-              --length;
-            }
-            ++in_bracket;
-            break;
-          case ')':
-            --in_bracket;
-            if (in_bracket==0) {
+          }
+          
+        } else {
+          switch (*cur) {
+            case ';':
               ++post_skip;
               return true;
-            }
-            break;
-        }      
-      }
+            case '"':
+              in_dquote = true;
+              break;
+            case '#':
+              in_comment = true;
+              break;
+          }      
+        }
+        
+      } break;
+
+      case ArgStatement::Bracketed: {
+        // BRACKETED parse mode
+
+        if (in_dquote) {
+          // Ignore everything until end quote
+          if ((*cur) == '"') {
+            in_dquote = false;
+          }
+          
+        } else {
+          switch (*cur) {
+            case '"':
+              in_dquote = true;
+              break;
+            case '(':
+              if (in_bracket==0) {
+                ++pre_skip;
+                --length;
+              }
+              ++in_bracket;
+              break;
+            case ')':
+              --in_bracket;
+              if (in_bracket==0) {
+                ++post_skip;
+                return true;
+              }
+              break;
+          }      
+        }
+      } break;
+      
+      case ArgStatement::Name: {
+        // NAME parse mode
+        if (!isalpha(*cur)) {
+          return true;
+        }
+      } break;
+      
     }
     
     ++length;
@@ -245,5 +273,12 @@ bool ArgScript::next_token(
   
   return false;
 }
+
+//=============================================================================
+void ArgScript::set_error_des(Descriptor* error_des)
+{
+  m_error_des = error_des;
+}
+
 
 };

@@ -75,7 +75,8 @@ int Multiplexer::spin()
     m_des_new.pop_front();
   }
   m_new_mutex.unlock();
-
+  
+  int num = m_des.size();
   bool immediate = false;
  
   for (it = m_des.begin();
@@ -106,14 +107,17 @@ int Multiplexer::spin()
 	immediate = true;
       }
 
-
       maxfd = std::max(maxfd,fd);
     }
   }
   m_job_mutex.unlock();
 
+  if (num == 0) {
+    return -1;
+  }
+  
   if (num_added==0) {
-    return 1;
+    return 0;
   }
 
   timeval time;
@@ -127,11 +131,11 @@ int Multiplexer::spin()
   }
 
   // Select
-  int num = select(maxfd+1, &fds_read, &fds_write, &fds_except, &time);
+  num = select(maxfd+1, &fds_read, &fds_write, &fds_except, &time);
   
   if (num < 0) {
     DEBUG_LOG("select failed, errno=" << errno);
-    return 1;
+    return 0;
   }
 
   // Dispatch socket events

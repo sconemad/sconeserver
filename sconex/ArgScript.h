@@ -55,6 +55,8 @@ public:
 
   ArgStatement* parse_token(const std::string& token);
   // Make a new ArgStatement based on the current token
+
+  void set_error_des(Descriptor* error_des);
   
 protected:
 
@@ -82,6 +84,9 @@ private:
   // Stack of statements being parsed
   // The root group is always the bottom statement, the top is the current
   // statement being parsed.
+
+  Descriptor* m_error_des;
+  // Descriptor to write error output to
   
 };
 

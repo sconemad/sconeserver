@@ -36,6 +36,9 @@ Free Software Foundation, Inc.,
 #include "sconex/sconex.h"
 namespace scx {
 
+class ArgStatement;
+class ArgProc;
+  
 //=============================================================================
 class SCONEX_API Arg {
 
@@ -45,6 +48,7 @@ public:
   Arg(const Arg& c);
   virtual ~Arg();
   virtual Arg* new_copy() const =0;
+  virtual Arg* var_copy();
 
   virtual std::string get_string() const =0;
   virtual int get_int() const =0;
@@ -64,6 +68,7 @@ public:
   ArgString(const ArgString& c);
   virtual ~ArgString();
   virtual Arg* new_copy() const;
+  virtual Arg* var_copy();
 
   virtual std::string get_string() const;
   virtual int get_int() const;
@@ -73,7 +78,8 @@ public:
 protected:
 
   std::string m_string;
-
+  ArgString* m_orig;
+  
 };
 
 
@@ -86,6 +92,7 @@ public:
   ArgInt(const ArgInt& c);
   virtual ~ArgInt();
   virtual Arg* new_copy() const;
+  virtual Arg* var_copy();
 
   virtual std::string get_string() const;
   virtual int get_int() const;
@@ -95,6 +102,7 @@ public:
 protected:
 
   int m_value;
+  ArgInt* m_orig;
 
 };
 
@@ -108,6 +116,7 @@ public:
   ArgReal(const ArgReal& c);
   virtual ~ArgReal();
   virtual Arg* new_copy() const;
+  virtual Arg* var_copy();
 
   virtual std::string get_string() const;
   virtual int get_int() const;
@@ -119,6 +128,7 @@ public:
 protected:
 
   double m_value;
+  ArgReal* m_orig;
 
 };
 
@@ -154,15 +164,14 @@ protected:
 
 };
 
-
 //=============================================================================
-class SCONEX_API ArgFunction : public Arg {
+class SCONEX_API ArgSub : public Arg {
 
 public:
 
-  ArgFunction(const std::string& name);
-  ArgFunction(const ArgFunction& c);
-  virtual ~ArgFunction();
+  ArgSub(const std::string& name, ArgStatement* body, ArgProc& proc);
+  ArgSub(const ArgSub& c);
+  virtual ~ArgSub();
   virtual Arg* new_copy() const;
 
   virtual std::string get_string() const;
@@ -170,9 +179,15 @@ public:
 
   virtual Arg* op(OpType optype, const std::string& opname, Arg* right);
 
+  Arg* call(Arg* args);
+  
 protected:
 
   std::string m_name;
+  
+  ArgStatement* m_body;
+
+  ArgProc& m_proc;
 
 };
 
@@ -198,6 +213,7 @@ protected:
   std::string m_string;
 
 };
-
+ 
+  
 };
 #endif

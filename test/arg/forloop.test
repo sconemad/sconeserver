@@ -1,13 +1,16 @@
+# ArgScript test script
+#
+#
+
 print("START" + endl);
 
-for ( var("a",0); 
-      a < 10; 
-      set("a",a+1) ) {
+var a;
+print("INIT a = " + a + endl);
 
-  print ("LOOP a=" + a + endl);
+for (a=5; a<15; ++a) {
 
+  print ("LOOP a=" + a + " a!=" + a! + endl);
 }
 
-test(a==10,"i think a should be 12");
-
+test(a==15,"i think a should be 15");
 print("END a=" + a + endl);

@@ -318,6 +318,7 @@ bool MessageStream::connect_request_module()
     // This is bad, user should have setup a default host
     m_module.log(id + " Unknown host '" + uri.get_host() + "'",
                  scx::Logger::Error);
+    set_status(http::Status::NotFound);
     return false;
   }
 
@@ -330,6 +331,7 @@ bool MessageStream::connect_request_module()
     m_module.log(id + " Unknown profile '" + m_request->get_profile() +
                  "' for host '" + uri.get_host() + "'",
                  scx::Logger::Error);
+    set_status(http::Status::NotFound);
     return false;
   }
 
@@ -367,6 +369,7 @@ bool MessageStream::connect_request_module()
   scx::ModuleRef ref = m_module.get_module(modname.c_str());
   if (!ref.valid()) {
     m_module.log("No module found to handle request",scx::Logger::Error);
+    set_status(http::Status::ServiceUnavailable);
     return false;
   }
 

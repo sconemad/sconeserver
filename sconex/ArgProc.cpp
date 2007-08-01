@@ -502,6 +502,8 @@ void ArgProc::init()
   int p=0;
   (*s_binary_ops)[","]  = ++p; // Sequential evaluation
 
+  (*s_binary_ops)["="]  = ++p; // Assignment
+
   (*s_binary_ops)["|"]  = ++p; // Logical OR
 
   (*s_binary_ops)["xor"]= ++p; // Logical XOR
@@ -526,10 +528,14 @@ void ArgProc::init()
   (*s_binary_ops)["^"]  = ++p; // Power
 
   (*s_postfix_ops)["!"] = ++p; // Unary postfix
+  (*s_postfix_ops)["++"] = p; 
+  (*s_postfix_ops)["--"] = p; 
 
   (*s_prefix_ops)["+"]  = ++p; // Unary prefix
   (*s_prefix_ops)["-"]  = p;
   (*s_prefix_ops)["!"]  = p;
+  (*s_prefix_ops)["++"]  = p;
+  (*s_prefix_ops)["--"]  = p;
 
   (*s_binary_ops)["["]  = ++p; // Subscript
   (*s_binary_ops)["("]  = ++p; // Function call

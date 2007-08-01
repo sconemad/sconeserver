@@ -1,4 +1,18 @@
 
+2007-08-01 Andrew Wedgbury <wedge@sconemad.com>
+
+	* http/MessageStream: Set correct status codes for basic errors.
+	* sconex/Multiplexer: Correct spin() return code to detect shutdown.
+	* sconex/Arg: Add virtual var_copy(), add subroutine arg ArgSub.
+	Implement lvalue (var copy) Args using pointer to original Arg.
+	* sconex/ArgScript: Add Name mode, handle 'var' and 'sub' statements.
+	* sconex/ArgStatement: Implement copy constructors, virtual new_copy().
+	Add ArgStatementVar - local variable declaration.
+	Add ArgStatementSub - subroutine declaration using ArgSub.
+	* sconex/ArgProc: Add new lvalue operators.
+	* sconex/Console: Don't set console non-blocking.
+	* test/ArgTest: Read script from file, use error descriptor for errors.
+	
 2007-07-25 Andrew Wedgbury <wedge@sconemad.com>
 
 	* sconex/ModuleLoader: Make module ref/load/unloading threadsafe.
@@ -8,7 +22,7 @@
 	* http/ResponseStream: Pass MessageStream to send method.
 	* getfile: Don't write error html, errorpage now does this.
 	* dirindex: Don't write error html, errorpage now does this.
-	            Use 'allow_list' param to enable/disable dir listings.
+	Use 'allow_list' param to enable/disable dir listings.
 	* errorpage: Generate error page html based on templates.
 	
 2007-07-14 Andrew Wedgbury <wedge@sconemad.com>

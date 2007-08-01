@@ -20,6 +20,8 @@ Free Software Foundation, Inc.,
 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA */
 
 #include "sconex/Arg.h"
+#include "sconex/ArgProc.h"
+#include "sconex/ArgStatement.h"
 namespace scx {
 
 //===========================================================================
@@ -40,22 +42,31 @@ Arg::~Arg()
   DEBUG_COUNT_DESTRUCTOR(Arg);
 }
 
+//===========================================================================
+Arg* Arg::var_copy()
+{
+  // Used if the arg doesn't support variable copies
+  return new_copy();
+}
 
 //===========================================================================
 ArgString::ArgString(const char* str)
-  : m_string(str)
+  : m_string(str),
+    m_orig(0)
 {
 }
 
 //===========================================================================
 ArgString::ArgString(const std::string& str)
-  : m_string(str)
+  : m_string(str),
+    m_orig(0)
 {
 }
 
 //===========================================================================
 ArgString::ArgString(const ArgString& c)
-  : m_string(c.m_string)
+  : m_string(c.m_string),
+    m_orig(c.m_orig)
 {
 }
 
@@ -68,6 +79,14 @@ ArgString::~ArgString()
 Arg* ArgString::new_copy() const
 {
   return new ArgString(*this);
+}
+
+//===========================================================================
+Arg* ArgString::var_copy()
+{
+  ArgString* c = new ArgString(*this);
+  c->m_orig = (ArgString*)this;
+  return c;
 }
 
 //===========================================================================
@@ -95,6 +114,13 @@ Arg* ArgString::op(OpType optype, const std::string& opname, Arg* right)
       
     } else if ("!="==opname) { // Not equal to
       return new ArgInt(m_string != right->get_string());
+
+    } else if ("="==opname) { // Assignment
+      m_string = right->get_string();
+      if (m_orig) {
+        m_orig->m_string = m_string;
+      }
+      return new_copy();
     }
   }
 
@@ -104,13 +130,15 @@ Arg* ArgString::op(OpType optype, const std::string& opname, Arg* right)
 
 //===========================================================================
 ArgInt::ArgInt(int value)
-  : m_value(value)
+  : m_value(value),
+    m_orig(0)
 {
 }
 
 //===========================================================================
 ArgInt::ArgInt(const ArgInt& c)
-  : m_value(c.m_value)
+  : m_value(c.m_value),
+    m_orig(c.m_orig)
 {
 }
 
@@ -123,6 +151,14 @@ ArgInt::~ArgInt()
 Arg* ArgInt::new_copy() const
 {
   return new ArgInt(*this);
+}
+
+//===========================================================================
+Arg* ArgInt::var_copy()
+{
+  ArgInt* c = new ArgInt(*this);
+  c->m_orig = (ArgInt*)this;
+  return c;
 }
 
 //===========================================================================
@@ -154,6 +190,20 @@ Arg* ArgInt::op(OpType optype, const std::string& opname, Arg* right)
 
       } else if ("!"==opname) { // Not
         return new ArgInt(!m_value);
+
+      } else if ("++"==opname) { // Pre-increment
+        ++m_value;
+        if (m_orig) {
+          m_orig->m_value = m_value;
+        }
+        return new_copy();        
+
+      } else if ("--"==opname) { // Pre-decrement
+        --m_value;
+        if (m_orig) {
+          m_orig->m_value = m_value;
+        }
+        return new_copy();        
       }
     } break;
 
@@ -162,6 +212,18 @@ Arg* ArgInt::op(OpType optype, const std::string& opname, Arg* right)
         int a = 1;
         for (int i=abs((int)m_value); i>1; --i) a *= i;
         return new ArgInt(a * (m_value<0 ? -1 : 1));
+
+      } else if ("++"==opname) { // Post-increment
+        if (m_orig) {
+          m_orig->m_value = m_value + 1;
+        }
+        return new_copy();        
+
+      } else if ("--"==opname) { // Post-decrement
+        if (m_orig) {
+          m_orig->m_value = m_value - 1;
+        }
+        return new_copy();        
       }
     } break;
 
@@ -213,6 +275,12 @@ Arg* ArgInt::op(OpType optype, const std::string& opname, Arg* right)
         } else if ("xor"==opname) { // Xor
           return new ArgInt((m_value!=0) ^ (rvalue!=0));
 
+        } else if ("="==opname) { // Assignment
+          m_value = right->get_int();
+          if (m_orig) {
+            m_orig->m_value = m_value;
+          }
+          return new_copy();
         }
       }
     } break;
@@ -225,13 +293,15 @@ Arg* ArgInt::op(OpType optype, const std::string& opname, Arg* right)
 
 //===========================================================================
 ArgReal::ArgReal(double value)
-  : m_value(value)
+  : m_value(value),
+    m_orig(0)
 {
 }
 
 //===========================================================================
 ArgReal::ArgReal(const ArgReal& c)
-  : m_value(c.m_value)
+  : m_value(c.m_value),
+    m_orig(c.m_orig)
 {
 }
 
@@ -244,6 +314,14 @@ ArgReal::~ArgReal()
 Arg* ArgReal::new_copy() const
 {
   return new ArgReal(*this);
+}
+
+//===========================================================================
+Arg* ArgReal::var_copy()
+{
+  ArgReal* c = new ArgReal(*this);
+  c->m_orig = (ArgReal*)this;
+  return c;
 }
 
 //===========================================================================
@@ -321,6 +399,12 @@ Arg* ArgReal::op(OpType optype, const std::string& opname, Arg* right)
         } else if ("!="==opname) { // Not equal to
           return new ArgInt(m_value != rvalue);
 
+        } else if ("="==opname) { // Assignment
+          m_value = rnum->get_real();
+          if (m_orig) {
+            m_orig->m_value = m_value;
+          }
+          return new_copy();
         }
       }
     } break;
@@ -448,47 +532,67 @@ Arg* ArgList::take(int i)
 
 
 //===========================================================================
-ArgFunction::ArgFunction(const std::string& name)
-  : m_name(name)
+ArgSub::ArgSub(const std::string& name, ArgStatement* body, ArgProc& proc)
+  : m_name(name),
+    m_body(body),
+    m_proc(proc)
 {
 }
 
 //===========================================================================
-ArgFunction::ArgFunction(const ArgFunction& c)
-  : m_name(c.m_name)
+ArgSub::ArgSub(const ArgSub& c)
+  : m_name(c.m_name),
+    m_body(0),
+    m_proc(c.m_proc)
 {
+  if (c.m_body) {
+    m_body = c.m_body->new_copy();
+  }
 }
 
 //===========================================================================
-ArgFunction::~ArgFunction()
+ArgSub::~ArgSub()
 {
+  delete m_body;
 }
 
 //===========================================================================
-Arg* ArgFunction::new_copy() const
+Arg* ArgSub::new_copy() const
 {
-  return new ArgFunction(*this);
+  return new ArgSub(*this);
 }
 
 //===========================================================================
-std::string ArgFunction::get_string() const
+std::string ArgSub::get_string() const
 {
   std::ostringstream oss;
-  oss << m_name << " function";
+  oss << m_name << " sub";
   return oss.str();
 }
 
 //===========================================================================
-int ArgFunction::get_int() const
+int ArgSub::get_int() const
 {
   return !m_name.empty();
 }
 
 //===========================================================================
-Arg* ArgFunction::op(OpType optype, const std::string& opname, Arg* right)
+Arg* ArgSub::op(OpType optype, const std::string& opname, Arg* right)
 {
-  //  ArgList* args = (ArgList*)right;
+  // Only allow binary ( operator - subroutine call
+  if (Arg::Binary == optype && "(" == opname) {
+    return call(right);
+  }
+  
+  return 0;
+}
 
+//=============================================================================
+Arg* ArgSub::call(Arg* args)
+{
+  if (m_body) {
+    m_body->run(m_proc);
+  }
   return 0;
 }
 

@@ -47,22 +47,25 @@ namespace scx {
 
 class ArgProc;
 class ArgScript;
- 
+class ArgStatementSub;
+  
 //=============================================================================
 class SCONEX_API ArgStatement : public ArgObjectInterface {
 
 public:
 
   ArgStatement();
+  ArgStatement(const ArgStatement& c);
   virtual ~ArgStatement();
+  virtual ArgStatement* new_copy() const =0;
 
   enum ParseResult { Continue, End, Pop, Error };
   virtual ParseResult parse(ArgScript& script, const std::string& token) =0;
 
-  enum ParseMode { SemicolonTerminated, Bracketed };
+  enum ParseMode { SemicolonTerminated, Bracketed, Name };
   virtual ParseMode parse_mode() const;
   
-  virtual bool run(ArgProc& proc) =0;
+  virtual Arg* run(ArgProc& proc) =0;
 
   // ArgObjectInterface methods
   virtual std::string name() const;
@@ -85,10 +88,12 @@ class SCONEX_API ArgStatementExpr : public ArgStatement {
 public:
   
   ArgStatementExpr(const std::string& expr);
+  ArgStatementExpr(const ArgStatementExpr& c);
   virtual ~ArgStatementExpr();
+  virtual ArgStatement* new_copy() const;
 
   virtual ParseResult parse(ArgScript& script, const std::string& token);
-  virtual bool run(ArgProc& proc);
+  virtual Arg* run(ArgProc& proc);
 
 protected:
 
@@ -104,10 +109,12 @@ class SCONEX_API ArgStatementGroup : public ArgStatement {
 public:
   
   ArgStatementGroup();
+  ArgStatementGroup(const ArgStatementGroup& c);
   virtual ~ArgStatementGroup();
+  virtual ArgStatement* new_copy() const;
 
   virtual ParseResult parse(ArgScript& script, const std::string& token);
-  virtual bool run(ArgProc& proc);
+  virtual Arg* run(ArgProc& proc);
 
   virtual Arg* arg_lookup(const std::string& name);
   virtual Arg* arg_function(const std::string& name, Arg* args);
@@ -131,11 +138,13 @@ class SCONEX_API ArgStatementConditional : public ArgStatement {
 public:
   
   ArgStatementConditional(const std::string& condition = "");
+  ArgStatementConditional(const ArgStatementConditional& c);
   virtual ~ArgStatementConditional();
+  virtual ArgStatement* new_copy() const;
 
   virtual ParseResult parse(ArgScript& script, const std::string& token);
   virtual ParseMode parse_mode() const;
-  virtual bool run(ArgProc& proc);
+  virtual Arg* run(ArgProc& proc);
 
 protected:
 
@@ -160,11 +169,13 @@ class SCONEX_API ArgStatementWhile : public ArgStatement {
 public:
   
   ArgStatementWhile(const std::string& condition = "");
+  ArgStatementWhile(const ArgStatementWhile& c);
   virtual ~ArgStatementWhile();
+  virtual ArgStatement* new_copy() const;
 
   virtual ParseResult parse(ArgScript& script, const std::string& token);
   virtual ParseMode parse_mode() const;
-  virtual bool run(ArgProc& proc);
+  virtual Arg* run(ArgProc& proc);
 
 protected:
 
@@ -186,11 +197,13 @@ class SCONEX_API ArgStatementFor : public ArgStatement {
 public:
   
   ArgStatementFor();
+  ArgStatementFor(const ArgStatementFor& c);
   virtual ~ArgStatementFor();
+  virtual ArgStatement* new_copy() const;
 
   virtual ParseResult parse(ArgScript& script, const std::string& token);
   virtual ParseMode parse_mode() const;
-  virtual bool run(ArgProc& proc);
+  virtual Arg* run(ArgProc& proc);
 
 protected:
 
@@ -211,6 +224,60 @@ protected:
   
 };
 
+  
+//=============================================================================
+class SCONEX_API ArgStatementVar : public ArgStatement {
+
+public:
+  
+  ArgStatementVar(const std::string& name = "");
+  ArgStatementVar(const ArgStatementVar& c);
+  virtual ~ArgStatementVar();
+  virtual ArgStatement* new_copy() const;
+
+  virtual ParseResult parse(ArgScript& script, const std::string& token);
+  virtual ParseMode parse_mode() const;
+  virtual Arg* run(ArgProc& proc);
+
+protected:
+
+  int m_seq;
+  // Sequence counter used for parsing
+
+  std::string m_name;
+  // Variable name
+  
+  std::string m_initialiser;
+  // Initialiser expression
+};
+
+  
+//=============================================================================
+class SCONEX_API ArgStatementSub : public ArgStatement {
+
+public:
+  
+  ArgStatementSub(const std::string& name = "");
+  ArgStatementSub(const ArgStatementSub& c);
+  virtual ~ArgStatementSub();
+  virtual ArgStatement* new_copy() const;
+
+  virtual ParseResult parse(ArgScript& script, const std::string& token);
+  virtual ParseMode parse_mode() const;
+  virtual Arg* run(ArgProc& proc);
+
+protected:
+
+  int m_seq;
+  // Sequence counter used for parsing
+
+  std::string m_name;
+  // Variable name
+  
+  ArgStatement* m_body;
+  // Subroutine body
+};
+  
   
 };
 #endif

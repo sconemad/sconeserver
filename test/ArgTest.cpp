@@ -27,6 +27,8 @@ Free Software Foundation, Inc.,
 #include "sconex/Debug.h"
 using namespace scx;
 
+Console* con = 0;
+
 //=============================================================================
 class ArgTest : public ArgObjectInterface {
 
@@ -69,6 +71,7 @@ Arg* ArgTest::arg_lookup(const std::string& name)
   // See if its a function
   if ("exit" == name ||
       "print" == name ||
+      "input" == name ||
       "test" == name) {
     return new ArgObjectFunction(new ArgObject(this),name);
   }
@@ -102,9 +105,18 @@ Arg* ArgTest::arg_function(
   if ("print" == name) {
     // Print string representations of all the arguments
     for (int i=0; i<l->size(); ++i) {
-      std::cout << l->get(i)->get_string();
+      con->write(l->get(i)->get_string());
     }
     return 0;
+  }
+  
+  if ("input" == name) {
+    char buffer[1024];
+    int na=0;
+    con->read(buffer,1000,na);
+    for (; na>0 && (buffer[na-1] == '\r' || buffer[na-1] == '\n'); --na) ;
+    buffer[na] = '\0';
+    return new ArgString(buffer);
   }
 
   if ("test" == name) {
@@ -125,19 +137,31 @@ Arg* ArgTest::arg_function(
 //=============================================================================
 int main(int argc,char* argv[])
 {
-  ArgTest argtest;
-  Multiplexer spinner;
-
   Logger* logger = new scx::Logger("argtest.log");
   Debug::get()->set_logger(logger);
+
+  con = new Console();
   
-  Console* c = new Console();
+  Descriptor* in = 0;
+  if (argv[1]) {
+    File* f = new File();
+    f->open(argv[1],File::Read);
+    in = f;
+  } else {
+    in = con;
+  }
+  
+  ArgTest argtest;
   ArgObject* ctx = new ArgObject(&argtest);
-  c->add_stream( new ArgScript(ctx) );
-  spinner.add(c);
+  ArgScript* script = new ArgScript(ctx);
+  script->set_error_des(con);
+  in->add_stream(script);
+
+  Multiplexer spinner;
+  spinner.add(in);
 
   while (spinner.spin() >= 0) ;
-  
+
   return 0;
   
 }

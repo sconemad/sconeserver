@@ -26,7 +26,6 @@ using namespace scx;
 int main(int argc,char* argv[])
 {
   UTRUN(Arg);
-  /*
   UTRUN(Buffer);
   UTRUN(LineBuffer);
   UTRUN(MemFile);
@@ -34,6 +33,5 @@ int main(int argc,char* argv[])
   UTRUN(TimeDate);
   UTRUN(VersionTag);
   UTRUN(Uri);
-  */
   UTEND;
 }
