@@ -1,4 +1,8 @@
 
+2007-08-03 Andrew Wedgbury <wedge@sconemad.com>
+
+	* http/errorpage: Fix closing stream if no http body is to be sent.
+	
 2007-08-01 Andrew Wedgbury <wedge@sconemad.com>
 
 	* http/MessageStream: Set correct status codes for basic errors.

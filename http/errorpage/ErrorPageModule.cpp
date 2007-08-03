@@ -119,17 +119,26 @@ protected:
       http::MessageStream* msg = 
         dynamic_cast<http::MessageStream*>(find_stream("http:message"));
       const http::Request& req = msg->get_request();
+      const http::Status& status = msg->get_status();
       
       if (req.get_method() != "GET" && 
 	  req.get_method() != "HEAD" ) {
 	// Don't understand the method
 	return scx::Close;
       }
+ 
+      bool body_allowed = (status.code() >= 200 &&
+                           status.code() != 204 &&
+                           status.code() != 304);
 
-      msg->set_header("Content-Type","text/html");
-
-      if (req.get_method() == "GET") {
+      if (body_allowed) {
+        msg->set_header("Content-Type","text/html");
+      }
+      
+      if (body_allowed && req.get_method() == "GET") {
 	// Only need to send the message body if method is GET
+
+        
         const http::FSDirectory* dir = msg->get_dir_node();
         const scx::Arg* a_error_page = dir->get_param("error_page");
         if (a_error_page) {
@@ -140,7 +149,7 @@ protected:
           if (file->open(path,scx::File::Read) == scx::Ok) {
             m_file_mode = true;
 
-            m_module.log("Sending '" + msg->get_status().string() +
+            m_module.log("Sending '" + status.string() +
                          "' response using template file mode"); 
             
             VarSubstStream* varsubst = new VarSubstStream(msg);
@@ -162,14 +171,15 @@ protected:
         }
 
         if (m_file_mode == false) {
-          m_module.log("Sending '" + msg->get_status().string() +
+          m_module.log("Sending '" + status.string() +
                        "' response using basic mode"); 
           enable_event(scx::Stream::Writeable,true);
         }
         
       } else {
-        m_module.log("Sending '" + msg->get_status().string() +
-                     "' header-only response"); 
+        m_module.log("Sending '" + status.string() +
+                     "' header-only response");
+        return scx::Close;
       }
     }
     
