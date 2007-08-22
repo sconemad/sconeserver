@@ -46,7 +46,7 @@ protected:
 
   virtual std::string stream_status() const;
   
-  bool ExecStream::spawn_process();
+  bool spawn_process();
   
 private:
 

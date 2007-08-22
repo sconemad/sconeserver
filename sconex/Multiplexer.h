@@ -27,6 +27,7 @@ Free Software Foundation, Inc.,
 namespace scx {
 
 class Descriptor;
+class DescriptorThread;
 
 //=============================================================================
 class SCONEX_API Multiplexer {

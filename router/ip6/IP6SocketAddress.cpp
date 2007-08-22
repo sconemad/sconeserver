@@ -20,7 +20,6 @@ Free Software Foundation, Inc.,
 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA */
 
 #include "IP6SocketAddress.h"
-namespace scx {
 
 //=============================================================================
 IP6SocketAddress::IP6SocketAddress(scx::Arg* args)
@@ -301,5 +300,3 @@ const std::string& IP6SocketAddress::get_service() const
   
   return m_service;
 }
-
-};

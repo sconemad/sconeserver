@@ -22,7 +22,6 @@ Free Software Foundation, Inc.,
 #include "sconex/FileStat.h"
 #include "sconex/FilePath.h"
 #include "LocalSocketAddress.h"
-namespace scx {
 
 // Some platforms still use UNIX instead of LOCAL
 #ifndef PF_LOCAL
@@ -155,5 +154,3 @@ std::string LocalSocketAddress::get_path() const
 {
   return std::string(m_addr.sun_path);
 }
-
-};

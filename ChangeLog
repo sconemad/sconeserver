@@ -1,4 +1,8 @@
+	
+2007-08-22 Andrew Wedgbury <wedge@sconemad.com>
 
+	* Fix a few trivial compile errors [GCC-4.1.2]
+	
 2007-08-03 Andrew Wedgbury <wedge@sconemad.com>
 
 	* http/errorpage: Fix closing stream if no http body is to be sent.
