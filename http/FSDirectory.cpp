@@ -154,6 +154,7 @@ void FSDirectory::set_param(const std::string& name, scx::Arg* value)
 //=============================================================================
 bool FSDirectory::build()
 {
+  scx::MutexLocker locker(m_mutex);
   std::list<FSNode*> exist;
   
   scx::FileDir dir(path());

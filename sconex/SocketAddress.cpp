@@ -123,9 +123,9 @@ Arg* SocketAddress::op(
       }
     }
   }
-  return 0;
-}
 
+  return Arg::op(optype,opname,right);
+}
 
 
 //=============================================================================

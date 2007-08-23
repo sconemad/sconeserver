@@ -179,7 +179,7 @@ Arg* VersionTag::op(OpType optype, const std::string& opname, Arg* right)
       break;
   }
   
-  return 0;
+  return Arg::op(optype,opname,right);
 }
 
 //=============================================================================

@@ -135,7 +135,7 @@ Arg* ArgObject::op(OpType optype, const std::string& opname, Arg* right)
     }
   }
   
-  return 0;
+  return Arg::op(optype,opname,right);
 }
 
 //=============================================================================
@@ -212,7 +212,7 @@ Arg* ArgObjectFunction::op(
     return call(right);
   }
   
-  return 0;
+  return Arg::op(optype,opname,right);
 }
 
 //=============================================================================

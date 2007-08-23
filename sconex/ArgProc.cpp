@@ -109,7 +109,7 @@ Arg* ArgProc::expression(int p, bool f)
           left = new_left;
 
           // Check its followed by a closing ']'
-          if (m_type!=ArgProc::Operator || "]"==m_name) {
+          if (m_type!=ArgProc::Operator || "]"!=m_name) {
             m_type = ArgProc::Null;
             delete left;
             return 0;

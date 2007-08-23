@@ -244,7 +244,8 @@ Arg* ArgStatementGroup::arg_function(const std::string& name, Arg* args)
       // Check if the variable is already declared
       std::map<std::string,Arg*>::const_iterator it = m_vars.find(var_name);
       if (it != m_vars.end()) {
-        return new ArgError("var: Redefinition of local variable " + var_name);
+        //        return new ArgError("var: Redefinition of local variable " + var_name);
+        delete (*it).second;
       }
       Arg* a_val = l->take(1);
       // If no initialiser was given, default to integer 0
@@ -375,7 +376,7 @@ Arg* ArgStatementConditional::run(ArgProc& proc)
   ArgObject ctx(this);
   proc.set_ctx(&ctx);
   Arg* result = proc.evaluate(m_condition);
-  bool cond = (0 != result->get_int());
+  bool cond = (result && 0 != result->get_int());
   delete result;
 
   if (cond) {

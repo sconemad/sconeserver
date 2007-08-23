@@ -24,6 +24,7 @@ Free Software Foundation, Inc.,
 
 #include "http/FSNode.h"
 #include "sconex/sconex.h"
+#include "sconex/Mutex.h"
 namespace http {
 
 //=============================================================================
@@ -62,6 +63,8 @@ protected:
   std::map<std::string,std::string> m_mods;
 
   std::map<std::string,scx::Arg*> m_params;
+
+  scx::Mutex m_mutex;
   
 };
 

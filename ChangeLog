@@ -1,4 +1,12 @@
 	
+2007-08-23 Andrew Wedgbury <wedge@sconemad.com>
+
+	* http/FSDirectory: Use mutex when build() is updating dir tree.
+	* sconex/ArgProx: Fix array index op.
+	* sconex/Arg: Call base op from Arg classes if not handled.
+	Implement base op with general logic operations.
+	Experimental new subroutine argument passing.
+
 2007-08-22 Andrew Wedgbury <wedge@sconemad.com>
 
 	* Fix a few trivial compile errors [GCC-4.1.2]

@@ -54,7 +54,7 @@ public:
   virtual int get_int() const =0;
 
   enum OpType { Prefix, Postfix, Binary };
-  virtual Arg* op(OpType optype, const std::string& opname, Arg* right=0) =0;
+  virtual Arg* op(OpType optype, const std::string& opname, Arg* right=0);
 
 };
 

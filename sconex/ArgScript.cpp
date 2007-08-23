@@ -172,6 +172,7 @@ bool ArgScript::next_token(
   const char* start = cur;
   bool in_dquote = false;
   bool in_comment = false;
+  bool first = true;
 
   ArgStatement::ParseMode pmode = m_stack.top()->parse_mode();
   int in_bracket = 0;
@@ -261,7 +262,15 @@ bool ArgScript::next_token(
       
       case ArgStatement::Name: {
         // NAME parse mode
-        if (!isalpha(*cur)) {
+        if (first) {
+          if (!isalpha(*cur)) {
+            // Name must start with alpha
+            return false;
+          }
+          break;
+        }
+        // Subsequent characters can be alpha, digit or underscore
+        if (!isalpha(*cur) && !isdigit(*cur) && (*cur != '_')) {
           return true;
         }
       } break;
@@ -269,6 +278,7 @@ bool ArgScript::next_token(
     }
     
     ++length;
+    first = false;
   }
   
   return false;

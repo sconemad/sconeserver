@@ -308,7 +308,7 @@ bool MessageStream::connect_request_module()
     
     const std::string& useragent = m_request->get_header("User-Agent");
     if (!useragent.empty()) {
-    m_module.log(id + " User-Agent: " + useragent);
+      m_module.log(id + " User-Agent: " + useragent);
     }
   }
   

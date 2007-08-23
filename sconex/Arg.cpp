@@ -50,6 +50,57 @@ Arg* Arg::var_copy()
 }
 
 //===========================================================================
+Arg* Arg::op(OpType optype, const std::string& opname, Arg* right)
+{
+
+  int value = get_int();
+  int rvalue = right ? right->get_int() : 0;
+  switch (optype) {
+
+    case Arg::Prefix:
+      if ("!"==opname) { // Not
+        return new ArgInt(!value);
+      }
+      break;
+
+    case Arg::Binary:
+      if (">"==opname) { // Greater than
+        return new ArgInt(value > rvalue);
+        
+      } else if ("<"==opname) { // Less than
+        return new ArgInt(value < rvalue);
+        
+      } else if (">="==opname) { // Greater than or equal to
+        return new ArgInt(value >= rvalue);
+        
+      } else if ("<="==opname) { // Less than or equal to
+        return new ArgInt(value <= rvalue);
+        
+      } else if ("=="==opname) { // Equal to
+        return new ArgInt(value == rvalue);
+        
+      } else if ("!="==opname) { // Not equal to
+        return new ArgInt(value != rvalue);
+        
+      } else if ("&"==opname) { // And
+        return new ArgInt(value && rvalue);
+        
+      } else if ("|"==opname) { // Or
+        return new ArgInt(value | rvalue);
+
+      } else if ("xor"==opname) { // Xor
+        return new ArgInt((value!=0) ^ (rvalue!=0));
+      }
+      break;
+      
+    default:
+      break;
+  }
+
+  return 0;
+}
+
+//===========================================================================
 ArgString::ArgString(const char* str)
   : m_string(str),
     m_orig(0)
@@ -124,7 +175,7 @@ Arg* ArgString::op(OpType optype, const std::string& opname, Arg* right)
     }
   }
 
-  return 0;
+  return Arg::op(optype,opname,right);
 }
 
 
@@ -188,9 +239,6 @@ Arg* ArgInt::op(OpType optype, const std::string& opname, Arg* right)
       } else if ("-"==opname) { // Negative
         return new ArgInt(-m_value);
 
-      } else if ("!"==opname) { // Not
-        return new ArgInt(!m_value);
-
       } else if ("++"==opname) { // Pre-increment
         ++m_value;
         if (m_orig) {
@@ -248,33 +296,6 @@ Arg* ArgInt::op(OpType optype, const std::string& opname, Arg* right)
             return new ArgError("Divide by zero");
           }
 
-        } else if (">"==opname) { // Greater than
-          return new ArgInt(m_value > rvalue);
-
-        } else if ("<"==opname) { // Less than
-          return new ArgInt(m_value < rvalue);
-
-        } else if (">="==opname) { // Greater than or equal to
-          return new ArgInt(m_value >= rvalue);
-
-        } else if ("<="==opname) { // Less than or equal to
-          return new ArgInt(m_value <= rvalue);
-
-        } else if ("=="==opname) { // Equal to
-          return new ArgInt(m_value == rvalue);
-
-        } else if ("!="==opname) { // Not equal to
-          return new ArgInt(m_value != rvalue);
-
-        } else if ("&"==opname) { // And
-          return new ArgInt(m_value && rvalue);
-
-        } else if ("|"==opname) { // Or
-          return new ArgInt(m_value | rvalue);
-          
-        } else if ("xor"==opname) { // Xor
-          return new ArgInt((m_value!=0) ^ (rvalue!=0));
-
         } else if ("="==opname) { // Assignment
           m_value = right->get_int();
           if (m_orig) {
@@ -287,7 +308,7 @@ Arg* ArgInt::op(OpType optype, const std::string& opname, Arg* right)
 
   }
 
-  return 0;
+  return Arg::op(optype,opname,right);
 }
 
 
@@ -411,7 +432,7 @@ Arg* ArgReal::op(OpType optype, const std::string& opname, Arg* right)
 
   }
 
-  return 0;
+  return Arg::op(optype,opname,right);
 }
 
 //===========================================================================
@@ -475,9 +496,23 @@ int ArgList::get_int() const
 }
 
 //===========================================================================
-Arg* ArgList::op(OpType type, const std::string& opname, Arg* right)
+Arg* ArgList::op(OpType optype, const std::string& opname, Arg* right)
 {
-  return 0;
+  if (optype == Arg::Binary && opname == "[") {
+    ArgInt* aidx = dynamic_cast<ArgInt*> (right);
+    if (aidx) {
+      int idx = aidx->get_int();
+      if (idx < 0 || idx >= m_list.size()) {
+        return new ArgError("Array index out of bounds");
+      }
+      const Arg* a = get(idx);
+      if (a) {
+        return a->new_copy();
+      }
+    }  
+  }
+
+  return Arg::op(optype,opname,right);
 }
 
 //===========================================================================
@@ -584,14 +619,20 @@ Arg* ArgSub::op(OpType optype, const std::string& opname, Arg* right)
     return call(right);
   }
   
-  return 0;
+  return Arg::op(optype,opname,right);
 }
 
 //=============================================================================
 Arg* ArgSub::call(Arg* args)
 {
   if (m_body) {
-    m_body->run(m_proc);
+    // Setup the argument vector
+    ArgList vargs;
+    vargs.give(new ArgString("ARGV"));
+    vargs.give(args->new_copy());
+    m_body->arg_function("var",&vargs);
+    
+    return m_body->run(m_proc);
   }
   return 0;
 }
