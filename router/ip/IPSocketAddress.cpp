@@ -112,6 +112,15 @@ IPSocketAddress::IPSocketAddress(scx::Arg* args)
     set_port(a_service_str->get_string());
     
   }
+
+  const scx::ArgString* a_type =
+    dynamic_cast<const scx::ArgString*>(l->get(2));
+  if (a_type) {
+    if (a_type->get_string() == "datagram") {
+      m_type = SOCK_DGRAM;
+    }
+  }
+  // type defaults to SOCK_STREAM
   
 }
 
@@ -177,14 +186,7 @@ socklen_t IPSocketAddress::get_sockaddr_size() const
 std::string IPSocketAddress::get_string() const
 {
   std::ostringstream oss;
-  switch (m_type) {
-    case SOCK_STREAM: oss << "tcp:"; break;
-    case SOCK_DGRAM: oss << "udp:"; break;
-    default:
-      oss << "unknown_ip:";
-      DEBUG_LOG("get_string() Unknown socket type");
-      break;
-  }
+  oss << get_type_name() << ":";
   
   std::string host = get_host();
   oss << host;
@@ -335,7 +337,8 @@ void IPSocketAddress::set_port(
     if (m_addr.sin_port == 0) {
       // Its not a valid port number, so assume it is a service name and 
       // try and resolve it.
-      servent* pse = getservbyname(port.c_str(),"tcp");
+      servent* pse = getservbyname(port.c_str(),
+				   get_type_name().c_str());
       if (pse) {
         // Resolved so save it
         m_addr.sin_port = pse->s_port;
@@ -369,7 +372,8 @@ const std::string& IPSocketAddress::get_service() const
 {
   if (m_service.length()==0) {
     // We haven't got a service name set so try and resolve it
-    servent* pse = getservbyport((int)m_addr.sin_port,"tcp");
+    servent* pse = getservbyport((int)m_addr.sin_port,
+				 get_type_name().c_str());
     IPSocketAddress* unconst = (IPSocketAddress*)this; // CAC!!!
     if (pse) {
       // Resolved the service name so cache it
@@ -382,4 +386,14 @@ const std::string& IPSocketAddress::get_service() const
   }
   
   return m_service;
+}
+
+//=============================================================================
+std::string IPSocketAddress::get_type_name() const
+{
+  switch (m_type) {
+  case SOCK_STREAM: return "tcp";
+  case SOCK_DGRAM: return "udp";
+  }
+  return "unknown";
 }

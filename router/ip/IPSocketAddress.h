@@ -80,6 +80,9 @@ public:
   const std::string& get_service() const;
   // Get the service name (resolves if required)
 
+  std::string get_type_name() const;
+  // Get a string describing the socket type, e.g. "tcp" or "udp"
+
 protected:
 
   struct sockaddr_in m_addr;

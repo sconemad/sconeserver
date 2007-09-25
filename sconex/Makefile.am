@@ -17,6 +17,7 @@ Buffer.cpp \
 ConfigFile.cpp \
 ConfigStream.cpp \
 Console.cpp \
+DatagramSocket.cpp \
 Date.cpp \
 Debug.cpp \
 Descriptor.cpp \
@@ -69,6 +70,7 @@ Buffer.h \
 ConfigFile.h \
 ConfigStream.h \
 Console.h \
+DatagramSocket.h \
 Date.h \
 Debug.h \
 Descriptor.h \

@@ -25,6 +25,7 @@ Free Software Foundation, Inc.,
 #include "sconex/Kernel.h" 
 #include "sconex/ConfigStream.h"
 #include "sconex/ListenerSocket.h"
+#include "sconex/DatagramSocket.h"
 #include "sconex/StreamBuffer.h"
 #include "sconex/StreamDebugger.h"
 #include "sconex/Descriptor.h"
@@ -196,28 +197,53 @@ scx::Arg* RouterChain::arg_function(
       return new scx::ArgError("route::listen() Address must be specified");
     }
 
-    RouterListener* rl = new RouterListener(m_name,m_module);
-    rl->add_module_ref(m_module.ref());
+    if (sa->socket_type() == SOCK_STREAM) {
+      // STREAM socket
+
+      RouterListener* rl = new RouterListener(m_name,m_module);
+      rl->add_module_ref(m_module.ref());
     
-    const int bl = 5;
-    scx::ListenerSocket* ls = new scx::ListenerSocket(sa,bl);
-    ls->add_stream(rl);
+      const int bl = 5;
+      scx::ListenerSocket* ls = new scx::ListenerSocket(sa,bl);
+      ls->add_stream(rl);
+      
+      if (ls->listen()) {
+	delete ls;
+	return new scx::ArgError("route::listen() Unable to bind " +
+				 sa->get_string());
+      }
+
+      log("Listening on " + sa->get_string());
+      
+      // Construct argument list with route name
+      scx::ArgList* listener_args = new scx::ArgList();
+      listener_args->give(new scx::ArgString(m_name));
+      
+      scx::Kernel::get()->connect(ls,listener_args);
+      
+      delete listener_args;
+
+    } else {
+      // DATAGRAM socket
+
+      //      RouterListener* rl = new RouterListener(m_name,m_module);
+      //      rl->add_module_ref(m_module.ref());
     
-    if (ls->listen()) {
-      delete ls;
-      return new scx::ArgError("route::listen() Unable to bind " +
-                               sa->get_string());
+      scx::DatagramSocket* ds = new scx::DatagramSocket(sa);
+      //      ds->add_stream(rl);
+
+      if (ds->listen()) {
+	delete ds;
+	return new scx::ArgError("route::listen() Unable to bind " +
+				 sa->get_string());
+      }
+
+      log("Listening on " + sa->get_string());
+
+      scx::ArgList* listener_args = new scx::ArgList();
+      scx::Kernel::get()->connect(ds,listener_args);
+      
     }
-
-    log("Listening on " + sa->get_string());
-
-    // Construct argument list with route name
-    scx::ArgList* listener_args = new scx::ArgList();
-    listener_args->give(new scx::ArgString(m_name));
-
-    scx::Kernel::get()->connect(ls,listener_args);
-
-    delete listener_args;
     return 0;
   }
   

@@ -30,8 +30,8 @@ ListenerSocket::ListenerSocket(
 ) : m_backlog(backlog)
 {
   DEBUG_COUNT_CONSTRUCTOR(ListenerSocket);
-  m_addr_local = dynamic_cast<SocketAddress*> (sockaddr->new_copy());
-  DEBUG_ASSERT(m_addr_local!=0,"ctor() SocketAddress cast failed");
+  m_addr_local = dynamic_cast<SocketAddress*>(sockaddr->new_copy());
+  DEBUG_ASSERT(m_addr_local!=0,"ctor() Invalid SocketAddress");
 }
 
 //=============================================================================
