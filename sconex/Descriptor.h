@@ -143,11 +143,14 @@ protected:
   
   State m_state;
 
+  int m_virtual_events;
+
 private:
 
   friend class Multiplexer;
   friend class Stream;
   friend class DescriptorThread;
+  friend class DatagramHandler;
  
   std::list<Stream*> m_streams;
   // Stream list

@@ -31,20 +31,33 @@ class SCONEX_API DatagramSocket : public Socket {
 
 public:
 
-  DatagramSocket(
-    const SocketAddress* sockaddr
-  );
+  DatagramSocket();
   // Construct a datagram socket
 
   virtual ~DatagramSocket();
 
-  int listen();
+  virtual std::string describe() const;
+
+  int listen(const SocketAddress* addr_local);
   // Start listening
+
+  Condition connect(const SocketAddress* addr_remote);
+  // Connect this socket 
 
 protected:
 
   virtual Condition endpoint_read(void* buffer,int n,int& na);
   virtual Condition endpoint_write(const void* buffer,int n,int& na);
+
+  virtual Condition endpoint_readfrom(void* buffer,int n,int& na,
+				      SocketAddress*& sa);
+  virtual Condition endpoint_writeto(const void* buffer,int n,int& na,
+				     const SocketAddress& sa);
+
+  SocketAddress* peek_address();
+
+  friend class DatagramMultiplexer;
+  friend class DatagramChannel;
 
 private:
 

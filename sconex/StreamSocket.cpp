@@ -149,8 +149,6 @@ const SocketAddress* StreamSocket::get_remote_addr() const
   return m_addr_remote;
 }
 
-
-
 //=============================================================================
 Condition StreamSocket::endpoint_read(
   void* buffer,

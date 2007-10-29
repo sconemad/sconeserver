@@ -26,6 +26,7 @@ Free Software Foundation, Inc.,
 #include "sconex/ConfigStream.h"
 #include "sconex/ListenerSocket.h"
 #include "sconex/DatagramSocket.h"
+#include "sconex/DatagramMultiplexer.h"
 #include "sconex/StreamBuffer.h"
 #include "sconex/StreamDebugger.h"
 #include "sconex/Descriptor.h"
@@ -65,7 +66,7 @@ bool RouterChain::connect(
     if (!(*it)->connect(d)) {
       return false;
     }
-    
+
     ++it;
   }
   return true;
@@ -92,7 +93,8 @@ scx::Arg* RouterChain::arg_lookup(
   
   if ("add" == name ||
       "remove" == name ||
-      "listen" == name) {
+      "listen" == name ||
+      "listen_all" == name) {
     return new scx::ArgObjectFunction(new scx::ArgObject(this),name);
   }
 
@@ -226,13 +228,9 @@ scx::Arg* RouterChain::arg_function(
     } else {
       // DATAGRAM socket
 
-      //      RouterListener* rl = new RouterListener(m_name,m_module);
-      //      rl->add_module_ref(m_module.ref());
-    
-      scx::DatagramSocket* ds = new scx::DatagramSocket(sa);
-      //      ds->add_stream(rl);
+      scx::DatagramSocket* ds = new scx::DatagramSocket();
 
-      if (ds->listen()) {
+      if (ds->listen(sa)) {
 	delete ds;
 	return new scx::ArgError("route::listen() Unable to bind " +
 				 sa->get_string());
@@ -240,11 +238,40 @@ scx::Arg* RouterChain::arg_function(
 
       log("Listening on " + sa->get_string());
 
+      scx::DatagramMultiplexer* mp = 
+	new scx::DatagramMultiplexer(m_module,m_name);
+      mp->add_module_ref(m_module.ref());
+      ds->add_stream(mp);
+  
       scx::ArgList* listener_args = new scx::ArgList();
       scx::Kernel::get()->connect(ds,listener_args);
-      
     }
     return 0;
+  }
+
+  if ("listen_all" == name) {
+    // Socket address
+    const scx::SocketAddress* sa =
+      dynamic_cast<const scx::SocketAddress*>(l->get(0));
+    if (!sa) {
+      return new scx::ArgError("route::listen_all() Address must be specified");
+    }
+    scx::DatagramSocket* ds = new scx::DatagramSocket();
+    
+    if (ds->listen(sa)) {
+      delete ds;
+      return new scx::ArgError("route::listen_all() Unable to bind " +
+			       sa->get_string());
+    }
+
+    if (connect(ds)) {
+      log("Listening (all) on " + sa->get_string());
+      scx::ArgList* listener_args = new scx::ArgList();
+      scx::Kernel::get()->connect(ds,listener_args);
+    } else {
+      delete ds;
+      return new scx::ArgError("route::listen_all() Failed to create chain");
+    }
   }
   
   return SCXBASE ArgObjectInterface::arg_function(name,args);

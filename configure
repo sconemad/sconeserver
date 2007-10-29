@@ -24611,6 +24611,8 @@ ac_config_files="$ac_config_files exec/Makefile"
 
 ac_config_files="$ac_config_files forward/Makefile"
 
+ac_config_files="$ac_config_files tftp/Makefile"
+
 ac_config_files="$ac_config_files test/Makefile"
 
 ac_config_files="$ac_config_files testbuilder/Makefile"
@@ -25280,6 +25282,7 @@ do
     "http/errorpage/Makefile") CONFIG_FILES="$CONFIG_FILES http/errorpage/Makefile" ;;
     "exec/Makefile") CONFIG_FILES="$CONFIG_FILES exec/Makefile" ;;
     "forward/Makefile") CONFIG_FILES="$CONFIG_FILES forward/Makefile" ;;
+    "tftp/Makefile") CONFIG_FILES="$CONFIG_FILES tftp/Makefile" ;;
     "test/Makefile") CONFIG_FILES="$CONFIG_FILES test/Makefile" ;;
     "testbuilder/Makefile") CONFIG_FILES="$CONFIG_FILES testbuilder/Makefile" ;;
 
@@ -26134,6 +26137,7 @@ The following modules will be built:
   + ssl            $SSL
   + exec           yes
   + forward        yes
+  + tftp           yes
   + test           yes
   + examples       $EXAMPLES
   + testbuilder    $TESTBUILDER
@@ -26162,6 +26166,7 @@ The following modules will be built:
   + ssl            $SSL
   + exec           yes
   + forward        yes
+  + tftp           yes
   + test           yes
   + examples       $EXAMPLES
   + testbuilder    $TESTBUILDER

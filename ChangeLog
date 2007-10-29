@@ -1,4 +1,15 @@
 	
+2007-10-29 Andrew Wedgbury <wedge@sconemad.com>
+
+	* router/RouterChain: Support "listening" on datagram sockets.
+	* router/ListenerSocket: Extra checks to ensure stream sockets.
+	* sconex/DatagramSocket: New socket class for datagrams.
+	* sconex/DatagramChannel: New virtual descriptor for datagram channels.
+	* sconex/DatagramMultiplexer: Datagram channel splitter.
+	* sconex/Descriptor: Allow "virtual" descriptors with events.
+	* sconex/Multiplexer: Handle virtual descriptors.
+	* sconex/Console: Always set non-blocking.
+	
 2007-08-23 Andrew Wedgbury <wedge@sconemad.com>
 
 	* http/FSDirectory: Use mutex when build() is updating dir tree.

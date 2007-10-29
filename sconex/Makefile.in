@@ -62,9 +62,10 @@ LTLIBRARIES = $(lib_LTLIBRARIES)
 libsconex_la_LIBADD =
 am_libsconex_la_OBJECTS = sconex.lo utils.lo Arg.lo ArgObject.lo \
 	ArgProc.lo ArgScript.lo ArgStatement.lo Buffer.lo \
-	ConfigFile.lo ConfigStream.lo Console.lo DatagramSocket.lo \
-	Date.lo Debug.lo Descriptor.lo DescriptorThread.lo File.lo \
-	FileDir.lo FilePath.lo FileStat.lo Kernel.lo LineBuffer.lo \
+	ConfigFile.lo ConfigStream.lo Console.lo DatagramChannel.lo \
+	DatagramMultiplexer.lo DatagramSocket.lo Date.lo Debug.lo \
+	Descriptor.lo DescriptorThread.lo File.lo FileDir.lo \
+	FilePath.lo FileStat.lo Kernel.lo LineBuffer.lo \
 	ListenerSocket.lo Logger.lo MemFile.lo MimeType.lo Module.lo \
 	ModuleLoader.lo ModuleLoaderDLL.lo ModuleRef.lo Multiplexer.lo \
 	Mutex.lo Process.lo Response.lo Socket.lo SocketAddress.lo \
@@ -224,6 +225,8 @@ Buffer.cpp \
 ConfigFile.cpp \
 ConfigStream.cpp \
 Console.cpp \
+DatagramChannel.cpp \
+DatagramMultiplexer.cpp \
 DatagramSocket.cpp \
 Date.cpp \
 Debug.cpp \
@@ -276,6 +279,8 @@ Buffer.h \
 ConfigFile.h \
 ConfigStream.h \
 Console.h \
+DatagramChannel.h \
+DatagramMultiplexer.h \
 DatagramSocket.h \
 Date.h \
 Debug.h \
@@ -419,6 +424,8 @@ distclean-compile:
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/ConfigFile.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/ConfigStream.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/Console.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/DatagramChannel.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/DatagramMultiplexer.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/DatagramSocket.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/Date.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/Debug.Plo@am__quote@

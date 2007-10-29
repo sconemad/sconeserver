@@ -205,6 +205,7 @@ AC_CONFIG_FILES([http/dirindex/Makefile])
 AC_CONFIG_FILES([http/errorpage/Makefile])
 AC_CONFIG_FILES([exec/Makefile])
 AC_CONFIG_FILES([forward/Makefile])
+AC_CONFIG_FILES([tftp/Makefile])
 AC_CONFIG_FILES([test/Makefile])
 AC_CONFIG_FILES([testbuilder/Makefile])
 
@@ -234,6 +235,7 @@ The following modules will be built:
   + ssl            $SSL
   + exec           yes   
   + forward        yes   
+  + tftp           yes
   + test           yes
   + examples       $EXAMPLES
   + testbuilder    $TESTBUILDER

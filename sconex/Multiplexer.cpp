@@ -87,17 +87,21 @@ int Multiplexer::spin()
         d->m_runstate == Descriptor::Cycle) {
 
       d->m_runstate = Descriptor::Select;
-      int fd = d->fd();
-      int mask = d->get_event_mask();
 
-      if (0 != (mask & (1<<Stream::Readable))) {
-        FD_SET(fd,&fds_read);
-        ++num_added;
-      }
-      
-      if (0 != (mask & (1<<Stream::Writeable))) {
-        FD_SET(fd,&fds_write);
-        ++num_added;
+      int mask = d->get_event_mask();
+      int fd = d->fd();
+
+      if (fd >= 0) {
+	
+	if (0 != (mask & (1<<Stream::Readable))) {
+	  FD_SET(fd,&fds_read);
+	  ++num_added;
+	}
+	
+	if (0 != (mask & (1<<Stream::Writeable))) {
+	  FD_SET(fd,&fds_write);
+	  ++num_added;
+	}
       }
 
       if (0 != (mask & (1<<Stream::SendReadable)) ||
@@ -105,6 +109,8 @@ int Multiplexer::spin()
 	// These events can be sent immediately, so put the
 	// select into immediate mode.
 	immediate = true;
+	// TODO: This may hog CPU if there is nothing after the
+	// sending stream waiting to read/write. 
       }
 
       maxfd = std::max(maxfd,fd);
@@ -138,7 +144,7 @@ int Multiplexer::spin()
     return 0;
   }
 
-  // Dispatch socket events
+  // Decode events and allocate dispatch jobs
   for (it = m_des.begin();
        it != m_des.end();
        it++) {
@@ -151,8 +157,11 @@ int Multiplexer::spin()
     if (rs == Descriptor::Select) {
       int fd = d->fd();
       int events = 0;
-      events |= (FD_ISSET(fd,&fds_read) ? (1<<Stream::Readable) : 0);
-      events |= (FD_ISSET(fd,&fds_write) ? (1<<Stream::Writeable) : 0);
+
+      if (fd >= 0) {
+	events |= (FD_ISSET(fd,&fds_read) ? (1<<Stream::Readable) : 0);
+	events |= (FD_ISSET(fd,&fds_write) ? (1<<Stream::Writeable) : 0);
+      }
       
       allocate_job(d,events);
     }

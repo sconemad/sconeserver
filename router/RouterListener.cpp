@@ -48,32 +48,40 @@ RouterListener::~RouterListener()
 scx::Condition RouterListener::event(scx::Stream::Event e)
 { 
   if (e == scx::Stream::Readable) {
-    scx::StreamSocket* s = new scx::StreamSocket();
+
+    scx::ListenerSocket* stream_listener = 
+      dynamic_cast<scx::ListenerSocket*>(&endpoint());
+    if (stream_listener) {
+      scx::StreamSocket* s = new scx::StreamSocket();
     
-    // Accept the incoming connection
+      // Accept the incoming connection
+      if (stream_listener->accept(s) != 0) {
+	// Client aborted before we got a chance to accept, oh well.
+	delete s;
+	return scx::Ok;
+      }
     
-    if ( ((scx::ListenerSocket&)endpoint()).accept(s) != 0 ) {
-      // Client aborted before we got a chance to accept, oh well.
-      delete s;
+      // Construct argument list with route name
+      scx::ArgList* args = new scx::ArgList();
+      args->give(new scx::ArgString(m_route));
+    
+      // Pass to the router to connect any streams
+      if (m_module.connect(s,args)) {
+	
+	// Socket routed succesfully, give to kernel
+	scx::Kernel::get()->connect(s,args);
+	
+      } else {
+	// Failed to route connection, terminate it
+	delete s;
+      }
+    
+      delete args;
       return scx::Ok;
     }
-    
-    // Construct argument list with route name
-    scx::ArgList* args = new scx::ArgList();
-    args->give(new scx::ArgString(m_route));
-    
-    // Pass to the router to connect any streams
-    if (m_module.connect(s,args)) {
-      
-      // Socket routed succesfully, give to kernel
-      scx::Kernel::get()->connect(s,args);
-      
-    } else {
-      // Failed to route connection, terminate it
-      delete s;
-    }
-    
-    delete args;
+
+    // Unknown socket type, shouldn't be used with this listener
+    return scx::Error;
   }
   
   return scx::Ok;

@@ -17,6 +17,8 @@ Buffer.cpp \
 ConfigFile.cpp \
 ConfigStream.cpp \
 Console.cpp \
+DatagramChannel.cpp \
+DatagramMultiplexer.cpp \
 DatagramSocket.cpp \
 Date.cpp \
 Debug.cpp \
@@ -70,6 +72,8 @@ Buffer.h \
 ConfigFile.h \
 ConfigStream.h \
 Console.h \
+DatagramChannel.h \
+DatagramMultiplexer.h \
 DatagramSocket.h \
 Date.h \
 Debug.h \

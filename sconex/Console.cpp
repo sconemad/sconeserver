@@ -26,7 +26,7 @@ namespace scx {
 Console::Console()
 {
   DEBUG_COUNT_CONSTRUCTOR(Console);
-  //  set_blocking(false);
+  set_blocking(false);
   m_state = Connected;
 }
 
