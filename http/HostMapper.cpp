@@ -161,27 +161,37 @@ scx::Arg* HostMapper::arg_function(
   scx::ArgList* l = dynamic_cast<scx::ArgList*>(args);
 
   if ("add" == name) {
-    const scx::ArgString* a_host =
+    const scx::ArgString* a_id =
       dynamic_cast<const scx::ArgString*>(l->get(0));
-    if (!a_host) {
-      return new scx::ArgError("add() No name specified");
+    if (!a_id) {
+      return new scx::ArgError("add() No host ID specified");
     }
-    std::string s_hostname = a_host->get_string();
+    std::string s_id = a_id->get_string();
+
+    const scx::ArgString* a_hostname =
+      dynamic_cast<const scx::ArgString*>(l->get(1));
+    if (!a_hostname) {
+      return new scx::ArgError("add() No hostname specified");
+    }
+    std::string s_hostname = a_hostname->get_string();
     
     const scx::ArgString* a_path =
-      dynamic_cast<const scx::ArgString*>(l->get(1));
+      dynamic_cast<const scx::ArgString*>(l->get(2));
     if (!a_path) {
       return new scx::ArgError("add() No path specified");
     }
 
-    std::map<std::string,Host*>::const_iterator it = m_hosts.find(s_hostname);
+    std::map<std::string,Host*>::const_iterator it = m_hosts.find(s_id);
     if (it != m_hosts.end()) {
-      return new scx::ArgError("add() Host already exists");
+      return new scx::ArgError("add() Host with this ID already exists");
     }
         
-    log("Adding host '" + s_hostname + "' dir '" + a_path->get_string() + "'");
+    log("Adding {HOST:" + s_id + "} hostname '" + s_hostname + "' path '" + a_path->get_string() + "'");
     scx::FilePath path = m_module.get_conf_path() + a_path->get_string();
-    m_hosts[s_hostname] = new Host(m_module,*this,s_hostname,path.path());
+    Host* host = new Host(m_module,*this,s_id,s_hostname,path.path());
+    host->init();
+    m_hosts[s_id] = host;
+    m_hostmap[s_hostname] = s_id;
     return 0;
   }
 

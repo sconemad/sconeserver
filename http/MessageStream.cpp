@@ -322,9 +322,7 @@ bool MessageStream::connect_request_module()
     return false;
   }
 
-  // Lookup resource node
-  std::string path = uri.get_path();
-  if (path.empty()) path = "/";
+  // Lookup document root node for this profile
   DocRoot* docroot = host->get_docroot(m_request->get_profile());
   if (docroot==0) {
     // Profile is unknown within this host, can't do anything
@@ -335,33 +333,44 @@ bool MessageStream::connect_request_module()
     return false;
   }
 
-  // Lookup the node
-  m_node = docroot->lookup(path);
-
-  if (!m_node) {
-    m_dir_node = docroot;
-    set_status(http::Status::NotFound);
-  } else {
-    m_dir_node = m_node->parent();
-    if (!m_dir_node) {
-      m_dir_node = docroot;
-    }
-  }
-
-  
+  // Find the module to use to handle the request
   std::string modname;
-  if (m_node && !m_error_response) {
-    if (m_node->type() == FSNode::Directory) {
-      // Use the directory module
-      modname = ((FSDirectory*)m_node)->lookup_mod(".");
-    } else {
-      modname = m_node->parent()->lookup_mod(m_node->name());
-    }
-  } else {
-    // Use the error module
+  
+  if (m_error_response) {
+    // We are doing an error response, so use the error module
     modname = docroot->lookup_mod("!");
-  }
+    
+  } else {
+    // Lookup the node
+    std::string path = uri.get_path();
+    if (path.empty()) path = "/";
+    m_node = docroot->lookup(path);
 
+    
+    
+    if (!m_node) {
+      m_dir_node = docroot;
+      set_status(http::Status::NotFound);
+    } else {
+      m_dir_node = m_node->parent();
+      if (!m_dir_node) {
+        m_dir_node = docroot;
+      }
+    }
+    
+    if (m_node) {
+      if (m_node->type() == FSNode::Directory) {
+        // Use the directory module
+        modname = ((FSDirectory*)m_node)->lookup_mod(".");
+      } else {
+        modname = m_node->parent()->lookup_mod(m_node->name());
+      }
+    } else {
+      // Use the error module
+      modname = docroot->lookup_mod("!");
+    }
+  }
+  
   // Construct args
   scx::ArgList args;
 

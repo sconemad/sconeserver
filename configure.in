@@ -109,6 +109,13 @@ AC_ARG_WITH([testbuilder],
   [TESTBUILDER="yes"]
 )
 
+# Lettuce module
+AC_ARG_WITH([lettuce],
+  [AC_HELP_STRING([--with-lettuce],[Enable Lettuce module])],
+  [LETTUCE="$withval"],
+  [LETTUCE="yes"]
+)
+
 # Checks for header files.
 AC_LANG_CPLUSPLUS
 AC_HEADER_STDC
@@ -180,6 +187,7 @@ AM_CONDITIONAL(BUILD_ROUTER_BLUETOOTH, test x$ROUTER_BLUETOOTH = xyes)
 AM_CONDITIONAL(BUILD_SSL, test x$SSL = xyes)
 AM_CONDITIONAL(BUILD_EXAMPLES, test x$EXAMPLES = xyes)
 AM_CONDITIONAL(BUILD_TESTBUILDER, test x$TESTBUILDER = xyes)
+AM_CONDITIONAL(BUILD_LETTUCE, test x$LETTUCE = xyes)
 
 CPPFLAGS="$CPPFLAGS -Wall"
 
@@ -208,6 +216,7 @@ AC_CONFIG_FILES([forward/Makefile])
 AC_CONFIG_FILES([tftp/Makefile])
 AC_CONFIG_FILES([test/Makefile])
 AC_CONFIG_FILES([testbuilder/Makefile])
+AC_CONFIG_FILES([lettuce/Makefile])
 
 AC_OUTPUT
 
@@ -239,4 +248,5 @@ The following modules will be built:
   + test           yes
   + examples       $EXAMPLES
   + testbuilder    $TESTBUILDER
+  + lettuce        $LETTUCE
 ])

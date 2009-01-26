@@ -23,6 +23,7 @@ Free Software Foundation, Inc.,
 #include "http/Host.h"
 #include "http/HostMapper.h"
 #include "http/DocRoot.h"
+#include "sconex/ConfigFile.h"
 namespace http {
 
 //=========================================================================
@@ -30,10 +31,12 @@ Host::Host(
   HTTPModule& module,
   HostMapper& mapper,
   const std::string id,
+  const std::string hostname,
   const scx::FilePath& dir
 ) : m_module(module),
     m_mapper(mapper),
     m_id(id),
+    m_hostname(hostname),
     m_dir(dir)
 {
 
@@ -51,9 +54,24 @@ Host::~Host()
 }
 
 //=========================================================================
+int Host::init()
+{
+  scx::ConfigFile config(m_dir + "host.conf");
+  scx::ArgObject* ctx = new scx::ArgObject(this);
+  int err = config.load(ctx);
+  return err;
+}
+
+//=========================================================================
 const std::string Host::get_id() const
 {
   return m_id;
+}
+
+//=========================================================================
+const std::string Host::get_hostname() const
+{
+  return m_hostname;
 }
 
 //=========================================================================

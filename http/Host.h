@@ -38,13 +38,17 @@ public:
     HTTPModule& module,
     HostMapper& mapper,
     const std::string id,
+    const std::string hostname,
     const scx::FilePath& dir
   );
   // Create a host with id and dir
 
   virtual ~Host();
 
+  int init();
+
   const std::string get_id() const;
+  const std::string get_hostname() const;
 
   DocRoot* get_docroot(const std::string& profile);
   
@@ -60,6 +64,7 @@ private:
   HTTPModule& m_module;
   HostMapper& m_mapper;
   std::string m_id;
+  std::string m_hostname;
   scx::FilePath m_dir;
 
   std::map<std::string,DocRoot*> m_docroots;

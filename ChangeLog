@@ -1,3 +1,8 @@
+
+2009-01-26 Andrew Wedgbury <wedge@sconemad.com>
+
+	* http: Allow host config files.
+	* lettuce: New module for lettuce project, incl media streaming.  
 	
 2007-10-29 Andrew Wedgbury <wedge@sconemad.com>
 
