@@ -8,7 +8,6 @@ var a;
 print("INIT a = " + a + endl);
 
 for (a=5; a<15; ++a) {
-
   print ("LOOP a=" + a + " a!=" + a! + endl);
 }
 

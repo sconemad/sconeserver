@@ -1,0 +1,10 @@
+# ArgScript test script
+#
+#
+
+sub MySub
+{
+  ARGV[0] + 1;
+}
+
+print ("MySub(100) returned " + MySub(100) + " and that was good" + endl);

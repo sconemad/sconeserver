@@ -22,13 +22,13 @@ Free Software Foundation, Inc.,
 
 #include "http/HTTPModule.h"
 #include "http/Request.h"
-#include "http/FSDirectory.h"
 #include "http/MessageStream.h"
 #include "http/Status.h"
-#include "http/FSNode.h"
+#include "http/DocRoot.h"
 #include "http/ResponseStream.h"
 
 #include "sconex/ModuleInterface.h"
+#include "sconex/FileDir.h"
 #include "sconex/Module.h"
 
 //=========================================================================
@@ -51,7 +51,7 @@ public:
 
   
 protected:
-
+  /*
   void do_dir(const http::FSDirectory* fsdir)
   {
     const std::list<http::FSNode*>& dir = fsdir->dir();
@@ -70,22 +70,17 @@ protected:
       write("<li class='" + type +
             "'><a href='" + link +
             "'>" + name + "</a></li>\n");
-      
-      //      if (cur->type() == http::FSNode::Directory) {
-      //        write("<ul>\n");
-      //        do_dir((const http::FSDirectory*)cur);      
-      //        write("</ul>\n");
-      //      }
       ++it;
     }
-  
-  
   };
+  */
 
   virtual scx::Condition send(http::MessageStream& msg) 
   {
+
     const http::Request& req = msg.get_request();
     const scx::Uri& uri = req.get_uri();
+    const http::DocRoot* docroot = msg.get_docroot();
 
     if (req.get_method() != "GET" && 
         req.get_method() != "HEAD" ) {
@@ -93,23 +88,19 @@ protected:
       msg.set_status(http::Status::NotImplemented);
       return scx::Close;
     }
-      
-    const http::FSNode* node = msg.get_node();
-    if (!node) {
-      return scx::Close;
-    }
 
-    if (node->type() == http::FSNode::Directory) {
-      const http::FSDirectory* fsdir = (const http::FSDirectory*)node;
-      
-      const scx::Arg* a_default_page = fsdir->get_param("default_page");
+    const scx::FilePath& path = msg.get_path();
+    scx::FileStat stat(path);
+  
+    if (stat.is_dir()) {
+      const scx::Arg* a_default_page = 0; docroot->get_param("default_page");
       std::string s_default_page =
         (a_default_page ? a_default_page->get_string() : "index.html");
       
       std::string url = uri.get_string();
-      std::string path = uri.get_path();
+      std::string uripath = uri.get_path();
       
-      if (fsdir->lookup(s_default_page)) {
+      if (scx::FileStat(path + s_default_page).exists()) {
         // Redirect to default page
         if (url[url.size()-1] != '/') url += "/";
         m_module.log("Redirect '" + url + "' to '" +
@@ -122,7 +113,7 @@ protected:
         return scx::Close;
       }
       
-      if (!path.empty() && path[path.size()-1] != '/') {
+      if (!uripath.empty() && uripath[uripath.size()-1] != '/') {
         // Redirect to directory URL ending in '/'
         m_module.log("Redirect '" + url + "' to '" + url + "/'"); 
         url += "/";
@@ -132,8 +123,9 @@ protected:
         msg.set_header("Location",url);
         return scx::Close;
       }
-      
-      const scx::Arg* a_allow_list = fsdir->get_param("allow_list");
+
+
+      const scx::Arg* a_allow_list = docroot->get_param("allow_list");
       bool allow_list = (a_allow_list ? a_allow_list->get_int() : false);
       
       if (allow_list) {
@@ -152,17 +144,18 @@ protected:
                 "<link rel='stylesheet' href='/dir.css' type='text/css' />"
                 "</head>\n"
                 "<body>\n"
-                "<h1>Listing of " + node->url() + "</h1>\n"
+                "<h1>Listing of " + url + "</h1>\n"
                 "<div class='box'>\n"
                 "<ul>\n");
           
-          if (fsdir->parent()) {
-            write("<li class='parent'><a href='" +
-                  fsdir->parent()->url() +
-                  "'>../ (parent)</a></li>\n");
+          scx::FileDir dir(msg.get_path());
+          while (dir.next()) {
+            std::string name = dir.name().path();
+            if (name != ".") {
+              write("<li><a href='" + name + "'>" + name + "</a></li>\n");
+            }
           }
-          do_dir(fsdir);
-          
+                    
           write("</ul>\n"
                 "</div>\n"
                 "</body>\n"

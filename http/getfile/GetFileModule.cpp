@@ -24,7 +24,6 @@ Free Software Foundation, Inc.,
 #include "http/MessageStream.h"
 #include "http/Request.h"
 #include "http/Status.h"
-#include "http/FSNode.h"
 
 #include "sconex/ModuleInterface.h"
 #include "sconex/Module.h"
@@ -70,7 +69,7 @@ protected:
       }
 
       // Open the file
-      scx::FilePath path = msg->get_node()->path();
+      scx::FilePath path = msg->get_path();
       scx::File* file = new scx::File();
       if (file->open(path,scx::File::Read) != scx::Ok) {
         m_module.log("Cannot open file '" + path.path() + "'"); 

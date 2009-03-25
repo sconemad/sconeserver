@@ -187,7 +187,7 @@ protected:
   
   ArgStatement* m_body;
 
-  ArgProc& m_proc;
+  ArgProc* m_proc;
 
 };
 

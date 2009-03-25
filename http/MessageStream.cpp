@@ -22,7 +22,6 @@ Free Software Foundation, Inc.,
 #include "http/MessageStream.h"
 #include "http/ConnectionStream.h"
 #include "http/Request.h"
-#include "http/FSNode.h"
 #include "http/HostMapper.h"
 #include "http/Host.h"
 #include "http/DocRoot.h"
@@ -51,7 +50,6 @@ MessageStream::MessageStream(
     m_headers_sent(false),
     m_error_response(false),
     m_buffer(0),
-    m_node(0),
     m_write_chunked(false),
     m_write_remaining(0),
     m_finished(false),
@@ -80,7 +78,7 @@ scx::Condition MessageStream::event(scx::Stream::Event e)
   switch (e) {
 
     case scx::Stream::Opening: {
-      if (!connect_request_module()) {
+      if (!connect_request_module(false)) {
         return scx::Close;
       }
     } break;
@@ -91,7 +89,7 @@ scx::Condition MessageStream::event(scx::Stream::Event e)
         if (!m_buffer) {
           if (!m_error_response) {
             m_error_response = true;
-            if (connect_request_module()) {
+            if (connect_request_module(true)) {
               // Cancel shutdown for now
               return scx::End;
             }
@@ -270,20 +268,38 @@ const Request& MessageStream::get_request() const
   return *m_request;
 }
 
-//===========================================================================
-const FSNode* MessageStream::get_node() const
+//=============================================================================
+void MessageStream::set_path(const scx::FilePath& path)
 {
-  return m_node;
-}
-
-//===========================================================================
-const FSDirectory* MessageStream::get_dir_node() const
-{
-  return m_dir_node;
+  m_path = path;
 }
 
 //=============================================================================
-bool MessageStream::connect_request_module()
+const scx::FilePath& MessageStream::get_path() const
+{
+  return m_path;
+}
+
+//=============================================================================
+void MessageStream::set_docroot(DocRoot* docroot)
+{
+  m_docroot = docroot;
+}
+
+//=============================================================================
+DocRoot* MessageStream::get_docroot()
+{
+  return m_docroot;
+}
+
+//=============================================================================
+Host* MessageStream::get_host()
+{
+  return m_host;
+}
+
+//=============================================================================
+bool MessageStream::connect_request_module(bool error)
 {
   const scx::Uri& uri = m_request->get_uri();
   
@@ -297,7 +313,7 @@ bool MessageStream::connect_request_module()
     dynamic_cast<const scx::StreamSocket*>(&endpoint());
   const scx::SocketAddress* addr = sock->get_remote_addr();
 
-  if (!m_error_response) {
+  if (!error) {
     m_module.log(id + " " + addr->get_string() + " " +
                  m_request->get_method() + " " + uri.get_string());
     
@@ -313,79 +329,18 @@ bool MessageStream::connect_request_module()
   }
   
   // Lookup host object
-  Host* host = m_module.get_host_mapper().host_lookup(uri.get_host());
-  if (host==0) {
+  m_host = m_module.get_host_mapper().host_lookup(uri.get_host());
+  if (m_host==0) {
     // This is bad, user should have setup a default host
     m_module.log(id + " Unknown host '" + uri.get_host() + "'",
                  scx::Logger::Error);
     set_status(http::Status::NotFound);
     return false;
   }
-
-  // Lookup document root node for this profile
-  DocRoot* docroot = host->get_docroot(m_request->get_profile());
-  if (docroot==0) {
-    // Profile is unknown within this host, can't do anything
-    m_module.log(id + " Unknown profile '" + m_request->get_profile() +
-                 "' for host '" + uri.get_host() + "'",
-                 scx::Logger::Error);
-    set_status(http::Status::NotFound);
-    return false;
-  }
-
-  // Find the module to use to handle the request
-  std::string modname;
   
-  if (m_error_response) {
-    // We are doing an error response, so use the error module
-    modname = docroot->lookup_mod("!");
-    
-  } else {
-    // Lookup the node
-    std::string path = uri.get_path();
-    if (path.empty()) path = "/";
-    m_node = docroot->lookup(path);
-
-    
-    
-    if (!m_node) {
-      m_dir_node = docroot;
-      set_status(http::Status::NotFound);
-    } else {
-      m_dir_node = m_node->parent();
-      if (!m_dir_node) {
-        m_dir_node = docroot;
-      }
-    }
-    
-    if (m_node) {
-      if (m_node->type() == FSNode::Directory) {
-        // Use the directory module
-        modname = ((FSDirectory*)m_node)->lookup_mod(".");
-      } else {
-        modname = m_node->parent()->lookup_mod(m_node->name());
-      }
-    } else {
-      // Use the error module
-      modname = docroot->lookup_mod("!");
-    }
-  }
-  
-  // Construct args
-  scx::ArgList args;
-
-  // Lookup module
-  scx::ModuleRef ref = m_module.get_module(modname.c_str());
-  if (!ref.valid()) {
-    m_module.log("No module found to handle request",scx::Logger::Error);
-    set_status(http::Status::ServiceUnavailable);
-    return false;
-  }
-
-  // Connect module
-  return ref.module()->connect(&endpoint(),&args);
+  return m_host->connect_request(&endpoint(),*this);
 }
-
+  
 //=============================================================================
 bool MessageStream::build_header()
 {

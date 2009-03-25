@@ -218,10 +218,14 @@ scx::Condition LettuceCommandStream::event(scx::Stream::Event e)
 
     char prefix;
     c = read(&prefix,1,na);
+    
+    char cmd;
+    c = read(&cmd,1,na);
 
     LettuceBuffer name_buffer;
     c = name_buffer.read(*this);
     scx::Arg* a_name = name_buffer.new_arg();
+    scx::ArgInt* a_int_name = dynamic_cast<scx::ArgInt*>(a_name);
     
     LettuceBuffer data_buffer;
     c = data_buffer.read(*this);
@@ -230,12 +234,16 @@ scx::Condition LettuceCommandStream::event(scx::Stream::Event e)
     const scx::DatagramChannel* sock =
       dynamic_cast<const scx::DatagramChannel*>(&endpoint());
     const scx::SocketAddress* addr = sock->get_remote_addr();
-    
+  
     // log
     std::ostringstream oss;
-    oss << addr->get_string() << " - "
-        << a_name->get_string() << ": "
-        << a_data->get_string();
+    oss << addr->get_string() << " - ";
+    if (a_int_name) {
+      oss << std::hex << a_int_name->get_int();
+    } else {
+      oss << a_name->get_string();
+    }
+    oss << ": " << a_data->get_string();
     m_module.log(oss.str());
     
     endpoint().reset_timeout();

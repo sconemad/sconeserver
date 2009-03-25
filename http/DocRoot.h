@@ -23,16 +23,18 @@ Free Software Foundation, Inc.,
 #define httpDocRoot_h
 
 #include "http/HTTPModule.h"
-#include "http/FSLink.h"
+#include "sconex/ArgObject.h"
 namespace http {
 
 class HostMapper;
-
+class MessageStream;
+  
 //=============================================================================
-class HTTP_API DocRoot : public FSLink {
+class HTTP_API DocRoot : public scx::ArgObjectInterface {
 public:
 
   DocRoot(
+    HTTPModule& module,
     Host& host,
     const std::string profile,
     const scx::FilePath& path
@@ -44,15 +46,31 @@ public:
 
   const std::string get_profile() const;
 
+  bool connect_request(scx::Descriptor* endpoint, MessageStream& message);
+
+  std::string lookup_mod(const std::string& name) const;
+  
+  const scx::Arg* get_param(const std::string& name) const;
+  void set_param(const std::string& name, scx::Arg* value);
+
   virtual std::string name() const;
   virtual scx::Arg* arg_resolve(const std::string& name);
+  virtual scx::Arg* arg_lookup(const std::string& name);
+  virtual scx::Arg* arg_function(const std::string& name,scx::Arg* args);
   
 protected:
 
 private:
 
+  HTTPModule& m_module;
   Host& m_host;
+  std::string m_profile;
+  
+  scx::FilePath m_path;
 
+  std::map<std::string,std::string> m_mods;
+  
+  std::map<std::string,scx::Arg*> m_params;
 };
 
 };

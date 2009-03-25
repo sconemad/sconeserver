@@ -570,7 +570,7 @@ Arg* ArgList::take(int i)
 ArgSub::ArgSub(const std::string& name, ArgStatement* body, ArgProc& proc)
   : m_name(name),
     m_body(body),
-    m_proc(proc)
+    m_proc(new ArgProc(proc))
 {
 }
 
@@ -578,7 +578,7 @@ ArgSub::ArgSub(const std::string& name, ArgStatement* body, ArgProc& proc)
 ArgSub::ArgSub(const ArgSub& c)
   : m_name(c.m_name),
     m_body(0),
-    m_proc(c.m_proc)
+    m_proc(new ArgProc(*c.m_proc))
 {
   if (c.m_body) {
     m_body = c.m_body->new_copy();
@@ -589,6 +589,7 @@ ArgSub::ArgSub(const ArgSub& c)
 ArgSub::~ArgSub()
 {
   delete m_body;
+  delete m_proc;
 }
 
 //===========================================================================
@@ -632,7 +633,7 @@ Arg* ArgSub::call(Arg* args)
     vargs.give(args->new_copy());
     m_body->arg_function("var",&vargs);
     
-    return m_body->run(m_proc);
+    return m_body->run(*m_proc);
   }
   return 0;
 }

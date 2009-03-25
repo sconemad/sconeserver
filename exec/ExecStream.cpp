@@ -85,16 +85,15 @@ bool ExecStream::spawn_process()
     // We're part of an HTTP request chain
     m_cgi_mode = true;
     const http::Request& req = msg->get_request();
-    const http::FSNode* node = msg->get_node();
     const scx::Uri& uri = req.get_uri();
 
     delete m_args;
     m_args = new scx::ArgList();
 
-    prog = node->path().path();
+    prog = msg->get_path().path();
     m_process = new scx::Process(prog);
       
-    m_args->give(new scx::ArgString(node->url()));
+    m_args->give(new scx::ArgString(uri.get_string()));
 
     msg->set_header("Content-Type","text/html");
     msg->set_header("Connection","close");

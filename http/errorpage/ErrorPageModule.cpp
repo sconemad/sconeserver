@@ -114,6 +114,7 @@ protected:
 
   virtual scx::Condition event(scx::Stream::Event e) 
   {
+
     if (e == scx::Stream::Opening) {
 
       http::MessageStream* msg = 
@@ -134,11 +135,10 @@ protected:
       if (body_allowed) {
         msg->set_header("Content-Type","text/html");
       }
-      
       if (body_allowed && req.get_method() == "GET") {
 	// Only need to send the message body if method is GET
 
-        
+        /*
         const http::FSDirectory* dir = msg->get_dir_node();
         const scx::Arg* a_error_page = dir->get_param("error_page");
         if (a_error_page) {
@@ -169,7 +169,7 @@ protected:
             delete file;
           }
         }
-
+        */
         if (m_file_mode == false) {
           m_module.log("Sending '" + status.string() +
                        "' response using basic mode"); 
@@ -190,7 +190,7 @@ protected:
         return scx::Close;
       }
     }
-    
+  
     return scx::Ok;
   };
 

@@ -30,6 +30,7 @@ Free Software Foundation, Inc.,
 #include "http/HeaderTable.h"
 #include "sconex/Stream.h"
 #include "sconex/VersionTag.h"
+#include "sconex/FilePath.h"
 namespace scx { class Buffer; };
 
 namespace http {
@@ -38,6 +39,8 @@ class ConnectionStream;
 class Request;
 class FSNode;
 class FSDirectory;
+class DocRoot;
+class Host;
   
 //=============================================================================
 class HTTP_API MessageStream : public scx::Stream {
@@ -72,12 +75,17 @@ public:
 
   const Request& get_request() const;
 
-  const FSNode* get_node() const;
-  const FSDirectory* get_dir_node() const;
+  void set_path(const scx::FilePath& path);
+  const scx::FilePath& get_path() const;
+
+  void set_docroot(DocRoot* docroot);
+  DocRoot* get_docroot();
+
+  Host* get_host();
 
 private:
 
-  bool connect_request_module();
+  bool connect_request_module(bool error);
   
   bool build_header();
   scx::Condition write_header();
@@ -85,15 +93,16 @@ private:
   HTTPModule& m_module;
   ConnectionStream& m_httpstream;
   Request* m_request;
-
+  scx::FilePath m_path;
+  DocRoot* m_docroot;
+  Host* m_host;
+  
   scx::VersionTag m_version;
   Status m_status;
   HeaderTable m_headers;
   bool m_headers_sent;
   bool m_error_response;
   scx::Buffer* m_buffer;
-  const FSNode* m_node;
-  const FSDirectory* m_dir_node;
 
   // Chunked
   bool m_write_chunked;

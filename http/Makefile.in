@@ -63,10 +63,9 @@ am__installdirs = "$(DESTDIR)$(pkglibdir)" "$(DESTDIR)$(sysconfdir)" \
 pkglibLTLIBRARIES_INSTALL = $(INSTALL)
 LTLIBRARIES = $(pkglib_LTLIBRARIES)
 http_la_LIBADD =
-am_http_la_OBJECTS = ConnectionStream.lo DocRoot.lo FSDirectory.lo \
-	FSFile.lo FSLink.lo FSNode.lo HeaderTable.lo Host.lo \
-	HostMapper.lo MessageStream.lo Request.lo ResponseStream.lo \
-	HTTPModule.lo Status.lo
+am_http_la_OBJECTS = ConnectionStream.lo DocRoot.lo HeaderTable.lo \
+	Host.lo HostMapper.lo MessageStream.lo Request.lo \
+	ResponseStream.lo HTTPModule.lo Status.lo
 http_la_OBJECTS = $(am_http_la_OBJECTS)
 DEFAULT_INCLUDES = -I. -I$(srcdir) -I$(top_builddir)
 depcomp = $(SHELL) $(top_srcdir)/depcomp
@@ -225,10 +224,6 @@ pkglib_LTLIBRARIES = http.la
 http_la_SOURCES = \
 ConnectionStream.cpp \
 DocRoot.cpp \
-FSDirectory.cpp \
-FSFile.cpp \
-FSLink.cpp \
-FSNode.cpp \
 HeaderTable.cpp \
 Host.cpp \
 HostMapper.cpp \
@@ -242,10 +237,6 @@ httpincludedir = $(includedir)/http
 httpinclude_HEADERS = \
 ConnectionStream.h \
 DocRoot.h \
-FSDirectory.h \
-FSFile.h \
-FSLink.h \
-FSNode.h \
 HeaderTable.h \
 Host.h \
 HostMapper.h \
@@ -330,10 +321,6 @@ distclean-compile:
 
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/ConnectionStream.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/DocRoot.Plo@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/FSDirectory.Plo@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/FSFile.Plo@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/FSLink.Plo@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/FSNode.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/HTTPModule.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/HeaderTable.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/Host.Plo@am__quote@

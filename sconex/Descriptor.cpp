@@ -348,6 +348,7 @@ int Descriptor::dispatch(int events)
           break;
         case scx::Close:
           EVENT_DEBUG_LOG("CLOSE");
+          stream->enable_event(Stream::Opening,true);
           close = true;
           break;
         case scx::Error:

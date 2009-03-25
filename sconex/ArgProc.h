@@ -36,6 +36,7 @@ class SCONEX_API ArgProc {
 public:
 
   ArgProc(Arg* ctx=0);
+  ArgProc(const ArgProc& c);
   ~ArgProc();
 
   Arg* evaluate(const std::string& expr);

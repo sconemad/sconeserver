@@ -10,10 +10,6 @@ pkglib_LTLIBRARIES = http.la
 http_la_SOURCES = \
 ConnectionStream.cpp \
 DocRoot.cpp \
-FSDirectory.cpp \
-FSFile.cpp \
-FSLink.cpp \
-FSNode.cpp \
 HeaderTable.cpp \
 Host.cpp \
 HostMapper.cpp \
@@ -28,10 +24,6 @@ httpincludedir = $(includedir)/http
 httpinclude_HEADERS = \
 ConnectionStream.h \
 DocRoot.h \
-FSDirectory.h \
-FSFile.h \
-FSLink.h \
-FSNode.h \
 HeaderTable.h \
 Host.h \
 HostMapper.h \

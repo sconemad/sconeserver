@@ -31,12 +31,14 @@ class LettuceBuffer {
 
 public:
   enum Type {
-    LettuceBufferEmpty = 0,
-    LettuceBufferBool,
-    LettuceBufferUInt,
-    LettuceBufferString,
-    LettuceBufferBinary,
-    LettuceBufferIPAddr
+    LettuceBufferEmpty = 0x00,
+    LettuceBufferBool = 0x10,
+    LettuceBufferUInt = 0x20,
+    LettuceBufferInt = 0x21,
+    LettuceBufferString = 0x40,
+    LettuceBufferBinary = 0x50,
+    LettuceBufferIPAddr = 0x60,
+    LettuceBufferIP6Addr = 0x61
   };
 
   LettuceBuffer();

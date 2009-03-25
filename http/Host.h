@@ -28,6 +28,7 @@ namespace http {
 
 class HTTPModule;
 class HostMapper;
+class MessageStream;
 class DocRoot;
   
 //=============================================================================
@@ -47,6 +48,8 @@ public:
 
   int init();
 
+  bool connect_request(scx::Descriptor* endpoint, MessageStream& message);
+  
   const std::string get_id() const;
   const std::string get_hostname() const;
 

@@ -1,4 +1,17 @@
 
+2009-03-25 Andrew Wedgbury <wedge@sconemad.com>
+
+	* http: Remove bothersome FS tree, replace with simpler model based
+	on the actual filesystem. Eliminates issues when running multithreaded!
+	Fix dependent modules: exec, getfile, dirindex, errorpage.
+	* http/MessageStream: Tidy connect method, delegate to Host, DocRoot.
+	* sconex/ArgProc: Allow copying of ArgProc objects.
+	* sconex/Arg: Copy passed ArgProc when creating ArgSub objects.
+	Fixes issues with recursive calls.
+	* sconex/Descriptor: Fix Opened flag issue when stream returns Close 
+	immediately when opened (as http::MessageStream can).
+	* lettuce: Update command stream protocol.
+	
 2009-01-26 Andrew Wedgbury <wedge@sconemad.com>
 
 	* http: Allow host config files.

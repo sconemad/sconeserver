@@ -23,6 +23,8 @@ Free Software Foundation, Inc.,
 #include "http/Host.h"
 #include "http/HostMapper.h"
 #include "http/DocRoot.h"
+#include "http/MessageStream.h"
+#include "http/Request.h"
 #include "sconex/ConfigFile.h"
 namespace http {
 
@@ -60,6 +62,24 @@ int Host::init()
   scx::ArgObject* ctx = new scx::ArgObject(this);
   int err = config.load(ctx);
   return err;
+}
+
+//=========================================================================
+bool Host::connect_request(scx::Descriptor* endpoint, MessageStream& message)
+{
+  std::string profile = message.get_request().get_profile();
+  DocRoot* docroot = get_docroot(profile);
+  if (docroot == 0) {
+    // Unknown profile
+    m_module.log("Unknown profile '" + profile +
+                 "' for host '" + m_hostname + "'",
+                 scx::Logger::Error);
+    message.set_status(http::Status::NotFound);
+    return false;
+  }
+
+  message.set_docroot(docroot);
+  return docroot->connect_request(endpoint,message);
 }
 
 //=========================================================================
@@ -172,7 +192,7 @@ scx::Arg* Host::arg_function(
     scx::FilePath path = m_dir + a_path->get_string();
     log("Adding profile '" + s_profile + "' dir '" +
         path.path() + "'");
-    m_docroots[s_profile] = new DocRoot(*this,s_profile,path.path());
+    m_docroots[s_profile] = new DocRoot(m_module,*this,s_profile,path.path());
     return 0;
   }
 
