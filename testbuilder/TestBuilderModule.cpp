@@ -91,7 +91,7 @@ void* TestBuilderModule::run()
   m_builds_mutex.lock();
   scx::FileDir dir(m_dir + "builds");
   while (dir.next()) {
-    std::string id = dir.name().path();
+    std::string id = dir.name();
     Build* build = new Build(*this);
     if (build->load(id)) {
       m_builds.push_back(build);

@@ -13,6 +13,7 @@ ArgObject.cpp \
 ArgProc.cpp \
 ArgScript.cpp \
 ArgStatement.cpp \
+Base64.cpp \
 Buffer.cpp \
 ConfigFile.cpp \
 ConfigStream.cpp \
@@ -33,6 +34,7 @@ LineBuffer.cpp \
 ListenerSocket.cpp \
 Logger.cpp \
 MemFile.cpp \
+MimeHeader.cpp \
 MimeType.cpp \
 Module.cpp \
 ModuleLoader.cpp \
@@ -40,6 +42,7 @@ ModuleLoaderDLL.cpp \
 ModuleRef.cpp \
 Multiplexer.cpp \
 Mutex.cpp \
+NullFile.cpp \
 Process.cpp \
 Response.cpp \
 Socket.cpp \
@@ -68,6 +71,7 @@ ArgObject.h \
 ArgProc.h \
 ArgScript.h \
 ArgStatement.h \
+Base64.h \
 Buffer.h \
 ConfigFile.h \
 ConfigStream.h \
@@ -88,6 +92,7 @@ LineBuffer.h \
 ListenerSocket.h \
 Logger.h \
 MemFile.h \
+MimeHeader.h \
 MimeType.h \
 Module.h \
 ModuleInterface.h \
@@ -96,6 +101,7 @@ ModuleLoaderDLL.h \
 ModuleRef.h \
 Multiplexer.h \
 Mutex.h \
+NullFile.h \
 Process.h \
 Response.h \
 Socket.h \
@@ -126,6 +132,7 @@ Arg_ut.cpp \
 Buffer_ut.cpp \
 LineBuffer_ut.cpp \
 MemFile_ut.cpp \
+MimeHeader_ut.cpp \
 MimeType_ut.cpp \
 TimeDate_ut.cpp \
 Uri_ut.cpp \

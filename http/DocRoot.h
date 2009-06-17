@@ -28,6 +28,31 @@ namespace http {
 
 class HostMapper;
 class MessageStream;
+class AuthRealm;
+
+//=============================================================================
+class ModuleMap {
+public:
+
+  ModuleMap(
+    HTTPModule& module,
+    const std::string& name,
+    scx::ArgList* args
+  );
+  
+  ~ModuleMap();
+
+  const std::string& get_name() const;
+  
+  bool connect_module(scx::Descriptor* endpoint);
+  
+private:
+  HTTPModule& m_module;
+
+  std::string m_name;
+  scx::ArgList* m_args;
+};
+
   
 //=============================================================================
 class HTTP_API DocRoot : public scx::ArgObjectInterface {
@@ -48,7 +73,10 @@ public:
 
   bool connect_request(scx::Descriptor* endpoint, MessageStream& message);
 
-  std::string lookup_mod(const std::string& name) const;
+  ModuleMap* lookup_extn_mod(const std::string& name) const;
+  ModuleMap* lookup_path_mod(const std::string& name) const;
+
+  std::string lookup_realm_map(const std::string& name) const;
   
   const scx::Arg* get_param(const std::string& name) const;
   void set_param(const std::string& name, scx::Arg* value);
@@ -60,6 +88,8 @@ public:
   
 protected:
 
+  bool check_auth(MessageStream& message);
+  
 private:
 
   HTTPModule& m_module;
@@ -68,7 +98,10 @@ private:
   
   scx::FilePath m_path;
 
-  std::map<std::string,std::string> m_mods;
+  std::map<std::string,ModuleMap*> m_extn_mods;
+  std::map<std::string,ModuleMap*> m_path_mods;
+
+  std::map<std::string,std::string> m_realm_maps;
   
   std::map<std::string,scx::Arg*> m_params;
 };

@@ -878,6 +878,8 @@ BUILD_TESTBUILDER_TRUE
 BUILD_TESTBUILDER_FALSE
 BUILD_LETTUCE_TRUE
 BUILD_LETTUCE_FALSE
+BUILD_SCONESITE_TRUE
+BUILD_SCONESITE_FALSE
 LTLIBOBJS'
 ac_subst_files=''
       ac_precious_vars='build_alias
@@ -1501,6 +1503,7 @@ Optional Packages:
   --with-examples         Enable building of example code
   --with-testbuilder      Enable TestBuilder module
   --with-lettuce          Enable Lettuce module
+  --with-sconesite        Enable Sconesite module
 
 Some influential environment variables:
   CXX         C++ compiler command
@@ -5473,7 +5476,7 @@ ia64-*-hpux*)
   ;;
 *-*-irix6*)
   # Find out which ABI we are using.
-  echo '#line 5476 "configure"' > conftest.$ac_ext
+  echo '#line 5479 "configure"' > conftest.$ac_ext
   if { (eval echo "$as_me:$LINENO: \"$ac_compile\"") >&5
   (eval $ac_compile) 2>&5
   ac_status=$?
@@ -7638,11 +7641,11 @@ else
    -e 's:.*FLAGS}\{0,1\} :&$lt_compiler_flag :; t' \
    -e 's: [^ ]*conftest\.: $lt_compiler_flag&:; t' \
    -e 's:$: $lt_compiler_flag:'`
-   (eval echo "\"\$as_me:7641: $lt_compile\"" >&5)
+   (eval echo "\"\$as_me:7644: $lt_compile\"" >&5)
    (eval "$lt_compile" 2>conftest.err)
    ac_status=$?
    cat conftest.err >&5
-   echo "$as_me:7645: \$? = $ac_status" >&5
+   echo "$as_me:7648: \$? = $ac_status" >&5
    if (exit $ac_status) && test -s "$ac_outfile"; then
      # The compiler can only warn and ignore the option if not recognized
      # So say no if there are warnings other than the usual output.
@@ -7906,11 +7909,11 @@ else
    -e 's:.*FLAGS}\{0,1\} :&$lt_compiler_flag :; t' \
    -e 's: [^ ]*conftest\.: $lt_compiler_flag&:; t' \
    -e 's:$: $lt_compiler_flag:'`
-   (eval echo "\"\$as_me:7909: $lt_compile\"" >&5)
+   (eval echo "\"\$as_me:7912: $lt_compile\"" >&5)
    (eval "$lt_compile" 2>conftest.err)
    ac_status=$?
    cat conftest.err >&5
-   echo "$as_me:7913: \$? = $ac_status" >&5
+   echo "$as_me:7916: \$? = $ac_status" >&5
    if (exit $ac_status) && test -s "$ac_outfile"; then
      # The compiler can only warn and ignore the option if not recognized
      # So say no if there are warnings other than the usual output.
@@ -8010,11 +8013,11 @@ else
    -e 's:.*FLAGS}\{0,1\} :&$lt_compiler_flag :; t' \
    -e 's: [^ ]*conftest\.: $lt_compiler_flag&:; t' \
    -e 's:$: $lt_compiler_flag:'`
-   (eval echo "\"\$as_me:8013: $lt_compile\"" >&5)
+   (eval echo "\"\$as_me:8016: $lt_compile\"" >&5)
    (eval "$lt_compile" 2>out/conftest.err)
    ac_status=$?
    cat out/conftest.err >&5
-   echo "$as_me:8017: \$? = $ac_status" >&5
+   echo "$as_me:8020: \$? = $ac_status" >&5
    if (exit $ac_status) && test -s out/conftest2.$ac_objext
    then
      # The compiler can only warn and ignore the option if not recognized
@@ -10462,7 +10465,7 @@ else
   lt_dlunknown=0; lt_dlno_uscore=1; lt_dlneed_uscore=2
   lt_status=$lt_dlunknown
   cat > conftest.$ac_ext <<EOF
-#line 10465 "configure"
+#line 10468 "configure"
 #include "confdefs.h"
 
 #if HAVE_DLFCN_H
@@ -10562,7 +10565,7 @@ else
   lt_dlunknown=0; lt_dlno_uscore=1; lt_dlneed_uscore=2
   lt_status=$lt_dlunknown
   cat > conftest.$ac_ext <<EOF
-#line 10565 "configure"
+#line 10568 "configure"
 #include "confdefs.h"
 
 #if HAVE_DLFCN_H
@@ -12930,11 +12933,11 @@ else
    -e 's:.*FLAGS}\{0,1\} :&$lt_compiler_flag :; t' \
    -e 's: [^ ]*conftest\.: $lt_compiler_flag&:; t' \
    -e 's:$: $lt_compiler_flag:'`
-   (eval echo "\"\$as_me:12933: $lt_compile\"" >&5)
+   (eval echo "\"\$as_me:12936: $lt_compile\"" >&5)
    (eval "$lt_compile" 2>conftest.err)
    ac_status=$?
    cat conftest.err >&5
-   echo "$as_me:12937: \$? = $ac_status" >&5
+   echo "$as_me:12940: \$? = $ac_status" >&5
    if (exit $ac_status) && test -s "$ac_outfile"; then
      # The compiler can only warn and ignore the option if not recognized
      # So say no if there are warnings other than the usual output.
@@ -13034,11 +13037,11 @@ else
    -e 's:.*FLAGS}\{0,1\} :&$lt_compiler_flag :; t' \
    -e 's: [^ ]*conftest\.: $lt_compiler_flag&:; t' \
    -e 's:$: $lt_compiler_flag:'`
-   (eval echo "\"\$as_me:13037: $lt_compile\"" >&5)
+   (eval echo "\"\$as_me:13040: $lt_compile\"" >&5)
    (eval "$lt_compile" 2>out/conftest.err)
    ac_status=$?
    cat out/conftest.err >&5
-   echo "$as_me:13041: \$? = $ac_status" >&5
+   echo "$as_me:13044: \$? = $ac_status" >&5
    if (exit $ac_status) && test -s out/conftest2.$ac_objext
    then
      # The compiler can only warn and ignore the option if not recognized
@@ -14604,11 +14607,11 @@ else
    -e 's:.*FLAGS}\{0,1\} :&$lt_compiler_flag :; t' \
    -e 's: [^ ]*conftest\.: $lt_compiler_flag&:; t' \
    -e 's:$: $lt_compiler_flag:'`
-   (eval echo "\"\$as_me:14607: $lt_compile\"" >&5)
+   (eval echo "\"\$as_me:14610: $lt_compile\"" >&5)
    (eval "$lt_compile" 2>conftest.err)
    ac_status=$?
    cat conftest.err >&5
-   echo "$as_me:14611: \$? = $ac_status" >&5
+   echo "$as_me:14614: \$? = $ac_status" >&5
    if (exit $ac_status) && test -s "$ac_outfile"; then
      # The compiler can only warn and ignore the option if not recognized
      # So say no if there are warnings other than the usual output.
@@ -14708,11 +14711,11 @@ else
    -e 's:.*FLAGS}\{0,1\} :&$lt_compiler_flag :; t' \
    -e 's: [^ ]*conftest\.: $lt_compiler_flag&:; t' \
    -e 's:$: $lt_compiler_flag:'`
-   (eval echo "\"\$as_me:14711: $lt_compile\"" >&5)
+   (eval echo "\"\$as_me:14714: $lt_compile\"" >&5)
    (eval "$lt_compile" 2>out/conftest.err)
    ac_status=$?
    cat out/conftest.err >&5
-   echo "$as_me:14715: \$? = $ac_status" >&5
+   echo "$as_me:14718: \$? = $ac_status" >&5
    if (exit $ac_status) && test -s out/conftest2.$ac_objext
    then
      # The compiler can only warn and ignore the option if not recognized
@@ -16938,11 +16941,11 @@ else
    -e 's:.*FLAGS}\{0,1\} :&$lt_compiler_flag :; t' \
    -e 's: [^ ]*conftest\.: $lt_compiler_flag&:; t' \
    -e 's:$: $lt_compiler_flag:'`
-   (eval echo "\"\$as_me:16941: $lt_compile\"" >&5)
+   (eval echo "\"\$as_me:16944: $lt_compile\"" >&5)
    (eval "$lt_compile" 2>conftest.err)
    ac_status=$?
    cat conftest.err >&5
-   echo "$as_me:16945: \$? = $ac_status" >&5
+   echo "$as_me:16948: \$? = $ac_status" >&5
    if (exit $ac_status) && test -s "$ac_outfile"; then
      # The compiler can only warn and ignore the option if not recognized
      # So say no if there are warnings other than the usual output.
@@ -17206,11 +17209,11 @@ else
    -e 's:.*FLAGS}\{0,1\} :&$lt_compiler_flag :; t' \
    -e 's: [^ ]*conftest\.: $lt_compiler_flag&:; t' \
    -e 's:$: $lt_compiler_flag:'`
-   (eval echo "\"\$as_me:17209: $lt_compile\"" >&5)
+   (eval echo "\"\$as_me:17212: $lt_compile\"" >&5)
    (eval "$lt_compile" 2>conftest.err)
    ac_status=$?
    cat conftest.err >&5
-   echo "$as_me:17213: \$? = $ac_status" >&5
+   echo "$as_me:17216: \$? = $ac_status" >&5
    if (exit $ac_status) && test -s "$ac_outfile"; then
      # The compiler can only warn and ignore the option if not recognized
      # So say no if there are warnings other than the usual output.
@@ -17310,11 +17313,11 @@ else
    -e 's:.*FLAGS}\{0,1\} :&$lt_compiler_flag :; t' \
    -e 's: [^ ]*conftest\.: $lt_compiler_flag&:; t' \
    -e 's:$: $lt_compiler_flag:'`
-   (eval echo "\"\$as_me:17313: $lt_compile\"" >&5)
+   (eval echo "\"\$as_me:17316: $lt_compile\"" >&5)
    (eval "$lt_compile" 2>out/conftest.err)
    ac_status=$?
    cat out/conftest.err >&5
-   echo "$as_me:17317: \$? = $ac_status" >&5
+   echo "$as_me:17320: \$? = $ac_status" >&5
    if (exit $ac_status) && test -s out/conftest2.$ac_objext
    then
      # The compiler can only warn and ignore the option if not recognized
@@ -21683,6 +21686,112 @@ else
 fi
 
 
+# Sconesite module
+
+# Check whether --with-sconesite was given.
+if test "${with_sconesite+set}" = set; then
+  withval=$with_sconesite; SCONESITE="$withval"
+else
+  SCONESITE="yes"
+
+fi
+
+if test "x$SCONESITE" == "xyes"; then
+
+{ echo "$as_me:$LINENO: checking for xmlNewDoc in -lxml2" >&5
+echo $ECHO_N "checking for xmlNewDoc in -lxml2... $ECHO_C" >&6; }
+if test "${ac_cv_lib_xml2_xmlNewDoc+set}" = set; then
+  echo $ECHO_N "(cached) $ECHO_C" >&6
+else
+  ac_check_lib_save_LIBS=$LIBS
+LIBS="-lxml2  $LIBS"
+cat >conftest.$ac_ext <<_ACEOF
+/* confdefs.h.  */
+_ACEOF
+cat confdefs.h >>conftest.$ac_ext
+cat >>conftest.$ac_ext <<_ACEOF
+/* end confdefs.h.  */
+
+/* Override any GCC internal prototype to avoid an error.
+   Use char because int might match the return type of a GCC
+   builtin and then its argument prototype would still apply.  */
+#ifdef __cplusplus
+extern "C"
+#endif
+char xmlNewDoc ();
+int
+main ()
+{
+return xmlNewDoc ();
+  ;
+  return 0;
+}
+_ACEOF
+rm -f conftest.$ac_objext conftest$ac_exeext
+if { (ac_try="$ac_link"
+case "(($ac_try" in
+  *\"* | *\`* | *\\*) ac_try_echo=\$ac_try;;
+  *) ac_try_echo=$ac_try;;
+esac
+eval "echo \"\$as_me:$LINENO: $ac_try_echo\"") >&5
+  (eval "$ac_link") 2>conftest.er1
+  ac_status=$?
+  grep -v '^ *+' conftest.er1 >conftest.err
+  rm -f conftest.er1
+  cat conftest.err >&5
+  echo "$as_me:$LINENO: \$? = $ac_status" >&5
+  (exit $ac_status); } &&
+	 { ac_try='test -z "$ac_c_werror_flag" || test ! -s conftest.err'
+  { (case "(($ac_try" in
+  *\"* | *\`* | *\\*) ac_try_echo=\$ac_try;;
+  *) ac_try_echo=$ac_try;;
+esac
+eval "echo \"\$as_me:$LINENO: $ac_try_echo\"") >&5
+  (eval "$ac_try") 2>&5
+  ac_status=$?
+  echo "$as_me:$LINENO: \$? = $ac_status" >&5
+  (exit $ac_status); }; } &&
+	 { ac_try='test -s conftest$ac_exeext'
+  { (case "(($ac_try" in
+  *\"* | *\`* | *\\*) ac_try_echo=\$ac_try;;
+  *) ac_try_echo=$ac_try;;
+esac
+eval "echo \"\$as_me:$LINENO: $ac_try_echo\"") >&5
+  (eval "$ac_try") 2>&5
+  ac_status=$?
+  echo "$as_me:$LINENO: \$? = $ac_status" >&5
+  (exit $ac_status); }; }; then
+  ac_cv_lib_xml2_xmlNewDoc=yes
+else
+  echo "$as_me: failed program was:" >&5
+sed 's/^/| /' conftest.$ac_ext >&5
+
+	ac_cv_lib_xml2_xmlNewDoc=no
+fi
+
+rm -f core conftest.err conftest.$ac_objext \
+      conftest$ac_exeext conftest.$ac_ext
+LIBS=$ac_check_lib_save_LIBS
+fi
+{ echo "$as_me:$LINENO: result: $ac_cv_lib_xml2_xmlNewDoc" >&5
+echo "${ECHO_T}$ac_cv_lib_xml2_xmlNewDoc" >&6; }
+if test $ac_cv_lib_xml2_xmlNewDoc = yes; then
+  cat >>confdefs.h <<_ACEOF
+#define HAVE_LIBXML2 1
+_ACEOF
+
+  LIBS="-lxml2 $LIBS"
+
+else
+  { { echo "$as_me:$LINENO: error: library 'xml2' is required for Sconesite" >&5
+echo "$as_me: error: library 'xml2' is required for Sconesite" >&2;}
+   { (exit 1); exit 1; }; }
+
+fi
+
+  CPPFLAGS = "$CPPFLAGS `xml2-config --cflags`";
+fi
+
 # Checks for header files.
 ac_ext=cpp
 ac_cpp='$CXXCPP $CPPFLAGS'
@@ -25889,6 +25998,16 @@ else
 fi
 
 
+
+if test x$SCONESITE = xyes; then
+  BUILD_SCONESITE_TRUE=
+  BUILD_SCONESITE_FALSE='#'
+else
+  BUILD_SCONESITE_TRUE='#'
+  BUILD_SCONESITE_FALSE=
+fi
+
+
 CPPFLAGS="$CPPFLAGS -Wall"
 
 ac_config_files="$ac_config_files Makefile"
@@ -25942,6 +26061,8 @@ ac_config_files="$ac_config_files test/Makefile"
 ac_config_files="$ac_config_files testbuilder/Makefile"
 
 ac_config_files="$ac_config_files lettuce/Makefile"
+
+ac_config_files="$ac_config_files sconesite/Makefile"
 
 
 cat >confcache <<\_ACEOF
@@ -26121,6 +26242,13 @@ if test -z "${BUILD_LETTUCE_TRUE}" && test -z "${BUILD_LETTUCE_FALSE}"; then
   { { echo "$as_me:$LINENO: error: conditional \"BUILD_LETTUCE\" was never defined.
 Usually this means the macro was only invoked conditionally." >&5
 echo "$as_me: error: conditional \"BUILD_LETTUCE\" was never defined.
+Usually this means the macro was only invoked conditionally." >&2;}
+   { (exit 1); exit 1; }; }
+fi
+if test -z "${BUILD_SCONESITE_TRUE}" && test -z "${BUILD_SCONESITE_FALSE}"; then
+  { { echo "$as_me:$LINENO: error: conditional \"BUILD_SCONESITE\" was never defined.
+Usually this means the macro was only invoked conditionally." >&5
+echo "$as_me: error: conditional \"BUILD_SCONESITE\" was never defined.
 Usually this means the macro was only invoked conditionally." >&2;}
    { (exit 1); exit 1; }; }
 fi
@@ -26605,6 +26733,7 @@ do
     "test/Makefile") CONFIG_FILES="$CONFIG_FILES test/Makefile" ;;
     "testbuilder/Makefile") CONFIG_FILES="$CONFIG_FILES testbuilder/Makefile" ;;
     "lettuce/Makefile") CONFIG_FILES="$CONFIG_FILES lettuce/Makefile" ;;
+    "sconesite/Makefile") CONFIG_FILES="$CONFIG_FILES sconesite/Makefile" ;;
 
   *) { { echo "$as_me:$LINENO: error: invalid argument: $ac_config_target" >&5
 echo "$as_me: error: invalid argument: $ac_config_target" >&2;}
@@ -26832,10 +26961,12 @@ BUILD_TESTBUILDER_TRUE!$BUILD_TESTBUILDER_TRUE$ac_delim
 BUILD_TESTBUILDER_FALSE!$BUILD_TESTBUILDER_FALSE$ac_delim
 BUILD_LETTUCE_TRUE!$BUILD_LETTUCE_TRUE$ac_delim
 BUILD_LETTUCE_FALSE!$BUILD_LETTUCE_FALSE$ac_delim
+BUILD_SCONESITE_TRUE!$BUILD_SCONESITE_TRUE$ac_delim
+BUILD_SCONESITE_FALSE!$BUILD_SCONESITE_FALSE$ac_delim
 LTLIBOBJS!$LTLIBOBJS$ac_delim
 _ACEOF
 
-  if test `sed -n "s/.*$ac_delim\$/X/p" conf$$subs.sed | grep -c X` = 28; then
+  if test `sed -n "s/.*$ac_delim\$/X/p" conf$$subs.sed | grep -c X` = 30; then
     break
   elif $ac_last_try; then
     { { echo "$as_me:$LINENO: error: could not make $CONFIG_STATUS" >&5
@@ -27456,6 +27587,7 @@ The following modules will be built:
   + examples       $EXAMPLES
   + testbuilder    $TESTBUILDER
   + lettuce        $LETTUCE
+  + sconesite      $SCONESITE
 " >&5
 echo "${ECHO_T}
 ------------------------------------------------------------------------------
@@ -27486,4 +27618,5 @@ The following modules will be built:
   + examples       $EXAMPLES
   + testbuilder    $TESTBUILDER
   + lettuce        $LETTUCE
+  + sconesite      $SCONESITE
 " >&6; }

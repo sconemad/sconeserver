@@ -22,11 +22,11 @@ Free Software Foundation, Inc.,
 #ifndef httpRequest_h
 #define httpRequest_h
 
-#include "http/HeaderTable.h"
 #include "http/DocRoot.h"
 #include "sconex/Arg.h"
 #include "sconex/VersionTag.h"
 #include "sconex/Uri.h"
+#include "sconex/MimeHeader.h"
 namespace http {
 
 //=============================================================================
@@ -47,6 +47,7 @@ public:
   bool parse_request(const std::string& str, bool secure);
 
   std::string get_header(const std::string& name) const;
+  scx::MimeHeader get_header_parsed(const std::string& name) const;
   bool parse_header(const std::string& str);
 
   const std::string& get_profile() const;
@@ -65,7 +66,7 @@ protected:
   std::string m_method;
   scx::Uri m_uri;
   scx::VersionTag m_version;
-  HeaderTable m_headers;
+  scx::MimeHeaderTable m_headers;
   std::string m_profile;
   
 private:

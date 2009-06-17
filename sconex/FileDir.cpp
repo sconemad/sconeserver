@@ -77,7 +77,7 @@ const FilePath& FileDir::root() const
 }
 
 //=============================================================================
-const FilePath& FileDir::name() const
+const std::string& FileDir::name() const
 {
   return m_current_name;
 }

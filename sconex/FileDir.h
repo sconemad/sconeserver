@@ -52,7 +52,7 @@ public:
   const FilePath& root() const;
   // Get root path of directory being enumerated
   
-  const FilePath& name() const;
+  const std::string& name() const;
   // Get name of current file
 
   FilePath path() const;
@@ -66,7 +66,7 @@ private:
   FilePath m_root;
   // Root directory being enumerated
   
-  FilePath m_current_name;
+  std::string m_current_name;
   FileStat m_current_stat;
   // Details for current file
   

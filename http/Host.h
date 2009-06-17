@@ -30,6 +30,8 @@ class HTTPModule;
 class HostMapper;
 class MessageStream;
 class DocRoot;
+class AuthRealmManager;
+class AuthRealm;
   
 //=============================================================================
 class HTTP_API Host : public scx::ArgObjectInterface {
@@ -54,6 +56,7 @@ public:
   const std::string get_hostname() const;
 
   DocRoot* get_docroot(const std::string& profile);
+  AuthRealm* lookup_realm(const std::string& realm);
   
   virtual std::string name() const;
   virtual scx::Arg* arg_lookup(const std::string& name);
@@ -72,6 +75,7 @@ private:
 
   std::map<std::string,DocRoot*> m_docroots;
 
+  AuthRealmManager* m_realms;
 };
 
 };

@@ -78,6 +78,15 @@ scx::Condition MessageStream::event(scx::Stream::Event e)
   switch (e) {
 
     case scx::Stream::Opening: {
+      if (m_bytes_readable < 0) {
+        m_bytes_readable = 0;
+        // See how much should be read for this message
+        const std::string& clength = m_request->get_header("Content-Length");
+        if (!clength.empty()) {
+          m_bytes_readable = atoi(clength.c_str());
+        }
+      }
+  
       if (!connect_request_module(false)) {
         return scx::Close;
       }
@@ -99,6 +108,8 @@ scx::Condition MessageStream::event(scx::Stream::Event e)
         }
         return write_header();
       }
+
+      DEBUG_ASSERT(m_bytes_readable == m_bytes_read,"event(Closing) Message not read");
       
       if (m_write_chunked) {
         DEBUG_ASSERT(m_write_remaining==0,"event(Closing) Written incomplete chunk");
@@ -137,19 +148,10 @@ scx::Condition MessageStream::event(scx::Stream::Event e)
 //=========================================================================
 scx::Condition MessageStream::read(void* buffer,int n,int& na)
 {
-  if (m_bytes_readable < 0) {
-    m_bytes_readable = 0;
-    // See how much should be read
-    const std::string& clength = m_request->get_header("Content-Length");
-    if (!clength.empty()) {
-      m_bytes_readable = atoi(clength.c_str());
-    }
-  }
-  
   if (m_bytes_read >= m_bytes_readable) {
     // Read all that is allowed, finish
     na = 0;
-    return scx::Close;
+    return scx::End;
   }
 
   if ((n + m_bytes_read) > m_bytes_readable) {
@@ -205,6 +207,12 @@ scx::Condition MessageStream::write(const void* buffer,int n,int& na)
   }
 
   return c;
+}
+
+//=============================================================================
+void MessageStream::send_continue()
+{
+  Stream::write("HTTP/1.0 100 Continue\r\n\r\n");
 }
 
 //=============================================================================
@@ -299,6 +307,18 @@ Host* MessageStream::get_host()
 }
 
 //=============================================================================
+void MessageStream::set_auth_user(const std::string& user)
+{
+  m_auth_user = user;
+}
+
+//=============================================================================
+const std::string& MessageStream::get_auth_user() const
+{
+  return m_auth_user;
+}
+
+//=============================================================================
 bool MessageStream::connect_request_module(bool error)
 {
   const scx::Uri& uri = m_request->get_uri();
@@ -346,7 +366,8 @@ bool MessageStream::build_header()
 {
   // Should persistant connections be used
   bool persist = (m_version > scx::VersionTag(1,0));
-  if (m_request->get_header("CONNECTION") == "close") {
+  if (m_request->get_header("Connection") == "close" ||
+      m_headers.get("Connection") == "close") {
     m_headers.set("Connection","close");
     persist = false;
   }

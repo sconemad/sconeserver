@@ -86,6 +86,8 @@ HostMapper& HTTPModule::get_host_mapper()
 //=============================================================================
 scx::Arg* HTTPModule::arg_lookup(const std::string& name)
 {
+  // Sub-objects
+  
   if ("hosts" == name) {
     return new scx::ArgObject(&m_host_mapper);
   }

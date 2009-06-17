@@ -42,7 +42,7 @@ StreamDebugger::StreamDebugger(
   ++s_debugger_index;
 
   std::ostringstream oss;
-  oss << "dbg." << name << "." 
+  oss << "/tmp/scxdbg." << name << "." 
       << std::setfill('0') << std::setw(5) << s_debugger_index;
   
   m_file.open(oss.str(),File::Write | File::Create | File::Truncate);

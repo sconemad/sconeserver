@@ -115,12 +115,13 @@ protected:
       
       if (!uripath.empty() && uripath[uripath.size()-1] != '/') {
         // Redirect to directory URL ending in '/'
-        m_module.log("Redirect '" + url + "' to '" + url + "/'"); 
-        url += "/";
+        scx::Uri new_uri = uri;
+        new_uri.set_path(uripath + "/");
+        m_module.log("Redirect '" + uri.get_string() + "' to '" + new_uri.get_string() + "'"); 
         
         msg.set_status(http::Status::Found);
         msg.set_header("Content-Type","text/html");
-        msg.set_header("Location",url);
+        msg.set_header("Location",new_uri.get_string());
         return scx::Close;
       }
 
@@ -150,7 +151,7 @@ protected:
           
           scx::FileDir dir(msg.get_path());
           while (dir.next()) {
-            std::string name = dir.name().path();
+            std::string name = dir.name();
             if (name != ".") {
               write("<li><a href='" + name + "'>" + name + "</a></li>\n");
             }

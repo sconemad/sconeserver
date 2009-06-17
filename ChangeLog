@@ -1,4 +1,22 @@
 
+2009-06-17 Andrew Wedgbury <wedge@sconemad.com>
+
+	* http/AuthRealm: Implement basic HTTP authorization realms.
+	* sconex/Base64: Base64 encoding/decoding utility.
+	* ssl: Implement callbacks required for OpenSSL thread safety.
+	* http/DocRoot: Add path -> module mapping.
+	Allow args to be passed through to modules. 
+	Implement basic HTTP authentication via AuthRealms.
+	* sconex/StreamTokenizer: Remove unneccecary write() method.
+	Send readable events when there is data in its buffer.
+	* http/ResponseStream: Read multipart mime http messages.
+	* sconex/NullFile: New bit-bucket descriptor.
+	* sconex/MimeHeader: New mime header parser and table (from http).
+	* sconex/FileDir: Make name return a string not a path, more obvious.
+	* sconex/FilePath: Add rmdir and rmfile methods.
+	* exec: Set working directory when launching.
+	* sconesite: Experimental new http website module.
+			
 2009-03-25 Andrew Wedgbury <wedge@sconemad.com>
 
 	* http: Remove bothersome FS tree, replace with simpler model based

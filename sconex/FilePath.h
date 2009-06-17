@@ -51,6 +51,8 @@ public:
   static bool is_root(const std::string& path);
 
   static bool mkdir(const FilePath& path, bool recursive, mode_t mode);
+  static bool rmdir(const FilePath& path, bool recursive=false);
+  static bool rmfile(const FilePath& path);
   static bool chown(const FilePath& path, const User& user);
   
 protected:

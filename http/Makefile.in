@@ -63,9 +63,9 @@ am__installdirs = "$(DESTDIR)$(pkglibdir)" "$(DESTDIR)$(sysconfdir)" \
 pkglibLTLIBRARIES_INSTALL = $(INSTALL)
 LTLIBRARIES = $(pkglib_LTLIBRARIES)
 http_la_LIBADD =
-am_http_la_OBJECTS = ConnectionStream.lo DocRoot.lo HeaderTable.lo \
-	Host.lo HostMapper.lo MessageStream.lo Request.lo \
-	ResponseStream.lo HTTPModule.lo Status.lo
+am_http_la_OBJECTS = ConnectionStream.lo DocRoot.lo Host.lo \
+	HostMapper.lo MessageStream.lo Request.lo ResponseStream.lo \
+	HTTPModule.lo Status.lo AuthRealm.lo
 http_la_OBJECTS = $(am_http_la_OBJECTS)
 DEFAULT_INCLUDES = -I. -I$(srcdir) -I$(top_builddir)
 depcomp = $(SHELL) $(top_srcdir)/depcomp
@@ -115,6 +115,8 @@ BUILD_ROUTER_IP_FALSE = @BUILD_ROUTER_IP_FALSE@
 BUILD_ROUTER_IP_TRUE = @BUILD_ROUTER_IP_TRUE@
 BUILD_ROUTER_LOCAL_FALSE = @BUILD_ROUTER_LOCAL_FALSE@
 BUILD_ROUTER_LOCAL_TRUE = @BUILD_ROUTER_LOCAL_TRUE@
+BUILD_SCONESITE_FALSE = @BUILD_SCONESITE_FALSE@
+BUILD_SCONESITE_TRUE = @BUILD_SCONESITE_TRUE@
 BUILD_SSL_FALSE = @BUILD_SSL_FALSE@
 BUILD_SSL_TRUE = @BUILD_SSL_TRUE@
 BUILD_TESTBUILDER_FALSE = @BUILD_TESTBUILDER_FALSE@
@@ -224,20 +226,19 @@ pkglib_LTLIBRARIES = http.la
 http_la_SOURCES = \
 ConnectionStream.cpp \
 DocRoot.cpp \
-HeaderTable.cpp \
 Host.cpp \
 HostMapper.cpp \
 MessageStream.cpp \
 Request.cpp \
 ResponseStream.cpp \
 HTTPModule.cpp \
-Status.cpp
+Status.cpp \
+AuthRealm.cpp
 
 httpincludedir = $(includedir)/http
 httpinclude_HEADERS = \
 ConnectionStream.h \
 DocRoot.h \
-HeaderTable.h \
 Host.h \
 HostMapper.h \
 Request.h \
@@ -245,7 +246,8 @@ ResponseStream.h \
 MessageStream.h \
 http.h \
 HTTPModule.h \
-Status.h
+Status.h \
+AuthRealm.h
 
 http_la_LDFLAGS = -module -avoid-version
 sysconf_DATA = http.conf
@@ -319,10 +321,10 @@ mostlyclean-compile:
 distclean-compile:
 	-rm -f *.tab.c
 
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/AuthRealm.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/ConnectionStream.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/DocRoot.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/HTTPModule.Plo@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/HeaderTable.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/Host.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/HostMapper.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/MessageStream.Plo@am__quote@

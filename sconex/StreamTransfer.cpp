@@ -272,6 +272,7 @@ void StreamTransferSource::dest_event(Event e)
   switch (e) {
 
     case Stream::Writeable: {
+      endpoint().reset_timeout();
       enable_event(Stream::Readable,true);
     } break;
     

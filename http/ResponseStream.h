@@ -23,6 +23,8 @@ Free Software Foundation, Inc.,
 #define httpResponseStream_h
 
 #include "sconex/Stream.h"
+#include "sconex/LineBuffer.h"
+#include "sconex/Buffer.h"
 #include "http/http.h"
 #include "http/MessageStream.h"
 
@@ -33,29 +35,61 @@ class HTTP_API ResponseStream : public scx::Stream {
 
 public:
 
+  enum ResponseSequence {
+    resp_Start,
+    resp_ReadSingle,
+    resp_ReadMultiStart,
+    resp_ReadMultiHeader,
+    resp_ReadMultiBody,
+    resp_ReadEnd,
+    resp_Write,
+    resp_End
+  };
+
+  enum MimeBoundaryType {
+    bound_Initial,
+    bound_Intermediate,
+    bound_Final
+  };
+  
   ResponseStream(const std::string& stream_name);
   
   ~ResponseStream();
 
   static std::string html_esc(std::string str);
-  // Escape a string for html
   
 protected:
 
+  // from scx::Stream:
   virtual scx::Condition event(scx::Stream::Event e);
+  virtual scx::Condition read(void* buffer,int n,int& na);
 
+  
   virtual scx::Condition send(http::MessageStream& msg) =0;
-
+  virtual scx::Condition start_section();
+  bool find_mime_boundary();
+  
   bool is_opt(const std::string& name) const;
   std::string get_opt(const std::string& name) const;
   
-private:
-
   scx::Condition decode_opts(http::MessageStream& msg);
   bool decode_opts_string(const char* cstr,int cstr_len);
-  
-  std::map<std::string,std::string> m_opts;
 
+protected:
+
+  MessageStream* m_message;
+  
+private:
+
+  ResponseSequence m_resp_seq;
+  std::map<std::string,std::string> m_opts;
+  scx::Buffer m_buffer;
+  std::string m_mime_boundary;
+  int m_mime_boundary_pos;
+  MimeBoundaryType m_mime_boundary_type;
+  int m_mime_boundary_num;
+  
+  scx::Condition m_prev_cond;
 };
 
 };

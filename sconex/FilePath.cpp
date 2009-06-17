@@ -20,6 +20,8 @@ Free Software Foundation, Inc.,
 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA */
 
 #include "sconex/FilePath.h"
+#include "sconex/FileDir.h"
+#include "sconex/FileStat.h"
 #include "sconex/User.h"
 namespace scx {
 
@@ -142,6 +144,31 @@ bool FilePath::mkdir(const FilePath& path, bool recursive, mode_t mode)
   }
   
   return (0 == ::mkdir(str.c_str(),mode));
+}
+
+//=============================================================================
+bool FilePath::rmdir(const FilePath& path, bool recursive)
+{
+  if (recursive) {
+    FileDir dir(path);
+    while (dir.next()) {
+      if (dir.name() == "." || dir.name() == "..") {
+        // nothing
+      } else if (dir.stat().is_dir()) {
+        rmdir(dir.path(),true);
+      } else {
+        rmfile(dir.path());
+      }
+    }
+  }
+  
+  return (0 == ::rmdir(path.path().c_str()));
+}
+
+//=============================================================================
+bool FilePath::rmfile(const FilePath& path)
+{
+  return (0 == ::unlink(path.path().c_str()));
 }
 
 //=============================================================================

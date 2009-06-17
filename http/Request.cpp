@@ -136,6 +136,12 @@ std::string Request::get_header(const std::string& name) const
 }
 
 //===========================================================================
+scx::MimeHeader Request::get_header_parsed(const std::string& name) const
+{
+  return m_headers.get_parsed(name);
+}
+
+//===========================================================================
 bool Request::parse_header(const std::string& str)
 {
   std::string::size_type i = str.find_first_of(":");

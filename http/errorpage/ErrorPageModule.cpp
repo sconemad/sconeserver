@@ -123,7 +123,8 @@ protected:
       const http::Status& status = msg->get_status();
       
       if (req.get_method() != "GET" && 
-	  req.get_method() != "HEAD" ) {
+	  req.get_method() != "HEAD" &&
+	  req.get_method() != "POST" ) {
 	// Don't understand the method
 	return scx::Close;
       }
@@ -135,7 +136,8 @@ protected:
       if (body_allowed) {
         msg->set_header("Content-Type","text/html");
       }
-      if (body_allowed && req.get_method() == "GET") {
+      if (body_allowed &&
+          (req.get_method() == "GET" || req.get_method() == "POST")) {
 	// Only need to send the message body if method is GET
 
         /*

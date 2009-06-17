@@ -116,6 +116,19 @@ AC_ARG_WITH([lettuce],
   [LETTUCE="yes"]
 )
 
+# Sconesite module
+AC_ARG_WITH([sconesite],
+  [AC_HELP_STRING([--with-sconesite],[Enable Sconesite module])],
+  [SCONESITE="$withval"],
+  [SCONESITE="yes"]
+)
+if test "x$SCONESITE" == "xyes"; then
+  AC_CHECK_LIB([xml2],[xmlNewDoc],,
+    [AC_MSG_ERROR([library 'xml2' is required for Sconesite])]
+  )
+  CPPFLAGS = "$CPPFLAGS `xml2-config --cflags`";
+fi
+
 # Checks for header files.
 AC_LANG_CPLUSPLUS
 AC_HEADER_STDC
@@ -188,6 +201,7 @@ AM_CONDITIONAL(BUILD_SSL, test x$SSL = xyes)
 AM_CONDITIONAL(BUILD_EXAMPLES, test x$EXAMPLES = xyes)
 AM_CONDITIONAL(BUILD_TESTBUILDER, test x$TESTBUILDER = xyes)
 AM_CONDITIONAL(BUILD_LETTUCE, test x$LETTUCE = xyes)
+AM_CONDITIONAL(BUILD_SCONESITE, test x$SCONESITE = xyes)
 
 CPPFLAGS="$CPPFLAGS -Wall"
 
@@ -217,6 +231,7 @@ AC_CONFIG_FILES([tftp/Makefile])
 AC_CONFIG_FILES([test/Makefile])
 AC_CONFIG_FILES([testbuilder/Makefile])
 AC_CONFIG_FILES([lettuce/Makefile])
+AC_CONFIG_FILES([sconesite/Makefile])
 
 AC_OUTPUT
 
@@ -249,4 +264,5 @@ The following modules will be built:
   + examples       $EXAMPLES
   + testbuilder    $TESTBUILDER
   + lettuce        $LETTUCE
+  + sconesite      $SCONESITE
 ])

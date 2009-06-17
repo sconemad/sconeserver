@@ -110,6 +110,7 @@ Condition StreamTokenizer::read(void* buffer,int n,int& na)
   if (m_buffer.used()) {
     na += m_buffer.pop_to(buffer,n);
     if (na == n) {
+      enable_event(Stream::SendReadable,m_buffer.used()); 
       return Ok;
     }
   }
@@ -119,7 +120,8 @@ Condition StreamTokenizer::read(void* buffer,int n,int& na)
     int nr = 0;
     Condition c = Stream::read((char*)buffer+na,left,nr);
     if (nr > 0) na += nr;
-    return c; 
+    enable_event(Stream::SendReadable,m_buffer.used());
+    return c;
   }
 
   int nr = 0;
@@ -128,13 +130,9 @@ Condition StreamTokenizer::read(void* buffer,int n,int& na)
     m_buffer.push(nr);
     na += m_buffer.pop_to((char*)buffer+na,left);
   }
-  return c;
-}
 
-//=============================================================================
-Condition StreamTokenizer::write(const void* buffer,int n,int& na)
-{
-  return Stream::write(buffer,n,na);
+  enable_event(Stream::SendReadable,m_buffer.used()); 
+  return c;
 }
 
 //=============================================================================

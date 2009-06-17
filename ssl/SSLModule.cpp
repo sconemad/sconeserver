@@ -33,8 +33,36 @@ Free Software Foundation, Inc.,
 SCONESERVER_MODULE(SSLModule);
 
 //=========================================================================
-SSLModule::SSLModule(
-)
+// Thread synchronization data and callbacks required by OpenSSL
+//
+static pthread_mutex_t lock_cs[CRYPTO_NUM_LOCKS];
+static long lock_count[CRYPTO_NUM_LOCKS];
+
+unsigned long pthreads_thread_id()
+{
+  return (unsigned long)pthread_self();
+}
+
+void pthreads_locking_callback(int mode, int type, const char* file, int line)
+{
+#ifdef undef
+  //SSL thread debug info:
+  fprintf(stderr,"thread=%4d mode=%s lock=%s %s:%d\n",
+          CRYPTO_thread_id(),
+          (mode&CRYPTO_LOCK)?"l":"u",
+          (type&CRYPTO_READ)?"r":"w",file,line);
+#endif
+
+  if (mode & CRYPTO_LOCK) {
+    pthread_mutex_lock(&(lock_cs[type]));
+    lock_count[type]++;
+  } else {
+    pthread_mutex_unlock(&(lock_cs[type]));
+  }
+}
+
+//=========================================================================
+SSLModule::SSLModule()
   : scx::Module("ssl",scx::version())
 {
 
@@ -48,6 +76,12 @@ SSLModule::~SSLModule()
     it != m_channels.end();
     it++) {
     delete it->second;
+  }
+
+  CRYPTO_set_locking_callback(NULL);
+  for (int i=0; i<CRYPTO_NUM_LOCKS; i++) {
+    pthread_mutex_destroy(&(lock_cs[i]));
+    //    fprintf(stderr,"%8ld:%s\n",lock_count[i],CRYPTO_get_lock_name(i));
   }
 }
 
@@ -67,6 +101,14 @@ int SSLModule::init()
   SSL_load_error_strings();
   SSL_library_init();
 
+  for (int i=0; i<CRYPTO_NUM_LOCKS; i++) {
+    lock_count[i]=0;
+    pthread_mutex_init(&(lock_cs[i]),NULL);
+  }
+
+  CRYPTO_set_id_callback((unsigned long (*)())pthreads_thread_id);
+  CRYPTO_set_locking_callback(pthreads_locking_callback);
+  
   return Module::init();
 }
 

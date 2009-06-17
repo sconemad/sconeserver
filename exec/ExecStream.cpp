@@ -24,7 +24,6 @@ Free Software Foundation, Inc.,
 #include "CGIResponseStream.h"
 
 #include "http/MessageStream.h"
-#include "http/FSNode.h"
 #include "http/Request.h"
 
 #include "sconex/Kernel.h"
@@ -92,6 +91,12 @@ bool ExecStream::spawn_process()
 
     prog = msg->get_path().path();
     m_process = new scx::Process(prog);
+
+    std::string::size_type is = prog.find_last_of("/");
+    if (is != std::string::npos) {
+      std::string wd = prog.substr(0,is);
+      m_process->set_dir(wd);
+    }
       
     m_args->give(new scx::ArgString(uri.get_string()));
 

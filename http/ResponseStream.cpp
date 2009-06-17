@@ -29,12 +29,24 @@ Free Software Foundation, Inc.,
 
 namespace http {
 
+// Uncomment to enable debug logging
+#define RESPONSE_DEBUG_LOG(m) STREAM_DEBUG_LOG(m)
+
+#ifndef RESPONSE_DEBUG_LOG
+#  define RESPONSE_DEBUG_LOG(m)
+#endif
+  
 //=========================================================================
 ResponseStream::ResponseStream(
   const std::string& stream_name
-) : scx::Stream(stream_name)
+) : scx::Stream(stream_name),
+    m_resp_seq(resp_Start),
+    m_buffer(1024),
+    m_mime_boundary_pos(-1),
+    m_mime_boundary_num(0),
+    m_prev_cond(scx::Ok)
 {
-  enable_event(scx::Stream::Writeable,true);
+
 }
 
 //=========================================================================
@@ -67,22 +79,224 @@ std::string ResponseStream::html_esc(
 //=========================================================================
 scx::Condition ResponseStream::event(scx::Stream::Event e) 
 {
+  if (e == scx::Stream::Opening) {
+
+    m_message = dynamic_cast<MessageStream*>(find_stream("http:message"));
+    const Request& req = m_message->get_request();
+    
+    if (req.get_method() == "POST") {
+      // Need to read message body
+      std::string type;
+      std::string content_type = req.get_header("Content-Type");
+      std::string::size_type ic = content_type.find_first_of(";");
+      if (ic != std::string::npos) {
+        type = content_type.substr(0,ic);
+        ic = content_type.find("boundary=");
+        if (ic != std::string::npos) {
+          m_mime_boundary = std::string("--") + content_type.substr(ic+9);
+        }
+      }
+    
+      if (type == "multipart/form-data") {
+        m_resp_seq = resp_ReadMultiStart;
+        
+      } else {
+        m_resp_seq = resp_ReadSingle;
+      }
+      enable_event(scx::Stream::Readable,true);
+    
+    } else {
+      // Go straight to write response
+      m_resp_seq = resp_Write;
+      enable_event(scx::Stream::Writeable,true);
+    }
+  }
+
+  if (e == scx::Stream::Readable) {
+    switch (m_resp_seq) {
+      case resp_ReadSingle: {
+        scx::Condition c = decode_opts(*m_message);
+        if (c == scx::Ok) {
+          m_resp_seq = resp_Write;
+          enable_event(scx::Stream::Readable,false);
+          enable_event(scx::Stream::Writeable,true);
+        }
+      } break;
+
+      case resp_ReadMultiStart: {
+        char buffer[100];
+        int na;
+        while (m_resp_seq == resp_ReadMultiStart) {
+          scx::Condition c = read(buffer,100,na);
+          RESPONSE_DEBUG_LOG("ReadMultiStart na=" << na << " c=" << c);
+          if (c == scx::End) {
+            enable_event(scx::Stream::Readable,false);
+            return scx::Close;
+          } else if (c != scx::Ok) {
+            return c;
+          }
+        }
+      } break;
+      
+    }
+  }
+
+  if (e == scx::Stream::Closing) {
+    RESPONSE_DEBUG_LOG("Response closing seq=" << m_resp_seq);
+    if (m_resp_seq == resp_ReadMultiHeader) {
+      m_resp_seq = resp_ReadMultiBody;
+      start_section();
+      return scx::End;
+      
+    } else if (m_resp_seq == resp_ReadEnd) {
+      m_resp_seq = resp_Write;
+      enable_event(scx::Stream::Readable,false);
+      enable_event(scx::Stream::Writeable,true);
+      return scx::End;
+    }
+  }
+  
   if (e == scx::Stream::Writeable) {
-    
-    http::MessageStream* msg = 
-      dynamic_cast<http::MessageStream*>(find_stream("http:message"));
-    if (!msg) {
-      return scx::Close;
-    }
-    
-    scx::Condition c = decode_opts(*msg);
-    if (c == scx::Ok) {
-      c = send(*msg);
-    }
-    return c;
+    return send(*m_message);
   }
 
   return scx::Ok;
+}
+
+//=========================================================================
+scx::Condition ResponseStream::read(void* buffer,int n,int& na)
+{
+  na = 0;
+  RESPONSE_DEBUG_LOG("read n=" << n <<
+                     " buf=" << m_buffer.used() <<
+                     " bpos=" << m_mime_boundary_pos);
+
+  if (m_resp_seq == resp_ReadMultiHeader ||
+      m_resp_seq == resp_ReadEnd) {
+    RESPONSE_DEBUG_LOG("boundary already reached");
+    return scx::End;
+  }
+  
+  if (m_mime_boundary_pos == 0) {
+    int sz = m_mime_boundary.size() + 2;
+    switch (m_mime_boundary_type) {
+
+      case bound_Initial:
+        RESPONSE_DEBUG_LOG("boundary (initial)");
+        m_resp_seq = resp_ReadMultiHeader;
+        break;
+
+      case bound_Intermediate:
+        RESPONSE_DEBUG_LOG("boundary");
+        sz += 2;
+        m_resp_seq = resp_ReadMultiHeader;
+        break;
+
+      case bound_Final:
+        RESPONSE_DEBUG_LOG("boundary (final)");
+        sz += 4;
+        m_resp_seq = resp_ReadEnd;
+        break;
+    }
+    m_buffer.pop(sz);
+    find_mime_boundary();
+    enable_event(Stream::SendReadable,true);
+    return scx::End;
+  }
+  
+  if (m_mime_boundary_pos > 0) {
+    if (n >= m_mime_boundary_pos) {
+      // Read right upto boundary
+      n = m_mime_boundary_pos;
+    }
+    na += m_buffer.pop_to(buffer,n);
+    m_mime_boundary_pos -= na;
+    enable_event(Stream::SendReadable,m_buffer.used()); 
+    return scx::Ok;
+  }
+
+  const int bs = m_mime_boundary.size() + 4; // account for "--\r\n"
+  const int nmax = m_buffer.size() - (2*bs) + 1;
+  n = std::min(n,nmax);
+  
+  if (m_buffer.used()) {
+    na += m_buffer.pop_to(buffer,n);
+    RESPONSE_DEBUG_LOG("pop " << na << " existing");
+    if (na == n) {
+      enable_event(Stream::SendReadable,m_buffer.used()); 
+      return scx::Ok;
+    }
+  }
+  
+  int left = n-na;
+  if (left < m_buffer.free()) {
+    int nr = 0;
+    scx::Condition c = scx::Stream::read(m_buffer.tail(),m_buffer.free(),nr);
+    m_prev_cond = c;
+    RESPONSE_DEBUG_LOG("source read " << nr << " c=" << c);
+    if (nr > 0) {
+      m_buffer.push(nr);
+      
+      if (find_mime_boundary()) {
+        enable_event(Stream::SendReadable,true); 
+        return scx::Ok;
+      }
+      
+      na += m_buffer.pop_to((char*)buffer+na,left);
+      RESPONSE_DEBUG_LOG("pop " << na);
+      
+    } else if (c == scx::End) {
+      m_resp_seq = resp_ReadEnd;
+      RESPONSE_DEBUG_LOG("end");
+    }
+    
+    if (na == 0) {
+      enable_event(Stream::SendReadable,m_buffer.used() || c == scx::End);
+      return c;
+    }
+  }
+  
+  enable_event(Stream::SendReadable,m_buffer.used()); 
+  return scx::Ok;
+}
+
+//=========================================================================
+scx::Condition ResponseStream::start_section()
+{
+  return scx::Ok;
+}
+
+//=========================================================================
+bool ResponseStream::find_mime_boundary()
+{
+  m_mime_boundary_pos = -1;
+  int bmax = m_mime_boundary.length();
+  int max = m_buffer.used() - bmax;
+  
+  for (int i=0; i<max; ++i) {
+    char* cp = (char*)m_buffer.head()+i;
+    if (*cp == m_mime_boundary[0]) {
+      std::string bcmp(cp,bmax);
+      if (bcmp == m_mime_boundary) {
+        m_mime_boundary_pos = i;
+        if (m_mime_boundary_num == 0) {
+          m_mime_boundary_type = bound_Initial;
+
+        } else if (*(cp+bmax) == '-') {
+          m_mime_boundary_type = bound_Final;
+          m_mime_boundary_pos -= 2;
+
+        } else {
+          m_mime_boundary_type = bound_Intermediate;
+          m_mime_boundary_pos -= 2;
+        }
+        RESPONSE_DEBUG_LOG("found boundary at " << m_mime_boundary_pos);
+        ++m_mime_boundary_num;
+        return true;
+      }
+    }
+  }
+  return false;
 }
 
 //=========================================================================

@@ -27,10 +27,10 @@ Free Software Foundation, Inc.,
 
 #include "http/HTTPModule.h"
 #include "http/Status.h"
-#include "http/HeaderTable.h"
 #include "sconex/Stream.h"
 #include "sconex/VersionTag.h"
 #include "sconex/FilePath.h"
+#include "sconex/MimeHeader.h"
 namespace scx { class Buffer; };
 
 namespace http {
@@ -59,8 +59,10 @@ public:
   virtual scx::Condition read(void* buffer,int n,int& na);
   virtual scx::Condition write(const void* buffer,int n,int& na);
 
+  void send_continue();
+
   virtual std::string stream_status() const;
-  
+ 
   void set_version(const scx::VersionTag& ver);
   const scx::VersionTag& get_version() const;
   
@@ -83,6 +85,9 @@ public:
 
   Host* get_host();
 
+  void set_auth_user(const std::string& user);
+  const std::string& get_auth_user() const;
+
 private:
 
   bool connect_request_module(bool error);
@@ -96,10 +101,11 @@ private:
   scx::FilePath m_path;
   DocRoot* m_docroot;
   Host* m_host;
+  std::string m_auth_user;
   
   scx::VersionTag m_version;
   Status m_status;
-  HeaderTable m_headers;
+  scx::MimeHeaderTable m_headers;
   bool m_headers_sent;
   bool m_error_response;
   scx::Buffer* m_buffer;

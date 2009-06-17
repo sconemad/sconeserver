@@ -45,7 +45,6 @@ public:
   Condition tokenize(std::string& token);
   
   virtual Condition read(void* buffer,int n,int& na);
-  virtual Condition write(const void* buffer,int n,int& na);
 
   virtual std::string stream_status() const;
   
@@ -64,8 +63,6 @@ protected:
   // Sets the buffer head to the start of the token and
   // returns the token length or -1 if not found
   
-private:
-
   Buffer m_buffer;
   bool m_overflow;
 

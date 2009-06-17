@@ -127,6 +127,8 @@ BUILD_ROUTER_IP_FALSE = @BUILD_ROUTER_IP_FALSE@
 BUILD_ROUTER_IP_TRUE = @BUILD_ROUTER_IP_TRUE@
 BUILD_ROUTER_LOCAL_FALSE = @BUILD_ROUTER_LOCAL_FALSE@
 BUILD_ROUTER_LOCAL_TRUE = @BUILD_ROUTER_LOCAL_TRUE@
+BUILD_SCONESITE_FALSE = @BUILD_SCONESITE_FALSE@
+BUILD_SCONESITE_TRUE = @BUILD_SCONESITE_TRUE@
 BUILD_SSL_FALSE = @BUILD_SSL_FALSE@
 BUILD_SSL_TRUE = @BUILD_SSL_TRUE@
 BUILD_TESTBUILDER_FALSE = @BUILD_TESTBUILDER_FALSE@
@@ -238,7 +240,7 @@ AM_CPPFLAGS = \
 
 sconed_SOURCES = main.cpp
 sconed_LDADD = $(top_builddir)/sconex/libsconex.la
-MODULES = router http mime simple ssl stat exec forward tftp test testbuilder lettuce
+MODULES = router http mime simple ssl stat exec forward tftp test testbuilder lettuce sconesite
 SUBDIRS = sconex doc $(MODULES)
 doc_DATA = AUTHORS COPYING INSTALL NEWS README THANKS TODO
 sysconf_DATA = sconeserver.conf

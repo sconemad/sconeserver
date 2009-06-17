@@ -1,8 +1,8 @@
 /* SconeServer (http://www.sconemad.com)
 
-HTTP Header Table
+Base64 utils
 
-Copyright (c) 2000-2006 Andrew Wedgbury <wedge@sconemad.com>
+Copyright (c) 2000-2009 Andrew Wedgbury <wedge@sconemad.com>
 
 This program is free software; you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -19,34 +19,24 @@ along with this program (see the file COPYING); if not, write to the
 Free Software Foundation, Inc.,
 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA */
 
-#ifndef httpHeaderTable_h
-#define httpHeaderTable_h
+#ifndef scxBase64_h
+#define scxBase64_h
 
 #include "sconex/sconex.h"
-#include "http/http.h"
-namespace http {
+namespace scx {
 
-//=============================================================================
-class HTTP_API HeaderTable {
+//===========================================================================
+class SCONEX_API Base64 {
 
 public:
 
-  HeaderTable();
-  ~HeaderTable();
+  static void encode(std::istream& in, std::ostream& out);
+  static void decode(std::istream& in, std::ostream& out);
 
-  void set(const std::string& name,const std::string& value);
-  bool erase(const std::string& name);
-  std::string get(const std::string& name) const;
-
-  std::string get_all() const;
-
-private:
-
-  std::string normalize(const std::string& name) const;
-  
-  std::map<std::string,std::string> m_headers;
+protected:
 
 };
 
 };
+
 #endif

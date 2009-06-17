@@ -64,22 +64,24 @@ libLTLIBRARIES_INSTALL = $(INSTALL)
 LTLIBRARIES = $(lib_LTLIBRARIES)
 libsconex_la_LIBADD =
 am_libsconex_la_OBJECTS = sconex.lo utils.lo Arg.lo ArgObject.lo \
-	ArgProc.lo ArgScript.lo ArgStatement.lo Buffer.lo \
+	ArgProc.lo ArgScript.lo ArgStatement.lo Base64.lo Buffer.lo \
 	ConfigFile.lo ConfigStream.lo Console.lo DatagramChannel.lo \
 	DatagramMultiplexer.lo DatagramSocket.lo Date.lo Debug.lo \
 	Descriptor.lo DescriptorThread.lo File.lo FileDir.lo \
 	FilePath.lo FileStat.lo Kernel.lo LineBuffer.lo \
-	ListenerSocket.lo Logger.lo MemFile.lo MimeType.lo Module.lo \
-	ModuleLoader.lo ModuleLoaderDLL.lo ModuleRef.lo Multiplexer.lo \
-	Mutex.lo Process.lo Response.lo Socket.lo SocketAddress.lo \
-	Stream.lo StreamBuffer.lo StreamDebugger.lo StreamSocket.lo \
+	ListenerSocket.lo Logger.lo MemFile.lo MimeHeader.lo \
+	MimeType.lo Module.lo ModuleLoader.lo ModuleLoaderDLL.lo \
+	ModuleRef.lo Multiplexer.lo Mutex.lo NullFile.lo Process.lo \
+	Response.lo Socket.lo SocketAddress.lo Stream.lo \
+	StreamBuffer.lo StreamDebugger.lo StreamSocket.lo \
 	StreamTokenizer.lo StreamTransfer.lo TermBuffer.lo Thread.lo \
 	Time.lo UnitTester.lo Uri.lo User.lo VersionTag.lo
 libsconex_la_OBJECTS = $(am_libsconex_la_OBJECTS)
 am_utest_OBJECTS = utest.$(OBJEXT) Arg_ut.$(OBJEXT) \
 	Buffer_ut.$(OBJEXT) LineBuffer_ut.$(OBJEXT) \
-	MemFile_ut.$(OBJEXT) MimeType_ut.$(OBJEXT) \
-	TimeDate_ut.$(OBJEXT) Uri_ut.$(OBJEXT) VersionTag_ut.$(OBJEXT)
+	MemFile_ut.$(OBJEXT) MimeHeader_ut.$(OBJEXT) \
+	MimeType_ut.$(OBJEXT) TimeDate_ut.$(OBJEXT) Uri_ut.$(OBJEXT) \
+	VersionTag_ut.$(OBJEXT)
 utest_OBJECTS = $(am_utest_OBJECTS)
 utest_DEPENDENCIES = libsconex.la
 DEFAULT_INCLUDES = -I. -I$(srcdir) -I$(top_builddir)
@@ -121,6 +123,8 @@ BUILD_ROUTER_IP_FALSE = @BUILD_ROUTER_IP_FALSE@
 BUILD_ROUTER_IP_TRUE = @BUILD_ROUTER_IP_TRUE@
 BUILD_ROUTER_LOCAL_FALSE = @BUILD_ROUTER_LOCAL_FALSE@
 BUILD_ROUTER_LOCAL_TRUE = @BUILD_ROUTER_LOCAL_TRUE@
+BUILD_SCONESITE_FALSE = @BUILD_SCONESITE_FALSE@
+BUILD_SCONESITE_TRUE = @BUILD_SCONESITE_TRUE@
 BUILD_SSL_FALSE = @BUILD_SSL_FALSE@
 BUILD_SSL_TRUE = @BUILD_SSL_TRUE@
 BUILD_TESTBUILDER_FALSE = @BUILD_TESTBUILDER_FALSE@
@@ -234,6 +238,7 @@ ArgObject.cpp \
 ArgProc.cpp \
 ArgScript.cpp \
 ArgStatement.cpp \
+Base64.cpp \
 Buffer.cpp \
 ConfigFile.cpp \
 ConfigStream.cpp \
@@ -254,6 +259,7 @@ LineBuffer.cpp \
 ListenerSocket.cpp \
 Logger.cpp \
 MemFile.cpp \
+MimeHeader.cpp \
 MimeType.cpp \
 Module.cpp \
 ModuleLoader.cpp \
@@ -261,6 +267,7 @@ ModuleLoaderDLL.cpp \
 ModuleRef.cpp \
 Multiplexer.cpp \
 Mutex.cpp \
+NullFile.cpp \
 Process.cpp \
 Response.cpp \
 Socket.cpp \
@@ -288,6 +295,7 @@ ArgObject.h \
 ArgProc.h \
 ArgScript.h \
 ArgStatement.h \
+Base64.h \
 Buffer.h \
 ConfigFile.h \
 ConfigStream.h \
@@ -308,6 +316,7 @@ LineBuffer.h \
 ListenerSocket.h \
 Logger.h \
 MemFile.h \
+MimeHeader.h \
 MimeType.h \
 Module.h \
 ModuleInterface.h \
@@ -316,6 +325,7 @@ ModuleLoaderDLL.h \
 ModuleRef.h \
 Multiplexer.h \
 Mutex.h \
+NullFile.h \
 Process.h \
 Response.h \
 Socket.h \
@@ -341,6 +351,7 @@ Arg_ut.cpp \
 Buffer_ut.cpp \
 LineBuffer_ut.cpp \
 MemFile_ut.cpp \
+MimeHeader_ut.cpp \
 MimeType_ut.cpp \
 TimeDate_ut.cpp \
 Uri_ut.cpp \
@@ -433,6 +444,7 @@ distclean-compile:
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/ArgScript.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/ArgStatement.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/Arg_ut.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/Base64.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/Buffer.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/Buffer_ut.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/ConfigFile.Plo@am__quote@
@@ -456,6 +468,8 @@ distclean-compile:
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/Logger.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/MemFile.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/MemFile_ut.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/MimeHeader.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/MimeHeader_ut.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/MimeType.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/MimeType_ut.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/Module.Plo@am__quote@
@@ -464,6 +478,7 @@ distclean-compile:
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/ModuleRef.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/Multiplexer.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/Mutex.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/NullFile.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/Process.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/Response.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/Socket.Plo@am__quote@
