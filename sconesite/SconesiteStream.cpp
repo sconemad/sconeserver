@@ -40,63 +40,6 @@ Free Software Foundation, Inc.,
 #include "sconex/NullFile.h"
 
 //=========================================================================
-class ArticleStream : public scx::LineBuffer {
-
-public:
-  ArticleStream(http::MessageStream* msg)
-    : scx::LineBuffer("sconesite:article"),
-      m_pos(0),
-      m_output(false),
-      m_msg(msg)
-  {
-
-  };
-  
-  virtual ~ArticleStream()
-  {
-  };
-
-  virtual scx::Condition read(void* buffer,int n,int& na)
-  {
-    scx::Condition c = scx::Ok;
-
-    if (m_pos == 0) {
-      c = tokenize(m_line);
-
-      if (m_line == "<content>") {
-        m_output = true;
-        m_line = "";
-        
-      } else if (m_line == "</content>") {
-        m_output = false;
-        m_line = "";
-
-      } else if (!m_output) {
-        m_line = "";
-        
-      } else if (c == scx::Ok) {
-        m_line += "\n";
-      }
-    }
-  
-    na = std::min(n,(int)m_line.size() - m_pos);
-    memcpy(buffer,m_line.c_str()+m_pos,na);
-    m_pos += n;
-    if (m_pos >= (int)m_line.size()) m_pos = 0;
-    
-    return c;
-  };
-  
-private:
-  
-  std::string m_line;
-  int m_pos;
-  bool m_output;
-  http::MessageStream* m_msg;
-  
-};
-
-//=========================================================================
 class MimeHeaderStream : public scx::LineBuffer {
 
 public:
@@ -131,12 +74,12 @@ public:
 
   scx::Condition start_body()
   {
-    http::MessageStream* m_message = dynamic_cast<http::MessageStream*>(find_stream("http:message"));
+    http::MessageStream* m_message = GET_HTTP_MESSAGE();
 
     scx::MimeHeader disp = m_request.get_header_parsed("Content-Disposition");
     bool discard = true;
 
-    scx::FilePath path = m_message->get_path();
+    scx::FilePath path = m_message->get_request().get_path();
     const scx::MimeHeaderValue* fdata = disp.get_value("form-data");
     if (fdata) {
       std::string name;
@@ -155,7 +98,7 @@ public:
     }
 
     // Discard posted data from unauthorized user
-    if (m_message->get_auth_user() == "") {
+    if (m_message->get_request().get_auth_user() == "") {
       discard = true;
     }
     
@@ -239,8 +182,8 @@ scx::Condition SconesiteStream::send(http::MessageStream& msg)
   const http::Request& req = msg.get_request();
   const scx::Uri& uri = req.get_uri();
 
-  if (req.get_method() == "POST" && msg.get_auth_user() == "") {
-    msg.set_status(http::Status::Forbidden);
+  if (req.get_method() == "POST" && req.get_auth_user() == "") {
+    msg.get_response().set_status(http::Status::Forbidden);
     return scx::Close;
   }
   
@@ -251,7 +194,7 @@ scx::Condition SconesiteStream::send(http::MessageStream& msg)
 
     case Start: {
 
-      scx::FileStat stat(msg.get_path());
+      scx::FileStat stat(req.get_path());
       if (stat.is_dir()) {
         std::string uripath = uri.get_path();
         if (!uripath.empty() && uripath[uripath.size()-1] != '/') {
@@ -259,14 +202,14 @@ scx::Condition SconesiteStream::send(http::MessageStream& msg)
           new_uri.set_path(uripath + "/");
           m_module.log("Redirect '" + uri.get_string() + "' to '" + new_uri.get_string() + "'"); 
           
-          msg.set_status(http::Status::Found);
-          msg.set_header("Content-Type","text/html");
-          msg.set_header("Location",new_uri.get_string());
+          msg.get_response().set_status(http::Status::Found);
+          msg.get_response().set_header("Content-Type","text/html");
+          msg.get_response().set_header("Location",new_uri.get_string());
           return scx::Close;
         }
 
         m_file = new scx::File();
-        scx::FilePath path = msg.get_path();
+        scx::FilePath path = req.get_path();
         path += "article.xml";
         
         if (m_file->open(path.path(),scx::File::Read) == scx::Ok) {
@@ -279,7 +222,7 @@ scx::Condition SconesiteStream::send(http::MessageStream& msg)
           m_seq = IndexHeader;
         }
       } else {
-        msg.set_status(http::Status::NotFound);
+        msg.get_response().set_status(http::Status::NotFound);
         return scx::Close;
       }
     } break;
@@ -367,9 +310,6 @@ scx::Condition SconesiteStream::send(http::MessageStream& msg)
         write("<textarea name='artbody' id='artbody' cols='80' rows='25' tabindex='1' accesskey=','>\n");
       }
       
-      //      ArticleStream* astream = new ArticleStream(&msg);
-      //      m_file->add_stream(astream);
-      
       scx::StreamTransfer* xfer = new scx::StreamTransfer(m_file,1024);
       xfer->set_close_when_finished(true);
       endpoint().add_stream(xfer);
@@ -392,7 +332,7 @@ scx::Condition SconesiteStream::send(http::MessageStream& msg)
         
         write("<h2>Files:</h2>\n");
         write("<ul>\n");
-        scx::FileDir dir(msg.get_path());
+        scx::FileDir dir(req.get_path());
         while (dir.next()) {
           std::string name = dir.name();
           std::string type = "";

@@ -78,8 +78,7 @@ bool ExecStream::spawn_process()
   std::string prog;
   int bytes_readable = -1;
 
-  http::MessageStream* msg = 
-    dynamic_cast<http::MessageStream*>(find_stream("http:message"));
+  http::MessageStream* msg = GET_HTTP_MESSAGE();
   if (msg) {
     // We're part of an HTTP request chain
     m_cgi_mode = true;
@@ -89,7 +88,7 @@ bool ExecStream::spawn_process()
     delete m_args;
     m_args = new scx::ArgList();
 
-    prog = msg->get_path().path();
+    prog = req.get_path().path();
     m_process = new scx::Process(prog);
 
     std::string::size_type is = prog.find_last_of("/");
@@ -100,8 +99,8 @@ bool ExecStream::spawn_process()
       
     m_args->give(new scx::ArgString(uri.get_string()));
 
-    msg->set_header("Content-Type","text/html");
-    msg->set_header("Connection","close");
+    msg->get_response().set_header("Content-Type","text/html");
+    msg->get_response().set_header("Connection","close");
 
     // Other environmnt variables required to fully comply with CGI spec:
     // AUTH_TYPE

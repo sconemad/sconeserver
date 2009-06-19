@@ -50,8 +50,20 @@ public:
   scx::MimeHeader get_header_parsed(const std::string& name) const;
   bool parse_header(const std::string& str);
 
+  void set_host(Host* host);
+  const Host* get_host() const;
+
   const std::string& get_profile() const;
-  
+
+  void set_docroot(DocRoot* docroot);
+  const DocRoot* get_docroot() const;
+
+  void set_path(const scx::FilePath& path);
+  const scx::FilePath& get_path() const;
+
+  void set_auth_user(const std::string& user);
+  const std::string& get_auth_user() const;
+
   // Arg methods
   virtual std::string get_string() const;
   virtual int get_int() const;
@@ -66,8 +78,15 @@ protected:
   std::string m_method;
   scx::Uri m_uri;
   scx::VersionTag m_version;
+
   scx::MimeHeaderTable m_headers;
+
+  Host* m_host;
   std::string m_profile;
+  DocRoot* m_docroot;
+  scx::FilePath m_path;
+
+  std::string m_auth_user;
   
 private:
 

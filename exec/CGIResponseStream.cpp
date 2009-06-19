@@ -73,7 +73,7 @@ scx::Condition CGIResponseStream::event(scx::Stream::Event e)
             value = std::string(line,i);
           }
         }
-        m_http_msg->set_header(name,value);
+        m_http_msg->get_response().set_header(name,value);
       }
 
     }

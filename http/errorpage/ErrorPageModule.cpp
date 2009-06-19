@@ -41,7 +41,7 @@ public:
       m_pos(0),
       m_msg(msg)
   {
-    m_vars["status"] = m_msg->get_status().string();
+    m_vars["status"] = m_msg->get_response().get_status().string();
     m_vars["method"] = m_msg->get_request().get_method();
     m_vars["uri"] = m_msg->get_request().get_uri().get_string();
     m_vars["httpversion"] = m_msg->get_request().get_version().get_string();
@@ -117,10 +117,9 @@ protected:
 
     if (e == scx::Stream::Opening) {
 
-      http::MessageStream* msg = 
-        dynamic_cast<http::MessageStream*>(find_stream("http:message"));
+      http::MessageStream* msg = GET_HTTP_MESSAGE();
       const http::Request& req = msg->get_request();
-      const http::Status& status = msg->get_status();
+      const http::Status& status = msg->get_response().get_status();
       
       if (req.get_method() != "GET" && 
 	  req.get_method() != "HEAD" &&
@@ -134,7 +133,7 @@ protected:
                            status.code() != 304);
 
       if (body_allowed) {
-        msg->set_header("Content-Type","text/html");
+        msg->get_response().set_header("Content-Type","text/html");
       }
       if (body_allowed &&
           (req.get_method() == "GET" || req.get_method() == "POST")) {
@@ -198,10 +197,9 @@ protected:
 
   void send_basic_page()
   {
-    http::MessageStream* msg = 
-      dynamic_cast<http::MessageStream*>(find_stream("http:message"));
+    http::MessageStream* msg = GET_HTTP_MESSAGE();
     const http::Request& req = msg->get_request();
-    const http::Status& status = msg->get_status();
+    const http::Status& status = msg->get_response().get_status();
 
     std::ostringstream oss;
     oss << "<html>"
@@ -220,7 +218,7 @@ protected:
       case http::Status::Found:
         oss << "<p>"
             << "Redirecting to '<em>"
-            << msg->get_header("Location")
+            << msg->get_response().get_header("Location")
             << "</em>'"
             << "</p>\n";
         break;

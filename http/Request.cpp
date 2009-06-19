@@ -30,7 +30,9 @@ namespace http {
 
 //===========================================================================
 Request::Request(const std::string& profile)
-  : m_profile(profile)
+  : m_host(0),
+    m_profile(profile),
+    m_docroot(0)
 {
   
 }
@@ -178,9 +180,57 @@ bool Request::parse_header(const std::string& str)
 }
 
 //=============================================================================
+void Request::set_host(Host* host)
+{
+  m_host = host;
+}
+
+//=============================================================================
+const Host* Request::get_host() const
+{
+  return m_host;
+}
+
+//=============================================================================
 const std::string& Request::get_profile() const
 {
   return m_profile;
+}
+
+//=============================================================================
+void Request::set_docroot(DocRoot* docroot)
+{
+  m_docroot = docroot;
+}
+
+//=============================================================================
+const DocRoot* Request::get_docroot() const
+{
+  return m_docroot;
+}
+
+//=============================================================================
+void Request::set_path(const scx::FilePath& path)
+{
+  m_path = path;
+}
+
+//=============================================================================
+const scx::FilePath& Request::get_path() const
+{
+  return m_path;
+}
+
+//=============================================================================
+void Request::set_auth_user(const std::string& user)
+{
+  m_auth_user = user;
+}
+
+//=============================================================================
+const std::string& Request::get_auth_user() const
+{
+  return m_auth_user;
 }
 
 //=============================================================================

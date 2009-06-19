@@ -1,4 +1,10 @@
 
+2009-06-19 Andrew Wedgbury <wedge@sconemad.com>
+
+	* http/MessageStream: Tidy up using request and new response class.
+	Add GET_HTTP_MESSAGE macro and use throughout.
+	* http/Response: New class to encapsulate http response data.
+	
 2009-06-17 Andrew Wedgbury <wedge@sconemad.com>
 
 	* http/AuthRealm: Implement basic HTTP authorization realms.

@@ -77,19 +77,18 @@ protected:
 
   virtual scx::Condition send(http::MessageStream& msg) 
   {
-
     const http::Request& req = msg.get_request();
     const scx::Uri& uri = req.get_uri();
-    const http::DocRoot* docroot = msg.get_docroot();
+    const http::DocRoot* docroot = req.get_docroot();
 
     if (req.get_method() != "GET" && 
         req.get_method() != "HEAD" ) {
       // Don't understand the method
-      msg.set_status(http::Status::NotImplemented);
+      msg.get_response().set_status(http::Status::NotImplemented);
       return scx::Close;
     }
 
-    const scx::FilePath& path = msg.get_path();
+    const scx::FilePath& path = req.get_path();
     scx::FileStat stat(path);
   
     if (stat.is_dir()) {
@@ -107,9 +106,9 @@ protected:
                      url + s_default_page + "'"); 
         url += s_default_page;
         
-        msg.set_status(http::Status::Found);
-        msg.set_header("Content-Type","text/html");
-        msg.set_header("Location",url);
+        msg.get_response().set_status(http::Status::Found);
+        msg.get_response().set_header("Content-Type","text/html");
+        msg.get_response().set_header("Location",url);
         return scx::Close;
       }
       
@@ -119,9 +118,9 @@ protected:
         new_uri.set_path(uripath + "/");
         m_module.log("Redirect '" + uri.get_string() + "' to '" + new_uri.get_string() + "'"); 
         
-        msg.set_status(http::Status::Found);
-        msg.set_header("Content-Type","text/html");
-        msg.set_header("Location",new_uri.get_string());
+        msg.get_response().set_status(http::Status::Found);
+        msg.get_response().set_header("Content-Type","text/html");
+        msg.get_response().set_header("Location",new_uri.get_string());
         return scx::Close;
       }
 
@@ -133,8 +132,8 @@ protected:
         // Send directory listing if allowed
         m_module.log("Listing directory '" + url + "'"); 
         
-        msg.set_status(http::Status::Ok);
-        msg.set_header("Content-Type","text/html");
+        msg.get_response().set_status(http::Status::Ok);
+        msg.get_response().set_header("Content-Type","text/html");
         
         if (req.get_method() == "GET") {
           write("<!DOCTYPE html PUBLIC \"-//W3C//DTD XHTML 1.0 Strict//EN\" "
@@ -149,7 +148,7 @@ protected:
                 "<div class='box'>\n"
                 "<ul>\n");
           
-          scx::FileDir dir(msg.get_path());
+          scx::FileDir dir(req.get_path());
           while (dir.next()) {
             std::string name = dir.name();
             if (name != ".") {
@@ -166,7 +165,7 @@ protected:
       }
       
       // Otherwise respond unauthorised
-      msg.set_status(http::Status::Unauthorized);
+      msg.get_response().set_status(http::Status::Unauthorized);
       return scx::Close;
       
     }

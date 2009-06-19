@@ -64,8 +64,8 @@ pkglibLTLIBRARIES_INSTALL = $(INSTALL)
 LTLIBRARIES = $(pkglib_LTLIBRARIES)
 http_la_LIBADD =
 am_http_la_OBJECTS = ConnectionStream.lo DocRoot.lo Host.lo \
-	HostMapper.lo MessageStream.lo Request.lo ResponseStream.lo \
-	HTTPModule.lo Status.lo AuthRealm.lo
+	HostMapper.lo MessageStream.lo Request.lo Response.lo \
+	ResponseStream.lo HTTPModule.lo Status.lo AuthRealm.lo
 http_la_OBJECTS = $(am_http_la_OBJECTS)
 DEFAULT_INCLUDES = -I. -I$(srcdir) -I$(top_builddir)
 depcomp = $(SHELL) $(top_srcdir)/depcomp
@@ -230,6 +230,7 @@ Host.cpp \
 HostMapper.cpp \
 MessageStream.cpp \
 Request.cpp \
+Response.cpp \
 ResponseStream.cpp \
 HTTPModule.cpp \
 Status.cpp \
@@ -242,6 +243,7 @@ DocRoot.h \
 Host.h \
 HostMapper.h \
 Request.h \
+Response.h \
 ResponseStream.h \
 MessageStream.h \
 http.h \
@@ -329,6 +331,7 @@ distclean-compile:
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/HostMapper.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/MessageStream.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/Request.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/Response.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/ResponseStream.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/Status.Plo@am__quote@
 

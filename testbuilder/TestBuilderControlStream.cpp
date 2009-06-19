@@ -92,10 +92,10 @@ scx::Condition TestBuilderControlStream::send(http::MessageStream& msg)
   const http::Request& req = msg.get_request();
   const scx::Uri& uri = req.get_uri();
   std::string base = "/" + uri.get_path();
-
-  msg.set_header("Content-Type","text/html");
-  msg.set_header("Cache-Control","no-cache");
-  msg.set_header("Last-Modified",scx::Date::now().string());
+  
+  msg.get_response().set_header("Content-Type","text/html");
+  msg.get_response().set_header("Cache-Control","no-cache");
+  msg.get_response().set_header("Last-Modified",scx::Date::now().string());
   
   // Get the profile name, if any
   std::string profile = get_opt("profile");

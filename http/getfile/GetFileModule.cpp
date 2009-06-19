@@ -57,49 +57,49 @@ protected:
   virtual scx::Condition event(scx::Stream::Event e) 
   {
     if (e == scx::Stream::Opening) {
-      http::MessageStream* msg = 
-	dynamic_cast<http::MessageStream*>(find_stream("http:message"));
+      http::MessageStream* msg = GET_HTTP_MESSAGE();
       const http::Request& req = msg->get_request();
+      http::Response& resp = msg->get_response();
 
       if (req.get_method() != "GET" && 
 	  req.get_method() != "HEAD" ) {
 	// Don't understand the method
-	msg->set_status(http::Status::NotImplemented);
+	resp.set_status(http::Status::NotImplemented);
 	return scx::Close;
       }
 
       // Open the file
-      scx::FilePath path = msg->get_path();
+      scx::FilePath path = req.get_path();
       scx::File* file = new scx::File();
       if (file->open(path,scx::File::Read) != scx::Ok) {
         m_module.log("Cannot open file '" + path.path() + "'"); 
-        msg->set_status(http::Status::Forbidden);
+        resp.set_status(http::Status::Forbidden);
         delete file;
 	return scx::Close;
       } 
 
       // Find last modified date
       scx::Date lastmod = file->stat().time();
-      msg->set_header("Last-Modified",lastmod.string());
+      resp.set_header("Last-Modified",lastmod.string());
 
       std::string mod = req.get_header("If-Modified-Since");
       if (!mod.empty()) {
 	scx::Date dmod = scx::Date(mod);
 	if (lastmod <= dmod) {
 	  m_module.log("File is not modified"); 
-	  msg->set_status(http::Status::NotModified);
+	  resp.set_status(http::Status::NotModified);
 	  delete file;
 	  return scx::Close;
 	}
       }
 
-      msg->set_status(http::Status::Ok);
+      resp.set_status(http::Status::Ok);
 
       // Set content length
       int clength = file->size();
       std::ostringstream oss;
       oss << clength;
-      msg->set_header("Content-Length",oss.str());
+      resp.set_header("Content-Length",oss.str());
 
       // Lookup MIME type for file
       scx::ModuleRef mime = scx::Kernel::get()->get_module("mime");
@@ -109,7 +109,7 @@ protected:
         scx::Arg* ret = mime.module()->arg_function("lookup",&args);
         scx::MimeType* mimetype = 0;
         if (ret && (mimetype = dynamic_cast<scx::MimeType*>(ret))) {
-          msg->set_header("Content-Type",mimetype->get_string());
+          resp.set_header("Content-Type",mimetype->get_string());
         }
         delete ret;
       }

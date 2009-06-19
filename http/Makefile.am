@@ -14,6 +14,7 @@ Host.cpp \
 HostMapper.cpp \
 MessageStream.cpp \
 Request.cpp \
+Response.cpp \
 ResponseStream.cpp \
 HTTPModule.cpp \
 Status.cpp \
@@ -27,6 +28,7 @@ DocRoot.h \
 Host.h \
 HostMapper.h \
 Request.h \
+Response.h \
 ResponseStream.h \
 MessageStream.h \
 http.h \

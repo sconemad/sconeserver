@@ -81,7 +81,7 @@ scx::Condition ResponseStream::event(scx::Stream::Event e)
 {
   if (e == scx::Stream::Opening) {
 
-    m_message = dynamic_cast<MessageStream*>(find_stream("http:message"));
+    m_message = GET_HTTP_MESSAGE();
     const Request& req = m_message->get_request();
     
     if (req.get_method() == "POST") {
@@ -326,7 +326,7 @@ scx::Condition ResponseStream::decode_opts(http::MessageStream& msg)
       req.get_method() != "HEAD" &&
       req.get_method() != "POST") {
     // Don't understand the method
-    msg.set_status(http::Status::NotImplemented);
+    msg.get_response().set_status(http::Status::NotImplemented);
     return scx::Close;
   }
     

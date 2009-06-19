@@ -68,21 +68,21 @@ int Host::init()
 }
 
 //=========================================================================
-bool Host::connect_request(scx::Descriptor* endpoint, MessageStream& message)
+bool Host::connect_request(scx::Descriptor* endpoint, Request& request, Response& response)
 {
-  std::string profile = message.get_request().get_profile();
+  std::string profile = request.get_profile();
   DocRoot* docroot = get_docroot(profile);
   if (docroot == 0) {
     // Unknown profile
     m_module.log("Unknown profile '" + profile +
                  "' for host '" + m_hostname + "'",
                  scx::Logger::Error);
-    message.set_status(http::Status::NotFound);
+    response.set_status(http::Status::NotFound);
     return false;
   }
 
-  message.set_docroot(docroot);
-  return docroot->connect_request(endpoint,message);
+  request.set_docroot(docroot);
+  return docroot->connect_request(endpoint,request,response);
 }
 
 //=========================================================================

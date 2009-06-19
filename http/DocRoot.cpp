@@ -94,35 +94,35 @@ DocRoot::~DocRoot()
 }
 
 //=========================================================================
-bool DocRoot::connect_request(scx::Descriptor* endpoint, MessageStream& message)
+bool DocRoot::connect_request(scx::Descriptor* endpoint, Request& request, Response& response)
 {
   ModuleMap* modmap = 0;
 
-  if (message.get_status().code() != http::Status::Ok) {
+  if (response.get_status().code() != http::Status::Ok) {
     modmap = lookup_extn_mod("!");
     
   } else {
-    const scx::Uri& uri = message.get_request().get_uri();
+    const scx::Uri& uri = request.get_uri();
     const std::string& uripath = uri.get_path();
     if (uripath.length() > 1 && uripath[0] == '/') {
       m_module.log("Request uri starts with /",scx::Logger::Error);
-      message.set_status(http::Status::Forbidden);
+      response.set_status(http::Status::Forbidden);
       return false;
 
     } else if (uripath.find("..") != std::string::npos) {
       m_module.log("Request uri contains ..",scx::Logger::Error);
-      message.set_status(http::Status::Forbidden);
+      response.set_status(http::Status::Forbidden);
       return false;
     }
 
     // Check http authorization
-    if (!check_auth(message)) {
-      message.set_status(http::Status::Unauthorized);
+    if (!check_auth(request,response)) {
+      response.set_status(http::Status::Unauthorized);
       return false;
     }
 
     scx::FilePath path = m_path + uripath;
-    message.set_path(path);
+    request.set_path(path);
 
     modmap = lookup_path_mod(uripath);
     if (modmap) {
@@ -132,7 +132,7 @@ bool DocRoot::connect_request(scx::Descriptor* endpoint, MessageStream& message)
       // Normal file mapping
       scx::FileStat stat(path);
       if (!stat.exists()) {
-        message.set_status(http::Status::NotFound);
+        response.set_status(http::Status::NotFound);
         return false;
       } else if (stat.is_dir()) {
         modmap = lookup_extn_mod(".");
@@ -145,14 +145,14 @@ bool DocRoot::connect_request(scx::Descriptor* endpoint, MessageStream& message)
   // Check we have a module map
   if (modmap == 0) {
     m_module.log("No module map found to handle request",scx::Logger::Error);
-    message.set_status(http::Status::ServiceUnavailable);
+    response.set_status(http::Status::ServiceUnavailable);
     return false;
   }
 
   // Connect the module
   if (!modmap->connect_module(endpoint)) {
     m_module.log("Failed to connect module to handle request",scx::Logger::Error);
-    message.set_status(http::Status::ServiceUnavailable);
+    response.set_status(http::Status::ServiceUnavailable);
     return false;
   }
 
@@ -432,16 +432,16 @@ scx::Arg* DocRoot::arg_function(
 }
 
 //=============================================================================
-bool DocRoot::check_auth(MessageStream& message)
+bool DocRoot::check_auth(Request& request, Response& response)
 {
   // Check auth
-  const scx::Uri& uri = message.get_request().get_uri();
+  const scx::Uri& uri = request.get_uri();
   const std::string& uripath = uri.get_path();
   
   std::string realm_name = lookup_realm_map(uripath);
   AuthRealm* realm = m_host.lookup_realm(realm_name);
   if (realm) {
-    std::string auth = message.get_request().get_header("AUTHORIZATION");
+    std::string auth = request.get_header("AUTHORIZATION");
     std::string user;
     std::string pass;
     if (!auth.empty()) {
@@ -468,10 +468,10 @@ bool DocRoot::check_auth(MessageStream& message)
     }
     if (realm->authorised(user,pass)) {
       m_module.log("Auth passed for realm '" + realm_name + "' (" + user + ":" + pass + ")",scx::Logger::Info);
-      message.set_auth_user(user);
+      request.set_auth_user(user);
     } else {
       m_module.log("Auth failed for realm '" + realm_name + "' (" + user + ":" + pass + ")",scx::Logger::Info);
-      message.set_header("WWW-AUTHENTICATE","Basic realm=\"" + realm_name + "\"");
+      response.set_header("WWW-AUTHENTICATE","Basic realm=\"" + realm_name + "\"");
       return false;
     }
   }

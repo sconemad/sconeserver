@@ -161,6 +161,8 @@ Free Software Foundation, Inc.,
 // sconex Debugging
 #include "sconex/Debug.h"
 
+// Standard character constants
+#define CRLF "\r\n"
 
 namespace scx {
 

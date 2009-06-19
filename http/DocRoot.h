@@ -27,7 +27,8 @@ Free Software Foundation, Inc.,
 namespace http {
 
 class HostMapper;
-class MessageStream;
+class Request;
+class Response;
 class AuthRealm;
 
 //=============================================================================
@@ -71,7 +72,7 @@ public:
 
   const std::string get_profile() const;
 
-  bool connect_request(scx::Descriptor* endpoint, MessageStream& message);
+  bool connect_request(scx::Descriptor* endpoint, Request& request, Response& response);
 
   ModuleMap* lookup_extn_mod(const std::string& name) const;
   ModuleMap* lookup_path_mod(const std::string& name) const;
@@ -88,7 +89,7 @@ public:
   
 protected:
 
-  bool check_auth(MessageStream& message);
+  bool check_auth(Request& request, Response& response);
   
 private:
 

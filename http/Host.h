@@ -28,7 +28,8 @@ namespace http {
 
 class HTTPModule;
 class HostMapper;
-class MessageStream;
+class Request;
+class Response;
 class DocRoot;
 class AuthRealmManager;
 class AuthRealm;
@@ -50,7 +51,7 @@ public:
 
   int init();
 
-  bool connect_request(scx::Descriptor* endpoint, MessageStream& message);
+  bool connect_request(scx::Descriptor* endpoint, Request& request, Response& response);
   
   const std::string get_id() const;
   const std::string get_hostname() const;

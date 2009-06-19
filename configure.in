@@ -122,12 +122,13 @@ AC_ARG_WITH([sconesite],
   [SCONESITE="$withval"],
   [SCONESITE="yes"]
 )
-if test "x$SCONESITE" == "xyes"; then
-  AC_CHECK_LIB([xml2],[xmlNewDoc],,
-    [AC_MSG_ERROR([library 'xml2' is required for Sconesite])]
-  )
-  CPPFLAGS = "$CPPFLAGS `xml2-config --cflags`";
-fi
+## if we use libxml for sconesite:
+#if test "x$SCONESITE" == "xyes"; then
+#  AC_CHECK_LIB([xml2],[xmlNewDoc],,
+#    [AC_MSG_ERROR([library 'xml2' is required for Sconesite])]
+#  )
+#  CPPFLAGS = "$CPPFLAGS `xml2-config --cflags`";
+#fi
 
 # Checks for header files.
 AC_LANG_CPLUSPLUS

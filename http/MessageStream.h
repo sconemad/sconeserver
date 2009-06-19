@@ -27,6 +27,7 @@ Free Software Foundation, Inc.,
 
 #include "http/HTTPModule.h"
 #include "http/Status.h"
+#include "http/Response.h"
 #include "sconex/Stream.h"
 #include "sconex/VersionTag.h"
 #include "sconex/FilePath.h"
@@ -41,6 +42,9 @@ class FSNode;
 class FSDirectory;
 class DocRoot;
 class Host;
+
+// Macro to find the current http::MessageStream from within another stream
+#define GET_HTTP_MESSAGE() dynamic_cast<http::MessageStream*>(find_stream("http:message"))
   
 //=============================================================================
 class HTTP_API MessageStream : public scx::Stream {
@@ -59,35 +63,16 @@ public:
   virtual scx::Condition read(void* buffer,int n,int& na);
   virtual scx::Condition write(const void* buffer,int n,int& na);
 
-  void send_continue();
-
   virtual std::string stream_status() const;
  
-  void set_version(const scx::VersionTag& ver);
-  const scx::VersionTag& get_version() const;
-  
-  void set_status(const Status& status);
-  const Status& get_status() const;
+  void send_continue();
 
-  void set_header(
-    const std::string& name,
-    const std::string& value
-  );
-  std::string get_header(const std::string& name) const;
-
+  // Request:
   const Request& get_request() const;
 
-  void set_path(const scx::FilePath& path);
-  const scx::FilePath& get_path() const;
-
-  void set_docroot(DocRoot* docroot);
-  DocRoot* get_docroot();
-
-  Host* get_host();
-
-  void set_auth_user(const std::string& user);
-  const std::string& get_auth_user() const;
-
+  // Response:
+  Response& get_response();
+  
 private:
 
   bool connect_request_module(bool error);
@@ -98,14 +83,8 @@ private:
   HTTPModule& m_module;
   ConnectionStream& m_httpstream;
   Request* m_request;
-  scx::FilePath m_path;
-  DocRoot* m_docroot;
-  Host* m_host;
-  std::string m_auth_user;
+  Response m_response;
   
-  scx::VersionTag m_version;
-  Status m_status;
-  scx::MimeHeaderTable m_headers;
   bool m_headers_sent;
   bool m_error_response;
   scx::Buffer* m_buffer;

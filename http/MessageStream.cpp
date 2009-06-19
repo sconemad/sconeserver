@@ -22,6 +22,7 @@ Free Software Foundation, Inc.,
 #include "http/MessageStream.h"
 #include "http/ConnectionStream.h"
 #include "http/Request.h"
+#include "http/Response.h"
 #include "http/HostMapper.h"
 #include "http/Host.h"
 #include "http/DocRoot.h"
@@ -34,8 +35,6 @@ Free Software Foundation, Inc.,
 
 namespace http {
   
-const char* CRLF = "\r\n";
-
 //=============================================================================
 MessageStream::MessageStream(
   HTTPModule& module,
@@ -46,7 +45,6 @@ MessageStream::MessageStream(
     m_module(module),
     m_httpstream(httpstream),
     m_request(request),
-    m_status(Status::Ok),
     m_headers_sent(false),
     m_error_response(false),
     m_buffer(0),
@@ -58,11 +56,11 @@ MessageStream::MessageStream(
     m_bytes_readable(-1)
 {
   // Set HTTP version to match request
-  m_version = request->get_version();
+  m_response.set_version(request->get_version());
 
   // Add standard headers
-  set_header("Server","SconeServer/" + scx::version().get_string());
-  set_header("Date",scx::Date::now().string());
+  m_response.set_header("Server","SconeServer/" + scx::version().get_string());
+  m_response.set_header("Date",scx::Date::now().string());
 }
 
 //=============================================================================
@@ -118,7 +116,7 @@ scx::Condition MessageStream::event(scx::Stream::Event e)
         Stream::write(oss.str());
         
       } else {
-        std::string slen = m_headers.get("Content-Length");
+        std::string slen = m_response.get_header("Content-Length");
         if (!slen.empty()) {
           int len = atoi(slen.c_str());
           DEBUG_ASSERT(m_bytes_written==len,"event(Closing) Incomplete message");
@@ -210,16 +208,10 @@ scx::Condition MessageStream::write(const void* buffer,int n,int& na)
 }
 
 //=============================================================================
-void MessageStream::send_continue()
-{
-  Stream::write("HTTP/1.0 100 Continue\r\n\r\n");
-}
-
-//=============================================================================
 std::string MessageStream::stream_status() const
 {
   std::ostringstream oss;
-  oss << m_status.code();
+  oss << m_response.get_status().code();
   if (m_headers_sent) oss << " HDRS";
   if (m_write_chunked) {
     oss << " chunk-rem:" << m_write_remaining;
@@ -232,42 +224,9 @@ std::string MessageStream::stream_status() const
 }
 
 //=============================================================================
-void MessageStream::set_version(const scx::VersionTag& version)
+void MessageStream::send_continue()
 {
-  m_version = version;
-}
-
-//=============================================================================
-const scx::VersionTag& MessageStream::get_version() const
-{
-  return m_version;
-}
-
-//=============================================================================
-void MessageStream::set_status(const Status& status)
-{
-  m_status = status;
-}
-
-//=============================================================================
-const Status& MessageStream::get_status() const
-{
-  return m_status;
-}
-
-//=============================================================================
-void MessageStream::set_header(
-  const std::string& name,
-  const std::string& value
-)
-{
-  m_headers.set(name,value);
-}
-
-//=============================================================================
-std::string MessageStream::get_header(const std::string& name) const
-{
-  return m_headers.get(name);
+  Stream::write("HTTP/1.0 100 Continue\r\n\r\n");
 }
 
 //=============================================================================
@@ -277,45 +236,9 @@ const Request& MessageStream::get_request() const
 }
 
 //=============================================================================
-void MessageStream::set_path(const scx::FilePath& path)
+Response& MessageStream::get_response()
 {
-  m_path = path;
-}
-
-//=============================================================================
-const scx::FilePath& MessageStream::get_path() const
-{
-  return m_path;
-}
-
-//=============================================================================
-void MessageStream::set_docroot(DocRoot* docroot)
-{
-  m_docroot = docroot;
-}
-
-//=============================================================================
-DocRoot* MessageStream::get_docroot()
-{
-  return m_docroot;
-}
-
-//=============================================================================
-Host* MessageStream::get_host()
-{
-  return m_host;
-}
-
-//=============================================================================
-void MessageStream::set_auth_user(const std::string& user)
-{
-  m_auth_user = user;
-}
-
-//=============================================================================
-const std::string& MessageStream::get_auth_user() const
-{
-  return m_auth_user;
+  return m_response;
 }
 
 //=============================================================================
@@ -349,62 +272,63 @@ bool MessageStream::connect_request_module(bool error)
   }
   
   // Lookup host object
-  m_host = m_module.get_host_mapper().host_lookup(uri.get_host());
-  if (m_host==0) {
+  Host* host = m_module.get_host_mapper().host_lookup(uri.get_host());
+  if (host==0) {
     // This is bad, user should have setup a default host
     m_module.log(id + " Unknown host '" + uri.get_host() + "'",
                  scx::Logger::Error);
-    set_status(http::Status::NotFound);
+    m_response.set_status(http::Status::NotFound);
     return false;
   }
   
-  return m_host->connect_request(&endpoint(),*this);
+  m_request->set_host(host);
+  return host->connect_request(&endpoint(),*m_request,m_response);
 }
   
 //=============================================================================
 bool MessageStream::build_header()
 {
   // Should persistant connections be used
-  bool persist = (m_version > scx::VersionTag(1,0));
-  if (m_request->get_header("Connection") == "close" ||
-      m_headers.get("Connection") == "close") {
-    m_headers.set("Connection","close");
+  bool persist = (m_response.get_version() > scx::VersionTag(1,0));
+  if (m_request->get_header("Connection") == "close") {
+    // Copy to response
+    m_response.set_header("Connection","close");
+    persist = false;
+  } else if (m_response.get_header("Connection") == "close") {
     persist = false;
   }
 
   // Can a body be sent with this response type
-  bool body = (m_status.code() >= 200 &&
-	       m_status.code() != 204 &&
-	       m_status.code() != 304);
+  const Status& status = m_response.get_status();
+  bool body = (status.code() >= 200 &&
+	       status.code() != 204 &&
+	       status.code() != 304);
   
   if (body) {
     // Do we know the content length
-    if (m_headers.get("Content-Length").empty()) {
+    if (m_response.get_header("Content-Length").empty()) {
       if (persist) {
 	// Use chunked encoding
 	m_write_chunked = true;
 	m_write_remaining = -1;
-	m_headers.set("Transfer-Encoding","chunked");
-	m_headers.erase("Connection");
+	m_response.set_header("Transfer-Encoding","chunked");
+	m_response.remove_header("Connection");
       }
     }
 
   } else {
-    m_headers.erase("Content-Length");
+    m_response.remove_header("Content-Length");
 
   }
-
+  
   // Tell the connection stream
   m_httpstream.set_persist(persist);
-  
-  // Write the header into the buffer
-  std::string str = "HTTP/" + m_version.get_string() + " " + 
-    m_status.string() + CRLF +
-    m_headers.get_all() + CRLF;
-  
+
+  // Build the response header and place in buffer
+  std::string str = m_response.build_header_string();
   m_buffer = new scx::Buffer(str.length());
   m_buffer->push_string(str);
-  
+
   enable_event(scx::Stream::Writeable,true);
   return true;
 }
