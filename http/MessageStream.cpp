@@ -45,15 +45,15 @@ MessageStream::MessageStream(
     m_module(module),
     m_httpstream(httpstream),
     m_request(request),
-    m_headers_sent(false),
     m_error_response(false),
+    m_bytes_read(0),
+    m_bytes_readable(-1),
     m_buffer(0),
+    m_headers_sent(false),
+    m_bytes_written(0),
     m_write_chunked(false),
     m_write_remaining(0),
-    m_finished(false),
-    m_bytes_written(0),
-    m_bytes_read(0),
-    m_bytes_readable(-1)
+    m_finished(false)
 {
   // Set HTTP version to match request
   m_response.set_version(request->get_version());
@@ -131,7 +131,8 @@ scx::Condition MessageStream::event(scx::Stream::Event e)
       if (m_headers_sent) {
         enable_event(scx::Stream::Writeable,false);
         if (m_finished) {
-          return scx::End;
+          DEBUG_LOG("Doing the end thing");
+          return scx::End; //WHY?
         }
       }
     } break;

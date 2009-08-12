@@ -43,9 +43,8 @@ public:
   
 protected:
 
-  virtual scx::Condition event(scx::Stream::Event e);
-  virtual scx::Condition send(http::MessageStream& msg);
-  virtual scx::Condition start_section();
+  virtual scx::Condition start_section(const http::Request& header);
+  virtual scx::Condition send_response();
 
 private:
   
@@ -53,7 +52,6 @@ private:
 
   std::string m_profile;
 
-  scx::File* m_file;
   MimeStream* m_mime;
   
   enum Sequence {

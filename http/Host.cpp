@@ -98,6 +98,12 @@ const std::string Host::get_hostname() const
 }
 
 //=========================================================================
+const scx::FilePath& Host::get_path() const
+{
+  return m_dir;
+}
+
+//=========================================================================
 DocRoot* Host::get_docroot(const std::string& profile)
 {
   std::map<std::string,DocRoot*>::const_iterator it =

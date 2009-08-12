@@ -1,4 +1,9 @@
 
+2009-08-12 Andrew Wedgbury <wedge@sconemad.com>
+
+	* http/ResponseStream: Tidy and improve encapsulation, and
+	integrate mime section header parsing.
+	
 2009-06-19 Andrew Wedgbury <wedge@sconemad.com>
 
 	* http/MessageStream: Tidy up using request and new response class.

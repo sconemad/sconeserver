@@ -75,16 +75,17 @@ protected:
   };
   */
 
-  virtual scx::Condition send(http::MessageStream& msg) 
+  virtual scx::Condition send_response()
   {
-    const http::Request& req = msg.get_request();
+    http::MessageStream* msg = GET_HTTP_MESSAGE();
+    const http::Request& req = msg->get_request();
     const scx::Uri& uri = req.get_uri();
     const http::DocRoot* docroot = req.get_docroot();
 
     if (req.get_method() != "GET" && 
         req.get_method() != "HEAD" ) {
       // Don't understand the method
-      msg.get_response().set_status(http::Status::NotImplemented);
+      msg->get_response().set_status(http::Status::NotImplemented);
       return scx::Close;
     }
 
@@ -106,9 +107,9 @@ protected:
                      url + s_default_page + "'"); 
         url += s_default_page;
         
-        msg.get_response().set_status(http::Status::Found);
-        msg.get_response().set_header("Content-Type","text/html");
-        msg.get_response().set_header("Location",url);
+        msg->get_response().set_status(http::Status::Found);
+        msg->get_response().set_header("Content-Type","text/html");
+        msg->get_response().set_header("Location",url);
         return scx::Close;
       }
       
@@ -118,9 +119,9 @@ protected:
         new_uri.set_path(uripath + "/");
         m_module.log("Redirect '" + uri.get_string() + "' to '" + new_uri.get_string() + "'"); 
         
-        msg.get_response().set_status(http::Status::Found);
-        msg.get_response().set_header("Content-Type","text/html");
-        msg.get_response().set_header("Location",new_uri.get_string());
+        msg->get_response().set_status(http::Status::Found);
+        msg->get_response().set_header("Content-Type","text/html");
+        msg->get_response().set_header("Location",new_uri.get_string());
         return scx::Close;
       }
 
@@ -132,8 +133,8 @@ protected:
         // Send directory listing if allowed
         m_module.log("Listing directory '" + url + "'"); 
         
-        msg.get_response().set_status(http::Status::Ok);
-        msg.get_response().set_header("Content-Type","text/html");
+        msg->get_response().set_status(http::Status::Ok);
+        msg->get_response().set_header("Content-Type","text/html");
         
         if (req.get_method() == "GET") {
           write("<!DOCTYPE html PUBLIC \"-//W3C//DTD XHTML 1.0 Strict//EN\" "
@@ -165,7 +166,7 @@ protected:
       }
       
       // Otherwise respond unauthorised
-      msg.get_response().set_status(http::Status::Unauthorized);
+      msg->get_response().set_status(http::Status::Unauthorized);
       return scx::Close;
       
     }

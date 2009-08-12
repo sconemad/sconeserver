@@ -27,115 +27,18 @@ Free Software Foundation, Inc.,
 #include "http/HTTPModule.h"
 #include "http/Request.h"
 #include "http/MessageStream.h"
+#include "http/MultipartStream.h"
 #include "http/Status.h"
 
 #include "sconex/Stream.h"
 #include "sconex/FileDir.h"
-#include "sconex/StreamTransfer.h"
 #include "sconex/Date.h"
-#include "sconex/Kernel.h"
 #include "sconex/LineBuffer.h"
 #include "sconex/Buffer.h"
 #include "sconex/MimeType.h"
 #include "sconex/NullFile.h"
-
-//=========================================================================
-class MimeHeaderStream : public scx::LineBuffer {
-
-public:
-
-  MimeHeaderStream()
-    : scx::LineBuffer("sconesite:mimeheader"),
-      m_done(false),
-      m_request("")
-  {
-    enable_event(scx::Stream::Readable,true);
-  };
-
-  virtual scx::Condition event(scx::Stream::Event e)
-  {
-    if (e == scx::Stream::Readable && !m_done) {
-      scx::Condition c;
-      std::string line;
-    
-      while ( (c=tokenize(line)) == scx::Ok ) {
-        if (line.empty()) {
-          m_done = true;
-          enable_event(scx::Stream::Readable,false);
-          return start_body();
-        } else {
-          m_request.parse_header(line);
-        }
-      }
-    }
-    
-    return scx::Ok;
-  };
-
-  scx::Condition start_body()
-  {
-    http::MessageStream* m_message = GET_HTTP_MESSAGE();
-
-    scx::MimeHeader disp = m_request.get_header_parsed("Content-Disposition");
-    bool discard = true;
-
-    scx::FilePath path = m_message->get_request().get_path();
-    const scx::MimeHeaderValue* fdata = disp.get_value("form-data");
-    if (fdata) {
-      std::string name;
-      fdata->get_parameter("name",name);
-      if (name == "artbody") {
-        path += "article.xml";
-        discard = false;
-      } else if (name == "testfile") {
-        std::string filename;
-        fdata->get_parameter("filename",filename);
-        if (filename != "") {
-          discard = false;
-          path += filename;
-        }
-      }
-    }
-
-    // Discard posted data from unauthorized user
-    if (m_message->get_request().get_auth_user() == "") {
-      discard = true;
-    }
-    
-    //m_message->send_continue();
-    
-    if (discard) {
-      // Transfer to a null file to discard the data
-      scx::NullFile* file = new scx::NullFile();
-      scx::StreamTransfer* xfer = new scx::StreamTransfer(&endpoint());
-      file->add_stream(xfer);
-      scx::Kernel::get()->connect(file,0);
-
-    } else {
-      scx::File* file = new scx::File();
-      if (file->open(path.path(),scx::File::Write | scx::File::Create | scx::File::Truncate) == scx::Ok) {
-        scx::StreamTransfer* xfer = new scx::StreamTransfer(&endpoint());
-        file->add_stream(xfer);
-        // Add file to kernel
-        scx::Kernel::get()->connect(file,0);
-        file = 0;
-      } else {
-        delete file;
-        return scx::Close;
-      }
-    }
-    
-    return scx::Ok;
-  };
-
-protected:
-  
-  bool m_done;
-  http::Request m_request;
-  
-};
-
-
+#include "sconex/StreamTransfer.h"
+#include "sconex/Kernel.h"
 
 //=========================================================================
 SconesiteStream::SconesiteStream(
@@ -158,32 +61,17 @@ SconesiteStream::~SconesiteStream()
 }
 
 //=========================================================================
-scx::Condition SconesiteStream::event(scx::Stream::Event e)
+scx::Condition SconesiteStream::send_response()
 {
-  if (e == scx::Stream::Opening) {
-    STREAM_DEBUG_LOG("Opening SconesiteStream");
-  }
-  
-  if (e == scx::Stream::Closing) {
-    STREAM_DEBUG_LOG("Closing SconesiteStream");
-  }
+  http::MessageStream* msg = GET_HTTP_MESSAGE();
 
-  if (e == scx::Stream::Closing && m_seq == ArticleFile) {
-    m_seq = ArticleFooter;
-    return scx::End;
-  }
-  
-  return http::ResponseStream::event(e);
-}
-
-//=========================================================================
-scx::Condition SconesiteStream::send(http::MessageStream& msg)
-{
-  const http::Request& req = msg.get_request();
+  const http::Request& req = msg->get_request();
   const scx::Uri& uri = req.get_uri();
 
+  bool auth = (msg->get_request().get_auth_user() != "");
+  
   if (req.get_method() == "POST" && req.get_auth_user() == "") {
-    msg.get_response().set_status(http::Status::Forbidden);
+    msg->get_response().set_status(http::Status::Forbidden);
     return scx::Close;
   }
   
@@ -202,27 +90,24 @@ scx::Condition SconesiteStream::send(http::MessageStream& msg)
           new_uri.set_path(uripath + "/");
           m_module.log("Redirect '" + uri.get_string() + "' to '" + new_uri.get_string() + "'"); 
           
-          msg.get_response().set_status(http::Status::Found);
-          msg.get_response().set_header("Content-Type","text/html");
-          msg.get_response().set_header("Location",new_uri.get_string());
+          msg->get_response().set_status(http::Status::Found);
+          msg->get_response().set_header("Content-Type","text/html");
+          msg->get_response().set_header("Location",new_uri.get_string());
           return scx::Close;
         }
 
-        m_file = new scx::File();
         scx::FilePath path = req.get_path();
         path += "article.xml";
-        
-        if (m_file->open(path.path(),scx::File::Read) == scx::Ok) {
+
+        if (scx::FileStat(path).is_file()) {
           m_module.log("Processing file " + path.path()); 
           m_seq = ArticleHeader;
         } else {
-          delete m_file;
-          m_file = 0;
           m_module.log("Sending index"); 
           m_seq = IndexHeader;
         }
       } else {
-        msg.get_response().set_status(http::Status::NotFound);
+        msg->get_response().set_status(http::Status::NotFound);
         return scx::Close;
       }
     } break;
@@ -254,7 +139,7 @@ scx::Condition SconesiteStream::send(http::MessageStream& msg)
     case IndexList: {
       const SconesiteArticle* article = (*m_list_it);
       std::string href = article->get_name() + "/";
-      write("<li><a href='" + href + "'>" + article->get_name() + "</a></li>\n");
+      write("<li><a href='/articles/" + href + "'>" + article->get_name() + "</a></li>\n");
       
       ++m_list_it;
       if (m_list_it == articles.end()) {
@@ -288,41 +173,41 @@ scx::Condition SconesiteStream::send(http::MessageStream& msg)
       
       write("<h1>" + uri.get_path() + "</h1>\n");
 
-      if (uri.get_query() == "delete") {
-
+      if (auth) {
+        if (uri.get_query() == "delete") {
         
-        
-      } else if (uri.get_query() == "edit") {
-        scx::Uri action = uri;
-        action.set_query("submit");
-        write("<form id='editform' name='editform' method='post' action='" + action.get_string() + "' enctype='multipart/form-data'>\n");
-        write("<input type='submit' value='Save'/>\n");
-      } else {
-        scx::Uri action = uri;
-        action.set_query("edit");
-        write("<p><a href='" + action.get_string() + "'>Edit this article</a></p>\n");
+        } else if (uri.get_query() == "edit") {
+          scx::Uri action = uri;
+          action.set_query("submit");
+          write("<form id='editform' name='editform' method='post' action='" + action.get_string() + "' enctype='multipart/form-data'>\n");
+          write("<input type='submit' value='Save'/>\n");
+        } else {
+          scx::Uri action = uri;
+          action.set_query("edit");
+          write("<p><a href='" + action.get_string() + "'>Edit this article</a></p>\n");
+        }
       }
       
-      write("<div id='main'/>\n");
+      write("<div id='main'>\n");
       write("\n\n");
       
-      if (uri.get_query() == "edit") {
-        write("<textarea name='artbody' id='artbody' cols='80' rows='25' tabindex='1' accesskey=','>\n");
+      if (auth && uri.get_query() == "edit") {
+        write("<textarea name='artbody' id='artbody' cols='80' rows='25'>\n");
+      }
+
+      scx::FilePath path = req.get_path();
+      path += "article.xml";
+      
+      m_seq = ArticleFooter;
+      if (send_file(path)) {
+        return scx::Wait;
       }
       
-      scx::StreamTransfer* xfer = new scx::StreamTransfer(m_file,1024);
-      xfer->set_close_when_finished(true);
-      endpoint().add_stream(xfer);
-      
-      // Add file to kernel
-      scx::Kernel::get()->connect(m_file,0);
-      m_file = 0;
-      m_seq = ArticleFile;
     } break;
 
     case ArticleFooter: {
       
-      if (uri.get_query() == "edit") {
+      if (auth && uri.get_query() == "edit") {
         write("</textarea>\n");
         write("<br/>\n");
         write("<input type='file' name='testfile'/>\n");
@@ -377,13 +262,62 @@ scx::Condition SconesiteStream::send(http::MessageStream& msg)
 }
 
 //=========================================================================
-scx::Condition SconesiteStream::start_section()
+scx::Condition SconesiteStream::start_section(const http::Request& header)
 {
   ++m_section;
   STREAM_DEBUG_LOG("Start section " << m_section);
 
-  MimeHeaderStream* mh = new MimeHeaderStream();
-  endpoint().add_stream(mh);
+  http::MessageStream* msg = GET_HTTP_MESSAGE();
 
+  scx::MimeHeader disp = header.get_header_parsed("Content-Disposition");
+  bool discard = true;
+  
+  scx::FilePath path = msg->get_request().get_path();
+  const scx::MimeHeaderValue* fdata = disp.get_value("form-data");
+  if (fdata) {
+    std::string name;
+    fdata->get_parameter("name",name);
+    STREAM_DEBUG_LOG("Section name is '" << name << "'");
+    if (name == "artbody") {
+      path += "article.xml";
+      discard = false;
+    } else if (name == "testfile") {
+      std::string filename;
+      fdata->get_parameter("filename",filename);
+      STREAM_DEBUG_LOG("Section filename is '" << filename << "'");
+      if (filename != "") {
+        discard = false;
+        path += filename;
+      }
+    }
+  }
+  
+  // Discard posted data from unauthorized user
+  if (msg->get_request().get_auth_user() == "") {
+    discard = true;
+  }
+  
+  if (discard) {
+    // Transfer to a null file to discard the data
+    scx::NullFile* file = new scx::NullFile();
+    scx::StreamTransfer* xfer = new scx::StreamTransfer(&endpoint());
+    file->add_stream(xfer);
+    scx::Kernel::get()->connect(file,0);
+    
+  } else {
+    scx::File* file = new scx::File();
+    if (file->open(path.path(),scx::File::Write | scx::File::Create | scx::File::Truncate) == scx::Ok) {
+      STREAM_DEBUG_LOG("Writing section to '" << path.path() << "'");
+      scx::StreamTransfer* xfer = new scx::StreamTransfer(&endpoint());
+      file->add_stream(xfer);
+      // Add file to kernel
+      scx::Kernel::get()->connect(file,0);
+      file = 0;
+    } else {
+      delete file;
+      return scx::Close;
+    }
+  }
+  
   return scx::Ok;
 }

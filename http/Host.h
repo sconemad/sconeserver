@@ -55,6 +55,7 @@ public:
   
   const std::string get_id() const;
   const std::string get_hostname() const;
+  const scx::FilePath& get_path() const;
 
   DocRoot* get_docroot(const std::string& profile);
   AuthRealm* lookup_realm(const std::string& realm);

@@ -2,7 +2,7 @@
 
 HTTP Response stream
 
-Copyright (c) 2000-2006 Andrew Wedgbury <wedge@sconemad.com>
+Copyright (c) 2000-2009 Andrew Wedgbury <wedge@sconemad.com>
 
 This program is free software; you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -26,6 +26,8 @@ Free Software Foundation, Inc.,
 #include "http/Status.h"
 
 #include "sconex/Date.h"
+#include "sconex/StreamTransfer.h"
+#include "sconex/Kernel.h"
 
 namespace http {
 
@@ -35,15 +37,58 @@ namespace http {
 #ifndef RESPONSE_DEBUG_LOG
 #  define RESPONSE_DEBUG_LOG(m)
 #endif
-  
+
 //=========================================================================
-ResponseStream::ResponseStream(
-  const std::string& stream_name
-) : scx::Stream(stream_name),
+class MimeHeaderStream : public scx::LineBuffer {
+
+public:
+
+  MimeHeaderStream(ResponseStream& resp)
+    : scx::LineBuffer("http:mimeheader"),
+      m_resp(resp),
+      m_done(false)
+  {
+    enable_event(scx::Stream::Readable,true);
+  };
+
+  virtual scx::Condition event(scx::Stream::Event e)
+  {
+    if (!m_done && e == scx::Stream::Readable) {
+      scx::Condition c;
+      std::string line;
+    
+      while ( (c=tokenize(line)) == scx::Ok ) {
+        if (line.empty()) {
+          m_done = true;
+          enable_event(scx::Stream::Readable,false);
+          m_resp.mimeheader_end();
+          return scx::Ok;
+
+        } else {
+          m_resp.mimeheader_line(line);
+        }
+      }
+    }
+    
+    return scx::Ok;
+  };
+
+protected:
+  
+  ResponseStream& m_resp;
+  bool m_done;
+  
+};
+
+ 
+//=========================================================================
+ResponseStream::ResponseStream(const std::string& stream_name)
+  : scx::Stream(stream_name),
     m_resp_seq(resp_Start),
     m_buffer(1024),
     m_mime_boundary_pos(-1),
     m_mime_boundary_num(0),
+    m_section_header(""),
     m_prev_cond(scx::Ok)
 {
 
@@ -79,10 +124,11 @@ std::string ResponseStream::html_esc(
 //=========================================================================
 scx::Condition ResponseStream::event(scx::Stream::Event e) 
 {
+  MessageStream* msg = GET_HTTP_MESSAGE();
+  
   if (e == scx::Stream::Opening) {
 
-    m_message = GET_HTTP_MESSAGE();
-    const Request& req = m_message->get_request();
+    const Request& req = msg->get_request();
     
     if (req.get_method() == "POST") {
       // Need to read message body
@@ -115,7 +161,7 @@ scx::Condition ResponseStream::event(scx::Stream::Event e)
   if (e == scx::Stream::Readable) {
     switch (m_resp_seq) {
       case resp_ReadSingle: {
-        scx::Condition c = decode_opts(*m_message);
+        scx::Condition c = decode_opts(*msg);
         if (c == scx::Ok) {
           m_resp_seq = resp_Write;
           enable_event(scx::Stream::Readable,false);
@@ -137,29 +183,56 @@ scx::Condition ResponseStream::event(scx::Stream::Event e)
           }
         }
       } break;
-      
+
+      default:
+        std::cerr << "READABLE in state " << m_resp_seq << "\n";
+        break;
     }
   }
 
+  if (e == scx::Stream::Writeable) {
+    if (m_resp_seq == resp_Write) {
+      scx::Condition c = send_response();
+      switch (c) {
+        case scx::Wait:
+          m_resp_seq = resp_WriteWait;
+          enable_event(scx::Stream::Writeable,false);
+          break;
+        case scx::Ok:
+          break;
+        default:
+          m_resp_seq = resp_End;
+          return c;
+      }
+    }
+  }
+  
   if (e == scx::Stream::Closing) {
     RESPONSE_DEBUG_LOG("Response closing seq=" << m_resp_seq);
-    if (m_resp_seq == resp_ReadMultiHeader) {
-      m_resp_seq = resp_ReadMultiBody;
-      start_section();
+    if (m_resp_seq == resp_ReadMultiBoundary) {
+      m_resp_seq = resp_ReadMultiHeader;
+      m_section_header = Request("");
+      MimeHeaderStream* mh = new MimeHeaderStream(*this);
+      endpoint().add_stream(mh);
       return scx::End;
-      
+
     } else if (m_resp_seq == resp_ReadEnd) {
       m_resp_seq = resp_Write;
       enable_event(scx::Stream::Readable,false);
       enable_event(scx::Stream::Writeable,true);
       return scx::End;
+
+    } else if (m_resp_seq == resp_WriteWait) {
+      m_resp_seq = resp_Write;
+      enable_event(scx::Stream::Writeable,true);
+      return scx::End;
+      
+    } else if (m_resp_seq != resp_End) {
+      // Don't let the stream close until send_response has returned close.
+      return scx::End;
     }
   }
   
-  if (e == scx::Stream::Writeable) {
-    return send(*m_message);
-  }
-
   return scx::Ok;
 }
 
@@ -171,7 +244,7 @@ scx::Condition ResponseStream::read(void* buffer,int n,int& na)
                      " buf=" << m_buffer.used() <<
                      " bpos=" << m_mime_boundary_pos);
 
-  if (m_resp_seq == resp_ReadMultiHeader ||
+  if (m_resp_seq == resp_ReadMultiBoundary ||
       m_resp_seq == resp_ReadEnd) {
     RESPONSE_DEBUG_LOG("boundary already reached");
     return scx::End;
@@ -183,13 +256,13 @@ scx::Condition ResponseStream::read(void* buffer,int n,int& na)
 
       case bound_Initial:
         RESPONSE_DEBUG_LOG("boundary (initial)");
-        m_resp_seq = resp_ReadMultiHeader;
+        m_resp_seq = resp_ReadMultiBoundary;
         break;
 
       case bound_Intermediate:
         RESPONSE_DEBUG_LOG("boundary");
         sz += 2;
-        m_resp_seq = resp_ReadMultiHeader;
+        m_resp_seq = resp_ReadMultiBoundary;
         break;
 
       case bound_Final:
@@ -261,9 +334,36 @@ scx::Condition ResponseStream::read(void* buffer,int n,int& na)
 }
 
 //=========================================================================
-scx::Condition ResponseStream::start_section()
+scx::Condition ResponseStream::start_section(const Request& request)
 {
   return scx::Ok;
+}
+
+//=========================================================================
+scx::Condition ResponseStream::send_response()
+{
+  return scx::Close;
+}
+
+//=========================================================================
+bool ResponseStream::send_file(const scx::FilePath& path)
+{
+  scx::File* file = new scx::File();
+
+  if (file->open(path.path(),scx::File::Read) != scx::Ok) {
+    delete file;
+    return false;
+  }
+
+  // Setup transfer object into this stream
+  scx::StreamTransfer* xfer = new scx::StreamTransfer(file,1024);
+  xfer->set_close_when_finished(true);
+  endpoint().add_stream(xfer);
+
+  // Add file to kernel table
+  scx::Kernel::get()->connect(file,0);
+  
+  return true;
 }
 
 //=========================================================================
@@ -434,6 +534,25 @@ bool ResponseStream::decode_opts_string(
   }
 
   return true;
+}
+
+//=========================================================================
+void ResponseStream::mimeheader_line(const std::string& line)
+{
+  if (m_resp_seq == resp_ReadMultiHeader) {
+    RESPONSE_DEBUG_LOG("mimeheader_line '" << line << "'");    
+    m_section_header.parse_header(line);
+  }
+}
+
+//=========================================================================
+void ResponseStream::mimeheader_end()
+{
+  if (m_resp_seq == resp_ReadMultiHeader) {
+    RESPONSE_DEBUG_LOG("mimeheader_end");
+    start_section(m_section_header);
+    m_resp_seq = resp_ReadMultiBody;
+  }
 }
 
 };

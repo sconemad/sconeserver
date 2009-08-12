@@ -85,21 +85,19 @@ private:
   Request* m_request;
   Response m_response;
   
-  bool m_headers_sent;
   bool m_error_response;
-  scx::Buffer* m_buffer;
 
-  // Chunked
+  // Read
+  int m_bytes_read;
+  int m_bytes_readable;
+
+  // Write
+  scx::Buffer* m_buffer;
+  bool m_headers_sent;
+  int m_bytes_written;
   bool m_write_chunked;
   int m_write_remaining;
-
-  // Totals
   bool m_finished;
-
-  int m_bytes_written;
-  int m_bytes_read;
-
-  int m_bytes_readable;
 };
 
 };

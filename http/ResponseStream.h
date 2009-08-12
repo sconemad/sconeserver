@@ -2,7 +2,7 @@
 
 HTTP Response stream
 
-Copyright (c) 2000-2006 Andrew Wedgbury <wedge@sconemad.com>
+Copyright (c) 2000-2009 Andrew Wedgbury <wedge@sconemad.com>
 
 This program is free software; you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -27,9 +27,12 @@ Free Software Foundation, Inc.,
 #include "sconex/Buffer.h"
 #include "http/http.h"
 #include "http/MessageStream.h"
+#include "http/Request.h"
 
 namespace http {
 
+class MimeHeaderStream;
+  
 //=========================================================================
 class HTTP_API ResponseStream : public scx::Stream {
 
@@ -39,10 +42,12 @@ public:
     resp_Start,
     resp_ReadSingle,
     resp_ReadMultiStart,
+    resp_ReadMultiBoundary,
     resp_ReadMultiHeader,
     resp_ReadMultiBody,
     resp_ReadEnd,
     resp_Write,
+    resp_WriteWait,
     resp_End
   };
 
@@ -57,7 +62,7 @@ public:
   ~ResponseStream();
 
   static std::string html_esc(std::string str);
-  
+
 protected:
 
   // from scx::Stream:
@@ -65,21 +70,25 @@ protected:
   virtual scx::Condition read(void* buffer,int n,int& na);
 
   
-  virtual scx::Condition send(http::MessageStream& msg) =0;
-  virtual scx::Condition start_section();
-  bool find_mime_boundary();
-  
+  virtual scx::Condition start_section(const Request& request);
+  virtual scx::Condition send_response();
+
   bool is_opt(const std::string& name) const;
   std::string get_opt(const std::string& name) const;
   
   scx::Condition decode_opts(http::MessageStream& msg);
   bool decode_opts_string(const char* cstr,int cstr_len);
 
-protected:
-
-  MessageStream* m_message;
+  bool send_file(const scx::FilePath& path);
+  
+  bool find_mime_boundary();
   
 private:
+
+  friend class MimeHeaderStream;
+
+  void mimeheader_line(const std::string& line);
+  void mimeheader_end();
 
   ResponseSequence m_resp_seq;
   std::map<std::string,std::string> m_opts;
@@ -88,6 +97,7 @@ private:
   int m_mime_boundary_pos;
   MimeBoundaryType m_mime_boundary_type;
   int m_mime_boundary_num;
+  Request m_section_header;
   
   scx::Condition m_prev_cond;
 };
