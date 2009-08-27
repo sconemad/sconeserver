@@ -1,4 +1,14 @@
 
+2009-08-27 Andrew Wedgbury <wedge@sconemad.com>
+
+	* sconex/MimeHeader: Move line parsing into here from http::Request.
+	* sconesite: Linking against libxml2 for XML parsing.
+	* sconesite/XMLDoc: New base class XML document parser.
+	* sconesite/Article: New article class.
+	* sconesite/Template: New doc template class.
+	* sconesite/Profile: New site profile, holds templates and articles.
+	* sconesite/Context: New xml processing context base class.
+	
 2009-08-12 Andrew Wedgbury <wedge@sconemad.com>
 
 	* http/ResponseStream: Tidy and improve encapsulation, and

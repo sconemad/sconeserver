@@ -25,9 +25,9 @@ Free Software Foundation, Inc.,
 #include "sconex/Stream.h"
 #include "sconex/LineBuffer.h"
 #include "sconex/Buffer.h"
+#include "sconex/MimeHeader.h"
 #include "http/http.h"
 #include "http/MessageStream.h"
-#include "http/Request.h"
 
 namespace http {
 
@@ -70,7 +70,7 @@ protected:
   virtual scx::Condition read(void* buffer,int n,int& na);
 
   
-  virtual scx::Condition start_section(const Request& request);
+  virtual scx::Condition start_section(const scx::MimeHeaderTable& headers);
   virtual scx::Condition send_response();
 
   bool is_opt(const std::string& name) const;
@@ -97,7 +97,7 @@ private:
   int m_mime_boundary_pos;
   MimeBoundaryType m_mime_boundary_type;
   int m_mime_boundary_num;
-  Request m_section_header;
+  scx::MimeHeaderTable m_section_headers;
   
   scx::Condition m_prev_cond;
 };

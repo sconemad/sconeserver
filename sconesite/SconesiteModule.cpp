@@ -22,7 +22,7 @@ Free Software Foundation, Inc.,
 
 #include "SconesiteModule.h"
 #include "SconesiteStream.h"
-#include "SconesiteArticle.h"
+#include "Profile.h"
 
 #include "sconex/ModuleInterface.h"
 #include "sconex/Module.h"
@@ -41,7 +41,7 @@ SconesiteModule::SconesiteModule()
 //=========================================================================
 SconesiteModule::~SconesiteModule()
 {
-  for (std::map<std::string,SconesiteArticleManager*>::const_iterator it =
+  for (std::map<std::string,Profile*>::const_iterator it =
          m_profiles.begin();
        it != m_profiles.end();
        ++it) {
@@ -77,9 +77,9 @@ bool SconesiteModule::connect(
 }
 
 //=========================================================================
-SconesiteArticleManager* SconesiteModule::lookup_profile(const std::string& profile)
+Profile* SconesiteModule::lookup_profile(const std::string& profile)
 {
-  std::map<std::string,SconesiteArticleManager*>::const_iterator it =
+  std::map<std::string,Profile*>::const_iterator it =
     m_profiles.find(profile);
   if (it != m_profiles.end()) {
     return (*it).second;
@@ -129,7 +129,7 @@ scx::Arg* SconesiteModule::arg_function(
       return new scx::ArgError("add() No path specified");
     }
 
-    std::map<std::string,SconesiteArticleManager*>::const_iterator it =
+    std::map<std::string,Profile*>::const_iterator it =
       m_profiles.find(s_profile);
     if (it != m_profiles.end()) {
       return new scx::ArgError("add() Profile already exists");
@@ -138,7 +138,7 @@ scx::Arg* SconesiteModule::arg_function(
     scx::FilePath path = a_path->get_string();
     log("Adding profile '" + s_profile + "' dir '" +
         path.path() + "'");
-    m_profiles[s_profile] = new SconesiteArticleManager(*this,path);
+    m_profiles[s_profile] = new Profile(*this,path);
 
     return 0;
   }

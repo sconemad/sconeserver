@@ -1,6 +1,6 @@
 /* SconeServer (http://www.sconemad.com)
 
-Sconesite Stream
+Sconesite Profile
 
 Copyright (c) 2000-2009 Andrew Wedgbury <wedge@sconemad.com>
 
@@ -19,51 +19,46 @@ along with this program (see the file COPYING); if not, write to the
 Free Software Foundation, Inc.,
 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA */
 
-#ifndef sconesiteStream_h
-#define sconesiteStream_h
+#ifndef sconesiteProfile_h
+#define sconesiteProfile_h
 
 #include "sconex/Stream.h"
-#include "http/ResponseStream.h"
+#include "sconex/FilePath.h"
 
-class TestBuilderModule;
+class SconesiteModule;
 class Article;
 class Template;
 
 //=========================================================================
-class SconesiteStream : public http::ResponseStream {
+class Profile {
 
 public:
 
-  SconesiteStream(
-    SconesiteModule& module,
-    const std::string& profile
-  );
+  Profile(SconesiteModule& module,
+          const scx::FilePath& path);
   
-  ~SconesiteStream();
+  ~Profile();
+
+  void refresh();
+
+  scx::FilePath& get_path();
   
-protected:
+  Article* lookup_article(const std::string& name);
+  const std::list<Article*>& articles() const;
 
-  virtual scx::Condition start_section(const scx::MimeHeaderTable& headers);
-  virtual scx::Condition send_response();
-
+  Template* lookup_template(const std::string& name);
+  
 private:
-  
+
   SconesiteModule& m_module;
 
-  std::string m_profile;
-
-  enum Sequence {
-    Start,
-    RunTemplate
-  };
-
-  Sequence m_seq;
-  Article* m_article;
-  scx::Condition m_prev_cond;
-
-  int m_section;
+  scx::FilePath m_path;
   
-  Template* m_template;
+  std::list<Article*> m_articles;
+  std::list<Template*> m_templates;
+  
 };
+
+
 
 #endif

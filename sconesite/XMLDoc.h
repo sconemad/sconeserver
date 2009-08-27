@@ -1,6 +1,6 @@
 /* SconeServer (http://www.sconemad.com)
 
-Sconesite Stream
+Sconesite XML document
 
 Copyright (c) 2000-2009 Andrew Wedgbury <wedge@sconemad.com>
 
@@ -19,51 +19,49 @@ along with this program (see the file COPYING); if not, write to the
 Free Software Foundation, Inc.,
 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA */
 
-#ifndef sconesiteStream_h
-#define sconesiteStream_h
+#ifndef sconesiteXMLDoc_h
+#define sconesiteXMLDoc_h
 
-#include "sconex/Stream.h"
-#include "http/ResponseStream.h"
+#include "sconex/FilePath.h"
+#include "sconex/Date.h"
 
-class TestBuilderModule;
-class Article;
-class Template;
+#include <libxml/parser.h>
+#include <libxml/tree.h>
+
+typedef std::map<std::string,std::string> XMLAttrs;
+
+class Context;
 
 //=========================================================================
-class SconesiteStream : public http::ResponseStream {
+class XMLDoc {
 
 public:
 
-  SconesiteStream(
-    SconesiteModule& module,
-    const std::string& profile
-  );
+  XMLDoc(const std::string& name,
+         const scx::FilePath& path);
   
-  ~SconesiteStream();
+  virtual ~XMLDoc();
   
+  const std::string& get_name() const;
+  const scx::FilePath& get_path() const;
+
+  bool process(Context& context);
+
 protected:
 
-  virtual scx::Condition start_section(const scx::MimeHeaderTable& headers);
-  virtual scx::Condition send_response();
+  virtual void process_node(Context& context, xmlNode* node);
+  
+  virtual bool open();
+  virtual void close();  
 
 private:
   
-  SconesiteModule& m_module;
+  std::string m_name;
+  scx::FilePath m_path;
+  scx::Date m_modtime;
 
-  std::string m_profile;
-
-  enum Sequence {
-    Start,
-    RunTemplate
-  };
-
-  Sequence m_seq;
-  Article* m_article;
-  scx::Condition m_prev_cond;
-
-  int m_section;
+  xmlDoc* m_xmldoc;
   
-  Template* m_template;
 };
 
 #endif

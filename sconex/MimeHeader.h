@@ -81,10 +81,12 @@ public:
   ~MimeHeaderTable();
 
   void set(const std::string& name,const std::string& value);
+  std::string parse_line(const std::string& line);
+
   bool erase(const std::string& name);
   std::string get(const std::string& name) const;
   MimeHeader get_parsed(const std::string& name) const;
-
+  
   std::string get_all() const;
 
 private:

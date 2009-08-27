@@ -75,7 +75,7 @@ public:
   bool connect_request(scx::Descriptor* endpoint, Request& request, Response& response);
 
   ModuleMap* lookup_extn_mod(const std::string& name) const;
-  ModuleMap* lookup_path_mod(const std::string& name) const;
+  ModuleMap* lookup_path_mod(const std::string& name, std::string& pathinfo) const;
 
   std::string lookup_realm_map(const std::string& name) const;
   

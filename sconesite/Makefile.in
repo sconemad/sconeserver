@@ -61,9 +61,9 @@ am__strip_dir = `echo $$p | sed -e 's|^.*/||'`;
 am__installdirs = "$(DESTDIR)$(pkglibdir)" "$(DESTDIR)$(sysconfdir)"
 pkglibLTLIBRARIES_INSTALL = $(INSTALL)
 LTLIBRARIES = $(pkglib_LTLIBRARIES)
-sconesite_la_LIBADD =
-am_sconesite_la_OBJECTS = SconesiteArticle.lo SconesiteStream.lo \
-	SconesiteModule.lo
+sconesite_la_DEPENDENCIES =
+am_sconesite_la_OBJECTS = SconesiteModule.lo SconesiteStream.lo \
+	Article.lo Context.lo Profile.lo Template.lo XMLDoc.lo
 sconesite_la_OBJECTS = $(am_sconesite_la_OBJECTS)
 DEFAULT_INCLUDES = -I. -I$(srcdir) -I$(top_builddir)
 depcomp = $(SHELL) $(top_srcdir)/depcomp
@@ -213,16 +213,25 @@ target_vendor = @target_vendor@
 AM_CPPFLAGS = -I$(top_srcdir)
 pkglib_LTLIBRARIES = sconesite.la
 sconesite_la_SOURCES = \
-SconesiteArticle.cpp \
+SconesiteModule.cpp \
 SconesiteStream.cpp \
-SconesiteModule.cpp
+Article.cpp \
+Context.cpp \
+Profile.cpp \
+Template.cpp \
+XMLDoc.cpp
 
 noinst_HEADERS = \
-SconesiteArticle.h \
+SconesiteModule.h \
 SconesiteStream.h \
-SconesiteModule.h
+Article.h \
+Context.h \
+Profile.h \
+Template.h \
+XMLDoc.h
 
 sconesite_la_LDFLAGS = -module -avoid-version
+sconesite_la_LIBADD = -lxml2
 sysconf_DATA = sconesite.conf
 EXTRA_DIST = $(sysconf_DATA)
 all: all-am
@@ -294,9 +303,13 @@ mostlyclean-compile:
 distclean-compile:
 	-rm -f *.tab.c
 
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/SconesiteArticle.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/Article.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/Context.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/Profile.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/SconesiteModule.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/SconesiteStream.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/Template.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/XMLDoc.Plo@am__quote@
 
 .cpp.o:
 @am__fastdepCXX_TRUE@	if $(CXXCOMPILE) -MT $@ -MD -MP -MF "$(DEPDIR)/$*.Tpo" -c -o $@ $<; \

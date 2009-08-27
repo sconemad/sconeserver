@@ -64,6 +64,9 @@ public:
   void set_auth_user(const std::string& user);
   const std::string& get_auth_user() const;
 
+  void set_path_info(const std::string& pathinfo);
+  const std::string& get_path_info() const;  
+  
   // Arg methods
   virtual std::string get_string() const;
   virtual int get_int() const;
@@ -87,6 +90,7 @@ protected:
   scx::FilePath m_path;
 
   std::string m_auth_user;
+  std::string m_pathinfo;
   
 private:
 

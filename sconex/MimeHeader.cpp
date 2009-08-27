@@ -317,6 +317,28 @@ void MimeHeaderTable::set(
 }
 
 //===========================================================================
+std::string MimeHeaderTable::parse_line(const std::string& line)
+{
+  std::string::size_type i = line.find_first_of(":");
+  if (i == std::string::npos) {
+    return "";
+  }
+  
+  std::string name = std::string(line,0,i);
+  std::string value;
+
+  if (i < line.length()) {
+    i = line.find_first_not_of(" ",i+1);
+    if (i != std::string::npos) {
+      value = std::string(line,i);
+    }
+  }
+ 
+  m_headers[normalize(name)]=value;
+  return name;
+}
+
+//===========================================================================
 bool MimeHeaderTable::erase(const std::string& name)
 {
   std::map<std::string,std::string>::iterator it =

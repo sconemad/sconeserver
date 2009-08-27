@@ -124,10 +124,12 @@ bool DocRoot::connect_request(scx::Descriptor* endpoint, Request& request, Respo
     scx::FilePath path = m_path + uripath;
     request.set_path(path);
 
-    modmap = lookup_path_mod(uripath);
+    std::string pathinfo;
+    modmap = lookup_path_mod(uripath,pathinfo);
     if (modmap) {
       // Path mapped module
-      m_module.log("Using path mapping",scx::Logger::Info);
+      m_module.log("Using path mapping, pathinfo='" + pathinfo + "'",scx::Logger::Info);
+      request.set_path_info(pathinfo);
     } else {
       // Normal file mapping
       scx::FileStat stat(path);
@@ -195,15 +197,17 @@ ModuleMap* DocRoot::lookup_extn_mod(const std::string& name) const
 }
 
 //=========================================================================
-ModuleMap* DocRoot::lookup_path_mod(const std::string& name) const
+ModuleMap* DocRoot::lookup_path_mod(const std::string& name, std::string& pathinfo) const
 {
   int bailout=100;
   std::string::size_type idot;
   std::string key=name;
+  pathinfo = "";
   while (--bailout > 0) {
 
     std::map<std::string,ModuleMap*>::const_iterator it = m_path_mods.find(key);
     if (it != m_path_mods.end()) {
+      if (pathinfo.length() > 0) pathinfo = pathinfo.substr(1);
       return (*it).second;
     }
     
@@ -216,6 +220,7 @@ ModuleMap* DocRoot::lookup_path_mod(const std::string& name) const
     if (idot==key.npos) {
       key="/";
     } else {
+      pathinfo = key.substr(idot) + pathinfo;
       key = key.substr(0,idot);
     }
     

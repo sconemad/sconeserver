@@ -24,7 +24,7 @@ Free Software Foundation, Inc.,
 
 #include "sconex/Module.h"
 
-class SconesiteArticleManager;
+class Profile;
 
 //#########################################################################
 class SconesiteModule : public scx::Module {
@@ -41,7 +41,7 @@ public:
     scx::ArgList* args
   );
 
-  SconesiteArticleManager* lookup_profile(const std::string& name);
+  Profile* lookup_profile(const std::string& name);
   
   virtual scx::Arg* arg_lookup(const std::string& name);
   virtual scx::Arg* arg_function(const std::string& name,scx::Arg* args);
@@ -50,7 +50,7 @@ protected:
   
 private:
 
-  std::map<std::string,SconesiteArticleManager*> m_profiles;
+  std::map<std::string,Profile*> m_profiles;
   
 };
 

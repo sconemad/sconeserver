@@ -1,6 +1,6 @@
 /* SconeServer (http://www.sconemad.com)
 
-Sconesite Article
+Sconesite Context
 
 Copyright (c) 2000-2009 Andrew Wedgbury <wedge@sconemad.com>
 
@@ -19,64 +19,52 @@ along with this program (see the file COPYING); if not, write to the
 Free Software Foundation, Inc.,
 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA */
 
-#ifndef sconesiteArticle_h
-#define sconesiteArticle_h
+#ifndef sconesiteContext_h
+#define sconesiteContext_h
+
+#include "XMLDoc.h"
 
 #include "sconex/Stream.h"
+#include "sconex/Descriptor.h"
 #include "sconex/FilePath.h"
+#include "sconex/FileDir.h"
 
-class SconesiteModule;
+class Profile;
+class Article;
 
 //=========================================================================
-class SconesiteArticle {
+class Context {
 
 public:
 
-  SconesiteArticle(SconesiteModule& module,
-                   const scx::FilePath& path,
-                   const std::string& name);
+  Context(Profile& profile,
+          scx::Descriptor& output);
 
-  ~SconesiteArticle();
+  virtual ~Context();
 
-  const std::string& get_name() const;
+  void set_article(Article* article);
+
+  // XMLDoc interface
+  virtual bool handle_start(const std::string& name, XMLAttrs& attrs, bool empty);
+  virtual bool handle_end(const std::string& name, XMLAttrs& attrs);
+  virtual void handle_process(const std::string& name, const char* data);
+  virtual void handle_text(const char* text);
+  virtual void handle_comment(const char* text);
+  virtual void handle_error();
   
 protected:
-
-private:
   
-  SconesiteModule& m_module;
+  Profile& m_profile;
+  scx::Descriptor& m_output;
 
-  scx::FilePath m_path;
+  Article* m_article;
 
-  std::string m_name;
-  
-};
+  bool m_articles_mode;
+  std::list<Article*>::const_iterator m_articles_it;
 
-//=========================================================================
-class SconesiteArticleManager {
-
-public:
-
-  SconesiteArticleManager(SconesiteModule& module,
-                          const scx::FilePath& path);
-
-  ~SconesiteArticleManager();
-
-  void refresh();
-
-  SconesiteArticle* lookup_article(const std::string& name);
-  const std::list<SconesiteArticle*>& articles() const;
-  
-private:
-
-  SconesiteModule& m_module;
-
-  scx::FilePath m_path;
-  
-  std::list<SconesiteArticle*> m_articles;
+  bool m_files_mode;
+  scx::FileDir m_files_it;
   
 };
-
-
 
 #endif

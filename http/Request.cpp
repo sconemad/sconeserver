@@ -146,25 +146,14 @@ scx::MimeHeader Request::get_header_parsed(const std::string& name) const
 //===========================================================================
 bool Request::parse_header(const std::string& str)
 {
-  std::string::size_type i = str.find_first_of(":");
-  if (i == std::string::npos) {
+  std::string name = m_headers.parse_line(str);
+  if (name.empty()) {
     return false;
   }
-  
-  std::string name = std::string(str,0,i);
-  std::string value;
-
-  if (i < str.length()) {
-    i = str.find_first_not_of(" ",i+1);
-    if (i != std::string::npos) {
-      value = std::string(str,i);
-    }
-  }
- 
-  m_headers.set(name,value);
 
   // Some special cases
   if (name == "Host" && m_uri.get_host().empty()) {
+    std::string value = m_headers.get(name);
     // Split into host:port if required
     std::string::size_type colon = value.find(":");
     if (colon != std::string::npos) {
@@ -231,6 +220,18 @@ void Request::set_auth_user(const std::string& user)
 const std::string& Request::get_auth_user() const
 {
   return m_auth_user;
+}
+
+//=============================================================================
+void Request::set_path_info(const std::string& pathinfo)
+{
+  m_pathinfo = pathinfo;
+}
+
+//=============================================================================
+const std::string& Request::get_path_info() const
+{
+  return m_pathinfo;
 }
 
 //=============================================================================

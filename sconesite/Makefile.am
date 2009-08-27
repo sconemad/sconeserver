@@ -6,16 +6,25 @@ AM_CPPFLAGS = -I$(top_srcdir)
 pkglib_LTLIBRARIES = sconesite.la
 
 sconesite_la_SOURCES = \
-SconesiteArticle.cpp \
+SconesiteModule.cpp \
 SconesiteStream.cpp \
-SconesiteModule.cpp
+Article.cpp \
+Context.cpp \
+Profile.cpp \
+Template.cpp \
+XMLDoc.cpp
 
 noinst_HEADERS = \
-SconesiteArticle.h \
+SconesiteModule.h \
 SconesiteStream.h \
-SconesiteModule.h
+Article.h \
+Context.h \
+Profile.h \
+Template.h \
+XMLDoc.h
 
 sconesite_la_LDFLAGS = -module -avoid-version
+sconesite_la_LIBADD = -lxml2
 
 sysconf_DATA = sconesite.conf
 

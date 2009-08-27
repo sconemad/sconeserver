@@ -65,6 +65,7 @@ public:
           return scx::Ok;
 
         } else {
+          
           m_resp.mimeheader_line(line);
         }
       }
@@ -88,7 +89,7 @@ ResponseStream::ResponseStream(const std::string& stream_name)
     m_buffer(1024),
     m_mime_boundary_pos(-1),
     m_mime_boundary_num(0),
-    m_section_header(""),
+    m_section_headers(),
     m_prev_cond(scx::Ok)
 {
 
@@ -211,7 +212,7 @@ scx::Condition ResponseStream::event(scx::Stream::Event e)
     RESPONSE_DEBUG_LOG("Response closing seq=" << m_resp_seq);
     if (m_resp_seq == resp_ReadMultiBoundary) {
       m_resp_seq = resp_ReadMultiHeader;
-      m_section_header = Request("");
+      m_section_headers = scx::MimeHeaderTable();
       MimeHeaderStream* mh = new MimeHeaderStream(*this);
       endpoint().add_stream(mh);
       return scx::End;
@@ -334,7 +335,7 @@ scx::Condition ResponseStream::read(void* buffer,int n,int& na)
 }
 
 //=========================================================================
-scx::Condition ResponseStream::start_section(const Request& request)
+scx::Condition ResponseStream::start_section(const scx::MimeHeaderTable& headers)
 {
   return scx::Ok;
 }
@@ -541,7 +542,7 @@ void ResponseStream::mimeheader_line(const std::string& line)
 {
   if (m_resp_seq == resp_ReadMultiHeader) {
     RESPONSE_DEBUG_LOG("mimeheader_line '" << line << "'");    
-    m_section_header.parse_header(line);
+    m_section_headers.parse_line(line);
   }
 }
 
@@ -550,7 +551,7 @@ void ResponseStream::mimeheader_end()
 {
   if (m_resp_seq == resp_ReadMultiHeader) {
     RESPONSE_DEBUG_LOG("mimeheader_end");
-    start_section(m_section_header);
+    start_section(m_section_headers);
     m_resp_seq = resp_ReadMultiBody;
   }
 }
