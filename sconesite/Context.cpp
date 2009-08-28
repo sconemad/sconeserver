@@ -38,9 +38,7 @@ Context::Context(
 ) : m_profile(profile),
     m_output(output),
     m_article(0),
-
     m_articles_mode(false),
-    
     m_files_mode(false),
     m_files_it("")
 {
@@ -83,9 +81,32 @@ bool Context::handle_start(const std::string& name, XMLAttrs& attrs, bool empty)
     m_output.write(oss.str());
 
     
-  } else if (name == "article") { // Current article
-    m_article->process(*this);
+  } else if (name == "article") { // Current article processed
+    if (m_article) {
+      m_article->process(*this);
+    }
 
+  } else if (name == "editor") { // Article editor
+    if (m_article) {
+      scx::File* file = new scx::File();
+      if (scx::Ok == file->open(m_article->get_path(),scx::File::Read)) {
+        char* buffer[1024];
+        while (true) {
+          int na = 0;
+          scx::Condition c = file->read(buffer,1024,na);
+          if (scx::Ok != c) {
+            break;
+          }
+          m_output.write(buffer,na,na);
+        }
+      }
+      delete file;
+    }
+     
+  } else if (name == "name") { // Current article name
+    if (m_article) {
+      m_output.write(m_article->get_name());
+    }
     
   } else if (name == "articles") {
     m_articles_it = m_profile.articles().begin();
@@ -154,9 +175,7 @@ bool Context::handle_end(const std::string& name, XMLAttrs& attrs)
 //=========================================================================
 void Context::handle_process(const std::string& name, const char* data)
 {
-  if (name == "article") {
-    m_article->process(*this);
-  }
+
 }
 
 //=========================================================================
@@ -176,4 +195,42 @@ void Context::handle_error()
 {
   m_output.write("Parsing error");
 
+}
+
+//=========================================================================
+std::string Context::name() const
+{
+  if (m_article) {
+    return m_article->get_name();
+  }
+  return "";
+}
+
+//=========================================================================
+scx::Arg* Context::arg_resolve(const std::string& name)
+{
+  return 0;
+}
+
+//=========================================================================
+scx::Arg* Context::arg_lookup(const std::string& name)
+{
+  // Methods
+  if ("map" == name ||
+      "map_path" == name ||
+      "add_realm" == name ||
+      "map_realm" == name ||
+      "set_param" == name) {
+    return new scx::ArgObjectFunction(new scx::ArgObject(this),name);
+  }
+
+  // Sub-objects
+  
+  return SCXBASE ArgObjectInterface::arg_lookup(name);
+}
+
+//=========================================================================
+scx::Arg* Context::arg_function(const std::string& name,scx::Arg* args)
+{
+  return 0;
 }

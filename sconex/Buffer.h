@@ -74,6 +74,8 @@ public:
   void compact();
   // Rearrange buffer to remove any wasted space.
 
+  bool resize(int new_size);
+  // Resize buffer
   std::string status_string() const;
   // Get a string representing the status of this buffer, for debugging/info
   

@@ -1,4 +1,9 @@
 
+2009-08-28 Andrew Wedgbury <wedge@sconemad.com>
+
+	* sconex/Buffer: Add resize method.
+	* sconesite/Context: Make into Arg class to allow scripting.
+	
 2009-08-27 Andrew Wedgbury <wedge@sconemad.com>
 
 	* sconex/MimeHeader: Move line parsing into here from http::Request.

@@ -54,8 +54,6 @@ protected:
   virtual bool open();
   virtual void close();  
 
-private:
-  
   std::string m_name;
   scx::FilePath m_path;
   scx::Date m_modtime;

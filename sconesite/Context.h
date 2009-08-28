@@ -24,6 +24,7 @@ Free Software Foundation, Inc.,
 
 #include "XMLDoc.h"
 
+#include "sconex/ArgObject.h"
 #include "sconex/Stream.h"
 #include "sconex/Descriptor.h"
 #include "sconex/FilePath.h"
@@ -33,14 +34,14 @@ class Profile;
 class Article;
 
 //=========================================================================
-class Context {
+class Context : public scx::ArgObjectInterface {
 
 public:
 
   Context(Profile& profile,
           scx::Descriptor& output);
 
-  virtual ~Context();
+  ~Context();
 
   void set_article(Article* article);
 
@@ -51,6 +52,12 @@ public:
   virtual void handle_text(const char* text);
   virtual void handle_comment(const char* text);
   virtual void handle_error();
+
+  // ArgObject interface
+  virtual std::string name() const;
+  virtual scx::Arg* arg_resolve(const std::string& name);
+  virtual scx::Arg* arg_lookup(const std::string& name);
+  virtual scx::Arg* arg_function(const std::string& name,scx::Arg* args);
   
 protected:
   
