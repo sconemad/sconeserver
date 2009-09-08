@@ -31,10 +31,8 @@ Free Software Foundation, Inc.,
 #include "sconex/Kernel.h"
 #include "sconex/FileDir.h"
 
-
 const char* ARTDIR = "art";
 const char* TPLDIR = "tpl";
-
 
 //=========================================================================
 Profile::Profile(
@@ -71,7 +69,7 @@ void Profile::refresh()
         scx::FilePath path = dir.path();
         Article* article = new Article(*this,name,path);
         m_articles.push_back(article);
-        m_module.log("Adding article '" + name + "' path '" + path.path() + "'");
+        m_module.log("Adding article '" + name + "'");
       }
     }
   }
@@ -90,13 +88,18 @@ void Profile::refresh()
   // Add new templates
   dir = scx::FileDir(m_path + TPLDIR);
   while (dir.next()) {
-    std::string name = dir.name();
-    if (name != "." && name != "..") {
-      if (!lookup_template(name)) {
-        scx::FilePath path = dir.path();
-        Template* tpl = new Template(*this,name,path);
-        m_templates.push_back(tpl);
-        m_module.log("Adding template '" + name + "' path '" + path.path() + "'");
+    std::string file = dir.name();
+    if (file != "." && file != "..") {
+      std::string::size_type idot = file.find_first_of(".");
+      if (idot != std::string::npos) {
+	std::string name = file.substr(0,idot);
+	std::string extn = file.substr(idot+1,std::string::npos);
+	if (extn == "xml" && !lookup_template(name)) {
+	  scx::FilePath path = dir.path();
+	  Template* tpl = new Template(*this,name,path);
+	  m_templates.push_back(tpl);
+	  m_module.log("Adding template '" + name + "'");
+	}
       }
     }
   }
@@ -137,6 +140,24 @@ Article* Profile::lookup_article(const std::string& name)
 const std::list<Article*>& Profile::articles() const
 {
   return m_articles;
+}
+
+//=========================================================================
+Article* Profile::create_article(const std::string& name)
+{
+  if (lookup_article(name)) {
+    // Aricle already exists
+    return 0;
+  }
+
+  scx::FilePath path = m_path + ARTDIR + name;
+  scx::FilePath::mkdir(path,false,0777);
+  scx::FilePath::mkdir(path + "files",false,0777);
+
+  Article* article = new Article(*this,name,path);
+  m_articles.push_back(article);
+
+  return article;
 }
 
 //=========================================================================

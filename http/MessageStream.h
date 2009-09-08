@@ -67,6 +67,8 @@ public:
  
   void send_continue();
 
+  HTTPModule& get_module();
+
   // Request:
   const Request& get_request() const;
 
@@ -84,7 +86,7 @@ private:
   ConnectionStream& m_httpstream;
   Request* m_request;
   Response m_response;
-  
+
   bool m_error_response;
 
   // Read

@@ -185,14 +185,21 @@ Arg* Uri::op(OpType optype, const std::string& opname, Arg* right)
 {
   switch (optype) {
     case Arg::Binary: {
-      Uri* rv = dynamic_cast<Uri*>(right);
-      if (rv) {
-        if ("=="==opname) { // Equality
-          return new ArgInt(*this == *rv);
+      if ("==" == opname) { // Equality
+	Uri* rv = dynamic_cast<Uri*>(right);
+	if (rv) return new ArgInt(*this == *rv);
+	
+      } else if ("!=" == opname) { // Inequality
+	Uri* rv = dynamic_cast<Uri*>(right);
+	if (rv) return new ArgInt(*this != *rv);
 
-        } else if ("!="==opname) { // Inequality
-          return new ArgInt(*this != *rv);
-        }
+      } else if ("." == opname) { // Scope resolution
+	std::string name = right->get_string();
+	if (name == "scheme") return new scx::ArgString(m_scheme);
+	if (name == "host") return new scx::ArgString(m_host);
+	if (name == "port") return new scx::ArgInt(m_port);
+	if (name == "path") return new scx::ArgString(m_path);
+	if (name == "query") return new scx::ArgString(m_query);
       }
     } break;
     case Arg::Prefix: 

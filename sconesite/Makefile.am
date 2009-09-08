@@ -11,8 +11,11 @@ SconesiteStream.cpp \
 Article.cpp \
 Context.cpp \
 Profile.cpp \
+RenderMarkup.cpp \
 Template.cpp \
-XMLDoc.cpp
+ThreadManager.cpp \
+XMLDoc.cpp \
+WorkerThread.cpp
 
 noinst_HEADERS = \
 SconesiteModule.h \
@@ -20,8 +23,11 @@ SconesiteStream.h \
 Article.h \
 Context.h \
 Profile.h \
+RenderMarkup.h \
 Template.h \
-XMLDoc.h
+ThreadManager.h \
+XMLDoc.h \
+WorkerThread.h
 
 sconesite_la_LDFLAGS = -module -avoid-version
 sconesite_la_LIBADD = -lxml2

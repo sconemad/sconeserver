@@ -23,6 +23,7 @@ Free Software Foundation, Inc.,
 #define scxTime_h
 
 #include "sconex/sconex.h"
+#include "sconex/Arg.h"
 #include <time.h>
 namespace scx {
 
@@ -38,7 +39,7 @@ const int SECONDS_PER_MINUTE = 60;
 class Date;
 
 //=============================================================================
-class SCONEX_API Time {
+class SCONEX_API Time : public Arg {
 
 public:
 
@@ -69,6 +70,12 @@ public:
   Time operator-(const Time& t) const;
 
   std::string string() const;
+
+  // Arg:
+  virtual Arg* new_copy() const;
+  virtual std::string get_string() const;
+  virtual int get_int() const;
+  virtual Arg* op(OpType optype, const std::string& opname, Arg* right);
 
 protected:
   friend class Date;

@@ -29,7 +29,19 @@ Free Software Foundation, Inc.,
 #include "sconex/Date.h"
 #include "sconex/Kernel.h"
 #include "sconex/FileDir.h"
+#include "sconex/LineBuffer.h"
 
+//=========================================================================
+bool ArticleSortDate(const Article* a, const Article* b)
+{
+  return (a->get_modtime() > b->get_modtime());
+}
+
+//=========================================================================
+bool ArticleSortName(const Article* a, const Article* b)
+{
+  return (a->get_name() < b->get_name());
+}
 
 //=========================================================================
 Article::Article(
@@ -53,4 +65,61 @@ Article::~Article()
 const scx::FilePath& Article::get_root() const
 {
   return m_root;
+}
+
+//=========================================================================
+std::string Article::name() const
+{
+  std::ostringstream oss;
+  oss << "Article:" << m_name;
+  return oss.str();
+}
+
+//=========================================================================
+scx::Arg* Article::arg_resolve(const std::string& name)
+{
+  return XMLDoc::arg_resolve(name);
+}
+
+//=========================================================================
+scx::Arg* Article::arg_lookup(const std::string& name)
+{
+  // Methods
+  if ("test" == name) {
+    return new scx::ArgObjectFunction(new scx::ArgObject(this),name);
+  }
+
+  // Sub-objects
+  refresh();
+  std::string metaval = m_metadata.get(name);
+  if (!metaval.empty()) {
+    return new scx::ArgString(metaval);
+  }
+
+  return XMLDoc::arg_lookup(name);
+}
+
+//=========================================================================
+scx::Arg* Article::arg_function(const std::string& name,scx::Arg* args)
+{
+  scx::ArgList* l = dynamic_cast<scx::ArgList*>(args);
+
+  return XMLDoc::arg_function(name,args);
+}
+
+//=========================================================================
+void Article::refresh()
+{
+  m_metadata = scx::MimeHeaderTable();
+
+  scx::File file;
+  if (file.open(m_root + "meta.txt",scx::File::Read) == scx::Ok) {
+    scx::LineBuffer* parser = new scx::LineBuffer("meta parser");
+    file.add_stream(parser);
+
+    std::string line;
+    while (parser->tokenize(line) == scx::Ok) {
+      m_metadata.parse_line(line);
+    }
+  }
 }

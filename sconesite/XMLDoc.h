@@ -24,6 +24,7 @@ Free Software Foundation, Inc.,
 
 #include "sconex/FilePath.h"
 #include "sconex/Date.h"
+#include "sconex/ArgObject.h"
 
 #include <libxml/parser.h>
 #include <libxml/tree.h>
@@ -33,7 +34,7 @@ typedef std::map<std::string,std::string> XMLAttrs;
 class Context;
 
 //=========================================================================
-class XMLDoc {
+class XMLDoc : public scx::ArgObjectInterface {
 
 public:
 
@@ -46,6 +47,14 @@ public:
   const scx::FilePath& get_path() const;
 
   bool process(Context& context);
+
+  const scx::Date& get_modtime() const;
+
+  // ArgObject interface
+  virtual std::string name() const;
+  virtual scx::Arg* arg_resolve(const std::string& name);
+  virtual scx::Arg* arg_lookup(const std::string& name);
+  virtual scx::Arg* arg_function(const std::string& name,scx::Arg* args);
 
 protected:
 

@@ -73,6 +73,51 @@ bool XMLDoc::process(Context& context)
 }
 
 //=========================================================================
+const scx::Date& XMLDoc::get_modtime() const
+{
+  return m_modtime;
+}
+
+//=========================================================================
+std::string XMLDoc::name() const
+{
+  std::ostringstream oss;
+  oss << "XMLDoc:" << m_name;
+  return oss.str();
+}
+
+//=========================================================================
+scx::Arg* XMLDoc::arg_resolve(const std::string& name)
+{
+  return SCXBASE ArgObjectInterface::arg_resolve(name);
+}
+
+//=========================================================================
+scx::Arg* XMLDoc::arg_lookup(const std::string& name)
+{
+  // Methods
+  if ("test" == name) {
+    return new scx::ArgObjectFunction(new scx::ArgObject(this),name);
+  }
+
+  // Sub-objects
+  if ("name" == name) {
+    return new scx::ArgString(m_name);
+  }
+  if ("modtime" == name) {
+    return m_modtime.new_copy();
+  }
+
+  return SCXBASE ArgObjectInterface::arg_lookup(name);
+}
+
+//=========================================================================
+scx::Arg* XMLDoc::arg_function(const std::string& name,scx::Arg* args)
+{
+  return 0;
+}
+
+//=========================================================================
 void XMLDoc::process_node(Context& context, xmlNode* start)
 {
   for (xmlNode* node = start;

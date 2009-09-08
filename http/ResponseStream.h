@@ -95,6 +95,7 @@ private:
   scx::Buffer m_buffer;
   std::string m_mime_boundary;
   int m_mime_boundary_pos;
+  int m_mime_boundary_len;
   MimeBoundaryType m_mime_boundary_type;
   int m_mime_boundary_num;
   scx::MimeHeaderTable m_section_headers;

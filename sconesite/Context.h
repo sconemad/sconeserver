@@ -23,35 +23,23 @@ Free Software Foundation, Inc.,
 #define sconesiteContext_h
 
 #include "XMLDoc.h"
-
 #include "sconex/ArgObject.h"
-#include "sconex/Stream.h"
-#include "sconex/Descriptor.h"
-#include "sconex/FilePath.h"
-#include "sconex/FileDir.h"
-
-class Profile;
-class Article;
 
 //=========================================================================
 class Context : public scx::ArgObjectInterface {
 
 public:
 
-  Context(Profile& profile,
-          scx::Descriptor& output);
-
+  Context();
   ~Context();
 
-  void set_article(Article* article);
-
   // XMLDoc interface
-  virtual bool handle_start(const std::string& name, XMLAttrs& attrs, bool empty);
-  virtual bool handle_end(const std::string& name, XMLAttrs& attrs);
-  virtual void handle_process(const std::string& name, const char* data);
-  virtual void handle_text(const char* text);
-  virtual void handle_comment(const char* text);
-  virtual void handle_error();
+  virtual bool handle_start(const std::string& name, XMLAttrs& attrs, bool empty) =0;
+  virtual bool handle_end(const std::string& name, XMLAttrs& attrs) =0;
+  virtual void handle_process(const std::string& name, const char* data) =0;
+  virtual void handle_text(const char* text) =0;
+  virtual void handle_comment(const char* text) =0;
+  virtual void handle_error() =0;
 
   // ArgObject interface
   virtual std::string name() const;
@@ -60,17 +48,6 @@ public:
   virtual scx::Arg* arg_function(const std::string& name,scx::Arg* args);
   
 protected:
-  
-  Profile& m_profile;
-  scx::Descriptor& m_output;
-
-  Article* m_article;
-
-  bool m_articles_mode;
-  std::list<Article*>::const_iterator m_articles_it;
-
-  bool m_files_mode;
-  scx::FileDir m_files_it;
   
 };
 

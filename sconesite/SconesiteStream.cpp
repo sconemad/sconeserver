@@ -25,23 +25,21 @@ Free Software Foundation, Inc.,
 #include "Article.h"
 #include "Profile.h"
 #include "Template.h"
-#include "Context.h"
+#include "RenderMarkup.h"
+#include "ThreadManager.h"
 
 #include "http/HTTPModule.h"
 #include "http/Request.h"
 #include "http/MessageStream.h"
-#include "http/MultipartStream.h"
 #include "http/Status.h"
 
 #include "sconex/Stream.h"
-#include "sconex/FileDir.h"
 #include "sconex/Date.h"
-#include "sconex/LineBuffer.h"
-#include "sconex/Buffer.h"
-#include "sconex/MimeType.h"
 #include "sconex/NullFile.h"
 #include "sconex/StreamTransfer.h"
+#include "sconex/StreamSocket.h"
 #include "sconex/Kernel.h"
+#include "sconex/StreamDebugger.h"
 
 //=========================================================================
 SconesiteStream::SconesiteStream(
@@ -50,7 +48,6 @@ SconesiteStream::SconesiteStream(
 ) : http::ResponseStream("sconesite"),
     m_module(module),
     m_profile(profile),
-    m_seq(Start),
     m_article(0),
     m_prev_cond(scx::Ok),
     m_section(0),
@@ -69,12 +66,10 @@ SconesiteStream::~SconesiteStream()
 scx::Condition SconesiteStream::send_response()
 {
   http::MessageStream* msg = GET_HTTP_MESSAGE();
-
   const http::Request& req = msg->get_request();
+  http::Response& resp = msg->get_response();
   const scx::Uri& uri = req.get_uri();
 
-  bool auth = (req.get_auth_user() != "");
-  
   if (req.get_method() == "POST" && req.get_auth_user() == "") {
     msg->get_response().set_status(http::Status::Forbidden);
     return scx::Close;
@@ -82,90 +77,74 @@ scx::Condition SconesiteStream::send_response()
   
   Profile* profile = m_module.lookup_profile(m_profile);
   
-  switch (m_seq) {
-
-    case Start: {
-
-      std::string pathinfo = req.get_path_info();
-
-      std::string::size_type is = pathinfo.find_first_of("/");
-      std::string art_name = pathinfo;
-      std::string art_file = "";
-      if (is != std::string::npos) {
-        art_name = pathinfo.substr(0,is);
-        art_file = pathinfo.substr(is+1);
-      }
-      m_article = profile->lookup_article(art_name);
-
-      m_module.log("art_name '" + art_name + "'");
-      m_module.log("art_file '" + art_file + "'");
-      
-      if (pathinfo == "") {
-        m_module.log("Sending index"); 
-        m_seq = RunTemplate;
-
-      } else if (is == std::string::npos) {
-        scx::Uri new_uri = uri;
-        new_uri.set_path(new_uri.get_path() + "/");
-        m_module.log("Redirect '" + uri.get_string() + "' to '" + new_uri.get_string() + "'"); 
-        msg->get_response().set_status(http::Status::Found);
-        msg->get_response().set_header("Content-Type","text/html");
-        msg->get_response().set_header("Location",new_uri.get_string());
-        return scx::Close;
-
-      } else if (art_file != "") {
-        // Redirect to data location
-        scx::Uri new_uri = uri;
-        new_uri.set_path("data/" + art_name + "/" + art_file);
-        m_module.log("Redirect data '" + uri.get_string() + "' to '" + new_uri.get_string() + "'"); 
-        msg->get_response().set_status(http::Status::Found);
-        msg->get_response().set_header("Content-Type","text/html");
-        msg->get_response().set_header("Location",new_uri.get_string());
-        return scx::Close;
-        
-      } else if (m_article) {
-        m_module.log("Sending article '" + art_name + "'");
-        msg->get_response().set_header("Content-Type","text/html");
-        m_seq = RunTemplate;
-        
-      } else {
-        m_module.log("Sending 404, pathinfo is '" + pathinfo + "'");
-        msg->get_response().set_status(http::Status::NotFound);
-        return scx::Close;
-      }
-
-    } break;
+  std::string pathinfo = req.get_path_info();
+  std::string::size_type is = pathinfo.find_first_of("/");
+  std::string art_name = pathinfo;
+  std::string art_file = "";
+  if (is != std::string::npos) {
+    art_name = pathinfo.substr(0,is);
+    art_file = pathinfo.substr(is+1);
+  }
+  m_article = profile->lookup_article(art_name);
+  
+  if (pathinfo == "") {
+    m_module.log("Sending index"); 
     
-    case RunTemplate: {
-      std::string tplname = "test.xml";
-      if (m_article == 0) {
-        tplname = "index.xml";
-        
-      } else if (auth) {
-        if (uri.get_query() == "delete") {
-        
-        } else if (uri.get_query() == "edit") {
-          tplname = "edit.xml";
-          //          scx::Uri action = uri;
-          //          action.set_query("submit");
-          //          write("<form id='editform' name='editform' method='post' action='" + action.get_string() + "' enctype='multipart/form-data'>\n");
-          //          write("<input type='submit' value='Save'/>\n");
-        }
-      }
-      
-      Profile* profile = m_module.lookup_profile(m_profile);
-      Template* tpl = profile->lookup_template(tplname);
-      if (tpl) {
-        Context* ctx = new Context(*profile,endpoint());
-        ctx->set_article(m_article);
-        tpl->process(*ctx);
-        delete ctx;
-      }
-      return scx::Close;
-    } break;
+  } else if (is == std::string::npos) {
+    scx::Uri new_uri = uri;
+    new_uri.set_path(new_uri.get_path() + "/");
+    m_module.log("Redirect '" + uri.get_string() + "' to '" + new_uri.get_string() + "'"); 
+    resp.set_status(http::Status::Found);
+    resp.set_header("Content-Type","text/html");
+    resp.set_header("Location",new_uri.get_string());
+    return scx::Close;
+    
+  } else if (!art_file.empty()) {
+    // Update the path in the request (cast away const for this!)
+    http::Request& reqmod = (http::Request&)req;
+    reqmod.set_path(profile->get_path() + "art" + art_name + art_file);
+
+    // Connect the getfile module and relinquish
+    scx::ModuleRef getfile = msg->get_module().get_module("getfile");
+    if (getfile.valid()) {
+      m_module.log("Sending '" + art_name + "/" + art_file + "' with getfile"); 
+      scx::ArgList args;
+      getfile.module()->connect(&endpoint(),0);
+      return scx::End;
+    }
+
+    //  } else if (m_article) {
+  } else if (!art_name.empty()) {
+    m_module.log("Sending article '" + art_name + "'");
+    resp.set_header("Content-Type","text/html");
+    
+  } else {
+    m_module.log("Sending NotFound, pathinfo is '" + pathinfo + "'");
+    resp.set_status(http::Status::NotFound);
+    return scx::Close;
   }
   
-  return scx::Ok;
+  // Create a socketpair to connect to the render job thread
+  scx::StreamSocket* source = 0;
+  scx::StreamSocket* bio = 0;
+  scx::StreamSocket::pair(source,bio,"sconesite");
+  
+  // Create a transfer to transfer from source into this stream
+  scx::StreamTransfer* xfer = new scx::StreamTransfer(source,1024);
+  xfer->set_close_when_finished(true);
+  endpoint().add_stream(xfer);
+  scx::Kernel::get()->connect(source,0);
+  
+  // Create context for rendering HTML to the bio socket
+  RenderMarkupContext* ctx = new RenderMarkupContext(*profile,bio,req);
+  ctx->set_article(m_article);
+  
+  // Create and add a job to render this page
+  RenderMarkupJob* job = new RenderMarkupJob(ctx);
+  m_module.get_thread_manager().add(job);
+  
+  // Don't need us any more!
+  return scx::End;
 }
 
 //=========================================================================
@@ -177,6 +156,8 @@ scx::Condition SconesiteStream::start_section(const scx::MimeHeaderTable& header
   http::MessageStream* msg = GET_HTTP_MESSAGE();
 
   const http::Request& req = msg->get_request();
+  bool auth = (req.get_auth_user() != "");
+
   //  const scx::Uri& uri = req.get_uri();
   Profile* profile = m_module.lookup_profile(m_profile);
   std::string pathinfo = req.get_path_info();
@@ -188,6 +169,10 @@ scx::Condition SconesiteStream::start_section(const scx::MimeHeaderTable& header
     art_file = pathinfo.substr(is+1);
   }
   m_article = profile->lookup_article(art_name);
+
+  if (0 == m_article && auth) {
+    m_article = profile->create_article(art_name);
+  }
   
   scx::MimeHeader disp = headers.get_parsed("Content-Disposition");
   bool discard = true;
@@ -201,19 +186,20 @@ scx::Condition SconesiteStream::start_section(const scx::MimeHeaderTable& header
     if (name == "artbody") {
       discard = false;
       path += "article.xml";
-    } else if (name == "testfile") {
+    } else if (name == "file") {
       std::string filename;
       fdata->get_parameter("filename",filename);
       STREAM_DEBUG_LOG("Section filename is '" << filename << "'");
       if (filename != "") {
         discard = false;
+	path += "files";
         path += filename;
       }
     }
   }
   
   // Discard posted data from unauthorized user
-  if (msg->get_request().get_auth_user() == "") {
+  if (!auth) {
     discard = true;
   }
 
@@ -221,6 +207,7 @@ scx::Condition SconesiteStream::start_section(const scx::MimeHeaderTable& header
     scx::File* file = new scx::File();
     if (file->open(path.path(),scx::File::Write | scx::File::Create | scx::File::Truncate) == scx::Ok) {
       STREAM_DEBUG_LOG("Writing section to '" << path.path() << "'");
+      endpoint().add_stream(new scx::StreamDebugger("https-file"));
       scx::StreamTransfer* xfer = new scx::StreamTransfer(&endpoint());
       file->add_stream(xfer);
       // Add file to kernel

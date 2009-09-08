@@ -52,12 +52,6 @@ private:
 
   std::string m_profile;
 
-  enum Sequence {
-    Start,
-    RunTemplate
-  };
-
-  Sequence m_seq;
   Article* m_article;
   scx::Condition m_prev_cond;
 

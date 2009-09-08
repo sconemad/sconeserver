@@ -21,6 +21,7 @@ Free Software Foundation, Inc.,
 
 #include "sconex/MemFile.h"
 #include "sconex/File.h"
+#include "sconex/Stream.h"
 namespace scx {
 
 //=============================================================================
@@ -29,6 +30,7 @@ MemFile::MemFile(const MemFileBuffer* buffer)
     m_pos(0)
 {
   DEBUG_COUNT_CONSTRUCTOR(MemFile);
+  m_state = Connected;
 }
 
 //=============================================================================
@@ -41,7 +43,7 @@ MemFile::~MemFile()
 //=============================================================================
 void MemFile::close()
 {
-
+  m_state = Closed;
 }
 
 //=============================================================================
@@ -71,22 +73,26 @@ int MemFile::fd()
 //=============================================================================
 Condition MemFile::endpoint_read(void* buffer,int n,int& na)
 {
+  if (m_state != Connected) {
+    return scx::Error;
+  }
+
   int max = m_buffer->get_buffer()->used();
   if (m_pos >= max) {
     return scx::End;
   }
-
+  
   int left = max - m_pos;
   if (n > left) {
     n = left;
   }
-
+    
   const char* head = (const char*)m_buffer->get_buffer()->head();
   memcpy(buffer,head+m_pos,n);
-
+  
   na = n;
   m_pos += na;
-
+  
   return scx::Ok;
 }
 

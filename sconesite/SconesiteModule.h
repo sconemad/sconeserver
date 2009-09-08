@@ -23,6 +23,7 @@ Free Software Foundation, Inc.,
 #define sconesiteModule_h
 
 #include "sconex/Module.h"
+#include "ThreadManager.h"
 
 class Profile;
 
@@ -41,6 +42,8 @@ public:
     scx::ArgList* args
   );
 
+  ThreadManager& get_thread_manager();
+
   Profile* lookup_profile(const std::string& name);
   
   virtual scx::Arg* arg_lookup(const std::string& name);
@@ -50,6 +53,7 @@ protected:
   
 private:
 
+  ThreadManager m_manager;
   std::map<std::string,Profile*> m_profiles;
   
 };

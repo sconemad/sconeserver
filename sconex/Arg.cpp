@@ -444,11 +444,13 @@ double ArgReal::get_real() const
 
 //===========================================================================
 ArgList::ArgList()
+  : m_orig(0)
 {
 }
 
 //===========================================================================
 ArgList::ArgList(const ArgList& c)
+  : m_orig(c.m_orig)
 {
   std::list<Arg*>::const_iterator iter = c.m_list.begin();
   while (iter != c.m_list.end()) {
@@ -474,8 +476,18 @@ Arg* ArgList::new_copy() const
 }
 
 //===========================================================================
+Arg* ArgList::var_copy()
+{
+  ArgList* c = new ArgList();
+  c->m_orig = this;
+  return c;
+}
+
+//===========================================================================
 std::string ArgList::get_string() const
 {
+  if (m_orig) return m_orig->get_string();
+
   std::ostringstream oss;
   oss << "(";
   std::list<Arg*>::const_iterator iter = m_list.begin();
@@ -492,24 +504,34 @@ std::string ArgList::get_string() const
 //===========================================================================
 int ArgList::get_int() const
 {
+  if (m_orig) return m_orig->get_int();
+
   return m_list.size();
 }
 
 //===========================================================================
 Arg* ArgList::op(OpType optype, const std::string& opname, Arg* right)
 {
-  if (optype == Arg::Binary && opname == "[") {
-    ArgInt* aidx = dynamic_cast<ArgInt*> (right);
-    if (aidx) {
-      int idx = aidx->get_int();
-      if (idx < 0 || idx >= m_list.size()) {
-        return new ArgError("Array index out of bounds");
+  if (m_orig) return m_orig->op(optype,opname,right);
+
+  if (optype == Arg::Binary) {
+    if (opname == "[") {
+      ArgInt* aidx = dynamic_cast<ArgInt*> (right);
+      if (aidx) {
+	int idx = aidx->get_int();
+	if (idx < 0 || idx >= (int)m_list.size()) {
+	  return new ArgError("Array index out of bounds");
+	}
+	Arg* a = get(idx);
+	if (a) {
+	  return a->var_copy();
+	}
+	return 0;
       }
-      const Arg* a = get(idx);
-      if (a) {
-        return a->new_copy();
-      }
-    }  
+    } else if (opname == ".") {
+      std::string name = right->get_string();
+      if (name == "size") return new ArgInt(m_list.size());
+    }
   }
 
   return Arg::op(optype,opname,right);
@@ -518,13 +540,31 @@ Arg* ArgList::op(OpType optype, const std::string& opname, Arg* right)
 //===========================================================================
 int ArgList::size() const
 {
+  if (m_orig) return m_orig->size();
+
   return m_list.size();
 }
 
 //===========================================================================
 const Arg* ArgList::get(int i) const
 {
+  if (m_orig) return m_orig->get(i);
+
   std::list<Arg*>::const_iterator iter = m_list.begin();
+  int ic=0;
+  while (iter != m_list.end()) {
+    if (ic++==i) return *iter;
+    ++iter;
+  }
+  return 0;
+}
+
+//===========================================================================
+Arg* ArgList::get(int i)
+{
+  if (m_orig) return m_orig->get(i);
+
+  std::list<Arg*>::iterator iter = m_list.begin();
   int ic=0;
   while (iter != m_list.end()) {
     if (ic++==i) return *iter;
@@ -536,6 +576,8 @@ const Arg* ArgList::get(int i) const
 //===========================================================================
 void ArgList::give(Arg* arg, int i)
 {
+  if (m_orig) m_orig->give(arg,i);
+
   if (-1==i) {
     m_list.push_back(arg);
   } else {
@@ -552,6 +594,8 @@ void ArgList::give(Arg* arg, int i)
 //===========================================================================
 Arg* ArgList::take(int i)
 {
+  if (m_orig) return m_orig->take(i);
+
   std::list<Arg*>::iterator iter = m_list.begin();
   int ic=0;
   while (iter != m_list.end()) {
@@ -561,6 +605,174 @@ Arg* ArgList::take(int i)
       return arg;
     }
     ++iter;
+  }
+  return 0;
+}
+
+
+//===========================================================================
+ArgMap::ArgMap()
+  : m_orig(0)
+{
+
+}
+
+//===========================================================================
+ArgMap::ArgMap(const ArgMap& c)
+  : m_orig(c.m_orig)
+{
+  for (std::map<std::string,Arg*>::const_iterator it = c.m_map.begin();
+       it != c.m_map.end();
+       ++it) {
+    const std::string key = (*it).first;
+    const Arg* arg = (*it).second;
+    m_map.insert( std::pair<std::string,Arg*>(key,arg->new_copy()) );
+  }
+}
+
+//===========================================================================
+ArgMap::~ArgMap()
+{
+  for (std::map<std::string,Arg*>::iterator it = m_map.begin();
+       it != m_map.end();
+       ++it) {
+    delete (*it).second;
+  }
+}
+
+//===========================================================================
+Arg* ArgMap::new_copy() const
+{
+  return new ArgMap(*this);
+}
+
+//===========================================================================
+Arg* ArgMap::var_copy()
+{
+  ArgMap* c = new ArgMap();
+  c->m_orig = this;
+  return c;
+}
+
+//===========================================================================
+std::string ArgMap::get_string() const
+{
+  if (m_orig) return m_orig->get_string();
+
+  std::ostringstream oss;
+  oss << "{";
+  for (std::map<std::string,Arg*>::const_iterator it = m_map.begin();
+       it != m_map.end();
+       ++it) {
+    const std::string key = (*it).first;
+    const Arg* arg = (*it).second;
+    oss << (it==m_map.begin() ? "" : ",") 
+        << key << ":"
+	<< (arg ? arg->get_string() : "NULL");
+  }
+  oss << "}";
+  return oss.str();
+}
+
+//===========================================================================
+int ArgMap::get_int() const
+{
+  if (m_orig) return m_orig->get_int();
+
+  return m_map.size();
+}
+
+//===========================================================================
+Arg* ArgMap::op(OpType optype, const std::string& opname, Arg* right)
+{
+  if (m_orig) return m_orig->op(optype,opname,right);
+
+  if (optype == Arg::Binary) {
+    if (opname == "[") {
+      ArgString* akey = dynamic_cast<ArgString*> (right);
+      if (akey) {
+	const std::string key = akey->get_string();
+	Arg* a = lookup(key);
+	if (a) {
+	  return a->var_copy();
+	}
+	return 0;
+      }
+    } else if (opname == ".") {
+      std::string name = right->get_string();
+      if (name == "size") return new ArgInt(m_map.size());
+      if (name == "keys") return keys();
+    }
+  }
+
+  return Arg::op(optype,opname,right);
+}
+
+//===========================================================================
+int ArgMap::size() const
+{
+  if (m_orig) return m_orig->size();
+
+  return m_map.size();
+}
+
+//===========================================================================
+ArgList* ArgMap::keys() const
+{
+  if (m_orig) return m_orig->keys();
+
+  ArgList* list = new ArgList();
+  for (std::map<std::string,Arg*>::const_iterator it = m_map.begin();
+       it != m_map.end();
+       ++it) {
+    list->give( new ArgString((*it).first) );
+  }
+  return list;
+}
+
+//===========================================================================
+const Arg* ArgMap::lookup(const std::string& key) const
+{
+  if (m_orig) return m_orig->lookup(key);
+
+  std::map<std::string,Arg*>::const_iterator it = m_map.find(key);
+  if (it != m_map.end()) {
+    return (*it).second;
+  }
+  return 0;
+}
+
+//===========================================================================
+Arg* ArgMap::lookup(const std::string& key)
+{
+  if (m_orig) return m_orig->lookup(key);
+
+  std::map<std::string,Arg*>::iterator it = m_map.find(key);
+  if (it != m_map.end()) {
+    return (*it).second;
+  }
+  return 0;
+}
+
+//===========================================================================
+void ArgMap::give(const std::string& key, Arg* arg)
+{
+  if (m_orig) m_orig->give(key,arg);
+
+  delete lookup(key);
+  m_map[key] = arg;
+}
+
+//===========================================================================
+Arg* ArgMap::take(const std::string& key)
+{
+  if (m_orig) return m_orig->take(key);
+
+  std::map<std::string,Arg*>::iterator it = m_map.find(key);
+  if (it != m_map.end()) {
+    Arg* arg = (*it).second;
+    m_map.erase(it);
+    return arg;
   }
   return 0;
 }

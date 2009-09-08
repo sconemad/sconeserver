@@ -142,6 +142,7 @@ public:
   ArgList(const ArgList& c);
   virtual ~ArgList();
   virtual Arg* new_copy() const;
+  virtual Arg* var_copy();
 
   virtual std::string get_string() const;
   virtual int get_int() const;
@@ -151,18 +152,51 @@ public:
   int size() const;
 
   const Arg* get(int i) const;
+  Arg* get(int i);
 
   void give(Arg* arg, int pos=-1);
   Arg* take(int pos);
 
-  //  bool clear(int pos);
-  //  void clear();
-
 protected:
 
   std::list<Arg*> m_list;
+  ArgList* m_orig;
 
 };
+
+
+//=============================================================================
+class SCONEX_API ArgMap : public Arg {
+
+public:
+
+  ArgMap();
+  ArgMap(const ArgMap& c);
+  virtual ~ArgMap();
+  virtual Arg* new_copy() const;
+  virtual Arg* var_copy();
+
+  virtual std::string get_string() const;
+  virtual int get_int() const;
+
+  virtual Arg* op(OpType optype, const std::string& opname, Arg* right);
+
+  int size() const;
+  ArgList* keys() const;
+
+  const Arg* lookup(const std::string& key) const;
+  Arg* lookup(const std::string& key);
+
+  void give(const std::string& key, Arg* arg);
+  Arg* take(const std::string& key);
+
+protected:
+
+  std::map<std::string,Arg*> m_map;
+  ArgMap* m_orig;
+
+};
+
 
 //=============================================================================
 class SCONEX_API ArgSub : public Arg {

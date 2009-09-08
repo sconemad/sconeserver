@@ -43,7 +43,12 @@ Request::Request(const Request& c)
     m_uri(c.m_uri),
     m_version(c.m_version),
     m_headers(c.m_headers),
-    m_profile(c.m_profile)
+    m_host(c.m_host),
+    m_profile(c.m_profile),
+    m_docroot(c.m_docroot),
+    m_path(c.m_path),
+    m_auth_user(c.m_auth_user),
+    m_pathinfo(c.m_pathinfo)
 {
 
 }
@@ -253,6 +258,14 @@ scx::Arg* Request::op(
   scx::Arg* right
 )
 {
+  if (scx::Arg::Binary == optype && "." == opname) {
+    std::string name = right->get_string();
+    if (name == "auth") return new scx::ArgInt(m_auth_user != "");
+    if (name == "user") return new scx::ArgString(m_auth_user);
+    if (name == "method") return new scx::ArgString(m_method);
+    if (name == "uri") return m_uri.new_copy();
+    if (name == "profile") return new scx::ArgString(m_profile);
+  }
   return 0;
 }
 

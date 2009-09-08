@@ -25,14 +25,14 @@ using namespace scx;
 //=============================================================================
 int main(int argc,char* argv[])
 {
-  //  UTRUN(Arg);
-  //  UTRUN(Buffer);
-  //  UTRUN(LineBuffer);
-  //  UTRUN(MemFile);
+  UTRUN(Arg);
+  UTRUN(Buffer);
+  UTRUN(LineBuffer);
+  UTRUN(MemFile);
   UTRUN(MimeHeader);
-  //  UTRUN(MimeType);
-  //  UTRUN(TimeDate);
-  //  UTRUN(VersionTag);
-  //  UTRUN(Uri);
+  UTRUN(MimeType);
+  UTRUN(TimeDate);
+  UTRUN(VersionTag);
+  UTRUN(Uri);
   UTEND;
 }

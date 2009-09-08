@@ -139,7 +139,8 @@ ArgStatementGroup::ArgStatementGroup()
 
 //=============================================================================
 ArgStatementGroup::ArgStatementGroup(const ArgStatementGroup& c)
-  : ArgStatement(c)
+  : ArgStatement(c),
+    m_vars(c.m_vars)
 {
   DEBUG_COUNT_CONSTRUCTOR(ArgStatementGroup);
 
@@ -150,12 +151,6 @@ ArgStatementGroup::ArgStatementGroup(const ArgStatementGroup& c)
     ac->set_parent(this);
     m_statements.push_back(ac);
   }
-
-  for (std::map<std::string,Arg*>::const_iterator it_v = c.m_vars.begin();
-       it_v!= c.m_vars.end();
-       ++it_v) {
-    m_vars[(*it_v).first] = ((*it_v).second)->new_copy();
-  }
 }
 
 //=============================================================================
@@ -163,12 +158,6 @@ ArgStatementGroup::~ArgStatementGroup()
 {
   clear();
 
-  for (std::map<std::string,Arg*>::iterator it_v = m_vars.begin();
-       it_v != m_vars.end();
-       ++it_v) {
-    delete (*it_v).second;
-  }
-  
   DEBUG_COUNT_DESTRUCTOR(ArgStatementGroup);
 }
 
@@ -223,9 +212,8 @@ Arg* ArgStatementGroup::arg_lookup(const std::string& name)
     return new ArgObjectFunction(new ArgObject(this),name);
   }
 
-  std::map<std::string,Arg*>::const_iterator it = m_vars.find(name);
-  if (it != m_vars.end()) {
-    Arg* var = (*it).second;
+  Arg* var = m_vars.lookup(name);
+  if (var) {
     return var->var_copy();
   }
 
@@ -241,18 +229,12 @@ Arg* ArgStatementGroup::arg_function(const std::string& name, Arg* args)
     const ArgString* a_var = dynamic_cast<const ArgString*> (l->get(0));
     if (a_var) {
       std::string var_name = a_var->get_string();
-      // Check if the variable is already declared
-      std::map<std::string,Arg*>::const_iterator it = m_vars.find(var_name);
-      if (it != m_vars.end()) {
-        //        return new ArgError("var: Redefinition of local variable " + var_name);
-        delete (*it).second;
-      }
       Arg* a_val = l->take(1);
       // If no initialiser was given, default to integer 0
       if (a_val == 0) {
         a_val = new ArgInt(0);
       }
-      m_vars[var_name] = a_val;
+      m_vars.give(var_name, a_val);
     }
     return 0;
   }

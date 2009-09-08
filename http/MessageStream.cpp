@@ -162,6 +162,7 @@ scx::Condition MessageStream::read(void* buffer,int n,int& na)
   }
 
   scx::Condition c = Stream::read(buffer,n,na);
+  STREAM_DEBUG_LOG("MessageStream::read(" << n << ") returned " << c << " na=" << na);
 
   // Update counter
   m_bytes_read += na;
@@ -228,6 +229,12 @@ std::string MessageStream::stream_status() const
 void MessageStream::send_continue()
 {
   Stream::write("HTTP/1.0 100 Continue\r\n\r\n");
+}
+
+//=============================================================================
+HTTPModule& MessageStream::get_module()
+{
+  return m_module;
 }
 
 //=============================================================================

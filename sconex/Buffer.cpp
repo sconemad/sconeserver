@@ -193,8 +193,6 @@ bool Buffer::resize(int new_size)
   char* new_buffer = new char[new_size];
   memcpy(new_buffer, &m_buffer[m_head], used());
 
-  std::cerr << "RESIZING buffer " << m_size << " to " << new_size << "\n";
-  
   // Delete the old buffer and replace with new one
   delete[] m_buffer;
   m_buffer = new_buffer;

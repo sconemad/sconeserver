@@ -126,7 +126,7 @@ protected:
   std::list<ArgStatement*> m_statements;
   // List of statements in this group
 
-  std::map<std::string,Arg*> m_vars;
+  ArgMap m_vars;
   // Local variables defined within this group's scope
   
 };

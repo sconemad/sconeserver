@@ -1,8 +1,8 @@
 /* SconeServer (http://www.sconemad.com)
 
-Sconex directory enumerator
+Worker Thread - A thread for generating sconesite pages
 
-Copyright (c) 2000-2005 Andrew Wedgbury <wedge@sconemad.com>
+Copyright (c) 2000-2009 Andrew Wedgbury <wedge@sconemad.com>
 
 This program is free software; you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -19,81 +19,75 @@ along with this program (see the file COPYING); if not, write to the
 Free Software Foundation, Inc.,
 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA */
 
-#include "sconex/FileDir.h"
-namespace scx {
+#include "WorkerThread.h"
+#include "ThreadManager.h"
 
 //=============================================================================
-FileDir::FileDir(const FilePath& root)
-  : m_root(root),
-    m_state(0)
+WorkerJob::WorkerJob(const std::string& name)
+  : m_name(name)
 {
-  DEBUG_COUNT_CONSTRUCTOR(FileDir);
-  m_dir = 0;
+  
 }
 
 //=============================================================================
-FileDir::~FileDir()
+WorkerJob::~WorkerJob()
 {
-  reset();
-  DEBUG_COUNT_DESTRUCTOR(FileDir);
+
 }
 
 //=============================================================================
-void FileDir::reset()
+const std::string& WorkerJob::name() const
 {
-  if (m_dir) {
-    closedir(m_dir);
-  }
-  m_state = 0;
+  return m_name;
 }
 
 //=============================================================================
-bool FileDir::next()
+WorkerThread::WorkerThread(ThreadManager& manager)
+  : m_manager(manager),
+    m_job(0)
 {
-  if (m_state == 0) {
-    m_dir = opendir(m_root.path().c_str());
-    if (m_dir) {
-      m_state = 1;
+  DEBUG_COUNT_CONSTRUCTOR(WorkerThread);
+  start();
+}
+	
+//=============================================================================
+WorkerThread::~WorkerThread()
+{
+  stop();
+  DEBUG_COUNT_DESTRUCTOR(WorkerThread);
+}
+
+//=============================================================================
+void* WorkerThread::run()
+{
+  m_job_mutex.lock();
+  
+  while (true) {
+
+    while (m_job == 0) {
+      // Wait for a job to arrive
+      m_job_condition.wait(m_job_mutex);
     }
+    
+    m_job->run();
+    
+    m_manager.finished_job(this,m_job);
+
+    m_job = 0;
   }
-
-  if (m_state == 1) {
-    struct dirent* dent = readdir(m_dir);
-    if (dent) {
-      m_current_name = dent->d_name;
-      m_current_stat = FileStat(path());
-      return true;
-    }
-  }
-
-  m_state = 2;
-  m_current_name = "";
-  m_current_stat = FileStat();
-  return false;
+  
+  return 0;
 }
 
 //=============================================================================
-const FilePath& FileDir::root() const
+bool WorkerThread::allocate_job(WorkerJob* job)
 {
-  return m_root;
-}
+  m_job_mutex.lock();
+  
+  m_job = job;
 
-//=============================================================================
-const std::string& FileDir::name() const
-{
-  return m_current_name;
-}
+  m_job_condition.signal();
+  m_job_mutex.unlock();
 
-//=============================================================================
-FilePath FileDir::path() const
-{
-  return FilePath(m_root + m_current_name);
+  return true;
 }
-
-//=============================================================================
-const FileStat& FileDir::stat() const
-{
-  return m_current_stat;
-}
-
-};

@@ -246,7 +246,7 @@ Arg* ArgProc::primary(bool f)
         m_stack.push(expression(0,true));
         s = m_stack.size() - s;
         Arg* result;
-
+	
         // List
         if (s>1) {
           ArgList* l = new ArgList();
@@ -285,6 +285,53 @@ Arg* ArgProc::primary(bool f)
         return result;
       }
 
+      // Map initializer
+      if ("{"==op) {
+        int s = m_stack.size();
+        m_stack.push(expression(0,true));
+        s = m_stack.size() - s;
+        Arg* result;
+
+        // List
+	if (s%2 != 0) {
+	  result = new ArgError("Map initialiser should contain an even number of values");
+	} else if (s>1) {
+	  ArgMap* m = new ArgMap();
+          for (int i=0; i<s; i+=2) {
+	    Arg* aval = m_stack.top();
+            m_stack.pop();
+	    Arg* aname = m_stack.top();
+	    m_stack.pop();
+
+            m->give(aname->get_string(),aval);
+	    delete aname;
+          }
+          result = m;
+        } else {
+          result = m_stack.top();
+          m_stack.pop();
+        }
+
+        if (s==1 && result==0 && m_name=="}") {
+          // Empty array, that's ok just return it
+          result = new ArgMap();
+
+        } else if (m_type == ArgProc::Null) {
+          // Error in subexpression
+          delete result;
+          return 0;
+
+        } else {
+          // Check its followed by a closing ')'
+          if (m_type!=ArgProc::Operator || m_name!="}") {
+            m_type = ArgProc::Null;
+            delete result;
+            return 0;
+          }
+        }
+        next();
+        return result;
+      }
 
     } break;
 
@@ -443,7 +490,7 @@ void ArgProc::next()
   }
 
   // Parenthesis
-  if ('('==c || ')'==c || '['==c || ']'==c) {
+  if ('('==c || ')'==c || '['==c || ']'==c || '{'==c || '}'==c) {
     m_type = ArgProc::Operator;
     m_name = m_expr.substr(m_pos,1);
     ++m_pos;
@@ -546,6 +593,7 @@ void ArgProc::init()
 
   (*s_binary_ops)["["]  = ++p; // Subscript
   (*s_binary_ops)["("]  = ++p; // Function call
+  (*s_binary_ops)["{"]  = ++p; // Map initializer
 
   (*s_binary_ops)[":"]  = ++p; // Scope resoltion
   (*s_binary_ops)["."]  = ++p; // Member access

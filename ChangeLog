@@ -1,4 +1,23 @@
 
+2009-09-08 Andrew Wedgbury <wedge@sconemad.com>
+
+	* sconesite/ThreadManager: New thread manager based on multiplexer.
+	* sconesite/WorkerThread: New worker thread and job interface.
+	* sconesite/RenderMarkup: New markup renderer context and job.
+	* sconesite/SconesiteStream: Allocate jobs in thread manager.
+	* sconesite/Context: Make abstract, move stuff into RenderMarkup.
+	* sconesite/XMLDoc: Make into Arg class to allow scripting.
+	* sconesite/Article: Add Arg interfaces.
+	* http/Request: Add Arg properties for scripting.
+	* http/ResponseStream: Fix bug where boundary is not detected.
+	* sconex/Arg: Add size property to ArgList and make modifiable.
+	New ArgMap associative array type.
+	* sconex/ArgStatement: Use ArgMap to store vars in groups.
+        * sconex/ArgProc: Construct ArgMap types using {} syntax.
+	* sconex/FileDir: Reset current name at end of iteration.
+	* sconex/Uri: Add Arg properties for scripting.
+	* sconex/MemFile: Set descriptor states properly.
+	
 2009-08-28 Andrew Wedgbury <wedge@sconemad.com>
 
 	* sconex/Buffer: Add resize method.

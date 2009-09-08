@@ -23,10 +23,11 @@ Free Software Foundation, Inc.,
 #define scxDate_h
 
 #include "sconex/Time.h"
+#include "sconex/Arg.h"
 namespace scx {
 
 //=============================================================================
-class SCONEX_API Date {
+class SCONEX_API Date : public Arg {
 
 public:
 
@@ -104,6 +105,12 @@ public:
   TimeZone timezone() const;
   
   time_t epoch_seconds() const;
+
+  // Arg:
+  virtual Arg* new_copy() const;
+  virtual std::string get_string() const;
+  virtual int get_int() const;
+  virtual Arg* op(OpType optype, const std::string& opname, Arg* right);
  
 protected:
 

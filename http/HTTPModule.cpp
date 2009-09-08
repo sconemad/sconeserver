@@ -74,6 +74,8 @@ bool HTTPModule::connect(
   s->add_module_ref(ref());
   
   endpoint->add_stream(s);
+
+  //  endpoint->add_stream(new scx::StreamDebugger("https-con"));
   return true;
 }
 

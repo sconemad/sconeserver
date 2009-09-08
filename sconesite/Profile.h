@@ -45,6 +45,7 @@ public:
   
   Article* lookup_article(const std::string& name);
   const std::list<Article*>& articles() const;
+  Article* create_article(const std::string& name);
 
   Template* lookup_template(const std::string& name);
   

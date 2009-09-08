@@ -501,6 +501,75 @@ TimeZone Date::timezone() const
 }
 
 //=============================================================================
+Arg* Date::new_copy() const
+{
+  return new Date(*this);
+}
+
+//=============================================================================
+std::string Date::get_string() const
+{
+  return dcode();
+}
+
+//=============================================================================
+int Date::get_int() const
+{
+  return m_time;
+}
+//=============================================================================
+Arg* Date::op(OpType optype, const std::string& opname, Arg* right)
+{
+  if (optype == Arg::Binary) {
+    
+    Date* rd = dynamic_cast<Date*>(right);
+    if (rd) { // Date x Date ops
+      if ("-" == opname) { // Minus (difference in time)
+	return new Time(*this - *rd);
+      } else if ("==" == opname) { // Equality
+	return new ArgInt(*this == *rd);
+      } else if ("==" == opname) { // Inequality
+	return new ArgInt(*this != *rd);
+      } else if (">" == opname) { // Greater than
+	return new ArgInt(*this > *rd);
+      } else if (">=" == opname) { // Greater than or equal to
+	return new ArgInt(*this >= *rd);
+      } else if ("<" == opname) { // Less than
+	return new ArgInt(*this < *rd);
+      } else if ("<=" == opname) { // Less than or equal to
+	return new ArgInt(*this <= *rd);
+      }
+    }
+
+    Time* rt = dynamic_cast<Time*>(right);
+    if (rt) { // Date x Time ops
+      if ("+" == opname) { // Plus
+	return new Date(*this + *rt);
+      } else if ("-" == opname) { // Minus
+	return new Date(*this - *rt);
+      }
+    }
+    
+    if ("." == opname) { // Scope resolution
+      std::string name = right->get_string();
+      if (name == "second") return new ArgInt(second());
+      if (name == "minute") return new ArgInt(minute());
+      if (name == "hour") return new ArgInt(hour());
+      if (name == "mday") return new ArgInt(mday());
+      if (name == "month") return new ArgInt(month());
+      if (name == "year") return new ArgInt(year());
+      if (name == "day") return new ArgInt(day());
+      if (name == "yday") return new ArgInt(yday());
+      if (name == "timezone") return new ArgString(timezone().string());
+      if (name == "code") return new ArgString(code());
+      if (name == "string") return new ArgString(string());
+      if (name == "ansi") return new ArgString(ansi_string());
+    }
+  }
+  return Arg::op(optype,opname,right);
+}
+
+//=============================================================================
 bool Date::get_tms(struct tm& tms) const
 {
   struct tm* tmr;

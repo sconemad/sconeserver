@@ -22,12 +22,19 @@ Free Software Foundation, Inc.,
 #ifndef sconesiteArticle_h
 #define sconesiteArticle_h
 
+#include "XMLDoc.h"
+
 #include "sconex/Stream.h"
 #include "sconex/FilePath.h"
-#include "XMLDoc.h"
+#include "sconex/MimeHeader.h"
 
 class SconesiteModule;
 class Profile;
+class Article;
+
+// Sort predicates:
+bool ArticleSortDate(const Article* a, const Article* b);
+bool ArticleSortName(const Article* a, const Article* b);
 
 //=========================================================================
 class Article : public XMLDoc {
@@ -42,12 +49,20 @@ public:
 
   const scx::FilePath& get_root() const;
   
+  // ArgObject interface
+  virtual std::string name() const;
+  virtual scx::Arg* arg_resolve(const std::string& name);
+  virtual scx::Arg* arg_lookup(const std::string& name);
+  virtual scx::Arg* arg_function(const std::string& name,scx::Arg* args);
+
 protected:
 
-private:
-  
+  void refresh();
+
   Profile& m_profile;
   scx::FilePath m_root;
+
+  scx::MimeHeaderTable m_metadata;
 
 };
 

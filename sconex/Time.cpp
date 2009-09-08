@@ -295,6 +295,50 @@ Time Time::operator-(const Time& t) const
   return Time(m_time-t.m_time);
 }
 
+//=============================================================================
+Arg* Time::new_copy() const
+{
+  return new Time(*this);
+}
+
+//=============================================================================
+std::string Time::get_string() const
+{
+  return string();
+}
+
+//=============================================================================
+int Time::get_int() const
+{
+  return m_time;
+}
+//=============================================================================
+Arg* Time::op(OpType optype, const std::string& opname, Arg* right)
+{
+  if (optype == Arg::Binary) {
+    Time* rt = dynamic_cast<Time*>(right);
+    if (rt) { // Time X Time ops
+      if ("+" == opname) { // Plus
+	return new Time(*this + *rt);
+      } else if ("-" == opname) { // Minus
+	return new Time(*this - *rt);
+      }
+    }
+    
+    if ("." == opname) { // Scope resolution
+      std::string name = right->get_string();
+      if (name == "seconds") return new ArgInt(seconds());
+      if (name == "weeks") return new ArgReal(to_weeks());
+      if (name == "days") return new ArgReal(to_days());
+      if (name == "hours") return new ArgInt(to_hours());
+      if (name == "minutes") return new ArgInt(to_minutes());
+      if (name == "string") return new ArgString(string());
+    }
+  }
+  return Arg::op(optype,opname,right);
+}
+
+
 std::map<std::string,int>* TimeZone::s_zone_table = 0;
 
 //=============================================================================
