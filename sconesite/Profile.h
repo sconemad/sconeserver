@@ -41,8 +41,9 @@ public:
 
   void refresh();
 
+  SconesiteModule& get_module();
   scx::FilePath& get_path();
-  
+
   Article* lookup_article(const std::string& name);
   const std::list<Article*>& articles() const;
   Article* create_article(const std::string& name);

@@ -32,7 +32,7 @@ Free Software Foundation, Inc.,
 namespace http {
 
 // Uncomment to enable debug logging
-//#define RESPONSE_DEBUG_LOG(m) STREAM_DEBUG_LOG(m)
+#define RESPONSE_DEBUG_LOG(m) STREAM_DEBUG_LOG(m)
 
 #ifndef RESPONSE_DEBUG_LOG
 #  define RESPONSE_DEBUG_LOG(m)
@@ -126,10 +126,11 @@ std::string ResponseStream::html_esc(
 scx::Condition ResponseStream::event(scx::Stream::Event e) 
 {
   MessageStream* msg = GET_HTTP_MESSAGE();
-  
+  Request& req = const_cast<Request&>(msg->get_request());
+    
   if (e == scx::Stream::Opening) {
-
-    const Request& req = msg->get_request();
+    
+    decode_param_string(req.get_uri().get_query(),req);
     
     if (req.get_method() == "POST") {
       // Need to read message body
@@ -163,12 +164,28 @@ scx::Condition ResponseStream::event(scx::Stream::Event e)
   if (e == scx::Stream::Readable) {
     switch (m_resp_seq) {
       case resp_ReadSingle: {
-        scx::Condition c = decode_opts(*msg);
-        if (c == scx::Ok) {
-          m_resp_seq = resp_Write;
-          enable_event(scx::Stream::Readable,false);
-          enable_event(scx::Stream::Writeable,true);
-        }
+	char buffer[1024];
+	int na = 0;
+	while (true) {
+	  scx::Condition c = read(buffer,1024,na);
+          RESPONSE_DEBUG_LOG("ReadSingle na=" << na << " c=" << c);
+	  if (c == scx::Ok) {
+	    m_param_string += std::string(buffer,na);
+
+	  } else if (c == scx::Wait) {
+	    break;
+
+	  } else if (c == scx::End) {
+	    decode_param_string(m_param_string,req);
+	    m_resp_seq = resp_Write;
+	    enable_event(scx::Stream::Readable,false);
+	    enable_event(scx::Stream::Writeable,true);
+	    break;
+
+	  } else {
+	    return scx::Error;
+	  }
+	}
       } break;
 
       case resp_ReadMultiStart: {
@@ -195,6 +212,7 @@ scx::Condition ResponseStream::event(scx::Stream::Event e)
   if (e == scx::Stream::Writeable) {
     if (m_resp_seq == resp_Write) {
       scx::Condition c = send_response();
+      RESPONSE_DEBUG_LOG("Write c=" << c);
       switch (c) {
         case scx::Wait:
           m_resp_seq = resp_WriteWait;
@@ -241,6 +259,10 @@ scx::Condition ResponseStream::event(scx::Stream::Event e)
 //=========================================================================
 scx::Condition ResponseStream::read(void* buffer,int n,int& na)
 {
+  if (m_resp_seq == resp_ReadSingle) {
+    return scx::Stream::read(buffer,n,na);
+  }
+
   na = 0;
   RESPONSE_DEBUG_LOG("read n=" << n <<
                      " buf=" << m_buffer.used() <<
@@ -424,138 +446,91 @@ bool ResponseStream::find_mime_boundary()
 }
 
 //=========================================================================
-bool ResponseStream::is_opt(const std::string& name) const
+std::string urlencode(const std::string& str)
 {
-  return (m_opts.find(name) != m_opts.end());
+  std::string ret = str;
+
+  return ret;
 }
 
 //=========================================================================
-std::string ResponseStream::get_opt(const std::string& name) const
+std::string urldecode(const std::string& str)
 {
-  std::map<std::string,std::string>::const_iterator it =
-    m_opts.find(name);
-  if (it != m_opts.end()) {
-    return (*it).second;
-  }
-  return "";
-}
+  std::string ret;
+  std::string::size_type start = 0;
+  std::string::size_type end;
 
-//=========================================================================
-scx::Condition ResponseStream::decode_opts(http::MessageStream& msg)
-{
-  const http::Request& req = msg.get_request();
-  const scx::Uri& uri = req.get_uri();
-  
-  if (req.get_method() != "GET" &&
-      req.get_method() != "HEAD" &&
-      req.get_method() != "POST") {
-    // Don't understand the method
-    msg.get_response().set_status(http::Status::NotImplemented);
-    return scx::Close;
-  }
-    
-  if (req.get_method() == "POST") {
-    const std::string& clength = req.get_header("Content-Length");
-    if (!clength.empty()) {
-      int post_str_len = atoi(clength.c_str());
-      char* post_str = new char[post_str_len+1];
-      int t = 0;
-      while (t < post_str_len) {
-        int nr;
-        scx::Condition c = read(post_str+t,post_str_len-t,nr);
-        if (c == scx::Error || c == scx::End) {
-          delete[] post_str;
-          return c;
-        }
-        if (nr > 0) {
-          t += nr;
-        }
-      }
-      post_str[post_str_len] = '\0';
-      bool ret = decode_opts_string(post_str,post_str_len);
-      delete[] post_str;
-      if (!ret) {
-        return scx::Error;
-      }
+  while (true) {
+    end = str.find_first_of("%+",start);
+    if (end == std::string::npos) {
+      ret += str.substr(start);
+      break;
+
+    } else {
+      ret += str.substr(start,end-start);
     }
-  }
 
-  const std::string& get_str = uri.get_query();
-  bool ret = decode_opts_string(get_str.c_str(),get_str.size());
-  if (!ret) {
-    return scx::Error;
-  }
-  return scx::Ok;
-}
+    if (str[end] == '+') {
+      ret += " ";
+      start = end + 1;
 
-//=========================================================================
-bool ResponseStream::decode_opts_string(
-  const char* cstr,
-  int cstr_len
-)
-{
-  const int buflen = 1024;
-  char cur_name[buflen];
-  cur_name[0] = '\0';
-  char cur_value[buflen];
-  cur_value[0] = '\0';
-  char* cur = cur_name;
-  int j = 0;
-
-  for (int i=0; i<cstr_len; ++i) {
-    char a = cstr[i];
-    
-    if (a == '&') {
-      if (cur_name[0]) {
-        cur_value[j] = '\0';
-        m_opts[cur_name] = cur_value;
+    } else if (str[end] == '%') {
+      if (end+2 >= str.length()) {
+	break;
       }
-      cur_name[0] = '\0';
-      cur_value[0] = '\0';
-      cur = cur_name;
-      j = 0;
-      
-    } else if (a == '=') {
-      cur_name[j] = '\0';
-      cur = cur_value;
-      j = 0;
-      
-    } else if (a == '%' && i+2 < cstr_len) {
+      start = end + 3;
       char c = 0;
       
-      a = cstr[i+1];
+      char a = str[end+1];
       if (a >= '0' && a <= '9') c += (a - '0');
       else if (a >= 'A' && a <= 'F') c += (10 + a - 'A');
       else if (a >= 'a' && a <= 'f') c += (10 + a - 'a');
+      else continue;
       c = (c << 4);
       
-      a = cstr[i+2];
+      a = str[end+2];
       if (a >= '0' && a <= '9') c += (a - '0');
       else if (a >= 'A' && a <= 'F') c += (10 + a - 'A');
       else if (a >= 'a' && a <= 'f') c += (10 + a - 'a');
-        
-      cur[j++] = c;
-      i += 2;
-        
-    } else if (a == '+') {
-      cur[j++] = ' ';
+      else continue;
       
-    } else {
-      cur[j++] = a;
+      char cs[2] = {c,'\0'};
+      ret += cs;
     }
-    
-    if (j >= buflen-1) {
-      DEBUG_LOG("Overflow");
-      // Overflow
-      break;
-    }
-    
   }
+  return ret;
+}
 
-  if (cur_name[0]) {
-    cur_value[j] = '\0';
-    m_opts[cur_name] = cur_value;
-  }
+//=========================================================================
+bool ResponseStream::decode_param_string(const std::string& str,Request& request)
+{
+  if (str.empty()) return true;
+
+  std::string::size_type start = 0;
+  std::string::size_type end;
+  do { 
+    end = str.find_first_of("&",start);
+    std::string param;
+    if (end == std::string::npos) {
+      param = str.substr(start);
+    } else {
+      param = str.substr(start,end-start);
+    }
+
+    std::string name;
+    std::string value;
+    std::string::size_type ieq = param.find_first_of("=");
+    if (ieq == std::string::npos) {
+      name = urldecode(param);
+    } else {
+      name = urldecode(param.substr(0,ieq));
+      value = urldecode(param.substr(ieq+1));
+    }
+    RESPONSE_DEBUG_LOG("param '" << name << "'='" << value << "'");
+    request.set_param(name, value);
+
+    start = end+1;    
+  } while (end != std::string::npos);
 
   return true;
 }

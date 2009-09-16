@@ -98,20 +98,20 @@ scx::Condition TestBuilderControlStream::send(http::MessageStream& msg)
   msg.get_response().set_header("Last-Modified",scx::Date::now().string());
   
   // Get the profile name, if any
-  std::string profile = get_opt("profile");
+  std::string profile = req.get_param("profile");
   
   // Get the build ID, if any
-  std::string build = get_opt("build");
+  std::string build = req.get_param("build");
   
   // Get the build filter, if any
-  std::string showbuilds = get_opt("showbuilds");
+  std::string showbuilds = req.get_param("showbuilds");
   
   std::string alert;
   std::string alert_title;
   std::string error_profile;
   
   // New profile
-  if (is_opt("new_profile")) {
+  if (req.is_param("new_profile")) {
     // Validate new profile name
     if (profile.empty() ||
         profile.find_first_not_of(ALPHANUM) != std::string::npos ||
@@ -139,18 +139,18 @@ scx::Condition TestBuilderControlStream::send(http::MessageStream& msg)
   }
   
   // Save profile (or submit build)
-  if (is_opt("save_profile") ||
-      is_opt("start_build")) {
+  if (req.is_param("save_profile") ||
+      req.is_param("start_build")) {
     BuildProfile* profile_obj = m_module.lookup_profile(profile);
-    profile_obj->set_source_method(get_opt("source_method"));
-    profile_obj->set_source_uri(get_opt("source_uri"));
-    profile_obj->set_configure_command(get_opt("configure_command"));
-    profile_obj->set_make_targets(get_opt("make_targets"));
+    profile_obj->set_source_method(req.get_param("source_method"));
+    profile_obj->set_source_uri(req.get_param("source_uri"));
+    profile_obj->set_configure_command(req.get_param("configure_command"));
+    profile_obj->set_make_targets(req.get_param("make_targets"));
     m_module.save_profiles();
   }
   
   // Remove profile
-  if (is_opt("remove_profile")) {
+  if (req.is_param("remove_profile")) {
     if (m_module.remove_profile(profile)) {
       alert_title = "Profile removed";
       alert =
@@ -169,7 +169,7 @@ scx::Condition TestBuilderControlStream::send(http::MessageStream& msg)
   }
   
   // Start build
-  if (is_opt("start_build")) {
+  if (req.is_param("start_build")) {
     build = m_module.submit_build(profile);
     if (!build.empty()) {
       alert_title = "Build submitted";
@@ -194,7 +194,7 @@ scx::Condition TestBuilderControlStream::send(http::MessageStream& msg)
   }
 
   // Abort build
-  if (is_opt("abort_build")) {    
+  if (req.is_param("abort_build")) {    
     if (m_module.abort_build(build)) {
       alert_title = "Build aborted";
       alert =
@@ -214,7 +214,7 @@ scx::Condition TestBuilderControlStream::send(http::MessageStream& msg)
   }
 
   // Remove build
-  if (is_opt("remove_build")) {    
+  if (req.is_param("remove_build")) {    
     if (m_module.remove_build(build)) {
       alert_title = "Build removed";
       alert =

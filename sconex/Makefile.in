@@ -61,11 +61,11 @@ libLTLIBRARIES_INSTALL = $(INSTALL)
 LTLIBRARIES = $(lib_LTLIBRARIES)
 libsconex_la_LIBADD =
 am_libsconex_la_OBJECTS = sconex.lo utils.lo Arg.lo ArgObject.lo \
-	ArgProc.lo ArgScript.lo ArgStatement.lo Base64.lo Buffer.lo \
-	ConfigFile.lo ConfigStream.lo Console.lo DatagramChannel.lo \
-	DatagramMultiplexer.lo DatagramSocket.lo Date.lo Debug.lo \
-	Descriptor.lo DescriptorThread.lo File.lo FileDir.lo \
-	FilePath.lo FileStat.lo Kernel.lo LineBuffer.lo \
+	ArgProc.lo ArgScript.lo ArgStatement.lo ArgStore.lo Base64.lo \
+	Buffer.lo ConfigFile.lo ConfigStream.lo Console.lo \
+	DatagramChannel.lo DatagramMultiplexer.lo DatagramSocket.lo \
+	Date.lo Debug.lo Descriptor.lo DescriptorThread.lo File.lo \
+	FileDir.lo FilePath.lo FileStat.lo Kernel.lo LineBuffer.lo \
 	ListenerSocket.lo Logger.lo MemFile.lo MimeHeader.lo \
 	MimeType.lo Module.lo ModuleLoader.lo ModuleLoaderDLL.lo \
 	ModuleRef.lo Multiplexer.lo Mutex.lo NullFile.lo Process.lo \
@@ -226,6 +226,7 @@ ArgObject.cpp \
 ArgProc.cpp \
 ArgScript.cpp \
 ArgStatement.cpp \
+ArgStore.cpp \
 Base64.cpp \
 Buffer.cpp \
 ConfigFile.cpp \
@@ -283,6 +284,7 @@ ArgObject.h \
 ArgProc.h \
 ArgScript.h \
 ArgStatement.h \
+ArgStore.h \
 Base64.h \
 Buffer.h \
 ConfigFile.h \
@@ -430,6 +432,7 @@ distclean-compile:
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/ArgProc.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/ArgScript.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/ArgStatement.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/ArgStore.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/Arg_ut.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/Base64.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/Buffer.Plo@am__quote@

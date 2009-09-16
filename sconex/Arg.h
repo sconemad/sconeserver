@@ -182,7 +182,7 @@ public:
   virtual Arg* op(OpType optype, const std::string& opname, Arg* right);
 
   int size() const;
-  ArgList* keys() const;
+  void keys(std::vector<std::string>& keyvec) const;
 
   const Arg* lookup(const std::string& key) const;
   Arg* lookup(const std::string& key);

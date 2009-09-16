@@ -85,9 +85,9 @@ void ArgProc::set_ctx(Arg* ctx)
 }
 
 //===========================================================================
-Arg* ArgProc::expression(int p, bool f)
+Arg* ArgProc::expression(int p, bool f, bool exec)
 {
-  Arg* left = primary(f);
+  Arg* left = primary(f,exec);
 
   while (true) {
     if (ArgProc::Null == m_type) {
@@ -105,12 +105,13 @@ Arg* ArgProc::expression(int p, bool f)
 
         if ("["==op) {
           // Subscript operator
-          Arg* right = expression(0,true);
+          Arg* right = expression(0,true,exec);
           if (0==right) {
             m_type = ArgProc::Null;
             return right;
           }
-          Arg* new_left = left->op(Arg::Binary,op,right);
+          Arg* new_left = 0;
+	  if (exec) new_left = left->op(Arg::Binary,op,right);
           delete left;
           delete right;
           left = new_left;
@@ -126,7 +127,7 @@ Arg* ArgProc::expression(int p, bool f)
         } else if ("("==op) {
           // Function call operator
           int s = m_stack.size();
-          m_stack.push(expression(0,true));
+          m_stack.push(expression(0,true,exec));
           s = m_stack.size() - s;
 
           // Make the argument array from the stack
@@ -159,14 +160,27 @@ Arg* ArgProc::expression(int p, bool f)
           // Call the function
 
           ArgProc_DEBUG_LOG("call: " << left->get_string());
-          Arg* new_left = left->op(Arg::Binary,op,args);
+          Arg* new_left = 0;
+	  if (exec) new_left = left->op(Arg::Binary,op,args);
           delete left;
           delete args;
           left = new_left;
 
         } else {
 
-          Arg* right = expression(p2+1,f);
+          Arg* right = 0;
+
+	  if ("|" == op && left->get_int()) {
+	    // Short circuit | op - don't exec rhs if lhs is true
+	    right = expression(p2+1,f,false);
+
+	  } else if ("&" == op && !left->get_int()) {
+	    // Short circuit & op - don't exec rhs if lhs is false
+	    right = expression(p2+1,f,false);
+
+	  } else {
+	    right = expression(p2+1,f,exec);
+	  }
 
           if (0==right) {
             m_type=ArgProc::Null;
@@ -180,7 +194,8 @@ Arg* ArgProc::expression(int p, bool f)
             m_stack.push(left);
             left=right;
           } else {
-            Arg* new_left = left->op(Arg::Binary,op,right);
+            Arg* new_left = 0;
+	    if (exec) new_left = left->op(Arg::Binary,op,right);
             delete left;
             delete right;
             left = new_left;
@@ -194,7 +209,8 @@ Arg* ArgProc::expression(int p, bool f)
       } else if (prec(Arg::Postfix,op) >= 0) {
         // Unary postfix operation
         ArgProc_DEBUG_LOG("postfix op: " << op);
-        Arg* new_left = left->op(Arg::Postfix,op);
+        Arg* new_left = 0;
+	if (exec) new_left = left->op(Arg::Postfix,op);
         delete left;
         left = new_left;
         next();
@@ -218,7 +234,7 @@ Arg* ArgProc::expression(int p, bool f)
 }
 
 //===========================================================================
-Arg* ArgProc::primary(bool f)
+Arg* ArgProc::primary(bool f, bool exec)
 {
   next();
 
@@ -230,20 +246,23 @@ Arg* ArgProc::primary(bool f)
 
       // Unary prefix operation
       if (p2 >= 0) {
-        Arg* right = expression(p2,f);
+        Arg* right = expression(p2,f,exec);
         if (right) {
           ArgProc_DEBUG_LOG("prefix op: " << op);
-          Arg* result = right->op(Arg::Prefix,op);
+          Arg* result = 0;
+	  if (exec) result = right->op(Arg::Prefix,op);
           delete right;
           return result;
         }
+	// Special case: ! (NULL) should return true
+	if (op == "!") return new ArgInt(1);
         return 0;
       }
 
       // Sub-expression
       if ("("==op) {
         int s = m_stack.size();
-        m_stack.push(expression(0,true));
+        m_stack.push(expression(0,true,exec));
         s = m_stack.size() - s;
         Arg* result;
 	
@@ -288,7 +307,7 @@ Arg* ArgProc::primary(bool f)
       // Map initializer
       if ("{"==op) {
         int s = m_stack.size();
-        m_stack.push(expression(0,true));
+        m_stack.push(expression(0,true,exec));
         s = m_stack.size() - s;
         Arg* result;
 

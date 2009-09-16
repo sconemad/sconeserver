@@ -24,6 +24,8 @@ Free Software Foundation, Inc.,
 
 #include "http/http.h"
 #include "http/HostMapper.h"
+#include "http/AuthRealm.h"
+#include "http/Session.h"
 #include "sconex/Module.h"
 #include "sconex/Descriptor.h"
 
@@ -48,7 +50,9 @@ public:
     scx::ArgList* args
   );
 
-  HostMapper& get_host_mapper();
+  HostMapper& get_hosts();
+  AuthRealmManager& get_realms();
+  SessionManager& get_sessions();
 
   virtual scx::Arg* arg_lookup(const std::string& name);
   virtual scx::Arg* arg_function(const std::string& name,scx::Arg* args);
@@ -57,7 +61,9 @@ protected:
 
 private:
 
-  HostMapper m_host_mapper;
+  HostMapper m_hosts;
+  AuthRealmManager m_realms;
+  SessionManager m_sessions;
 
 };
 

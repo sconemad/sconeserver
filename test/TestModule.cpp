@@ -67,11 +67,11 @@ scx::Arg* TestModule::arg_lookup(const std::string& name)
       
     oss << "Instance counts:\n"
         << "CLASS NAME                     TOTAL    CURRENT  DELTA\n";
-    const std::map<std::string,scx::DebugInstanceCounter>& counters =
-      scx::Debug::get()->get_counters();
-    std::map<std::string,scx::DebugInstanceCounter>::const_iterator it = counters.begin();
+    std::map<std::string,scx::DebugInstanceCounter> counters;
+    scx::Debug::get()->get_counters(counters);
+    std::map<std::string,scx::DebugInstanceCounter>::iterator it = counters.begin();
     while (it != counters.end()) {
-      const scx::DebugInstanceCounter& counter = (*it).second;
+      scx::DebugInstanceCounter& counter = (*it).second;
       const std::string& class_name = (*it).first;
       int stat_max = counter.get_max();
       int stat_num = counter.get_num();
@@ -81,10 +81,12 @@ scx::Arg* TestModule::arg_lookup(const std::string& name)
           << std::setw(8) << stat_max << " "
           << std::setw(8) << stat_num << " "
           << std::setw(8) << stat_delta << "\n";
+      if (stat_delta) oss << counter.get_deltas() << "\n";
       
       it++;
     }
     prev_counters = counters;
+    scx::Debug::get()->reset_counters();
 #else
     oss << "Instance counts are only available in debug builds\n";
 #endif

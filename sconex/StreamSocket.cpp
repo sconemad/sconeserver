@@ -203,7 +203,7 @@ Condition StreamSocket::endpoint_write(
 
   na = send(m_socket,(char*)buffer,n,0);
 
-  if (na > 0) {
+  if (na > 0 || n==na) {
     // Sent some or all of the data ok
     return scx::Ok;
 

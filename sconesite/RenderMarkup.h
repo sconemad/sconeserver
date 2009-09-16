@@ -70,7 +70,7 @@ protected:
   
   Profile& m_profile;
   scx::Descriptor* m_output;
-  const http::Request* m_request;
+  http::Request m_request;
 
   Article* m_article;
 };

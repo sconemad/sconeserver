@@ -24,22 +24,19 @@ Free Software Foundation, Inc.,
 
 #include "http/http.h"
 #include "http/Status.h"
-#include "sconex/Arg.h"
+#include "sconex/ArgObject.h"
 #include "sconex/VersionTag.h"
 #include "sconex/MimeHeader.h"
 namespace http {
 
 //=============================================================================
-class HTTP_API Response : public scx::Arg {
+class HTTP_API Response : public scx::ArgObjectInterface {
 
 public:
 
   Response();
-  Response(const Response& c);
   
   virtual ~Response();
-
-  scx::Arg* new_copy() const;
 
   void set_version(const scx::VersionTag& ver);
   const scx::VersionTag& get_version() const;
@@ -53,14 +50,11 @@ public:
 
   std::string build_header_string();
   
-  // Arg methods
-  virtual std::string get_string() const;
-  virtual int get_int() const;
-  virtual scx::Arg* op(
-    scx::Arg::OpType optype,
-    const std::string& opname,
-    scx::Arg* right
-  );
+  // ArgObject interface
+  virtual std::string name() const;
+  virtual scx::Arg* arg_resolve(const std::string& name);
+  virtual scx::Arg* arg_lookup(const std::string& name);
+  virtual scx::Arg* arg_function(const std::string& name,scx::Arg* args);
   
 protected:
 

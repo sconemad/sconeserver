@@ -29,6 +29,7 @@ Free Software Foundation, Inc.,
 namespace scx {
 
 class Logger;
+class Mutex;
 
 #ifdef _DEBUG
 
@@ -47,11 +48,11 @@ class Logger;
 // Log debug message
 
 #define DEBUG_COUNT_CONSTRUCTOR(class_name) \
-  scx::Debug::get()->count_constuctor(#class_name);
+  scx::Debug::get()->count_constuctor(#class_name,this);
 // Increment nstance count for this class
   
 #define DEBUG_COUNT_DESTRUCTOR(class_name) \
-  scx::Debug::get()->count_destuctor(#class_name);
+  scx::Debug::get()->count_destuctor(#class_name,this);
 // Decrement instance count for this class
 
 #define DESCRIPTOR_DEBUG_LOG(message) \
@@ -93,16 +94,22 @@ public:
 
   DebugInstanceCounter();
 
-  void count_constructor();
-  void count_destructor();
+  void reset();
+
+  void count_constructor(void* addr);
+  void count_destructor(void* addr);
 
   int get_num() const;
   int get_max() const;
+  std::string get_deltas();
 
 private:
   
   int m_num;
   int m_max;
+
+  std::vector< std::pair<void*,int> > m_addrs;
+
 };
 
   
@@ -129,11 +136,14 @@ public:
   );
   // Log debug message
 
-  void count_constuctor(const std::string& class_name);
-  void count_destuctor(const std::string& class_name);
+  void count_constuctor(const std::string& class_name, void* addr);
+  void count_destuctor(const std::string& class_name, void* addr);
   // Count instance construction/destruction
 
-  const std::map<std::string,DebugInstanceCounter>& get_counters() const;
+  void reset_counters();
+  // Reset instance counters
+
+  void get_counters(std::map<std::string,DebugInstanceCounter>& counters);
   // Get the instance counters
   
   void set_logger(Logger* logger);
@@ -143,6 +153,7 @@ private:
 
   Logger* m_logger;
   std::map<std::string,DebugInstanceCounter> m_inst_counts;
+  Mutex* m_mutex;
 
   bool m_stop_on_assert;
 

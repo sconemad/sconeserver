@@ -29,7 +29,7 @@ Free Software Foundation, Inc.,
 #include "sconex/Date.h"
 #include "sconex/Kernel.h"
 #include "sconex/FileDir.h"
-#include "sconex/LineBuffer.h"
+#include "sconex/ArgProc.h"
 
 //=========================================================================
 bool ArticleSortDate(const Article* a, const Article* b)
@@ -50,9 +50,10 @@ Article::Article(
   const scx::FilePath& root
 ) : XMLDoc(name,root + "article.xml"),
     m_profile(profile),
-    m_root(root)
+    m_root(root),
+    m_metastore(root + "meta.txt")
 {
-
+  m_metastore.load();
 }
 
 //=========================================================================
@@ -90,11 +91,7 @@ scx::Arg* Article::arg_lookup(const std::string& name)
   }
 
   // Sub-objects
-  refresh();
-  std::string metaval = m_metadata.get(name);
-  if (!metaval.empty()) {
-    return new scx::ArgString(metaval);
-  }
+  if ("meta" == name) return new scx::ArgObject(&m_metastore);
 
   return XMLDoc::arg_lookup(name);
 }
@@ -105,21 +102,4 @@ scx::Arg* Article::arg_function(const std::string& name,scx::Arg* args)
   scx::ArgList* l = dynamic_cast<scx::ArgList*>(args);
 
   return XMLDoc::arg_function(name,args);
-}
-
-//=========================================================================
-void Article::refresh()
-{
-  m_metadata = scx::MimeHeaderTable();
-
-  scx::File file;
-  if (file.open(m_root + "meta.txt",scx::File::Read) == scx::Ok) {
-    scx::LineBuffer* parser = new scx::LineBuffer("meta parser");
-    file.add_stream(parser);
-
-    std::string line;
-    while (parser->tokenize(line) == scx::Ok) {
-      m_metadata.parse_line(line);
-    }
-  }
 }

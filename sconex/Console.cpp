@@ -89,7 +89,7 @@ Condition Console::endpoint_write(const void* buffer,int n,int& na)
 {
   na = ::write(fileno(stdout),buffer,n);
   
-  if (na > 0) {
+  if (na > 0 || n==na) {
     // Written some or all of the data ok
     return scx::Ok;
 

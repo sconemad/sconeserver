@@ -68,8 +68,13 @@ void* WorkerThread::run()
       // Wait for a job to arrive
       m_job_condition.wait(m_job_mutex);
     }
-    
-    m_job->run();
+
+    try {
+      m_job->run();
+    }
+    catch (...) {
+      DEBUG_LOG("EXCEPTION caught in worker thread");
+    }
     
     m_manager.finished_job(this,m_job);
 

@@ -1,0 +1,61 @@
+# ArgScript test script
+#
+#
+
+print("START" + endl);
+
+
+var a;
+var c = 0;
+sub f { c++; }
+
+print("running 1 | f()" + endl);
+a = 1 | f();
+test(c==0,"f() should not be called");
+
+print("running 0 | f()" + endl);
+a = 0 | f();
+test(c==1,"f() should be called");
+
+print("running 1 & f()" + endl);
+a = 1 & f();
+test(c==2,"f() should be called");
+
+print("running 0 & f()" + endl);
+a = 0 & f();
+test(c==2,"f() should not be called");
+
+
+var b = 0;
+
+print("running 1 | ++b" + endl);
+a = 1 | ++b
+test(b==0,"b should not be incremented");
+
+print("running 0 | ++b" + endl);
+a = 0 | ++b;
+test(b==1,"b should be incremented");
+
+print("running 1 & ++b" + endl);
+a = 1 & ++b;
+test(b==2,"b should be incremented");
+
+print("running 0 & ++b" + endl);
+a = 0 & ++b;
+test(b==2,"b should not be incremented");
+
+
+var m = {"one",1};
+
+print("running (1 | ++m.one) & f()" + endl);
+a = (1 | ++m.one) & f();
+test(c==3,"f() should be called");
+test(m.one==1,"m.one should not be incremented");
+
+print("running (1 & ++m.one) | f()" + endl);
+a = (1 & ++m.one) | f();
+test(c==3,"f() should not be called");
+test(m.one==2,"m.one should be incremented");
+
+
+print("END" + endl);

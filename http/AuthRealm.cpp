@@ -21,20 +21,21 @@ Free Software Foundation, Inc.,
 
 
 #include "http/AuthRealm.h"
-#include "http/Host.h"
+#include "http/HTTPModule.h"
 #include "http/MessageStream.h"
 #include "http/Request.h"
 #include "sconex/Uri.h"
+#include "sconex/LineBuffer.h"
 namespace http {
 
 //=========================================================================
 AuthRealm::AuthRealm(
   HTTPModule& module,
-  Host& host,
-  const std::string name
+  const std::string name,
+  const scx::FilePath& path
 ) : m_module(module),
-    m_host(host),
-    m_name(name)
+    m_name(name),
+    m_path(path)
 {
 
 }
@@ -52,8 +53,10 @@ const std::string& AuthRealm::get_realm() const
 }
 
 //=========================================================================
-bool AuthRealm::authorised(const std::string& user, const std::string& pass) const
+bool AuthRealm::authorised(const std::string& user, const std::string& pass)
 {
+  refresh();
+  scx::MutexLocker locker(m_mutex);
   std::map<std::string,std::string>::const_iterator it = m_users.find(user);
   if (it != m_users.end()) {
     return (pass == (*it).second);
@@ -75,7 +78,7 @@ scx::Arg* AuthRealm::arg_resolve(const std::string& name)
   scx::Arg* a = SCXBASE ArgObjectInterface::arg_resolve(name);
   if (a==0 || (dynamic_cast<scx::ArgError*>(a)!=0)) {
     delete a;
-    return m_host.arg_resolve(name);
+    return m_module.arg_resolve(name);
   }
   return a;
 }
@@ -84,7 +87,8 @@ scx::Arg* AuthRealm::arg_resolve(const std::string& name)
 scx::Arg* AuthRealm::arg_lookup(const std::string& name)
 {
   // Methods
-  if ("add" == name) {
+  if ("add" == name ||
+      "auth" == name) {
     return new scx::ArgObjectFunction(new scx::ArgObject(this),name);
   }
 
@@ -115,21 +119,71 @@ scx::Arg* AuthRealm::arg_function(
     std::string s_pass = a_pass->get_string();
 
     log("Adding user '" + s_user + "'");
+    m_mutex.lock();
     m_users[s_user] = s_pass;
+    m_mutex.unlock();
 
     return 0;
+  }
+
+  if ("auth" == name) {
+    const scx::ArgString* a_user =
+      dynamic_cast<const scx::ArgString*>(l->get(0));
+    if (!a_user) {
+      return new scx::ArgError("add() No user specified");
+    }
+    std::string s_user = a_user->get_string();
+
+    const scx::ArgString* a_pass =
+      dynamic_cast<const scx::ArgString*>(l->get(1));
+    if (!a_pass) {
+      return new scx::ArgError("add() No pass specified");
+    }
+    std::string s_pass = a_pass->get_string();
+
+    return new scx::ArgInt(authorised(s_user,s_pass));
   }
 
   return 0;
 }
 
+//=========================================================================
+void AuthRealm::refresh()
+{
+  scx::FileStat stat(m_path);
+  if (stat.is_file()) {
+    if (m_modtime != stat.time()) {
+      scx::MutexLocker locker(m_mutex);
+
+      m_users.clear();
+      scx::File file;
+      if (scx::Ok == file.open(m_path,scx::File::Read)) {
+	scx::LineBuffer* tok = new scx::LineBuffer("");
+	file.add_stream(tok);
+	std::string line;
+	while (scx::Ok == tok->tokenize(line)) {
+	  std::string::size_type i = line.find_first_of(" ");
+	  std::string username;
+	  std::string password;
+	  username = line.substr(0,i);
+	  i = line.find_first_not_of(" ",i);
+	  password = line.substr(i);
+	  if (!username.empty() && !password.empty()) {
+	    m_users[username] = password;
+	  }
+	}
+	file.close();
+	m_modtime = stat.time();
+      }
+    }
+  }
+}
+
 
 //=========================================================================
 AuthRealmManager::AuthRealmManager(
-  HTTPModule& module,
-  Host& host
-) : m_module(module),
-    m_host(host)
+  HTTPModule& module
+) : m_module(module)
 {
 
 }
@@ -169,7 +223,7 @@ scx::Arg* AuthRealmManager::arg_resolve(const std::string& name)
   scx::Arg* a = SCXBASE ArgObjectInterface::arg_resolve(name);
   if (a==0 || (dynamic_cast<scx::ArgError*>(a)!=0)) {
     delete a;
-    return m_host.arg_resolve(name);
+    return m_module.arg_resolve(name);
   }
   return a;
 }
@@ -184,6 +238,16 @@ scx::Arg* AuthRealmManager::arg_lookup(const std::string& name)
   }
 
   // Sub-objects
+  
+  if ("list" == name) {
+    std::ostringstream oss;
+    for (std::map<std::string,AuthRealm*>::const_iterator it = m_realms.begin();
+	 it != m_realms.end();
+	 ++it) {
+      oss << (*it).first << "\n";
+    }
+    return new scx::ArgString(oss.str());
+  }
   
   std::map<std::string,AuthRealm*>::const_iterator it = m_realms.find(name);
   if (it != m_realms.end()) {
@@ -214,9 +278,16 @@ scx::Arg* AuthRealmManager::arg_function(
     if (it != m_realms.end()) {
       return new scx::ArgError("add_realm() Realm already exists");
     }
+
+    const scx::ArgString* a_path =
+      dynamic_cast<const scx::ArgString*>(l->get(1));
+    if (!a_path) {
+      return new scx::ArgError("add_realm() No path specified");
+    }
+    std::string s_path = a_path->get_string();
     
     log("Adding realm '" + s_realm + "'");
-    m_realms[s_realm] = new AuthRealm(m_module,m_host,s_realm);
+    m_realms[s_realm] = new AuthRealm(m_module,s_realm,s_path);
 
     return 0;
   }

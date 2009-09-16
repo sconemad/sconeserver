@@ -25,7 +25,8 @@ namespace scx {
 //=============================================================================
 Mutex::Mutex()
 {
-  DEBUG_COUNT_CONSTRUCTOR(Mutex);
+  // NOTE: Cannot use DEBUG_COUNT here as the counter itself uses a mutex!
+  // DEBUG_COUNT_CONSTRUCTOR(Mutex);
 
   pthread_mutexattr_init(&m_attr);
   pthread_mutexattr_settype(&m_attr,PTHREAD_MUTEX_RECURSIVE);
@@ -38,7 +39,7 @@ Mutex::~Mutex()
   pthread_mutex_destroy(&m_mutex);
   pthread_mutexattr_destroy(&m_attr);
 
-  DEBUG_COUNT_DESTRUCTOR(Mutex);
+  // DEBUG_COUNT_DESTRUCTOR(Mutex);
 }
 
 //=============================================================================

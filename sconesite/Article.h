@@ -26,7 +26,8 @@ Free Software Foundation, Inc.,
 
 #include "sconex/Stream.h"
 #include "sconex/FilePath.h"
-#include "sconex/MimeHeader.h"
+#include "sconex/Arg.h"
+#include "sconex/ArgStore.h"
 
 class SconesiteModule;
 class Profile;
@@ -57,12 +58,10 @@ public:
 
 protected:
 
-  void refresh();
-
   Profile& m_profile;
   scx::FilePath m_root;
 
-  scx::MimeHeaderTable m_metadata;
+  scx::ArgStore m_metastore;
 
 };
 

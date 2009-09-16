@@ -112,10 +112,10 @@ scx::Arg* HostMapper::arg_lookup(
   
   if ("list" == name) {
     std::ostringstream oss;
-    std::map<std::string,Host*>::const_iterator it = m_hosts.begin();
-    while (it != m_hosts.end()) {
+    for (std::map<std::string,Host*>::const_iterator it = m_hosts.begin();
+	 it != m_hosts.end();
+	 ++it) {
       oss << (*it).first << "\n";
-      it++;
     }
     return new scx::ArgString(oss.str());
   }

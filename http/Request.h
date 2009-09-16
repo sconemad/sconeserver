@@ -23,23 +23,22 @@ Free Software Foundation, Inc.,
 #define httpRequest_h
 
 #include "http/DocRoot.h"
-#include "sconex/Arg.h"
+#include "sconex/ArgObject.h"
 #include "sconex/VersionTag.h"
 #include "sconex/Uri.h"
 #include "sconex/MimeHeader.h"
 namespace http {
 
+class Session;
+
 //=============================================================================
-class HTTP_API Request : public scx::Arg {
+class HTTP_API Request : public scx::ArgObjectInterface {
 
 public:
 
   Request(const std::string& profile);
-  Request(const Request& c);
   
   virtual ~Request();
-
-  scx::Arg* new_copy() const;
 
   const std::string& get_method() const;
   const scx::Uri& get_uri() const;
@@ -58,6 +57,10 @@ public:
   void set_docroot(DocRoot* docroot);
   const DocRoot* get_docroot() const;
 
+  void set_session(Session* session);
+  const Session* get_session() const;
+  Session* get_session();
+
   void set_path(const scx::FilePath& path);
   const scx::FilePath& get_path() const;
 
@@ -67,14 +70,15 @@ public:
   void set_path_info(const std::string& pathinfo);
   const std::string& get_path_info() const;  
   
-  // Arg methods
-  virtual std::string get_string() const;
-  virtual int get_int() const;
-  virtual scx::Arg* op(
-    scx::Arg::OpType optype,
-    const std::string& opname,
-    scx::Arg* right
-  );
+  void set_param(const std::string& name, const std::string& value);
+  std::string get_param(const std::string& name) const;
+  bool is_param(const std::string& name) const;
+
+  // ArgObject interface
+  virtual std::string name() const;
+  virtual scx::Arg* arg_resolve(const std::string& name);
+  virtual scx::Arg* arg_lookup(const std::string& name);
+  virtual scx::Arg* arg_function(const std::string& name,scx::Arg* args);
   
 protected:
 
@@ -87,10 +91,13 @@ protected:
   Host* m_host;
   std::string m_profile;
   DocRoot* m_docroot;
+  Session* m_session;
   scx::FilePath m_path;
 
   std::string m_auth_user;
   std::string m_pathinfo;
+
+  scx::ArgMap m_params;
   
 private:
 

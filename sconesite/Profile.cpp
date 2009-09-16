@@ -117,6 +117,12 @@ void Profile::refresh()
 }
 
 //=========================================================================
+SconesiteModule& Profile::get_module()
+{
+  return m_module;
+}
+
+//=========================================================================
 scx::FilePath& Profile::get_path()
 {
   return m_path;

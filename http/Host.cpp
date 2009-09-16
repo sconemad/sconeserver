@@ -26,6 +26,7 @@ Free Software Foundation, Inc.,
 #include "http/MessageStream.h"
 #include "http/Request.h"
 #include "http/AuthRealm.h"
+#include "http/Session.h"
 #include "sconex/ConfigFile.h"
 namespace http {
 
@@ -42,20 +43,17 @@ Host::Host(
     m_hostname(hostname),
     m_dir(dir)
 {
-  m_realms = new AuthRealmManager(m_module,*this);
+
 }
 
 //=========================================================================
 Host::~Host()
 {
-  for (std::map<std::string,DocRoot*>::const_iterator it =
-         m_docroots.begin();
+  for (std::map<std::string,DocRoot*>::const_iterator it = m_docroots.begin();
        it != m_docroots.end();
        ++it) {
     delete (*it).second;
   }
-  
-  delete m_realms;
 }
 
 //=========================================================================
@@ -116,12 +114,6 @@ DocRoot* Host::get_docroot(const std::string& profile)
 }
 
 //=========================================================================
-AuthRealm* Host::lookup_realm(const std::string& realm)
-{
-  return m_realms->lookup_realm(realm);
-}
-
-//=========================================================================
 std::string Host::name() const
 {
   std::ostringstream oss;
@@ -155,10 +147,6 @@ scx::Arg* Host::arg_lookup(
   }
 
   // Sub-objects
-
-  if ("realms" == name) {
-    return new scx::ArgObject(m_realms);
-  }
 
   std::map<std::string,DocRoot*>::const_iterator it = m_docroots.find(name);
   if (it != m_docroots.end()) {

@@ -83,10 +83,13 @@ Arg* Arg::op(OpType optype, const std::string& opname, Arg* right)
         return new ArgInt(value != rvalue);
         
       } else if ("&"==opname) { // And
-        return new ArgInt(value && rvalue);
+	if (value && right) return right->new_copy();
+	return new_copy();
         
       } else if ("|"==opname) { // Or
-        return new ArgInt(value | rvalue);
+	if (value) return new_copy();
+	if (right) return right->new_copy();
+        return 0;
 
       } else if ("xor"==opname) { // Xor
         return new ArgInt((value!=0) ^ (rvalue!=0));
@@ -149,7 +152,7 @@ std::string ArgString::get_string() const
 //===========================================================================
 int ArgString::get_int() const
 {
-  return !m_string.empty();
+  return 1;
 }
 
 //===========================================================================
@@ -172,6 +175,11 @@ Arg* ArgString::op(OpType optype, const std::string& opname, Arg* right)
         m_orig->m_string = m_string;
       }
       return new_copy();
+
+    } else if (opname == ".") {
+      std::string name = right->get_string();
+      if (name == "length") return new ArgInt(m_string.size());
+      if (name == "empty") return new ArgInt(m_string.empty());
     }
   }
 
@@ -526,7 +534,7 @@ Arg* ArgList::op(OpType optype, const std::string& opname, Arg* right)
 	if (a) {
 	  return a->var_copy();
 	}
-	return 0;
+	return new ArgError("Not defined");
       }
     } else if (opname == ".") {
       std::string name = right->get_string();
@@ -696,12 +704,23 @@ Arg* ArgMap::op(OpType optype, const std::string& opname, Arg* right)
 	if (a) {
 	  return a->var_copy();
 	}
-	return 0;
+	return new ArgError("Not defined");
       }
     } else if (opname == ".") {
       std::string name = right->get_string();
       if (name == "size") return new ArgInt(m_map.size());
-      if (name == "keys") return keys();
+      if (name == "keys") {
+	ArgList* list = new ArgList();
+	for (std::map<std::string,Arg*>::const_iterator it = m_map.begin();
+	     it != m_map.end();
+	     ++it) {
+	  list->give( new ArgString((*it).first) );
+	}
+	return list;
+      }
+      
+      Arg* a = lookup(name);
+      if (a) return a->var_copy();
     }
   }
 
@@ -717,17 +736,20 @@ int ArgMap::size() const
 }
 
 //===========================================================================
-ArgList* ArgMap::keys() const
+void ArgMap::keys(std::vector<std::string>& keyvec) const
 {
-  if (m_orig) return m_orig->keys();
+  if (m_orig) { 
+    m_orig->keys(keyvec);
+    return;
+  }
 
-  ArgList* list = new ArgList();
+  keyvec.clear();
+  keyvec.reserve(size());
   for (std::map<std::string,Arg*>::const_iterator it = m_map.begin();
        it != m_map.end();
        ++it) {
-    list->give( new ArgString((*it).first) );
+    keyvec.push_back( (*it).first );
   }
-  return list;
 }
 
 //===========================================================================
@@ -757,7 +779,10 @@ Arg* ArgMap::lookup(const std::string& key)
 //===========================================================================
 void ArgMap::give(const std::string& key, Arg* arg)
 {
-  if (m_orig) m_orig->give(key,arg);
+  if (m_orig) {
+    m_orig->give(key,arg);
+    return;
+  }
 
   delete lookup(key);
   m_map[key] = arg;
@@ -897,7 +922,7 @@ int ArgError::get_int() const
 //===========================================================================
 Arg* ArgError::op(OpType optype, const std::string& opname, Arg* right)
 {
-  return new ArgError(m_string);
+  return Arg::op(optype,opname,right);
 }
 
 

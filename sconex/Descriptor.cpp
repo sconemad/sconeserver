@@ -94,6 +94,7 @@ int Descriptor::write(const std::string& string)
   int len = string.size();
   write(string.c_str(),len,nw);
   DEBUG_ASSERT(nw==len,"write(const std::string&) Did not write string");
+  if (nw!=len) throw std::exception();
   return nw;
 }
 

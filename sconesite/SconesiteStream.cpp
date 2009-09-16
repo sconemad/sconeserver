@@ -30,6 +30,7 @@ Free Software Foundation, Inc.,
 
 #include "http/HTTPModule.h"
 #include "http/Request.h"
+#include "http/Session.h"
 #include "http/MessageStream.h"
 #include "http/Status.h"
 
@@ -40,6 +41,50 @@ Free Software Foundation, Inc.,
 #include "sconex/StreamSocket.h"
 #include "sconex/Kernel.h"
 #include "sconex/StreamDebugger.h"
+
+//=========================================================================
+class ParamReaderStream : public scx::Stream {
+
+public:
+
+  ParamReaderStream(const std::string& name, http::Request& request)
+    : scx::Stream("ParamReader"),
+      m_name(name),
+      m_request(request)
+  {
+    enable_event(scx::Stream::Readable,true);
+  };
+
+  virtual scx::Condition event(scx::Stream::Event e)
+  {
+    if (e == scx::Stream::Readable) {
+      char buffer[1024];
+      scx::Condition c;
+      int na = 0;
+      do {
+	c = read(buffer,1024,na);
+	m_value += std::string(buffer,na);
+      } while (c == scx::Ok);
+
+      if (c == scx::End) {
+	m_request.set_param(m_name,m_value);
+	return scx::Close;
+      }
+    
+      return c;
+    }
+    
+    return scx::Ok;
+  };
+
+protected:
+  
+  std::string m_name;
+  std::string m_value;
+  http::Request& m_request;
+  
+};
+
 
 //=========================================================================
 SconesiteStream::SconesiteStream(
@@ -70,11 +115,6 @@ scx::Condition SconesiteStream::send_response()
   http::Response& resp = msg->get_response();
   const scx::Uri& uri = req.get_uri();
 
-  if (req.get_method() == "POST" && req.get_auth_user() == "") {
-    msg->get_response().set_status(http::Status::Forbidden);
-    return scx::Close;
-  }
-  
   Profile* profile = m_module.lookup_profile(m_profile);
   
   std::string pathinfo = req.get_path_info();
@@ -101,7 +141,7 @@ scx::Condition SconesiteStream::send_response()
     
   } else if (!art_file.empty()) {
     // Update the path in the request (cast away const for this!)
-    http::Request& reqmod = (http::Request&)req;
+    http::Request& reqmod = const_cast<http::Request&>(req);
     reqmod.set_path(profile->get_path() + "art" + art_name + art_file);
 
     // Connect the getfile module and relinquish
@@ -154,79 +194,84 @@ scx::Condition SconesiteStream::start_section(const scx::MimeHeaderTable& header
   STREAM_DEBUG_LOG("Start section " << m_section);
 
   http::MessageStream* msg = GET_HTTP_MESSAGE();
-
   const http::Request& req = msg->get_request();
-  bool auth = (req.get_auth_user() != "");
+  const http::Session* s = req.get_session();
 
-  //  const scx::Uri& uri = req.get_uri();
-  Profile* profile = m_module.lookup_profile(m_profile);
-  std::string pathinfo = req.get_path_info();
-  std::string::size_type is = pathinfo.find_first_of("/");
-  std::string art_name = pathinfo;
-  std::string art_file = "";
-  if (is != std::string::npos) {
-    art_name = pathinfo.substr(0,is);
-    art_file = pathinfo.substr(is+1);
-  }
-  m_article = profile->lookup_article(art_name);
+  bool auth = (s && s->allow_upload());
+  if (auth) {
 
-  if (0 == m_article && auth) {
-    m_article = profile->create_article(art_name);
-  }
-  
-  scx::MimeHeader disp = headers.get_parsed("Content-Disposition");
-  bool discard = true;
-  
-  scx::FilePath path = m_article->get_root();
-  const scx::MimeHeaderValue* fdata = disp.get_value("form-data");
-  if (fdata) {
+    Profile* profile = m_module.lookup_profile(m_profile);
+    std::string pathinfo = req.get_path_info();
+    std::string::size_type is = pathinfo.find_first_of("/");
+    std::string art_name = pathinfo;
+    std::string art_file = "";
+    if (is != std::string::npos) {
+      art_name = pathinfo.substr(0,is);
+      art_file = pathinfo.substr(is+1);
+    }
+    m_article = profile->lookup_article(art_name);
+    
+    if (0 == m_article && auth) {
+      m_article = profile->create_article(art_name);
+    }
+    
+    scx::FilePath path = m_article->get_root();
     std::string name;
+    scx::MimeHeader disp = headers.get_parsed("Content-Disposition");
+    const scx::MimeHeaderValue* fdata = disp.get_value("form-data");
+    if (!fdata) {
+      return scx::Close;
+    }
+    
     fdata->get_parameter("name",name);
     STREAM_DEBUG_LOG("Section name is '" << name << "'");
-    if (name == "artbody") {
-      discard = false;
-      path += "article.xml";
-    } else if (name == "file") {
-      std::string filename;
-      fdata->get_parameter("filename",filename);
-      STREAM_DEBUG_LOG("Section filename is '" << filename << "'");
-      if (filename != "") {
-        discard = false;
-	path += "files";
-        path += filename;
+    
+    const std::string file_pattern = "file_";
+    std::string::size_type ip = name.find(file_pattern);
+    if (ip == 0) {
+      std::string fpname = name.substr(file_pattern.length());
+      // Name starts with "file_" so stream it into a file
+      if (fpname == "article") {
+	path += "article.xml";
+	
+      } else {
+	// File upload
+	std::string filename;
+	fdata->get_parameter("filename",filename);
+	if (filename != "") {
+	  path += "files";
+	  path += filename;
+	}
       }
-    }
-  }
-  
-  // Discard posted data from unauthorized user
-  if (!auth) {
-    discard = true;
-  }
-
-  if (!discard) {
-    scx::File* file = new scx::File();
-    if (file->open(path.path(),scx::File::Write | scx::File::Create | scx::File::Truncate) == scx::Ok) {
-      STREAM_DEBUG_LOG("Writing section to '" << path.path() << "'");
-      endpoint().add_stream(new scx::StreamDebugger("https-file"));
-      scx::StreamTransfer* xfer = new scx::StreamTransfer(&endpoint());
-      file->add_stream(xfer);
-      // Add file to kernel
-      scx::Kernel::get()->connect(file,0);
-      file = 0;
-    } else {
+      STREAM_DEBUG_LOG("Streaming section to file '" << path.path() << "'");
+      
+      scx::File* file = new scx::File();
+      if (file->open(path.path(),scx::File::Write | scx::File::Create | scx::File::Truncate) == scx::Ok) {
+	STREAM_DEBUG_LOG("Writing section to '" << path.path() << "'");
+	endpoint().add_stream(new scx::StreamDebugger("https-file"));
+	scx::StreamTransfer* xfer = new scx::StreamTransfer(&endpoint());
+	file->add_stream(xfer);
+	// Add file to kernel
+	scx::Kernel::get()->connect(file,0);
+	file = 0;
+	return scx::Ok;
+      }
+      
       STREAM_DEBUG_LOG("Error opening file '" << path.path() << "'");
-      discard = true;
       delete file;
+      
+    } else {
+      STREAM_DEBUG_LOG("Writing section to parameter '" << name << "'");
+      http::Request& creq = const_cast<http::Request&>(req);
+      endpoint().add_stream(new ParamReaderStream(name,creq));
+      return scx::Ok;
     }
   }
-  
-  if (discard) {
-    // Transfer to a null file to discard the data
-    scx::NullFile* file = new scx::NullFile();
-    scx::StreamTransfer* xfer = new scx::StreamTransfer(&endpoint());
-    file->add_stream(xfer);
-    scx::Kernel::get()->connect(file,0);
-  }
-  
-  return scx::Ok;
+    
+  // Transfer to a null file to discard the data
+  scx::NullFile* file = new scx::NullFile();
+  scx::StreamTransfer* xfer = new scx::StreamTransfer(&endpoint());
+  file->add_stream(xfer);
+  scx::Kernel::get()->connect(file,0);
+  return scx::Ok;  
 }

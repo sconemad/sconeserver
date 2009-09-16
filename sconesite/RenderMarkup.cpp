@@ -42,7 +42,7 @@ RenderMarkupContext::RenderMarkupContext(
   const http::Request& request
 ) : m_profile(profile),
     m_output(output),
-    m_request((http::Request*)request.new_copy()),
+    m_request(request),
     m_article(0)
 {
 
@@ -52,7 +52,6 @@ RenderMarkupContext::RenderMarkupContext(
 RenderMarkupContext::~RenderMarkupContext()
 {
   delete m_output;
-  delete m_request;
 }
 
 //=========================================================================
@@ -64,7 +63,7 @@ Profile& RenderMarkupContext::get_profile()
 //=========================================================================
 const http::Request& RenderMarkupContext::get_request() const
 {
-  return *m_request;
+  return m_request;
 }
 
 //=========================================================================
@@ -224,10 +223,13 @@ scx::Arg* RenderMarkupContext::arg_lookup(const std::string& name)
   }
 
   // Sub-objects
-  if ("request" == name) {
-    return m_request->new_copy();
+  if ("request" == name) return new scx::ArgObject(&m_request);
+  if ("session" == name) return new scx::ArgObject(m_request.get_session());
+  if ("realms" == name) {
+    scx::ModuleRef http = scx::Kernel::get()->get_module("http");
+    if (http.valid()) return http.module()->arg_lookup("realms");
   }
-  
+
   // Article dependent sub-objects
   if ("article" == name) {
     if (m_article) {

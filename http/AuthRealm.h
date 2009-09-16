@@ -22,11 +22,12 @@ Free Software Foundation, Inc.,
 #ifndef httpAuthRealm_h
 #define httpAuthRealm_h
 
-#include "http/HTTPModule.h"
+#include "http/http.h"
 #include "sconex/ArgObject.h"
+#include "sconex/FilePath.h"
 namespace http {
 
-class HostMapper;
+class HTTPModule;
 class MessageStream;
   
 //=============================================================================
@@ -35,8 +36,8 @@ public:
 
   AuthRealm(
     HTTPModule& module,
-    Host& host,
-    const std::string name
+    const std::string name,
+    const scx::FilePath& path
   );
   
   // Create an authrealm for specified profile and root path
@@ -45,7 +46,7 @@ public:
 
   const std::string& get_realm() const;
   
-  bool authorised(const std::string& user, const std::string& pass) const;
+  bool authorised(const std::string& user, const std::string& pass);
 
   virtual std::string name() const;
   virtual scx::Arg* arg_resolve(const std::string& name);
@@ -54,11 +55,15 @@ public:
   
 protected:
 
+  void refresh();
+
 private:
 
   HTTPModule& m_module;
-  Host& m_host;
   std::string m_name;
+  scx::FilePath m_path;
+  scx::Date m_modtime;
+  scx::Mutex m_mutex;
 
   std::map<std::string,std::string> m_users;
 };
@@ -67,10 +72,7 @@ private:
 class HTTP_API AuthRealmManager : public scx::ArgObjectInterface {
 public:
 
-  AuthRealmManager(
-    HTTPModule& module,
-    Host& host
-  );
+  AuthRealmManager(HTTPModule& module);
   
   virtual ~AuthRealmManager();
   
@@ -86,7 +88,6 @@ protected:
 private:
 
   HTTPModule& m_module;
-  Host& m_host;
 
   std::map<std::string,AuthRealm*> m_realms;
 };

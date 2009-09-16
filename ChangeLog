@@ -1,4 +1,26 @@
 
+2009-09-16 Andrew Wedgbury <wedge@sconemad.com>
+
+	* http/Session: New session object and session manager.
+	* http/DocRoot: Use HTTP session cookies.
+	* http/AuthRealm: Tidy and add management interface.
+	* http/HTTPModule: Tidy, add session manager, move realm manager.
+	* http/ResponseStream: (almost) fix horrible boundary break bug.
+	Rewrite option processing and urldecode.
+	Move option storage to Request (now called params).
+	* sconex/Arg: Perl-style short circuit & and | ops for Arg.
+	Allow base ops for ArgError.
+	Add ArgString length and empty props.
+	Allow object style member lookup for ArgMap.
+	* sconex/ArgProc: Allow "short-circuit" parse with no exec mode.
+	* sconex/ArgStore: New Arg persistent storage object.
+	* sconex/Descriptor: Allow 0 byte writes with no error.
+	* sconex/Debug: Improve instance counting system.
+	* test/TestModule: Display extra instance counting info.
+	* sconesite/SconesiteStream: Read posted multipart params.
+	* sconesite/Article: Use ArgStore to store metadata.
+	* sconesite/RenderMarkup: Provide access to session and realms.
+
 2009-09-08 Andrew Wedgbury <wedge@sconemad.com>
 
 	* sconesite/ThreadManager: New thread manager based on multiplexer.

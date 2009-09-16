@@ -21,7 +21,13 @@ Free Software Foundation, Inc.,
 
 #include "sconex/Debug.h"
 #include "sconex/Logger.h"
+#include "sconex/Mutex.h"
 namespace scx {
+
+#define DEBUG_BREAKPOINT asm("int $3");
+
+// Swtich on debug instance counting
+//#define DEBUG_INSTANCE_COUNT
 
 //=============================================================================
 DebugInstanceCounter::DebugInstanceCounter()
@@ -32,15 +38,33 @@ DebugInstanceCounter::DebugInstanceCounter()
 }
 
 //=============================================================================
-void DebugInstanceCounter::count_constructor()
+void DebugInstanceCounter::reset()
 {
+  m_addrs.clear();
+}
+
+//=============================================================================
+void DebugInstanceCounter::count_constructor(void* addr)
+{
+  m_addrs.push_back( std::pair<void*,int>(addr,m_max) );
+
   ++m_num;
   ++m_max;
 }
 
 //=============================================================================
-void DebugInstanceCounter::count_destructor()
+void DebugInstanceCounter::count_destructor(void* addr)
 {
+  for (std::vector< std::pair<void*,int> >::iterator it = m_addrs.begin();
+       it != m_addrs.end();
+       ++it) {
+    std::pair<void*,int>& p = *it;
+    if (p.first == addr) {
+      m_addrs.erase(it);
+      break;
+    }
+  }
+
   --m_num;
 }
 
@@ -54,6 +78,20 @@ int DebugInstanceCounter::get_num() const
 int DebugInstanceCounter::get_max() const
 {
   return m_max;
+}
+
+//=============================================================================
+std::string DebugInstanceCounter::get_deltas()
+{
+  std::ostringstream oss;
+  for (std::vector< std::pair<void*,int> >::iterator it = m_addrs.begin();
+       it != m_addrs.end();
+       ++it) {
+    std::pair<void*,int>& p = *it;
+    oss << p.second << " ";
+  }
+  
+  return oss.str();
 }
   
 Debug* Debug::s_debug = 0;
@@ -119,21 +157,53 @@ void Debug::log(
 }
 
 //=============================================================================
-void Debug::count_constuctor(const std::string& class_name)
+void Debug::count_constuctor(const std::string& class_name, void* addr)
 {
-  m_inst_counts[class_name].count_constructor();
+#ifdef DEBUG_INSTANCE_COUNT
+  m_mutex->lock();
+
+  // Place breakpoints for particular instance construction
+  if (class_name == "Arg") {
+    // if (m_inst_counts[class_name].get_max() == 2433) DEBUG_BREAKPOINT;
+  }
+
+  m_inst_counts[class_name].count_constructor(addr);
+  m_mutex->unlock();
+#endif
 }
 
 //=============================================================================
-void Debug::count_destuctor(const std::string& class_name)
+void Debug::count_destuctor(const std::string& class_name, void* addr)
 {
-  m_inst_counts[class_name].count_destructor();
+#ifdef DEBUG_INSTANCE_COUNT
+  m_mutex->lock();
+  m_inst_counts[class_name].count_destructor(addr);
+  m_mutex->unlock();
+#endif
 }
 
 //=============================================================================
-const std::map<std::string,DebugInstanceCounter>& Debug::get_counters() const
+void Debug::reset_counters()
 {
-  return m_inst_counts;
+#ifdef DEBUG_INSTANCE_COUNT
+  m_mutex->lock();
+  for (std::map<std::string,DebugInstanceCounter>::iterator it = m_inst_counts.begin();
+       it != m_inst_counts.end();
+       ++it) {
+    ((*it).second).reset();
+  }
+  m_mutex->unlock();
+#endif
+}
+
+//=============================================================================
+void Debug::get_counters(std::map<std::string,DebugInstanceCounter>& counters)
+{
+#ifdef DEBUG_INSTANCE_COUNT
+  m_mutex->lock();
+  counters = m_inst_counts;
+  m_mutex->unlock();
+#endif
 }
 
 //=============================================================================
@@ -145,6 +215,7 @@ void Debug::set_logger(Logger* logger)
 //=============================================================================
 Debug::Debug()
   : m_logger(0),
+    m_mutex(new Mutex()),
     m_stop_on_assert(false)
 {
 

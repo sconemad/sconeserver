@@ -13,6 +13,7 @@ ArgObject.cpp \
 ArgProc.cpp \
 ArgScript.cpp \
 ArgStatement.cpp \
+ArgStore.cpp \
 Base64.cpp \
 Buffer.cpp \
 ConfigFile.cpp \
@@ -71,6 +72,7 @@ ArgObject.h \
 ArgProc.h \
 ArgScript.h \
 ArgStatement.h \
+ArgStore.h \
 Base64.h \
 Buffer.h \
 ConfigFile.h \

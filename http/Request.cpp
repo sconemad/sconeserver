@@ -21,6 +21,7 @@ Free Software Foundation, Inc.,
 
 
 #include "http/Request.h"
+#include "http/Session.h"
 
 #include "sconex/ModuleRef.h"
 #include "sconex/StreamSocket.h"
@@ -32,37 +33,16 @@ namespace http {
 Request::Request(const std::string& profile)
   : m_host(0),
     m_profile(profile),
-    m_docroot(0)
+    m_docroot(0),
+    m_session(0)
 {
   
 }
 
-//===========================================================================
-Request::Request(const Request& c)
-  : m_method(c.m_method),
-    m_uri(c.m_uri),
-    m_version(c.m_version),
-    m_headers(c.m_headers),
-    m_host(c.m_host),
-    m_profile(c.m_profile),
-    m_docroot(c.m_docroot),
-    m_path(c.m_path),
-    m_auth_user(c.m_auth_user),
-    m_pathinfo(c.m_pathinfo)
-{
-
-}
-  
 //===========================================================================
 Request::~Request()
 {
 
-}
-
-//===========================================================================
-scx::Arg* Request::new_copy() const
-{
-  return new Request(*this);
 }
 
 //===========================================================================
@@ -204,6 +184,24 @@ const DocRoot* Request::get_docroot() const
 }
 
 //=============================================================================
+void Request::set_session(Session* session)
+{
+  m_session = session;
+}
+
+//=============================================================================
+const Session* Request::get_session() const
+{
+  return m_session;
+}
+
+//=============================================================================
+Session* Request::get_session()
+{
+  return m_session;
+}
+
+//=============================================================================
 void Request::set_path(const scx::FilePath& path)
 {
   m_path = path;
@@ -240,32 +238,68 @@ const std::string& Request::get_path_info() const
 }
 
 //=============================================================================
-std::string Request::get_string() const
+void Request::set_param(const std::string& name, const std::string& value)
 {
-  return std::string("REQUEST(") + m_uri.get_string() + ")";
+  m_params.give(name, new scx::ArgString(value));
 }
 
 //=============================================================================
-int Request::get_int() const
+std::string Request::get_param(const std::string& name) const
 {
-  return !m_uri.get_string().empty();
-}
-
-//=============================================================================
-scx::Arg* Request::op(
-  scx::Arg::OpType optype,
-  const std::string& opname,
-  scx::Arg* right
-)
-{
-  if (scx::Arg::Binary == optype && "." == opname) {
-    std::string name = right->get_string();
-    if (name == "auth") return new scx::ArgInt(m_auth_user != "");
-    if (name == "user") return new scx::ArgString(m_auth_user);
-    if (name == "method") return new scx::ArgString(m_method);
-    if (name == "uri") return m_uri.new_copy();
-    if (name == "profile") return new scx::ArgString(m_profile);
+  const scx::Arg* a = m_params.lookup(name);
+  if (a == 0) {
+    return "";
   }
+  return a->get_string();
+}
+
+//=============================================================================
+bool Request::is_param(const std::string& name) const
+{
+  return (m_params.lookup(name) != 0);
+}
+
+//=========================================================================
+std::string Request::name() const
+{
+  return "request";
+}
+
+//=========================================================================
+scx::Arg* Request::arg_resolve(const std::string& name)
+{
+  return SCXBASE ArgObjectInterface::arg_resolve(name);
+}
+
+//=========================================================================
+scx::Arg* Request::arg_lookup(const std::string& name)
+{
+  // Methods
+  if ("test" == name) {
+    return new scx::ArgObjectFunction(new scx::ArgObject(this),name);
+  }
+  
+  if (name == "auth") return new scx::ArgInt(m_auth_user != "");
+  if (name == "user") return new scx::ArgString(m_auth_user);
+  if (name == "method") return new scx::ArgString(m_method);
+  if (name == "uri") return m_uri.new_copy();
+  if (name == "version") return m_version.new_copy();
+  if (name == "profile") return new scx::ArgString(m_profile);
+  if (name == "params") return m_params.new_copy();
+  if (name == "session" && m_session) return new scx::ArgObject(m_session);
+
+  return SCXBASE ArgObjectInterface::arg_lookup(name);
+}
+
+//=========================================================================
+scx::Arg* Request::arg_function(const std::string& name,scx::Arg* args)
+{
+  scx::ArgList* l = dynamic_cast<scx::ArgList*>(args);
+
+  if (name == "test") {
+    return 0;
+  }
+
   return 0;
 }
 

@@ -280,7 +280,7 @@ bool MessageStream::connect_request_module(bool error)
   }
   
   // Lookup host object
-  Host* host = m_module.get_host_mapper().host_lookup(uri.get_host());
+  Host* host = m_module.get_hosts().host_lookup(uri.get_host());
   if (host==0) {
     // This is bad, user should have setup a default host
     m_module.log(id + " Unknown host '" + uri.get_host() + "'",

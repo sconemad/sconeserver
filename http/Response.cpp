@@ -36,24 +36,9 @@ Response::Response()
 }
 
 //===========================================================================
-Response::Response(const Response& c)
-  : m_version(c.m_version),
-    m_status(c.m_status),
-    m_headers(c.m_headers)
-{
-
-}
-  
-//===========================================================================
 Response::~Response()
 {
 
-}
-
-//===========================================================================
-scx::Arg* Response::new_copy() const
-{
-  return new Response(*this);
 }
 
 //===========================================================================
@@ -108,25 +93,42 @@ std::string Response::build_header_string()
   return str;
 }
 
-//=============================================================================
-std::string Response::get_string() const
+//=========================================================================
+std::string Response::name() const
 {
-  return std::string("RESPONSE(") + m_status.string() + ")";
+  return "request";
 }
 
-//=============================================================================
-int Response::get_int() const
+//=========================================================================
+scx::Arg* Response::arg_resolve(const std::string& name)
 {
-  return m_status.valid();
+  return SCXBASE ArgObjectInterface::arg_resolve(name);
 }
 
-//=============================================================================
-scx::Arg* Response::op(
-  scx::Arg::OpType optype,
-  const std::string& opname,
-  scx::Arg* right
-)
+//=========================================================================
+scx::Arg* Response::arg_lookup(const std::string& name)
 {
+  // Methods
+  if ("test" == name) {
+    return new scx::ArgObjectFunction(new scx::ArgObject(this),name);
+  }
+  
+  if (name == "version") return m_version.new_copy();
+  if (name == "status") return new scx::ArgString(m_status.string());
+  if (name == "statuscode") return new scx::ArgInt(m_status.code());
+
+  return SCXBASE ArgObjectInterface::arg_lookup(name);
+}
+
+//=========================================================================
+scx::Arg* Response::arg_function(const std::string& name,scx::Arg* args)
+{
+  scx::ArgList* l = dynamic_cast<scx::ArgList*>(args);
+
+  if (name == "test") {
+    return 0;
+  }
+
   return 0;
 }
 

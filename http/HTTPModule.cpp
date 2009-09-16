@@ -33,10 +33,11 @@ namespace http {
 SCONESERVER_MODULE(HTTPModule);
 
 //=========================================================================
-HTTPModule::HTTPModule(
-)
+HTTPModule::HTTPModule()
   : SCXBASE Module("http",scx::version()),
-    m_host_mapper(*this)
+    m_hosts(*this),
+    m_realms(*this),
+    m_sessions(*this)
 {
 
 }
@@ -80,9 +81,21 @@ bool HTTPModule::connect(
 }
 
 //=============================================================================
-HostMapper& HTTPModule::get_host_mapper()
+HostMapper& HTTPModule::get_hosts()
 {
-  return m_host_mapper;
+  return m_hosts;
+}
+
+//=========================================================================
+AuthRealmManager& HTTPModule::get_realms()
+{
+  return m_realms;
+}
+
+//=========================================================================
+SessionManager& HTTPModule::get_sessions()
+{
+  return m_sessions;
 }
 
 //=============================================================================
@@ -90,10 +103,10 @@ scx::Arg* HTTPModule::arg_lookup(const std::string& name)
 {
   // Sub-objects
   
-  if ("hosts" == name) {
-    return new scx::ArgObject(&m_host_mapper);
-  }
-    
+  if ("hosts" == name) return new scx::ArgObject(&m_hosts);
+  if ("realms" == name) return new scx::ArgObject(&m_realms);
+  if ("sessions" == name) return new scx::ArgObject(&m_sessions);
+
   return SCXBASE Module::arg_lookup(name);
 }
 

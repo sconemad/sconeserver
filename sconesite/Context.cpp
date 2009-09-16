@@ -50,7 +50,8 @@ scx::Arg* Context::arg_resolve(const std::string& name)
 scx::Arg* Context::arg_lookup(const std::string& name)
 {
   // Methods
-  if ("date" == name) {
+  if ("Date" == name ||
+      "Time" == name) {
     return new scx::ArgObjectFunction(new scx::ArgObject(this),name);
   }
 
@@ -62,8 +63,20 @@ scx::Arg* Context::arg_function(const std::string& name,scx::Arg* args)
 {
   scx::ArgList* l = dynamic_cast<scx::ArgList*>(args);
 
-  if (name == "date") {
+  if (name == "Date") {
+    scx::Arg* a = l->get(0);
+    if (a) {
+      return new scx::Date(a->get_string());
+    }
     return scx::Date::now().new_copy();
+  }
+
+  if (name == "Time") {
+    scx::Arg* a = l->get(0);
+    if (a) {
+      return new scx::Time(a->get_string());
+    }
+    return scx::Date::now().time().new_copy();
   }
 
   return 0;

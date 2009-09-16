@@ -142,6 +142,42 @@ bool DocRoot::connect_request(scx::Descriptor* endpoint, Request& request, Respo
         modmap = lookup_extn_mod(uripath);
       }
     }
+
+    // Check for session cookie
+    std::string cookie = request.get_header("Cookie");
+    DEBUG_LOG("COOKIE: " << cookie);
+    std::string scxid;
+    if (!cookie.empty()) {
+      const std::string pattern = "scxid=";
+      std::string::size_type start = cookie.find(pattern);
+      if (start != std::string::npos) {
+	start += pattern.length();
+	std::string::size_type end = cookie.find_first_of(" ;",start);
+	if (end != std::string::npos) {
+	  scxid = cookie.substr(start,end-start);
+	} else {
+	scxid = cookie.substr(start);
+	}
+      }
+    }
+
+    // Lookup the session
+    Session* s = m_module.get_sessions().lookup_session(scxid);
+    if (s!=0) {
+      // Existing session
+      DEBUG_LOG("Existing session: " << s->get_id());
+
+    } else {
+      // Create new session
+      s = m_module.get_sessions().new_session();
+      response.set_header("Set-Cookie","scxid="+s->get_id()+"; path=/");
+      DEBUG_LOG("New session: " << s->get_id());
+    }
+
+    if (s) {
+      s->reset_timeout();
+      request.set_session(s);
+    }
   }
 
   // Check we have a module map
@@ -444,7 +480,7 @@ bool DocRoot::check_auth(Request& request, Response& response)
   const std::string& uripath = uri.get_path();
   
   std::string realm_name = lookup_realm_map(uripath);
-  AuthRealm* realm = m_host.lookup_realm(realm_name);
+  AuthRealm* realm = m_module.get_realms().lookup_realm(realm_name);
   if (realm) {
     std::string auth = request.get_header("AUTHORIZATION");
     std::string user;

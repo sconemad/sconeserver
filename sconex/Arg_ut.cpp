@@ -77,7 +77,7 @@ void test_ArgString()
 
   UTCOD(ArgString as1(""));
   UTEST(as1.get_string() == "");
-  UTEST(as1.get_int() == 0);
+  UTEST(as1.get_int() == 1);
 
   UTCOD(ArgString as2("fish1234"));
   UTEST(as2.get_string() == "fish1234");

@@ -73,11 +73,7 @@ protected:
   virtual scx::Condition start_section(const scx::MimeHeaderTable& headers);
   virtual scx::Condition send_response();
 
-  bool is_opt(const std::string& name) const;
-  std::string get_opt(const std::string& name) const;
-  
-  scx::Condition decode_opts(http::MessageStream& msg);
-  bool decode_opts_string(const char* cstr,int cstr_len);
+  bool decode_param_string(const std::string& str,Request& request);
 
   bool send_file(const scx::FilePath& path);
   
@@ -91,7 +87,9 @@ private:
   void mimeheader_end();
 
   ResponseSequence m_resp_seq;
-  std::map<std::string,std::string> m_opts;
+
+  std::string m_param_string;
+
   scx::Buffer m_buffer;
   std::string m_mime_boundary;
   int m_mime_boundary_pos;

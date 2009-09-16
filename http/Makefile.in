@@ -59,9 +59,9 @@ am__installdirs = "$(DESTDIR)$(pkglibdir)" "$(DESTDIR)$(sysconfdir)" \
 pkglibLTLIBRARIES_INSTALL = $(INSTALL)
 LTLIBRARIES = $(pkglib_LTLIBRARIES)
 http_la_LIBADD =
-am_http_la_OBJECTS = ConnectionStream.lo DocRoot.lo Host.lo \
-	HostMapper.lo MessageStream.lo Request.lo Response.lo \
-	ResponseStream.lo HTTPModule.lo Status.lo AuthRealm.lo
+am_http_la_OBJECTS = AuthRealm.lo ConnectionStream.lo DocRoot.lo \
+	Host.lo HostMapper.lo HTTPModule.lo MessageStream.lo \
+	Request.lo Response.lo ResponseStream.lo Session.lo Status.lo
 http_la_OBJECTS = $(am_http_la_OBJECTS)
 http_la_LINK = $(LIBTOOL) --tag=CXX $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) \
 	--mode=link $(CXXLD) $(AM_CXXFLAGS) $(CXXFLAGS) \
@@ -214,32 +214,34 @@ SUBDIRS = dirindex getfile errorpage
 AM_CPPFLAGS = -I$(top_srcdir)
 pkglib_LTLIBRARIES = http.la
 http_la_SOURCES = \
+AuthRealm.cpp \
 ConnectionStream.cpp \
 DocRoot.cpp \
 Host.cpp \
 HostMapper.cpp \
+HTTPModule.cpp \
 MessageStream.cpp \
 Request.cpp \
 Response.cpp \
 ResponseStream.cpp \
-HTTPModule.cpp \
-Status.cpp \
-AuthRealm.cpp
+Session.cpp \
+Status.cpp
 
 httpincludedir = $(includedir)/http
 httpinclude_HEADERS = \
+AuthRealm.h \
 ConnectionStream.h \
 DocRoot.h \
 Host.h \
 HostMapper.h \
+http.h \
+HTTPModule.h \
+MessageStream.h \
 Request.h \
 Response.h \
 ResponseStream.h \
-MessageStream.h \
-http.h \
-HTTPModule.h \
-Status.h \
-AuthRealm.h
+Session.h \
+Status.h
 
 http_la_LDFLAGS = -module -avoid-version
 sysconf_DATA = http.conf
@@ -323,6 +325,7 @@ distclean-compile:
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/Request.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/Response.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/ResponseStream.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/Session.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/Status.Plo@am__quote@
 
 .cpp.o:

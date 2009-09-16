@@ -8,33 +8,35 @@ AM_CPPFLAGS = -I$(top_srcdir)
 pkglib_LTLIBRARIES = http.la
 
 http_la_SOURCES = \
+AuthRealm.cpp \
 ConnectionStream.cpp \
 DocRoot.cpp \
 Host.cpp \
 HostMapper.cpp \
+HTTPModule.cpp \
 MessageStream.cpp \
 Request.cpp \
 Response.cpp \
 ResponseStream.cpp \
-HTTPModule.cpp \
-Status.cpp \
-AuthRealm.cpp
+Session.cpp \
+Status.cpp
 
 httpincludedir = $(includedir)/http
 
 httpinclude_HEADERS = \
+AuthRealm.h \
 ConnectionStream.h \
 DocRoot.h \
 Host.h \
 HostMapper.h \
+http.h \
+HTTPModule.h \
+MessageStream.h \
 Request.h \
 Response.h \
 ResponseStream.h \
-MessageStream.h \
-http.h \
-HTTPModule.h \
-Status.h \
-AuthRealm.h
+Session.h \
+Status.h
 
 http_la_LDFLAGS = -module -avoid-version
 

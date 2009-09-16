@@ -45,8 +45,8 @@ public:
 
 protected:
 
-  Arg* expression(int p, bool f);
-  Arg* primary(bool f);
+  Arg* expression(int p, bool f, bool exec=true);
+  Arg* primary(bool f, bool exec=true);
   void next();
   int prec(Arg::OpType optype, const std::string& op) const;
 
