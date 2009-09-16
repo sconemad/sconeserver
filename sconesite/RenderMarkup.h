@@ -58,7 +58,7 @@ public:
   virtual void handle_process(const std::string& name, const char* data);
   virtual void handle_text(const char* text);
   virtual void handle_comment(const char* text);
-  virtual void handle_error();
+  virtual void handle_error(const std::string& msg);
 
   // ArgObject interface
   virtual std::string name() const;
@@ -73,6 +73,7 @@ protected:
   http::Request m_request;
 
   Article* m_article;
+  bool m_processing;
 };
 
 //=========================================================================

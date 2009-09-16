@@ -39,7 +39,7 @@ public:
   virtual void handle_process(const std::string& name, const char* data) =0;
   virtual void handle_text(const char* text) =0;
   virtual void handle_comment(const char* text) =0;
-  virtual void handle_error() =0;
+  virtual void handle_error(const std::string& msg) =0;
 
   // ArgObject interface
   virtual std::string name() const;

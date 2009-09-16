@@ -50,6 +50,8 @@ public:
 
   const scx::Date& get_modtime() const;
 
+  void parse_error(const std::string& msg);
+
   // ArgObject interface
   virtual std::string name() const;
   virtual scx::Arg* arg_resolve(const std::string& name);
@@ -68,6 +70,7 @@ protected:
   scx::Date m_modtime;
 
   xmlDoc* m_xmldoc;
+  std::string m_errors;
   
 };
 

@@ -27,7 +27,7 @@ namespace scx {
 #define DEBUG_BREAKPOINT asm("int $3");
 
 // Swtich on debug instance counting
-//#define DEBUG_INSTANCE_COUNT
+#define DEBUG_INSTANCE_COUNT
 
 //=============================================================================
 DebugInstanceCounter::DebugInstanceCounter()

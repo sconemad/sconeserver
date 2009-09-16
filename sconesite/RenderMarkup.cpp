@@ -43,7 +43,8 @@ RenderMarkupContext::RenderMarkupContext(
 ) : m_profile(profile),
     m_output(output),
     m_request(request),
-    m_article(0)
+    m_article(0),
+    m_processing(false)
 {
 
 }
@@ -184,9 +185,14 @@ void RenderMarkupContext::handle_comment(const char* text)
 }
 
 //=========================================================================
-void RenderMarkupContext::handle_error()
+void RenderMarkupContext::handle_error(const std::string& msg)
 {
-  m_output->write("<html><body><p>Server error</p></body></html>");
+  m_output->write("<html><body>");
+  m_output->write("<p class='scxerror'>ERROR: Cannot process article</p>");
+  m_output->write("<pre>");
+  m_output->write(msg);
+  m_output->write("</pre>");
+  m_output->write("</body></html>");
 }
 
 //=========================================================================
@@ -257,7 +263,13 @@ scx::Arg* RenderMarkupContext::arg_function(const std::string& name,scx::Arg* ar
 
   if (name == "process_article") {
     if (m_article) {
-      m_article->process(*this);
+      if (m_processing) {
+	m_output->write("<p class='scxerror'>ERROR: Already processing article</p>");
+      } else {
+	m_processing = true;
+	m_article->process(*this);
+	m_processing = false;
+      }
     }
     return 0;
   }
@@ -360,7 +372,7 @@ void RenderMarkupJob::run()
 
   Template* tpl = m_context->get_profile().lookup_template(tplname);
   if (!tpl) {
-    m_context->handle_error();
+    m_context->handle_error("No template");
     return;
   }
 

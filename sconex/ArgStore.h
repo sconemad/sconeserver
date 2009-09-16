@@ -45,6 +45,7 @@ public:
 
   bool load();
   bool save();
+  void reset();
 
   // ArgObject interface
   virtual std::string name() const;

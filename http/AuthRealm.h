@@ -29,7 +29,30 @@ namespace http {
 
 class HTTPModule;
 class MessageStream;
-  
+
+/*  
+//=============================================================================
+class HTTP_API HTTPUser : public scx::ArgObjectInterface {
+public:
+
+  HTTPUser(const std::string& name,const scx::FilePath& path);
+  virtual ~HTTPUser();
+
+  bool authorised(const std::string& pass);
+
+  virtual std::string name() const;
+  virtual scx::Arg* arg_resolve(const std::string& name);
+  virtual scx::Arg* arg_lookup(const std::string& name);
+  virtual scx::Arg* arg_function(const std::string& name,scx::Arg* args);
+
+private:
+
+  std::string m_name;
+  scx::ArgStore m_vars;
+
+};
+*/
+
 //=============================================================================
 class HTTP_API AuthRealm : public scx::ArgObjectInterface {
 public:

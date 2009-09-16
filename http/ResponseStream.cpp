@@ -32,7 +32,7 @@ Free Software Foundation, Inc.,
 namespace http {
 
 // Uncomment to enable debug logging
-#define RESPONSE_DEBUG_LOG(m) STREAM_DEBUG_LOG(m)
+//#define RESPONSE_DEBUG_LOG(m) STREAM_DEBUG_LOG(m)
 
 #ifndef RESPONSE_DEBUG_LOG
 #  define RESPONSE_DEBUG_LOG(m)
@@ -90,7 +90,7 @@ ResponseStream::ResponseStream(const std::string& stream_name)
     m_mime_boundary_pos(-1),
     m_mime_boundary_num(0),
     m_section_headers(),
-    m_prev_cond(scx::Ok)
+    m_source_cond(scx::Ok)
 {
 
 }
@@ -274,8 +274,21 @@ scx::Condition ResponseStream::read(void* buffer,int n,int& na)
     return scx::End;
   }
   
+  if (m_buffer.free()) {
+    // Try to fill the buffer from the source if there is some room
+    int nr = 0;
+    m_source_cond = scx::Stream::read(m_buffer.tail(),m_buffer.free(),nr);
+    RESPONSE_DEBUG_LOG("source read " << nr << " c=" << m_source_cond);
+    if (nr > 0) {
+      m_buffer.push(nr);
+      find_mime_boundary();
+    }
+  }
+
   if (m_mime_boundary_pos == 0) {
-    //    int sz = m_mime_boundary.size() + 2;
+    // A mime boundary has been reached -
+    // pop the boundary and return end
+
     int sz = m_mime_boundary_len + 2;
 
     switch (m_mime_boundary_type) {
@@ -298,81 +311,50 @@ scx::Condition ResponseStream::read(void* buffer,int n,int& na)
         m_resp_seq = resp_ReadEnd;
         break;
     }
-    RESPONSE_DEBUG_LOG("popping " << sz << " bytes");
+    RESPONSE_DEBUG_LOG("popping boundary (" << sz << " bytes)");
     m_buffer.pop(sz);
     find_mime_boundary();
     enable_event(Stream::SendReadable,true);
     return scx::End;
   }
   
+  // Calculate how much of the buffer can be read
+  int allow_read = 0;
   if (m_mime_boundary_pos > 0) {
-    if (n >= m_mime_boundary_pos) {
-      // Read right upto boundary
-      n = m_mime_boundary_pos;
-    }
-    na += m_buffer.pop_to(buffer,n);
-    RESPONSE_DEBUG_LOG("popping " << n << " bytes, actual " << na);
+    // Read up to a detected mime boundary
+    allow_read = m_mime_boundary_pos;
+    RESPONSE_DEBUG_LOG("Read up to detected mime boundary (max=" << allow_read << ")");
+
+  } else if (m_source_cond == scx::End) {
+    // If the end of the buffer has been reached, then allow all to be read
+    allow_read = m_buffer.used();
+    RESPONSE_DEBUG_LOG("Read remaining buffer (max=" << allow_read << ")");
+
+  } else {
+    // Allow all that has been scanned to be read
+    allow_read = m_buffer.used() - (m_mime_boundary_len+4) + 1;
+    RESPONSE_DEBUG_LOG("Read scanned data (max=" << allow_read << ")");
+  }
+
+  if (allow_read <= 0) {
+    // Cannot return any data right now
+    RESPONSE_DEBUG_LOG("No data, allow_read=" << allow_read);
+    //    enable_event(Stream::SendReadable,false); 
+    return scx::Wait;
+  }
+
+  // Reduce if the caller wanted less data than allowed
+  n = std::min(n,allow_read);
+  RESPONSE_DEBUG_LOG("n=" << n << " buffer used=" << m_buffer.used());
+
+  // Pop the required amount out of the buffer
+  na += m_buffer.pop_to(buffer,n);
+  m_buffer.compact();    
+  RESPONSE_DEBUG_LOG("pop " << na << " / " << n << " existing");
+
+  if (m_mime_boundary_pos > 0) {
+    // Update position of detected mime boundary
     m_mime_boundary_pos -= na;
-    RESPONSE_DEBUG_LOG("bpos now " << m_mime_boundary_pos);
-    enable_event(Stream::SendReadable,m_buffer.used()); 
-    return scx::Ok;
-  }
-
-  if (m_buffer.free()) {
-    int nr = 0;
-    scx::Condition c = scx::Stream::read(m_buffer.tail(),m_buffer.free(),nr);
-    m_prev_cond = c;
-    RESPONSE_DEBUG_LOG("source read " << nr << " c=" << c);
-    if (nr > 0) {
-      m_buffer.push(nr);
-      if (find_mime_boundary()) {
-        enable_event(Stream::SendReadable,true); 
-        return scx::Ok;
-      }
-    }
-  }
-
-  const int bs = m_mime_boundary_len + 4; // account for "--\r\n"
-  const int nmax = m_buffer.size() - (2*bs) + 1;
-  RESPONSE_DEBUG_LOG("n= " << n << " nmax= " << nmax << " bs= " << bs);
-  n = std::min(n,nmax);
-  
-  if (m_buffer.used()) {
-    na += m_buffer.pop_to(buffer,n);
-    m_buffer.compact();    
-    RESPONSE_DEBUG_LOG("pop " << na << " / " << n << " existing");
-    if (na == n) {
-      enable_event(Stream::SendReadable,m_buffer.used()); 
-      return scx::Ok;
-    }
-  }
-  
-  int left = n-na;
-  if (left < m_buffer.free()) {
-    int nr = 0;
-    scx::Condition c = scx::Stream::read(m_buffer.tail(),m_buffer.free(),nr);
-    m_prev_cond = c;
-    RESPONSE_DEBUG_LOG("source read " << nr << " c=" << c);
-    if (nr > 0) {
-      m_buffer.push(nr);
-      
-      if (find_mime_boundary()) {
-        enable_event(Stream::SendReadable,true); 
-        return scx::Ok;
-      }
-      
-      na += m_buffer.pop_to((char*)buffer+na,left);
-      RESPONSE_DEBUG_LOG("pop " << na);
-      
-    } else if (c == scx::End) {
-      m_resp_seq = resp_ReadEnd;
-      RESPONSE_DEBUG_LOG("end");
-    }
-    
-    if (na == 0) {
-      enable_event(Stream::SendReadable,m_buffer.used() || c == scx::End);
-      return c;
-    }
   }
   
   enable_event(Stream::SendReadable,m_buffer.used()); 

@@ -96,9 +96,10 @@ private:
   int m_mime_boundary_len;
   MimeBoundaryType m_mime_boundary_type;
   int m_mime_boundary_num;
+
   scx::MimeHeaderTable m_section_headers;
   
-  scx::Condition m_prev_cond;
+  scx::Condition m_source_cond;
 };
 
 };

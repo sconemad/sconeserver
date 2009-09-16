@@ -29,6 +29,19 @@ Free Software Foundation, Inc.,
 #include "sconex/FileStat.h"
 
 //=========================================================================
+void ErrorHandler(void* vcx,const char* str,...)
+{
+  va_list vl;
+  va_start(vl,1);
+  char* msg = va_arg(vl,char*);
+  va_end(vl);
+
+  xmlParserCtxt* cx = (xmlParserCtxt*)vcx;
+  XMLDoc* doc = (XMLDoc*)cx->_private;
+  doc->parse_error(msg);
+}
+
+//=========================================================================
 XMLDoc::XMLDoc(
   const std::string& name,
   const scx::FilePath& path
@@ -63,7 +76,7 @@ bool XMLDoc::process(Context& context)
   open();
 
   if (!m_xmldoc) {
-    context.handle_error();
+    context.handle_error(m_errors);
     return false;
 
   }
@@ -76,6 +89,12 @@ bool XMLDoc::process(Context& context)
 const scx::Date& XMLDoc::get_modtime() const
 {
   return m_modtime;
+}
+
+//=========================================================================
+void XMLDoc::parse_error(const std::string& msg)
+{
+  m_errors += msg;
 }
 
 //=========================================================================
@@ -169,8 +188,18 @@ bool XMLDoc::open()
   if (stat.is_file()) {
     if (m_xmldoc == 0 || m_modtime != stat.time()) {
       close();
-      m_xmldoc = xmlReadFile(m_path.path().c_str(),NULL,0);
+      m_errors = "";
+
+      xmlParserCtxt* cx;
+      cx = xmlNewParserCtxt();
+      cx->_private = this;
+      cx->sax->error = ErrorHandler;
+      cx->vctxt.error = ErrorHandler;
+
+      m_xmldoc = xmlCtxtReadFile(cx,m_path.path().c_str(),NULL,0);
       m_modtime = stat.time();
+
+      xmlFreeParserCtxt(cx);
     }
   } else {
     close();

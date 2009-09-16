@@ -35,9 +35,9 @@ namespace scx {
 //=============================================================================
 ArgStore::ArgStore(const FilePath& path)
   : m_path(path),
-    m_data(new ArgMap())
+    m_data(0)
 {
-
+  reset();
 }
  
 //=============================================================================
@@ -94,6 +94,13 @@ bool ArgStore::save()
 }
 
 //=========================================================================
+void ArgStore::reset()
+{
+  delete m_data;
+  m_data = new ArgMap();
+}
+
+//=========================================================================
 std::string ArgStore::name() const
 {
   return "ArgStore";
@@ -113,7 +120,8 @@ Arg* ArgStore::arg_lookup(const std::string& name)
       "load" == name ||
       "add" == name ||
       "set" == name ||
-      "remove" == name) {
+      "remove" == name ||
+      "reset" == name) {
     return new scx::ArgObjectFunction(new scx::ArgObject(this),name);
   }
 
@@ -163,6 +171,11 @@ Arg* ArgStore::arg_function(const std::string& name,Arg* args)
       return new ArgError("remove_meta: Does not exist");
     }
     delete v;
+    return 0;
+  }
+
+  if ("reset" == name) {
+    reset();
     return 0;
   }
 

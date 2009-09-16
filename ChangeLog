@@ -1,6 +1,14 @@
 
 2009-09-16 Andrew Wedgbury <wedge@sconemad.com>
 
+	* http/Session: Add (missed from last checkin)
+	* http/ResponseStream: Finally fix horrible boundary break bug.
+	* sconesite/RenderMarkup: Prevent recursive article processing.
+	* sconesite/XMLDoc: Capture and handle xml parser errors.
+	* sconex/ArgStore: Add reset() method.
+	
+2009-09-16 Andrew Wedgbury <wedge@sconemad.com>
+
 	* http/Session: New session object and session manager.
 	* http/DocRoot: Use HTTP session cookies.
 	* http/AuthRealm: Tidy and add management interface.
