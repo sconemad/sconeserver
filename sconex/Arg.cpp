@@ -89,7 +89,7 @@ Arg* Arg::op(OpType optype, const std::string& opname, Arg* right)
       } else if ("|"==opname) { // Or
 	if (value) return new_copy();
 	if (right) return right->new_copy();
-        return 0;
+	return 0;
 
       } else if ("xor"==opname) { // Xor
         return new ArgInt((value!=0) ^ (rvalue!=0));
@@ -100,7 +100,7 @@ Arg* Arg::op(OpType optype, const std::string& opname, Arg* right)
       break;
   }
 
-  return 0;
+  return new ArgError("Unsupported");
 }
 
 //===========================================================================
@@ -460,7 +460,7 @@ ArgList::ArgList()
 ArgList::ArgList(const ArgList& c)
   : m_orig(c.m_orig)
 {
-  std::list<Arg*>::const_iterator iter = c.m_list.begin();
+  ArgListData::const_iterator iter = c.m_list.begin();
   while (iter != c.m_list.end()) {
     m_list.push_back( (*iter)->new_copy() );
     ++iter;
@@ -470,7 +470,7 @@ ArgList::ArgList(const ArgList& c)
 //===========================================================================
 ArgList::~ArgList()
 {
-  std::list<Arg*>::iterator iter = m_list.begin();
+  ArgListData::iterator iter = m_list.begin();
   while (iter != m_list.end()) {
     delete *iter;
     ++iter;
@@ -498,7 +498,7 @@ std::string ArgList::get_string() const
 
   std::ostringstream oss;
   oss << "(";
-  std::list<Arg*>::const_iterator iter = m_list.begin();
+  ArgListData::const_iterator iter = m_list.begin();
   int i=0;
   while (iter != m_list.end()) {
     const Arg* arg = *iter;
@@ -558,7 +558,7 @@ const Arg* ArgList::get(int i) const
 {
   if (m_orig) return m_orig->get(i);
 
-  std::list<Arg*>::const_iterator iter = m_list.begin();
+  ArgListData::const_iterator iter = m_list.begin();
   int ic=0;
   while (iter != m_list.end()) {
     if (ic++==i) return *iter;
@@ -572,7 +572,7 @@ Arg* ArgList::get(int i)
 {
   if (m_orig) return m_orig->get(i);
 
-  std::list<Arg*>::iterator iter = m_list.begin();
+  ArgListData::iterator iter = m_list.begin();
   int ic=0;
   while (iter != m_list.end()) {
     if (ic++==i) return *iter;
@@ -589,7 +589,7 @@ void ArgList::give(Arg* arg, int i)
   if (-1==i) {
     m_list.push_back(arg);
   } else {
-    std::list<Arg*>::iterator iter = m_list.begin();
+    ArgListData::iterator iter = m_list.begin();
     int ic=0;
     while (iter != m_list.end()) {
       if (ic++==i) break;
@@ -604,7 +604,7 @@ Arg* ArgList::take(int i)
 {
   if (m_orig) return m_orig->take(i);
 
-  std::list<Arg*>::iterator iter = m_list.begin();
+  ArgListData::iterator iter = m_list.begin();
   int ic=0;
   while (iter != m_list.end()) {
     if (ic++==i) {
@@ -629,11 +629,11 @@ ArgMap::ArgMap()
 ArgMap::ArgMap(const ArgMap& c)
   : m_orig(c.m_orig)
 {
-  for (std::map<std::string,Arg*>::const_iterator it = c.m_map.begin();
+  for (ArgMapData::const_iterator it = c.m_map.begin();
        it != c.m_map.end();
        ++it) {
-    const std::string key = (*it).first;
-    const Arg* arg = (*it).second;
+    const std::string key = it->first;
+    const Arg* arg = it->second;
     m_map.insert( std::pair<std::string,Arg*>(key,arg->new_copy()) );
   }
 }
@@ -641,10 +641,10 @@ ArgMap::ArgMap(const ArgMap& c)
 //===========================================================================
 ArgMap::~ArgMap()
 {
-  for (std::map<std::string,Arg*>::iterator it = m_map.begin();
+  for (ArgMapData::iterator it = m_map.begin();
        it != m_map.end();
        ++it) {
-    delete (*it).second;
+    delete it->second;
   }
 }
 
@@ -669,11 +669,11 @@ std::string ArgMap::get_string() const
 
   std::ostringstream oss;
   oss << "{";
-  for (std::map<std::string,Arg*>::const_iterator it = m_map.begin();
+  for (ArgMapData::const_iterator it = m_map.begin();
        it != m_map.end();
        ++it) {
-    const std::string key = (*it).first;
-    const Arg* arg = (*it).second;
+    const std::string key = it->first;
+    const Arg* arg = it->second;
     oss << (it==m_map.begin() ? "" : ",") 
         << key << ":"
 	<< (arg ? arg->get_string() : "NULL");
@@ -711,10 +711,10 @@ Arg* ArgMap::op(OpType optype, const std::string& opname, Arg* right)
       if (name == "size") return new ArgInt(m_map.size());
       if (name == "keys") {
 	ArgList* list = new ArgList();
-	for (std::map<std::string,Arg*>::const_iterator it = m_map.begin();
+	for (ArgMapData::const_iterator it = m_map.begin();
 	     it != m_map.end();
 	     ++it) {
-	  list->give( new ArgString((*it).first) );
+	  list->give( new ArgString(it->first) );
 	}
 	return list;
       }
@@ -745,10 +745,10 @@ void ArgMap::keys(std::vector<std::string>& keyvec) const
 
   keyvec.clear();
   keyvec.reserve(size());
-  for (std::map<std::string,Arg*>::const_iterator it = m_map.begin();
+  for (ArgMapData::const_iterator it = m_map.begin();
        it != m_map.end();
        ++it) {
-    keyvec.push_back( (*it).first );
+    keyvec.push_back(it->first);
   }
 }
 
@@ -757,9 +757,9 @@ const Arg* ArgMap::lookup(const std::string& key) const
 {
   if (m_orig) return m_orig->lookup(key);
 
-  std::map<std::string,Arg*>::const_iterator it = m_map.find(key);
+  ArgMapData::const_iterator it = m_map.find(key);
   if (it != m_map.end()) {
-    return (*it).second;
+    return it->second;
   }
   return 0;
 }
@@ -769,9 +769,9 @@ Arg* ArgMap::lookup(const std::string& key)
 {
   if (m_orig) return m_orig->lookup(key);
 
-  std::map<std::string,Arg*>::iterator it = m_map.find(key);
+  ArgMapData::iterator it = m_map.find(key);
   if (it != m_map.end()) {
-    return (*it).second;
+    return it->second;
   }
   return 0;
 }
@@ -793,9 +793,9 @@ Arg* ArgMap::take(const std::string& key)
 {
   if (m_orig) return m_orig->take(key);
 
-  std::map<std::string,Arg*>::iterator it = m_map.find(key);
+  ArgMapData::iterator it = m_map.find(key);
   if (it != m_map.end()) {
-    Arg* arg = (*it).second;
+    Arg* arg = it->second;
     m_map.erase(it);
     return arg;
   }

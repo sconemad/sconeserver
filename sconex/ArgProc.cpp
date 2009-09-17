@@ -29,9 +29,9 @@ namespace scx {
 #  define ArgProc_DEBUG_LOG(m)
 #endif
   
-std::map<std::string,int>* ArgProc::s_binary_ops;
-std::map<std::string,int>* ArgProc::s_prefix_ops;
-std::map<std::string,int>* ArgProc::s_postfix_ops;
+ArgProc::PrecedenceMap* ArgProc::s_binary_ops = 0;
+ArgProc::PrecedenceMap* ArgProc::s_prefix_ops = 0;
+ArgProc::PrecedenceMap* ArgProc::s_postfix_ops = 0;
 
 //===========================================================================
 ArgProc::ArgProc(Arg* ctx)
@@ -91,11 +91,11 @@ Arg* ArgProc::expression(int p, bool f, bool exec)
 
   while (true) {
     if (ArgProc::Null == m_type) {
-      ArgProc_DEBUG_LOG("expr: (null)");
+      ArgProc_DEBUG_LOG("expr: (null) " << (exec?"":"(nx) "));
       break;
 
     } else if (ArgProc::Operator == m_type) {
-      ArgProc_DEBUG_LOG("expr: (op) " << m_name);
+      ArgProc_DEBUG_LOG("expr: (op) " << (exec?"":"(nx) ") << m_name);
       std::string op = m_name;
       f = !("."==op || ":"==op);
       int p2 = prec(Arg::Binary,op);
@@ -172,30 +172,34 @@ Arg* ArgProc::expression(int p, bool f, bool exec)
 
 	  if ("|" == op && left->get_int()) {
 	    // Short circuit | op - don't exec rhs if lhs is true
+	    ArgProc_DEBUG_LOG("Shorting |");
 	    right = expression(p2+1,f,false);
 
 	  } else if ("&" == op && !left->get_int()) {
 	    // Short circuit & op - don't exec rhs if lhs is false
+	    ArgProc_DEBUG_LOG("Shorting &");
 	    right = expression(p2+1,f,false);
 
 	  } else {
 	    right = expression(p2+1,f,exec);
 	  }
-
-          if (0==right) {
-            m_type=ArgProc::Null;
-            delete left;
-            return 0;
+	  
+	  if (0==right) {
+	    ArgProc_DEBUG_LOG("RHS Null op:" << op);
+	    m_type=ArgProc::Null;
+	    delete left;
+	    return 0;
           }
-
-          ArgProc_DEBUG_LOG("binary op: " << op);
+	  
+          ArgProc_DEBUG_LOG("binary op: " << (left ? left->get_string() : "NULL") << " "
+			    << op << " " << (right ? right->get_string() : "NULL"));
           
           if (","==op) {
             m_stack.push(left);
             left=right;
           } else {
             Arg* new_left = 0;
-	    if (exec) new_left = left->op(Arg::Binary,op,right);
+	    new_left = left->op(Arg::Binary,op,right);
             delete left;
             delete right;
             left = new_left;
@@ -220,7 +224,7 @@ Arg* ArgProc::expression(int p, bool f, bool exec)
       }
 
     } else {
-      ArgProc_DEBUG_LOG("expr: (unknown)");
+      ArgProc_DEBUG_LOG("expr: (unknown) " << (exec?"":"(nx) "));
       m_type=ArgProc::Null;
       // NOT SURE ABOUT THIS:
       //      delete left;
@@ -548,16 +552,16 @@ int ArgProc::prec(Arg::OpType optype, const std::string& op) const
 {
   switch (optype) {
     case Arg::Prefix: {
-      std::map<std::string,int>::const_iterator iter = s_prefix_ops->find(op);
-      if (iter!=s_prefix_ops->end()) return (*iter).second;
+      PrecedenceMap::const_iterator iter = s_prefix_ops->find(op);
+      if (iter!=s_prefix_ops->end()) return iter->second;
     } break;
     case Arg::Postfix: {
-      std::map<std::string,int>::const_iterator iter = s_postfix_ops->find(op);
-      if (iter!=s_postfix_ops->end()) return (*iter).second;
+      PrecedenceMap::const_iterator iter = s_postfix_ops->find(op);
+      if (iter!=s_postfix_ops->end()) return iter->second;
     } break;
     case Arg::Binary: {
-      std::map<std::string,int>::const_iterator iter = s_binary_ops->find(op);
-      if (iter!=s_binary_ops->end()) return (*iter).second;
+      PrecedenceMap::const_iterator iter = s_binary_ops->find(op);
+      if (iter!=s_binary_ops->end()) return iter->second;
     } break;
   }
   return -1;
@@ -568,9 +572,9 @@ void ArgProc::init()
 {
   if (s_binary_ops) return;
 
-  s_binary_ops = new std::map<std::string,int>;
-  s_prefix_ops = new std::map<std::string,int>;
-  s_postfix_ops = new std::map<std::string,int>;
+  s_binary_ops = new PrecedenceMap();
+  s_prefix_ops = new PrecedenceMap();
+  s_postfix_ops = new PrecedenceMap();
   
   int p=0;
   (*s_binary_ops)[","]  = ++p; // Sequential evaluation

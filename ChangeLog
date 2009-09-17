@@ -1,4 +1,9 @@
 
+2009-09-17 Andrew Wedgbury <wedge@sconemad.com>
+
+	* sconex/ArgProc: Allow binary ops in nx mode, improve logging.
+	* sconex/Arg: Make Arg return ArgError for unsupported ops.
+
 2009-09-16 Andrew Wedgbury <wedge@sconemad.com>
 
 	* http/Session: Add (missed from last checkin)

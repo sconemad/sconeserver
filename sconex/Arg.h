@@ -159,7 +159,8 @@ public:
 
 protected:
 
-  std::list<Arg*> m_list;
+  typedef std::list<Arg*> ArgListData;
+  ArgListData m_list;
   ArgList* m_orig;
 
 };
@@ -192,7 +193,8 @@ public:
 
 protected:
 
-  std::map<std::string,Arg*> m_map;
+  typedef std::map<std::string,Arg*> ArgMapData;
+  ArgMapData m_map;
   ArgMap* m_orig;
 
 };

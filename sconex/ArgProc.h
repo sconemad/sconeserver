@@ -63,14 +63,17 @@ protected:
   Arg* m_ctx;
   // Current context
 
-  std::stack<Arg*> m_stack;
+  typedef std::stack<Arg*> ArgStack;
+  ArgStack m_stack;
   // Stack
 
   static void init();
 
-  static std::map<std::string,int>* s_binary_ops;
-  static std::map<std::string,int>* s_prefix_ops;
-  static std::map<std::string,int>* s_postfix_ops;
+  typedef std::map<std::string,int> PrecedenceMap;
+
+  static PrecedenceMap* s_binary_ops;
+  static PrecedenceMap* s_prefix_ops;
+  static PrecedenceMap* s_postfix_ops;
 };
 
 };
