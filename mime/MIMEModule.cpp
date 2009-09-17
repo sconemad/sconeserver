@@ -2,7 +2,7 @@
 
 File MIME type lookup module
 
-Copyright (c) 2000-2005 Andrew Wedgbury <wedge@sconemad.com>
+Copyright (c) 2000-2009 Andrew Wedgbury <wedge@sconemad.com>
 
 This program is free software; you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -46,7 +46,7 @@ MIMEModule::~MIMEModule()
 //=========================================================================
 std::string MIMEModule::info() const
 {
-  return "Copyright (c) 2000-2005 Andrew Wedgbury\n"
+  return "Copyright (c) 2000-2009 Andrew Wedgbury\n"
          "File mimetype lookup module\n";
 }
 
@@ -63,13 +63,12 @@ scx::Arg* MIMEModule::arg_lookup(const std::string& name)
   if ("list" == name) {
     std::ostringstream oss;
     oss << "PATTERN      MIME-TYPE\n";
-    for (std::map<std::string,std::string>::const_iterator it = 
-	   m_mimemap.begin();
+    for (MimeMap::const_iterator it = m_mimemap.begin();
 	 it != m_mimemap.end();
 	 it++) {
       oss << std::setiosflags(std::ios_base::left) << std::setw(12) 
-	  << (*it).first << " "
-	  << (*it).second << "\n";
+	  << it->first << " "
+	  << it->second << "\n";
     }
     return new scx::ArgString(oss.str());
   }
@@ -97,11 +96,9 @@ scx::Arg* MIMEModule::arg_function(
     std::string::size_type idot;
     while (--bailout > 0) {
       
-      std::map<std::string,std::string>::const_iterator it =
-        m_mimemap.find(key);
-      
+      MimeMap::const_iterator it = m_mimemap.find(key);
       if (it != m_mimemap.end()) {
-        return new scx::MimeType((*it).second);
+        return new scx::MimeType(it->second);
       }
       
       if (key.size()<=0 || key=="*") {

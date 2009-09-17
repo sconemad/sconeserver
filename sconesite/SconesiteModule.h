@@ -54,7 +54,9 @@ protected:
 private:
 
   ThreadManager m_manager;
-  std::map<std::string,Profile*> m_profiles;
+
+  typedef HASH_TYPE<std::string,Profile*> ProfileMap;
+  ProfileMap m_profiles;
   
 };
 

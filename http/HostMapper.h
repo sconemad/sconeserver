@@ -47,8 +47,11 @@ private:
 
   HTTPModule& m_module;
 
-  std::map<std::string,Host*> m_hosts;
-  std::map<std::string,std::string> m_hostmap;
+  typedef std::map<std::string,Host*> HostMap;
+  HostMap m_hosts;
+
+  typedef HASH_TYPE<std::string,std::string> HostRedirectMap;
+  HostRedirectMap m_redirects;
 
 };
 

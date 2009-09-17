@@ -1,4 +1,24 @@
 
+0.8.0 2009-09-xx Andrew Wedgbury <wedge@sconemad.com>
+
+        * Major SconeScript improvements:
+         - Short circuit | and & operators.
+         - map (associative array) type.
+         - Lots of bug fixes.
+         - Scripted test system.
+        * HTTP module improvements:
+         - Reliable multi-threading support.
+         - HTTP Authentication support with realms.
+         - Session management.
+         - Multipart POST processing.
+        * New module: 'sconesite' web site management, includes:
+          - XML template driven page generation.
+          - Multi-threaded job scheduler.
+          - Server side SconeScript.
+          - Upload/wiki support.
+        * New module: 'lettuce' (http://www.sconemad.com/lettuce)
+        * New module: 'forward' connection forwarding.
+
 0.7.0 2006-06-24 Andrew Wedgbury <wedge@sconemad.com>
 
 	* New configurable pooled multi-threaded design.

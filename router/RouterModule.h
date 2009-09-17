@@ -49,7 +49,8 @@ public:
 
 private:
 
-  std::map<std::string,RouterChain*> m_chains;
+  typedef HASH_TYPE<std::string,RouterChain*> RouterChainMap;
+  RouterChainMap m_chains;
   
 };
   

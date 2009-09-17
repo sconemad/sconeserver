@@ -72,7 +72,8 @@ private:
   std::string m_hostname;
   scx::FilePath m_dir;
 
-  std::map<std::string,DocRoot*> m_docroots;
+  typedef std::map<std::string,DocRoot*> DocRootMap;
+  DocRootMap m_docroots;
 
 };
 

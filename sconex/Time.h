@@ -111,7 +111,8 @@ protected:
   
   void init_tables();
   void add_tz(const std::string& name,double hrs);
-  static std::map<std::string,int>* s_zone_table;
+  typedef std::map<std::string,int> TimeZoneOffsetMap;
+  static TimeZoneOffsetMap* s_zone_table;
 
 };
 

@@ -206,9 +206,9 @@ ModuleMap* DocRoot::lookup_extn_mod(const std::string& name) const
   std::string key=name;
   while (--bailout > 0) {
 
-    std::map<std::string,ModuleMap*>::const_iterator it = m_extn_mods.find(key);
+    PatternMap::const_iterator it = m_extn_mods.find(key);
     if (it != m_extn_mods.end()) {
-      return (*it).second;
+      return it->second;
     }
     
     if (key.size()<=0 || key=="*") {
@@ -241,10 +241,10 @@ ModuleMap* DocRoot::lookup_path_mod(const std::string& name, std::string& pathin
   pathinfo = "";
   while (--bailout > 0) {
 
-    std::map<std::string,ModuleMap*>::const_iterator it = m_path_mods.find(key);
+    PatternMap::const_iterator it = m_path_mods.find(key);
     if (it != m_path_mods.end()) {
       if (pathinfo.length() > 0) pathinfo = pathinfo.substr(1);
-      return (*it).second;
+      return it->second;
     }
     
     if (key.size()<=0 || key=="/") {
@@ -273,9 +273,9 @@ std::string DocRoot::lookup_realm_map(const std::string& name) const
   std::string key=name;
   while (--bailout > 0) {
 
-    std::map<std::string,std::string>::const_iterator it = m_realm_maps.find(key);
+    RealmMap::const_iterator it = m_realm_maps.find(key);
     if (it != m_realm_maps.end()) {
-      return (*it).second;
+      return it->second;
     }
     
     if (key.size()<=0 || key=="/") {
@@ -304,10 +304,9 @@ const std::string DocRoot::get_profile() const
 //=============================================================================
 const scx::Arg* DocRoot::get_param(const std::string& name) const
 {
-  std::map<std::string,scx::Arg*>::const_iterator it =
-    m_params.find(name);
+  ParamMap::const_iterator it = m_params.find(name);
   if (it != m_params.end()) {
-    return (*it).second;
+    return it->second;
   }
   return 0;
 }

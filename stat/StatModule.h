@@ -30,7 +30,7 @@ Free Software Foundation, Inc.,
 class StatModule;
 
 //#########################################################################
-class StatModule : public scx::Module { //, public scx::Thread {
+class StatModule : public scx::Module {
 
 public:
 
@@ -54,9 +54,6 @@ public:
   StatChannel* add_channel(const std::string& name);
   bool remove_channel(const std::string& name);
   
-  virtual int run();
-  // Thread entry point
-  
   virtual scx::Arg* arg_lookup(const std::string& name);
   virtual scx::Arg* arg_function(const std::string& name,scx::Arg* args);
 
@@ -64,7 +61,8 @@ protected:
   
 private:
 
-  std::map<std::string,StatChannel*> m_channels;
+  typedef HASH_TYPE<std::string,StatChannel*> ChannelMap;
+  ChannelMap m_channels;
   // Stat channels
   
 };

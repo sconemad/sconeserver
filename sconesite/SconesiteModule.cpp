@@ -42,11 +42,10 @@ SconesiteModule::SconesiteModule()
 //=========================================================================
 SconesiteModule::~SconesiteModule()
 {
-  for (std::map<std::string,Profile*>::const_iterator it =
-         m_profiles.begin();
+  for (ProfileMap::const_iterator it = m_profiles.begin();
        it != m_profiles.end();
        ++it) {
-    delete (*it).second;
+    delete it->second;
   }
 }
 
@@ -86,10 +85,9 @@ ThreadManager& SconesiteModule::get_thread_manager()
 //=========================================================================
 Profile* SconesiteModule::lookup_profile(const std::string& profile)
 {
-  std::map<std::string,Profile*>::const_iterator it =
-    m_profiles.find(profile);
+  ProfileMap::const_iterator it = m_profiles.find(profile);
   if (it != m_profiles.end()) {
-    return (*it).second;
+    return it->second;
   }
 
   return 0;
@@ -140,8 +138,7 @@ scx::Arg* SconesiteModule::arg_function(
       return new scx::ArgError("add() No path specified");
     }
 
-    std::map<std::string,Profile*>::const_iterator it =
-      m_profiles.find(s_profile);
+    ProfileMap::const_iterator it = m_profiles.find(s_profile);
     if (it != m_profiles.end()) {
       return new scx::ArgError("add() Profile already exists");
     }

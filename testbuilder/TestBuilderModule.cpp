@@ -50,14 +50,14 @@ TestBuilderModule::~TestBuilderModule()
 {
   stop();
   
-  for (std::map<std::string,BuildProfile*>::iterator it_p =
+  for (ProfileMap::iterator it_p =
          m_profiles.begin();
        it_p != m_profiles.end();
        it_p++) {
-    delete (*it_p).second;
+    delete it_p->second;
   }
 
-  for (std::list<Build*>::iterator it_b = m_builds.begin();
+  for (BuildList::iterator it_b = m_builds.begin();
        it_b != m_builds.end();
        it_b++) {
     delete (*it_b);
@@ -108,9 +108,9 @@ void* TestBuilderModule::run()
     int nrun = 0;
     
     m_builds_mutex.lock();
-    for (std::list<Build*>::iterator it = m_builds.begin();
+    for (BuildList::iterator it = m_builds.begin();
          it != m_builds.end();
-       it++) {
+	 it++) {
       Build* build = (*it);
       switch (build->get_state()) {
         
@@ -170,13 +170,12 @@ scx::Arg* TestBuilderModule::arg_lookup(const std::string& name)
 
   if ("source_methods" == name) {
     scx::ArgList* l1 = new scx::ArgList();
-    for (std::map<std::string,std::string>::const_iterator it = 
-	   m_source_methods.begin();
+    for (SourceMethodMap::const_iterator it = m_source_methods.begin();
 	 it != m_source_methods.end();
 	 it++) {
       scx::ArgList* l2 = new scx::ArgList();
-      l2->give( new scx::ArgString((*it).first) );
-      l2->give( new scx::ArgString((*it).second) );
+      l2->give( new scx::ArgString(it->first) );
+      l2->give( new scx::ArgString(it->second) );
       l1->give(l2);
     }
     return l1;
@@ -184,11 +183,10 @@ scx::Arg* TestBuilderModule::arg_lookup(const std::string& name)
 
   if ("profiles" == name) {
     scx::ArgList* l1 = new scx::ArgList();
-    for (std::map<std::string,BuildProfile*>::const_iterator it = 
-	   m_profiles.begin();
+    for (ProfileMap::const_iterator it = m_profiles.begin();
 	 it != m_profiles.end();
 	 it++) {
-      l1->give( new scx::ArgString((*it).first) );
+      l1->give( new scx::ArgString(it->first) );
     }
     return l1;
   }
@@ -196,7 +194,7 @@ scx::Arg* TestBuilderModule::arg_lookup(const std::string& name)
   if ("builds" == name) {
     m_builds_mutex.lock();
     std::ostringstream oss;
-    for (std::list<Build*>::reverse_iterator it = m_builds.rbegin();
+    for (BuildList::reverse_iterator it = m_builds.rbegin();
 	 it != m_builds.rend();
 	 it++) {
       Build* build = (*it);
@@ -211,7 +209,7 @@ scx::Arg* TestBuilderModule::arg_lookup(const std::string& name)
   if ("buildstats" == name) {
     m_builds_mutex.lock();
     scx::ArgList* l1 = new scx::ArgList();
-    for (std::list<Build*>::reverse_iterator it = m_builds.rbegin();
+    for (BuildList::reverse_iterator it = m_builds.rbegin();
 	 it != m_builds.rend();
 	 it++) {
       Build* build = (*it);
@@ -222,7 +220,7 @@ scx::Arg* TestBuilderModule::arg_lookup(const std::string& name)
       l2->give( new scx::ArgString(Build::get_state_str(build->get_state())) );
 
       scx::ArgList* l3 = new scx::ArgList();
-      for (std::list<BuildStep*>::const_iterator it_s =
+      for (Build::StepList::const_iterator it_s =
              build->get_steps().begin();
            it_s != build->get_steps().end();
            it_s++) {
@@ -259,10 +257,9 @@ scx::Arg* TestBuilderModule::arg_lookup(const std::string& name)
   
   // Sub-objects
   
-  std::map<std::string,BuildProfile*>::const_iterator it = 
-    m_profiles.find(name);
+  ProfileMap::const_iterator it = m_profiles.find(name);
   if (it != m_profiles.end()) {
-    return new scx::ArgObject((*it).second);
+    return new scx::ArgObject(it->second);
   }
   
   return SCXBASE Module::arg_lookup(name);
@@ -443,12 +440,11 @@ BuildProfile* TestBuilderModule::lookup_profile(
   const std::string& name
 )
 {
-  std::map<std::string,BuildProfile*>::const_iterator it =
-    m_profiles.find(name);
+  ProfileMap::const_iterator it = m_profiles.find(name);
   if (it == m_profiles.end()) {
     return 0;
   }
-  return (*it).second;
+  return it->second;
 }
 
 //=============================================================================
@@ -466,13 +462,12 @@ const scx::User& TestBuilderModule::get_build_user() const
 //=============================================================================
 std::string TestBuilderModule::submit_build(const std::string& profile)
 {
-  std::map<std::string,BuildProfile*>::iterator it = 
-    m_profiles.find(profile);
+  ProfileMap::iterator it = m_profiles.find(profile);
   if (it == m_profiles.end()) {
     return "";
   }
   
-  BuildProfile* profile_obj = (*it).second;
+  BuildProfile* profile_obj = it->second;
   Build* build = profile_obj->create_build(m_dir);
   
   if (!build) {
@@ -493,7 +488,7 @@ std::string TestBuilderModule::submit_build(const std::string& profile)
 bool TestBuilderModule::abort_build(const std::string& id)
 {
   scx::MutexLocker locker(m_builds_mutex);
-  for (std::list<Build*>::iterator it = m_builds.begin();
+  for (BuildList::iterator it = m_builds.begin();
        it != m_builds.end();
        it++) {
     Build* build = (*it);
@@ -508,7 +503,7 @@ bool TestBuilderModule::abort_build(const std::string& id)
 bool TestBuilderModule::remove_build(const std::string& id)
 {
   scx::MutexLocker locker(m_builds_mutex);
-  for (std::list<Build*>::iterator it = m_builds.begin();
+  for (BuildList::iterator it = m_builds.begin();
        it != m_builds.end();
        it++) {
     Build* build = (*it);
@@ -525,8 +520,7 @@ bool TestBuilderModule::remove_build(const std::string& id)
 //=============================================================================
 bool TestBuilderModule::add_profile(const std::string& profile)
 {
-  std::map<std::string,BuildProfile*>::const_iterator it = 
-    m_profiles.find(profile);
+  ProfileMap::const_iterator it = m_profiles.find(profile);
   if (it != m_profiles.end()) {
     return false;
   }
@@ -538,12 +532,11 @@ bool TestBuilderModule::add_profile(const std::string& profile)
 //=============================================================================
 bool TestBuilderModule::remove_profile(const std::string& profile)
 {
-  std::map<std::string,BuildProfile*>::iterator it = 
-    m_profiles.find(profile);
+  ProfileMap::iterator it = m_profiles.find(profile);
   if (it == m_profiles.end()) {
     return false;
   }
-
+  
   delete (*it).second;
   m_profiles.erase(it);
 
@@ -558,11 +551,10 @@ bool TestBuilderModule::save_profiles()
   if (scx::Ok != file.open(path,scx::File::Write | scx::File::Create)) {
     return false;
   }
-  for (std::map<std::string,BuildProfile*>::const_iterator it = 
-         m_profiles.begin();
+  for (ProfileMap::const_iterator it = m_profiles.begin();
        it != m_profiles.end();
        it++) {
-    BuildProfile* profile = (*it).second;
+    BuildProfile* profile = it->second;
     profile->save(file);
   }
   return true;

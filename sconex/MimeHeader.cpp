@@ -43,12 +43,12 @@ void MimeHeaderValue::set_value(const std::string& headervalue)
 //===========================================================================
 bool MimeHeaderValue::get_parameter(const std::string& parname, std::string& parvalue) const
 {
-  std::map<std::string,std::string>::const_iterator it = m_pars.find(parname);
+  ParMap::const_iterator it = m_pars.find(parname);
   if (it == m_pars.end()) {
     return false;
   }
 
-  parvalue = (*it).second;
+  parvalue = it->second;
   return true;
 }
 
@@ -62,7 +62,7 @@ bool MimeHeaderValue::set_parameter(const std::string& parname, const std::strin
 //===========================================================================
 bool MimeHeaderValue::remove_parameter(const std::string& parname)
 {
-  std::map<std::string,std::string>::iterator it = m_pars.find(parname);
+  ParMap::iterator it = m_pars.find(parname);
   if (it == m_pars.end()) {
     return false;
   }
@@ -77,10 +77,10 @@ std::string MimeHeaderValue::get_string() const
   std::ostringstream oss;
   oss << m_value;
 
-  for (std::map<std::string,std::string>::const_iterator it = m_pars.begin();
+  for (ParMap::const_iterator it = m_pars.begin();
        it != m_pars.end();
        it++) {
-    oss << "; " << (*it).first << "=\"" << (*it).second << "\"";
+    oss << "; " << it->first << "=\"" << it->second << "\"";
   }
   return oss.str();
 }
@@ -219,7 +219,7 @@ const MimeHeaderValue* MimeHeader::get_value() const
 //===========================================================================
 const MimeHeaderValue* MimeHeader::get_value(int index) const
 {
-  std::list<MimeHeaderValue>::const_iterator it = m_values.begin();
+  ValueList::const_iterator it = m_values.begin();
   for (int i=0; i<index; ++i) {
     it++;
   }
@@ -232,7 +232,7 @@ const MimeHeaderValue* MimeHeader::get_value(int index) const
 //===========================================================================
 const MimeHeaderValue* MimeHeader::get_value(const std::string& value) const
 {
-  for (std::list<MimeHeaderValue>::const_iterator it = m_values.begin();
+  for (ValueList::const_iterator it = m_values.begin();
        it != m_values.end();
        it++) {
     const MimeHeaderValue& mhv = *it;
@@ -253,7 +253,7 @@ bool MimeHeader::add_value(const MimeHeaderValue& value)
 //===========================================================================
 void MimeHeader::remove_value(const std::string& value)
 {
-  for (std::list<MimeHeaderValue>::iterator it = m_values.begin();
+  for (ValueList::iterator it = m_values.begin();
        it != m_values.end();
        it++) {
     MimeHeaderValue& mhv = *it;
@@ -266,7 +266,7 @@ void MimeHeader::remove_value(const std::string& value)
 //===========================================================================
 void MimeHeader::remove_all_values()
 {
-  for (std::list<MimeHeaderValue>::iterator it = m_values.begin();
+  for (ValueList::iterator it = m_values.begin();
        it != m_values.end();
        it++) {
     m_values.erase(it);
@@ -280,12 +280,12 @@ std::string MimeHeader::get_string() const
   oss << m_name << ":";
 
   bool first = true;
-  for (std::list<MimeHeaderValue>::const_iterator it = m_values.begin();
+  for (ValueList::const_iterator it = m_values.begin();
        it != m_values.end();
        it++) {
     if (!first) oss << ",";
     first=false;
-    oss << " " << (*it).get_string();
+    oss << " " << it->get_string();
   }
   return oss.str();
 }
@@ -341,8 +341,7 @@ std::string MimeHeaderTable::parse_line(const std::string& line)
 //===========================================================================
 bool MimeHeaderTable::erase(const std::string& name)
 {
-  std::map<std::string,std::string>::iterator it =
-    m_headers.find(normalize(name));
+  HeaderMap::iterator it = m_headers.find(normalize(name));
   if (it == m_headers.end()) {
     return false;
   }
@@ -353,8 +352,7 @@ bool MimeHeaderTable::erase(const std::string& name)
 //===========================================================================
 std::string MimeHeaderTable::get(const std::string& name) const
 {
-  std::map<std::string,std::string>::const_iterator it =
-    m_headers.find(normalize(name));
+  HeaderMap::const_iterator it = m_headers.find(normalize(name));
   if (it == m_headers.end()) {
     return "";
   }
@@ -366,13 +364,12 @@ MimeHeader MimeHeaderTable::get_parsed(const std::string& name) const
 {
   MimeHeader header(name);
   
-  std::map<std::string,std::string>::const_iterator it =
-    m_headers.find(normalize(name));
+  HeaderMap::const_iterator it = m_headers.find(normalize(name));
   if (it == m_headers.end()) {
     return header;
   }
 
-  header.parse_value((*it).second);
+  header.parse_value(it->second);
   return header;
 }
 
@@ -380,10 +377,10 @@ MimeHeader MimeHeaderTable::get_parsed(const std::string& name) const
 std::string MimeHeaderTable::get_all() const
 {
   std::ostringstream oss;
-  std::map<std::string,std::string>::const_iterator it = m_headers.begin();
-  while (it != m_headers.end()) {
+  for (HeaderMap::const_iterator it = m_headers.begin();
+       it != m_headers.end();
+       ++it) {
     oss << (*it).first << ": " << (*it).second << "\r\n";
-    it++;
   }
   return oss.str();
 }

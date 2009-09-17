@@ -24,7 +24,7 @@ Free Software Foundation, Inc.,
 #include "sconex/utils.h"
 namespace scx {
 
-std::map<std::string,int>* Date::s_month_table = 0;
+Date::MonthNameMap* Date::s_month_table = 0;
 
 //=============================================================================
 Date::Date(
@@ -96,16 +96,15 @@ Date::Date(
         std::string token(it1,it);
         strup(token);
         if (month<0) {
-          std::map<std::string,int>::const_iterator m_it =
-            s_month_table->find(token);
+          MonthNameMap::const_iterator m_it = s_month_table->find(token);
           if (m_it != s_month_table->end()) {
-            month = (*m_it).second;
+            month = m_it->second;
             continue;
           }
         }
         
         if (!got_zone) {
-          std::map<std::string,int>::const_iterator z_it =
+          TimeZone::TimeZoneOffsetMap::const_iterator z_it =
             TimeZone::s_zone_table->find(token);
           if (z_it != TimeZone::s_zone_table->end()) {
             tz = TimeZone(std::string(token));
@@ -591,7 +590,7 @@ bool Date::get_tms(struct tm& tms) const
 void Date::init_tables()
 {
   if (s_month_table == 0) {
-    s_month_table = new std::map<std::string,int>;
+    s_month_table = new MonthNameMap();
     
     (*s_month_table)["JAN"]=0;
     (*s_month_table)["JANUARY"]=0;

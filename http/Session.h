@@ -30,6 +30,8 @@ namespace http {
 class Session;
 class HTTPModule;
 
+typedef HASH_TYPE<std::string,Session*> SessionMap;
+
 //=============================================================================
 class HTTP_API SessionManager : public scx::ArgObjectInterface {
 public:
@@ -52,7 +54,7 @@ public:
   
   HTTPModule& m_module;
 
-  std::map<std::string,Session*> m_sessions;
+  SessionMap m_sessions;
 
 };
  

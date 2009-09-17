@@ -121,6 +121,8 @@ public:
   static Debug* get();
   // Get the debug instance
 
+  typedef std::map<std::string,DebugInstanceCounter> InstanceCounterMap;
+
   void dbg_assert(
     bool test,
     const char* message,
@@ -143,7 +145,7 @@ public:
   void reset_counters();
   // Reset instance counters
 
-  void get_counters(std::map<std::string,DebugInstanceCounter>& counters);
+  void get_counters(InstanceCounterMap& counters);
   // Get the instance counters
   
   void set_logger(Logger* logger);
@@ -152,7 +154,7 @@ public:
 private:
 
   Logger* m_logger;
-  std::map<std::string,DebugInstanceCounter> m_inst_counts;
+  InstanceCounterMap m_inst_counts;
   Mutex* m_mutex;
 
   bool m_stop_on_assert;

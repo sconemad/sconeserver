@@ -73,7 +73,9 @@ protected:
   
   std::string m_type;
   std::string m_subtype;
-  std::map<std::string,std::string> m_params;
+
+  typedef std::map<std::string,std::string> ParamMap;
+  ParamMap m_params;
 
 };
 

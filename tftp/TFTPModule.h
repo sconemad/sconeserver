@@ -53,7 +53,8 @@ protected:
 
 private:
 
-  std::map<std::string,TFTPProfile*> m_profiles;
+  typedef std::map<std::string,TFTPProfile*> ProfileMap;
+  ProfileMap m_profiles;
   
 };
 

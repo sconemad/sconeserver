@@ -41,7 +41,8 @@ protected:
   
 private:
 
-  std::map<std::string,std::string> m_mimemap;
+  typedef HASH_TYPE<std::string,std::string> MimeMap;
+  MimeMap m_mimemap;
   
 };
 

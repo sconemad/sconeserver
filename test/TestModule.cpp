@@ -63,16 +63,16 @@ scx::Arg* TestModule::arg_lookup(const std::string& name)
     // Output instance counters
     std::ostringstream oss;
 #ifdef _DEBUG
-    static std::map<std::string,scx::DebugInstanceCounter> prev_counters;
+    static scx::Debug::InstanceCounterMap prev_counters;
       
     oss << "Instance counts:\n"
         << "CLASS NAME                     TOTAL    CURRENT  DELTA\n";
-    std::map<std::string,scx::DebugInstanceCounter> counters;
+    scx::Debug::InstanceCounterMap counters;
     scx::Debug::get()->get_counters(counters);
-    std::map<std::string,scx::DebugInstanceCounter>::iterator it = counters.begin();
+    scx::Debug::InstanceCounterMap::iterator it = counters.begin();
     while (it != counters.end()) {
-      scx::DebugInstanceCounter& counter = (*it).second;
-      const std::string& class_name = (*it).first;
+      const std::string& class_name = it->first;
+      scx::DebugInstanceCounter& counter = it->second;
       int stat_max = counter.get_max();
       int stat_num = counter.get_num();
       int stat_delta = stat_num - prev_counters[class_name].get_num();

@@ -99,12 +99,15 @@ private:
   
   scx::FilePath m_path;
 
-  std::map<std::string,ModuleMap*> m_extn_mods;
-  std::map<std::string,ModuleMap*> m_path_mods;
+  typedef std::map<std::string,ModuleMap*> PatternMap;
+  PatternMap m_extn_mods;
+  PatternMap m_path_mods;
 
-  std::map<std::string,std::string> m_realm_maps;
+  typedef std::map<std::string,std::string> RealmMap;
+  RealmMap m_realm_maps;
   
-  std::map<std::string,scx::Arg*> m_params;
+  typedef std::map<std::string,scx::Arg*> ParamMap;
+  ParamMap m_params;
 };
 
 };

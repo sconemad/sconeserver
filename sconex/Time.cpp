@@ -339,7 +339,7 @@ Arg* Time::op(OpType optype, const std::string& opname, Arg* right)
 }
 
 
-std::map<std::string,int>* TimeZone::s_zone_table = 0;
+TimeZone::TimeZoneOffsetMap* TimeZone::s_zone_table = 0;
 
 //=============================================================================
 TimeZone::TimeZone(time_t t)
@@ -367,10 +367,9 @@ TimeZone::TimeZone(const std::string& str)
   m_time=0;
 
   // First lookup in zone table
-  std::map<std::string,int>::const_iterator zit =
-    s_zone_table->find(str);
+  TimeZoneOffsetMap::const_iterator zit = s_zone_table->find(str);
   if (zit != s_zone_table->end()) {
-    m_time = (*zit).second;
+    m_time = zit->second;
     
   } else {
     std::string::const_iterator it = str.begin();
@@ -477,7 +476,7 @@ std::string TimeZone::string() const
 void TimeZone::init_tables()
 {
   if (s_zone_table == 0) {
-    s_zone_table = new std::map<std::string,int>;
+    s_zone_table = new TimeZoneOffsetMap();
     
     add_tz("AKST",-9);
     add_tz("AKDT",-8);

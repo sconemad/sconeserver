@@ -418,7 +418,8 @@ private:
     Process::RunState type;
     int code;
   };
-  std::map<pid_t,ProcStat> m_stats;
+  typedef std::map<pid_t,ProcStat> ProcStatMap;
+  ProcStatMap m_stats;
   
 };
 
@@ -505,10 +506,9 @@ int Proxy::run()
       case ProxyPacket::CheckPid: {
         ProxyPacket packet;
         packet.set_type(ProxyPacket::CheckedRunning);
-        std::map<pid_t,ProcStat>::iterator it =
-          m_stats.find(m_packet.get_num_value());
+        ProcStatMap::iterator it = m_stats.find(m_packet.get_num_value());
         if (it != m_stats.end()) {
-          ProcStat& stat = (*it).second;
+          ProcStat& stat = it->second;
             if (stat.type == Process::Terminated) {
               packet.set_type(ProxyPacket::CheckedTerminated);
               packet.set_num_value(stat.code);
@@ -519,10 +519,9 @@ int Proxy::run()
       } break;
       
       case ProxyPacket::DetatchPid: {
-        std::map<pid_t,ProcStat>::iterator it =
-          m_stats.find(m_packet.get_num_value());
+        ProcStatMap::iterator it = m_stats.find(m_packet.get_num_value());
         if (it != m_stats.end()) {
-          ProcStat& stat = (*it).second;
+          ProcStat& stat = it->second;
           if (stat.type == Process::Running) {
             stat.type = Process::Detatched;
           } else {
@@ -542,9 +541,9 @@ int Proxy::run()
 //============================================================================
 void Proxy::process_terminated(pid_t pid, int code)
 {
-  std::map<pid_t,ProcStat>::iterator it = m_stats.find(pid);
+  ProcStatMap::iterator it = m_stats.find(pid);
   if (it != m_stats.end()) {
-    ProcStat& stat = (*it).second;
+    ProcStat& stat = it->second;
     if (stat.type == Process::Running) {
       stat.type = Process::Terminated;
       stat.code = code;
@@ -609,7 +608,7 @@ bool Proxy::launch()
     }
 
     // Initialise the stat entry if not already there
-    std::map<pid_t,ProcStat>::iterator it = m_stats.find(pid);
+    ProcStatMap::iterator it = m_stats.find(pid);
     if (it == m_stats.end()) {
       ProcStat& stat = m_stats[pid];
       stat.type = Process::Running;
@@ -825,23 +824,23 @@ bool Process::launch()
   packet.set_str_value(m_exe.c_str());
   packet.send(s_proxy_sock);
 
-  for (std::list<std::string>::const_iterator it_a = m_args.begin();
+  for (ProcessArgList::const_iterator it_a = m_args.begin();
        it_a != m_args.end();
        it_a++) {
     packet.set_type(ProxyPacket::LaunchArg);
-    packet.set_str_value((*it_a).c_str());
+    packet.set_str_value(it_a->c_str());
     packet.send(s_proxy_sock);
   }
   
-  for (std::map<std::string,std::string>::const_iterator it_e = m_env.begin();
+  for (ProcessEnvMap::const_iterator it_e = m_env.begin();
        it_e != m_env.end();
        it_e++) {
     packet.set_type(ProxyPacket::LaunchEnvName);
-    packet.set_str_value((*it_e).first.c_str());
+    packet.set_str_value(it_e->first.c_str());
     packet.send(s_proxy_sock);
     
     packet.set_type(ProxyPacket::LaunchEnvValue);
-    packet.set_str_value((*it_e).second.c_str());
+    packet.set_str_value(it_e->second.c_str());
     packet.send(s_proxy_sock);    
   }
 

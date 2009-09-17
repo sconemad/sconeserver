@@ -41,10 +41,9 @@ TFTPModule::TFTPModule()
 //=========================================================================
 TFTPModule::~TFTPModule()
 {  
-  for (
-    std::map<std::string,TFTPProfile*>::const_iterator it = m_profiles.begin();
-    it != m_profiles.end();
-    it++) {
+  for (ProfileMap::const_iterator it = m_profiles.begin();
+       it != m_profiles.end();
+       it++) {
     delete it->second;
   }
 }
@@ -85,8 +84,7 @@ bool TFTPModule::connect(
 //=========================================================================
 TFTPProfile* TFTPModule::find_profile(const std::string& name)
 {
-  std::map<std::string,TFTPProfile*>::const_iterator it =
-    m_profiles.find(name);
+  ProfileMap::const_iterator it = m_profiles.find(name);
   
   if (it != m_profiles.end()) {
     return it->second;
@@ -110,10 +108,10 @@ scx::Arg* TFTPModule::arg_lookup(const std::string& name)
   
   if ("list" == name) {
     std::ostringstream oss;
-    std::map<std::string,TFTPProfile*>::const_iterator it = m_profiles.begin();
-    while (it != m_profiles.end()) {
+    for (ProfileMap::const_iterator it = m_profiles.begin();
+	 it != m_profiles.end();
+	 ++it) {
       oss << (*it).first << "\n";
-      it++;
     }
     return new scx::ArgString(oss.str());
   }

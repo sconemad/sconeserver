@@ -46,7 +46,7 @@ Kernel* Kernel::get()
 //=============================================================================
 std::string Kernel::info() const
 {
-  return "Copyright (c) 2000-2005 Andrew Wedgbury\n"
+  return "Copyright (c) 2000-2009 Andrew Wedgbury\n"
          "An object orientated network server framework\n";
 }
 

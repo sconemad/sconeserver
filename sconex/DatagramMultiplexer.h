@@ -46,7 +46,9 @@ private:
 
   Module& m_router;
   std::string m_chain;
-  std::map<std::string,DatagramChannel*> m_channels;
+  
+  typedef HASH_TYPE<std::string,DatagramChannel*> DatagramChannelMap;
+  DatagramChannelMap m_channels;
 };
 
 

@@ -1,6 +1,14 @@
 
 2009-09-17 Andrew Wedgbury <wedge@sconemad.com>
 
+	* configure: update version to 0.8.0, update NEWS.
+	* all: Use typedefs for std::map and std::list types.
+	Use unordered_map or hash_map where appropriate.
+	define HASH_TYPE to indicate best hash-map type available.
+	* test: Add shell script to auto run all arg test scripts.
+	
+2009-09-17 Andrew Wedgbury <wedge@sconemad.com>
+
 	* sconex/ArgProc: Allow binary ops in nx mode, improve logging.
 	* sconex/Arg: Make Arg return ArgError for unsupported ops.
 

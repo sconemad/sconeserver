@@ -158,6 +158,32 @@ Free Software Foundation, Inc.,
 #  include <set>
 #endif
 
+#ifdef HAVE_TR1_UNORDERED_MAP
+#  include <tr1/unordered_map>
+#  define HASH_TYPE std::tr1::unordered_map
+#else
+#  if HAVE_EXT_HASH_MAP
+#    include <ext/hash_map>
+#    define HASH_TYPE __gnu_cxx::hash_map
+     namespace __gnu_cxx
+     {
+       template<> struct hash<std::string> 
+       {
+         size_t operator()(const std::string& x) const
+         {
+           return hash<const char*>()(x.c_str());
+         }
+       };
+     }
+#  else
+#    ifdef HAVE_MAP
+#      define HASH_TYPE std::map
+#    else
+#      error "No std::map type found!"
+#    endif
+#  endif
+#endif
+
 // sconex Debugging
 #include "sconex/Debug.h"
 

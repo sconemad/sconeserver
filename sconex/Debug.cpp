@@ -187,7 +187,7 @@ void Debug::reset_counters()
 {
 #ifdef DEBUG_INSTANCE_COUNT
   m_mutex->lock();
-  for (std::map<std::string,DebugInstanceCounter>::iterator it = m_inst_counts.begin();
+  for (InstanceCounterMap::iterator it = m_inst_counts.begin();
        it != m_inst_counts.end();
        ++it) {
     ((*it).second).reset();
@@ -197,7 +197,7 @@ void Debug::reset_counters()
 }
 
 //=============================================================================
-void Debug::get_counters(std::map<std::string,DebugInstanceCounter>& counters)
+void Debug::get_counters(InstanceCounterMap& counters)
 {
 #ifdef DEBUG_INSTANCE_COUNT
   m_mutex->lock();

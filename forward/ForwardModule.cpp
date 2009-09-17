@@ -48,7 +48,7 @@ ForwardModule::~ForwardModule()
 //=========================================================================
 std::string ForwardModule::info() const
 {
-  return "Copyright (c) 2000-2007 Andrew Wedgbury\n"
+  return "Copyright (c) 2000-2009 Andrew Wedgbury\n"
          "Connection forwarding\n";
 }
 

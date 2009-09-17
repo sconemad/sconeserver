@@ -106,8 +106,7 @@ void MimeType::set_param(const std::string& name, const std::string& value)
 //=============================================================================
 bool MimeType::erase_param(const std::string& name)
 {
-  std::map<std::string,std::string>::iterator it =
-    m_params.find(name);
+  ParamMap::iterator it = m_params.find(name);
   if (it == m_params.end()) {
     return false;
   }
@@ -130,12 +129,11 @@ const std::string& MimeType::get_subtype() const
 //=============================================================================
 std::string MimeType::get_param(const std::string& name) const
 {
-  std::map<std::string,std::string>::const_iterator it =
-    m_params.find(name);
+  ParamMap::const_iterator it = m_params.find(name);
   if (it == m_params.end()) {
     return "";
   }
-  return (*it).second;  
+  return it->second;  
 }
 
 //=============================================================================
@@ -144,10 +142,10 @@ std::string MimeType::get_string() const
   std::ostringstream oss;
   oss << m_type << "/" << m_subtype;
 
-  for (std::map<std::string,std::string>::const_iterator it = m_params.begin();
+  for (ParamMap::const_iterator it = m_params.begin();
        it != m_params.end();
        it++) {
-    oss << "; " << (*it).first << "=\"" << (*it).second << "\"";
+    oss << "; " << it->first << "=\"" << it->second << "\"";
   }
 
   return oss.str();
@@ -189,17 +187,17 @@ bool MimeType::operator==(const MimeType& v) const
   if (m_type != v.m_type) return false;
   if (m_subtype != v.m_subtype) return false;
   
-  std::map<std::string,std::string>::const_iterator it;
+  ParamMap::const_iterator it;
   for (it = m_params.begin();
        it != m_params.end();
        it++) {
-    if (v.get_param((*it).first) != (*it).second) return false;
+    if (v.get_param(it->first) != it->second) return false;
   }
   
   for (it = v.m_params.begin();
        it != v.m_params.end();
        it++) {
-    if (get_param((*it).first) != (*it).second) return false;
+    if (get_param(it->first) != it->second) return false;
   }
   
   return true;

@@ -53,7 +53,8 @@ protected:
 
 private:
 
-  std::map<std::string,SSLChannel*> m_channels;
+  typedef std::map<std::string,SSLChannel*> ChannelMap;
+  ChannelMap m_channels;
   
 };
 

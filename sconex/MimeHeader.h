@@ -42,7 +42,9 @@ public:
   
 private:
   std::string m_value;
-  std::map<std::string,std::string> m_pars;
+
+  typedef std::map<std::string,std::string> ParMap;
+  ParMap m_pars;
 };
 
   
@@ -70,7 +72,9 @@ public:
   
 private:
   std::string m_name;
-  std::list<MimeHeaderValue> m_values;
+
+  typedef std::list<MimeHeaderValue> ValueList;
+  ValueList m_values;
 };
   
 
@@ -92,8 +96,9 @@ public:
 private:
 
   std::string normalize(const std::string& name) const;
-  
-  std::map<std::string,std::string> m_headers;
+
+  typedef std::map<std::string,std::string> HeaderMap;
+  HeaderMap m_headers;
 
 };
 

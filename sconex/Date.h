@@ -120,7 +120,8 @@ protected:
   bool m_local;
   
   void init_tables();
-  static std::map<std::string,int>* s_month_table;
+  typedef std::map<std::string,int> MonthNameMap;
+  static MonthNameMap* s_month_table;
 
 };
 

@@ -56,7 +56,7 @@ Build::Build(
 //=========================================================================
 Build::~Build()
 {
-  for (std::list<BuildStep*>::iterator it = m_steps.begin();
+  for (StepList::iterator it = m_steps.begin();
        it != m_steps.end();
        it++) {
     delete (*it);
@@ -120,7 +120,7 @@ bool Build::save()
       << m_dir.path() << "\n";
   file.write(oss.str());
 
-  for (std::list<BuildStep*>::const_iterator it = m_steps.begin();
+  for (StepList::const_iterator it = m_steps.begin();
        it != m_steps.end();
        it++) {
     BuildStep* step = (*it);
@@ -135,7 +135,7 @@ bool Build::save()
 //=========================================================================
 bool Build::proceed()
 {
-  for (std::list<BuildStep*>::const_iterator it = m_steps.begin();
+  for (StepList::const_iterator it = m_steps.begin();
        it != m_steps.end();
        it++) {
     BuildStep* step = (*it);
@@ -196,7 +196,7 @@ bool Build::abort()
   }
   
   m_state = Aborted;
-  for (std::list<BuildStep*>::const_iterator it = m_steps.begin();
+  for (StepList::const_iterator it = m_steps.begin();
        it != m_steps.end();
        it++) {
     BuildStep* step = (*it);

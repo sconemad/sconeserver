@@ -2,7 +2,7 @@
 
 Router module
 
-Copyright (c) 2000-2005 Andrew Wedgbury <wedge@sconemad.com>
+Copyright (c) 2000-2009 Andrew Wedgbury <wedge@sconemad.com>
 
 This program is free software; you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -38,17 +38,17 @@ RouterModule::RouterModule()
 //=============================================================================
 RouterModule::~RouterModule()
 {
-  std::map<std::string,RouterChain*>::const_iterator it = m_chains.begin();
-  while (it != m_chains.end()) {
-    delete (*it).second;
-    it++;
+  for (RouterChainMap::const_iterator it = m_chains.begin();
+       it != m_chains.end();
+       ++it) {
+    delete it->second;
   }
 }
 
 //=========================================================================
 std::string RouterModule::info() const
 {
-  return "Copyright (c) 2000-2005 Andrew Wedgbury\n"
+  return "Copyright (c) 2000-2009 Andrew Wedgbury\n"
          "Connection router\n";
 }
 
@@ -84,10 +84,9 @@ void RouterModule::add(const std::string& name, RouterChain* c)
 //=============================================================================
 RouterChain* RouterModule::find(const std::string& name)
 {
-  std::map<std::string,RouterChain*>::const_iterator it = m_chains.find(name);
-
+  RouterChainMap::const_iterator it = m_chains.find(name);
   if (it != m_chains.end()) {
-    return (*it).second;
+    return it->second;
   }
   
   return 0;
@@ -109,10 +108,10 @@ scx::Arg* RouterModule::arg_lookup(
 
   if ("list" == name) {
     std::ostringstream oss;
-    std::map<std::string,RouterChain*>::const_iterator it = m_chains.begin();
-    while (it != m_chains.end()) {
-      oss << (*it).first << "\n";
-      it++;
+    for (RouterChainMap::const_iterator it = m_chains.begin();
+	 it != m_chains.end();
+	 ++it) {
+      oss << it->first << "\n";
     }
     return new scx::ArgString(oss.str());
   }
@@ -166,8 +165,7 @@ scx::Arg* RouterModule::arg_function(
     }
     std::string s_name = a_name->get_string();
 
-    std::map<std::string,RouterChain*>::iterator it = m_chains.find(s_name);
-    
+    RouterChainMap::iterator it = m_chains.find(s_name);
     if (it == m_chains.end()) {
       return new scx::ArgError("router::remove() {ROUTE:" + s_name + "} not found");
     }

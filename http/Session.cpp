@@ -35,7 +35,7 @@ SessionManager::SessionManager(HTTPModule& module)
 //=========================================================================
 SessionManager::~SessionManager()
 {
-  for (std::map<std::string,Session*>::iterator it = m_sessions.begin();
+  for (SessionMap::iterator it = m_sessions.begin();
        it != m_sessions.end();
        ++it) {
     Session* session = (*it).second;
@@ -47,7 +47,7 @@ SessionManager::~SessionManager()
 Session* SessionManager::lookup_session(const std::string& id)
 {
   check_sessions();
-  std::map<std::string,Session*>::iterator it = m_sessions.find(id);
+  SessionMap::iterator it = m_sessions.find(id);
   if (it != m_sessions.end()) {
     return (*it).second;
   }
@@ -67,7 +67,7 @@ Session* SessionManager::new_session()
 int SessionManager::check_sessions()
 {
   int n=0;
-  for (std::map<std::string,Session*>::iterator it = m_sessions.begin();
+  for (SessionMap::iterator it = m_sessions.begin();
        it != m_sessions.end();
        ++it) {
     Session* session = (*it).second;
@@ -103,7 +103,7 @@ scx::Arg* SessionManager::arg_lookup(
 
   if ("list" == name) {
     std::ostringstream oss;
-    for (std::map<std::string,Session*>::const_iterator it = m_sessions.begin();
+    for (SessionMap::const_iterator it = m_sessions.begin();
 	 it != m_sessions.end();
 	 ++it) {
       oss << (*it).first << "\n";

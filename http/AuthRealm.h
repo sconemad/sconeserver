@@ -88,7 +88,8 @@ private:
   scx::Date m_modtime;
   scx::Mutex m_mutex;
 
-  std::map<std::string,std::string> m_users;
+  typedef HASH_TYPE<std::string,std::string> UserMap;
+  UserMap m_users;
 };
 
 //=============================================================================
@@ -112,7 +113,8 @@ private:
 
   HTTPModule& m_module;
 
-  std::map<std::string,AuthRealm*> m_realms;
+  typedef std::map<std::string,AuthRealm*> AuthRealmMap;
+  AuthRealmMap m_realms;
 };
 
 

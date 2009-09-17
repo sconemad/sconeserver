@@ -56,8 +56,7 @@ scx::Condition DatagramMultiplexer::event(scx::Stream::Event e)
     int na=0;
     sock->endpoint_readfrom(buffer,65536,na,sa);
     
-    std::map<std::string,DatagramChannel*>::iterator iter = 
-      m_channels.find(sa->get_string());
+    DatagramChannelMap::iterator iter = m_channels.find(sa->get_string());
     if (iter!=m_channels.end()) {
       // Existing channel
       channel = (*iter).second;
@@ -95,8 +94,7 @@ std::string DatagramMultiplexer::stream_status() const
 //=============================================================================
 void DatagramMultiplexer::notify_close(const std::string& addr_remote)
 {
-  std::map<std::string,DatagramChannel*>::iterator iter = 
-    m_channels.find(addr_remote);
+  DatagramChannelMap::iterator iter = m_channels.find(addr_remote);
   if (iter!=m_channels.end()) {
     m_channels.erase(iter);
   }

@@ -2,7 +2,7 @@
 
 Statistics Module
 
-Copyright (c) 2000-2004 Andrew Wedgbury <wedge@sconemad.com>
+Copyright (c) 2000-2009 Andrew Wedgbury <wedge@sconemad.com>
 
 This program is free software; you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -36,25 +36,23 @@ StatModule::StatModule(
 )
   : scx::Module("stat",scx::version())
 {
-  //  start();
+
 }
 
 //=========================================================================
 StatModule::~StatModule()
 {
-  //  stop();
-  
-  std::map<std::string,StatChannel*>::iterator it = m_channels.begin();
-  while (it != m_channels.end()) {
+  for (ChannelMap::iterator it = m_channels.begin();
+       it != m_channels.end();
+       ++it) {
     delete (*it).second;
-    it++;
   }
 }
 
 //=========================================================================
 std::string StatModule::info() const
 {
-  return "Copyright (c) 2000-2005 Andrew Wedgbury\n"
+  return "Copyright (c) 2000-2009 Andrew Wedgbury\n"
          "Connection and I/O statistics\n";
 }
 
@@ -94,9 +92,7 @@ void StatModule::add_stats(
 //=========================================================================
 StatChannel* StatModule::find_channel(const std::string& name)
 {
-  std::map<std::string,StatChannel*>::const_iterator it =
-    m_channels.find(name);
-  
+  ChannelMap::const_iterator it = m_channels.find(name);
   if (it != m_channels.end()) {
     return (*it).second;
   }
@@ -129,27 +125,6 @@ bool StatModule::remove_channel(const std::string& name)
 }
 
 //=============================================================================
-int StatModule::run()
-{
-  //  pthread_setcanceltype(PTHREAD_CANCEL_ASYNCHRONOUS,0);
-
-  while (true) {
- 
-    //    std::map<std::string,StatChannel*>::const_iterator it = m_channels.begin();
-    //    while (it != m_channels.end()) {
-    //      scx::Arg* a = new ArgStatChannel(ref(),(*it).first);
-    //      std::cout << a->get_string() << std::endl;
-    //      delete a;
-    //      it++;
-    //    }
-   
-    //    sleep(10);
-  }
-  
-  return 0;
-}
-
-//=============================================================================
 scx::Arg* StatModule::arg_lookup(const std::string& name)
 {
   // Methods
@@ -164,10 +139,10 @@ scx::Arg* StatModule::arg_lookup(const std::string& name)
   
   if ("list" == name) {
     std::ostringstream oss;
-    std::map<std::string,StatChannel*>::const_iterator it = m_channels.begin();
-    while (it != m_channels.end()) {
+    for (ChannelMap::const_iterator it = m_channels.begin();
+	 it != m_channels.end();
+	 ++it) {
       oss << (*it).first << "\n";
-      it++;
     }
     return new scx::ArgString(oss.str());
   }
@@ -175,8 +150,9 @@ scx::Arg* StatModule::arg_lookup(const std::string& name)
   if ("print" == name) {
     std::ostringstream oss;
     oss << "   CHANNEL    NUM-CON   BYTES-IN  BYTES-OUT\n";
-    std::map<std::string,StatChannel*>::const_iterator it = m_channels.begin();
-    while (it != m_channels.end()) {
+    for (ChannelMap::const_iterator it = m_channels.begin();
+	 it != m_channels.end();
+	 ++it) {
 
       StatChannel* channel = (*it).second;
       scx::Arg* connections = channel->arg_lookup("connections");
@@ -191,7 +167,6 @@ scx::Arg* StatModule::arg_lookup(const std::string& name)
       delete connections;
       delete input;
       delete output;
-      it++;
     }
     return new scx::ArgString(oss.str());
   }

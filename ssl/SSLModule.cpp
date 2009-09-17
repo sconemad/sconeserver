@@ -71,10 +71,9 @@ SSLModule::SSLModule()
 //=========================================================================
 SSLModule::~SSLModule()
 {  
-  for (
-    std::map<std::string,SSLChannel*>::const_iterator it = m_channels.begin();
-    it != m_channels.end();
-    it++) {
+  for (ChannelMap::const_iterator it = m_channels.begin();
+       it != m_channels.end();
+       it++) {
     delete it->second;
   }
 
@@ -89,7 +88,7 @@ SSLModule::~SSLModule()
 std::string SSLModule::info() const
 {
   std::ostringstream oss;
-  oss << "Copyright (c) 2000-2004 Andrew Wedgbury\n"
+  oss << "Copyright (c) 2000-2009 Andrew Wedgbury\n"
       << "Secure socket layer\n"
       << "Using " << SSLeay_version(SSLEAY_VERSION) << "\n";
   return oss.str();
@@ -135,8 +134,7 @@ bool SSLModule::connect(
 //=========================================================================
 SSLChannel* SSLModule::find_channel(const std::string& name)
 {
-  std::map<std::string,SSLChannel*>::const_iterator it =
-    m_channels.find(name);
+  ChannelMap::const_iterator it = m_channels.find(name);
   
   if (it != m_channels.end()) {
     return it->second;
@@ -160,10 +158,10 @@ scx::Arg* SSLModule::arg_lookup(const std::string& name)
   
   if ("list" == name) {
     std::ostringstream oss;
-    std::map<std::string,SSLChannel*>::const_iterator it = m_channels.begin();
-    while (it != m_channels.end()) {
-      oss << (*it).first << "\n";
-      it++;
+    for (ChannelMap::const_iterator it = m_channels.begin();
+	 it != m_channels.end();
+	 ++it) {
+      oss << it->first << "\n";
     }
     return new scx::ArgString(oss.str());
   }

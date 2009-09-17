@@ -51,7 +51,7 @@ HTTPModule::~HTTPModule()
 //=========================================================================
 std::string HTTPModule::info() const
 {
-  return "Copyright (c) 2000-2004 Andrew Wedgbury\n"
+  return "Copyright (c) 2000-2009 Andrew Wedgbury\n"
          "HTTP web server\n";
 }
 

@@ -49,10 +49,10 @@ Host::Host(
 //=========================================================================
 Host::~Host()
 {
-  for (std::map<std::string,DocRoot*>::const_iterator it = m_docroots.begin();
+  for (DocRootMap::const_iterator it = m_docroots.begin();
        it != m_docroots.end();
        ++it) {
-    delete (*it).second;
+    delete it->second;
   }
 }
 
@@ -104,10 +104,9 @@ const scx::FilePath& Host::get_path() const
 //=========================================================================
 DocRoot* Host::get_docroot(const std::string& profile)
 {
-  std::map<std::string,DocRoot*>::const_iterator it =
-    m_docroots.find(profile);
+  DocRootMap::const_iterator it = m_docroots.find(profile);
   if (it != m_docroots.end()) {
-    return (*it).second;
+    return it->second;
   }
 
   return 0;
@@ -137,20 +136,19 @@ scx::Arg* Host::arg_lookup(
   
   if ("list" == name) {
     std::ostringstream oss;
-    for (std::map<std::string,DocRoot*>::const_iterator it =
-           m_docroots.begin();
+    for (DocRootMap::const_iterator it = m_docroots.begin();
          it != m_docroots.end();
          ++it) {
-      oss << (*it).first << "\n";
+      oss << it->first << "\n";
     }
     return new scx::ArgString(oss.str());
   }
 
   // Sub-objects
 
-  std::map<std::string,DocRoot*>::const_iterator it = m_docroots.find(name);
+  DocRootMap::const_iterator it = m_docroots.find(name);
   if (it != m_docroots.end()) {
-    DocRoot* r = (*it).second;
+    DocRoot* r = it->second;
     return new scx::ArgObject(r);
   }      
 
@@ -190,8 +188,7 @@ scx::Arg* Host::arg_function(
       return new scx::ArgError("add() No path specified");
     }
 
-    std::map<std::string,DocRoot*>::const_iterator it =
-      m_docroots.find(s_profile);
+    DocRootMap::const_iterator it = m_docroots.find(s_profile);
     if (it != m_docroots.end()) {
       return new scx::ArgError("add() Profile already exists");
     }
@@ -211,8 +208,7 @@ scx::Arg* Host::arg_function(
     }
     std::string s_profile = a_profile->get_string();
 
-    std::map<std::string,DocRoot*>::iterator it =
-      m_docroots.find(s_profile);
+    DocRootMap::iterator it = m_docroots.find(s_profile);
     if (it == m_docroots.end()) {
       return new scx::ArgError("remove() Profile not found");
     }

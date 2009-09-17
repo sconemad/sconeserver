@@ -29,6 +29,9 @@ Free Software Foundation, Inc.,
 namespace scx {
 
 class Mutex;
+
+typedef std::list<std::string> ProcessArgList;
+typedef std::map<std::string,std::string> ProcessEnvMap;
   
 //============================================================================
 class SCONEX_API Process : public StreamSocket {
@@ -81,8 +84,8 @@ private:
   static Mutex* s_proxy_mutex;
   
   std::string m_exe;
-  std::list<std::string> m_args;
-  std::map<std::string,std::string> m_env;
+  ProcessArgList m_args;
+  ProcessEnvMap m_env;
   FilePath m_dir;
   User m_user;
   RunState m_runstate;

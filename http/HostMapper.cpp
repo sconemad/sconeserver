@@ -35,11 +35,10 @@ HostMapper::HostMapper(HTTPModule& module)
 //=========================================================================
 HostMapper::~HostMapper()
 {
-  for (std::map<std::string,Host*>::const_iterator it =
-         m_hosts.begin();
+  for (HostMap::const_iterator it = m_hosts.begin();
        it != m_hosts.end();
        ++it) {
-    delete (*it).second;
+    delete it->second;
   }
 }
 
@@ -54,12 +53,12 @@ Host* HostMapper::host_lookup(
 
   while (--bailout > 0) {
   
-    std::map<std::string,std::string>::const_iterator it = m_hostmap.find(key);
-    if (it != m_hostmap.end()) {
-      std::string id = (*it).second;
-      std::map<std::string,Host*>::const_iterator it2 = m_hosts.find(id);
+    HostRedirectMap::const_iterator it = m_redirects.find(key);
+    if (it != m_redirects.end()) {
+      std::string id = it->second;
+      HostMap::const_iterator it2 = m_hosts.find(id);
       if (it2 != m_hosts.end()) {
-        Host* h = (*it2).second;
+        Host* h = it2->second;
         return h;
       }
       log(std::string("Lookup failure: '") + name + 
@@ -112,19 +111,19 @@ scx::Arg* HostMapper::arg_lookup(
   
   if ("list" == name) {
     std::ostringstream oss;
-    for (std::map<std::string,Host*>::const_iterator it = m_hosts.begin();
+    for (HostMap::const_iterator it = m_hosts.begin();
 	 it != m_hosts.end();
 	 ++it) {
-      oss << (*it).first << "\n";
+      oss << it->first << "\n";
     }
     return new scx::ArgString(oss.str());
   }
 
   if ("lsmap" == name) {
     std::ostringstream oss;
-    std::map<std::string,std::string>::const_iterator it = m_hostmap.begin();
-    while (it != m_hostmap.end()) {
-      oss << "'" << (*it).first << "' -> " << (*it).second << "\n";
+    HostRedirectMap::const_iterator it = m_redirects.begin();
+    while (it != m_redirects.end()) {
+      oss << "'" << it->first << "' -> " << it->second << "\n";
       it++;
     }
     return new scx::ArgString(oss.str());
@@ -132,9 +131,9 @@ scx::Arg* HostMapper::arg_lookup(
 
   // Sub-objects
 
-  std::map<std::string,Host*>::const_iterator it = m_hosts.find(name);
+  HostMap::const_iterator it = m_hosts.find(name);
   if (it != m_hosts.end()) {
-    Host* h = (*it).second;
+    Host* h = it->second;
     return new scx::ArgObject(h);
   }      
 
@@ -181,7 +180,7 @@ scx::Arg* HostMapper::arg_function(
       return new scx::ArgError("add() No path specified");
     }
 
-    std::map<std::string,Host*>::const_iterator it = m_hosts.find(s_id);
+    HostMap::const_iterator it = m_hosts.find(s_id);
     if (it != m_hosts.end()) {
       return new scx::ArgError("add() Host with this ID already exists");
     }
@@ -191,7 +190,7 @@ scx::Arg* HostMapper::arg_function(
     Host* host = new Host(m_module,*this,s_id,s_hostname,path.path());
     host->init();
     m_hosts[s_id] = host;
-    m_hostmap[s_hostname] = s_id;
+    m_redirects[s_hostname] = s_id;
     return 0;
   }
 
@@ -203,13 +202,13 @@ scx::Arg* HostMapper::arg_function(
     }
     std::string s_hostname = a_host->get_string();
 
-    std::map<std::string,Host*>::iterator it = m_hosts.find(s_hostname);
+    HostMap::iterator it = m_hosts.find(s_hostname);
     if (it == m_hosts.end()) {
       return new scx::ArgError("remove() Host not found");
     }
     
     log("Removing host '" + s_hostname + "'");
-    delete (*it).second;
+    delete it->second;
     m_hosts.erase(it);
     return 0;
   }
@@ -230,7 +229,7 @@ scx::Arg* HostMapper::arg_function(
     std::string s_target = a_target->get_string();
 
     log("Mapping host pattern '" + s_pattern + "' to ID '" + s_target + "'"); 
-    m_hostmap[s_pattern] = s_target;
+    m_redirects[s_pattern] = s_target;
     return 0;
   }
     

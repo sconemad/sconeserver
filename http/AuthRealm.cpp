@@ -57,9 +57,9 @@ bool AuthRealm::authorised(const std::string& user, const std::string& pass)
 {
   refresh();
   scx::MutexLocker locker(m_mutex);
-  std::map<std::string,std::string>::const_iterator it = m_users.find(user);
+  UserMap::const_iterator it = m_users.find(user);
   if (it != m_users.end()) {
-    return (pass == (*it).second);
+    return (pass == it->second);
   }
   return false;
 }
@@ -191,20 +191,19 @@ AuthRealmManager::AuthRealmManager(
 //=========================================================================
 AuthRealmManager::~AuthRealmManager()
 {
-  for (std::map<std::string,AuthRealm*>::const_iterator it =
-         m_realms.begin();
+  for (AuthRealmMap::const_iterator it = m_realms.begin();
        it != m_realms.end();
        ++it) {
-    delete (*it).second;
+    delete it->second;
   }
 }
 
 //=========================================================================
 AuthRealm* AuthRealmManager::lookup_realm(const std::string& name)
 {
-  std::map<std::string,AuthRealm*>::const_iterator it = m_realms.find(name);
+  AuthRealmMap::const_iterator it = m_realms.find(name);
   if (it != m_realms.end()) {
-    return (*it).second;
+    return it->second;
   }
   return 0;
 }
@@ -241,17 +240,17 @@ scx::Arg* AuthRealmManager::arg_lookup(const std::string& name)
   
   if ("list" == name) {
     std::ostringstream oss;
-    for (std::map<std::string,AuthRealm*>::const_iterator it = m_realms.begin();
+    for (AuthRealmMap::const_iterator it = m_realms.begin();
 	 it != m_realms.end();
 	 ++it) {
-      oss << (*it).first << "\n";
+      oss << it->first << "\n";
     }
     return new scx::ArgString(oss.str());
   }
   
-  std::map<std::string,AuthRealm*>::const_iterator it = m_realms.find(name);
+  AuthRealmMap::const_iterator it = m_realms.find(name);
   if (it != m_realms.end()) {
-    AuthRealm* r = (*it).second;
+    AuthRealm* r = it->second;
     return new scx::ArgObject(r);
   }
   
@@ -274,7 +273,7 @@ scx::Arg* AuthRealmManager::arg_function(
     }
     std::string s_realm = a_realm->get_string();
 
-    std::map<std::string,AuthRealm*>::const_iterator it = m_realms.find(s_realm);
+    AuthRealmMap::const_iterator it = m_realms.find(s_realm);
     if (it != m_realms.end()) {
       return new scx::ArgError("add_realm() Realm already exists");
     }
@@ -300,7 +299,7 @@ scx::Arg* AuthRealmManager::arg_function(
     }
     std::string s_realm = a_realm->get_string();
 
-    std::map<std::string,AuthRealm*>::iterator it = m_realms.find(s_realm);
+    AuthRealmMap::iterator it = m_realms.find(s_realm);
     if (it == m_realms.end()) {
       return new scx::ArgError("add_realm() Realm does not exist");
     }

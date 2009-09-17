@@ -18,6 +18,8 @@ argtest_SOURCES = \
 ArgTest.cpp
 argtest_LDADD = $(top_builddir)/sconex/libsconex.la
 
+TESTS = runargtests.sh
+
 EXTRA_DIST = \
 arg/forloop.test \
 site/html/index.html \

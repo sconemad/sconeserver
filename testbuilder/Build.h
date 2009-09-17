@@ -32,6 +32,8 @@ class Build {
 
 public:
 
+  typedef std::list<BuildStep*> StepList;
+
   Build(TestBuilderModule& module);
   // Create a new build for loading
 
@@ -67,7 +69,7 @@ public:
 
   const std::string& get_profile() const { return m_profile; };
   const std::string& get_id() const { return m_id; };
-  const std::list<BuildStep*>& get_steps() const { return m_steps; };
+  const StepList& get_steps() const { return m_steps; };
 
   static std::string get_state_str(State state);
   
@@ -81,8 +83,8 @@ private:
   std::string m_profile;
   std::string m_id;
   scx::FilePath m_dir;
-  
-  std::list<BuildStep*> m_steps;
+
+  StepList m_steps;
   
 };
 

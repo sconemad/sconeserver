@@ -4,10 +4,9 @@
 
 print("START" + endl);
 
-
 var a;
 var c = 0;
-sub f { c++; }
+sub f { ++c; }
 
 print("running 1 | f()" + endl);
 a = 1 | f();
@@ -56,6 +55,39 @@ print("running (1 & ++m.one) | f()" + endl);
 a = (1 & ++m.one) | f();
 test(c==3,"f() should not be called");
 test(m.one==2,"m.one should be incremented");
+
+
+
+print("running z.notdefined | f()" + endl);
+a = z.notdefined | f();
+test(c==4,"f() should be called");
+print("a="+a+endl);
+test(a==4,"a should be 4");
+
+print("running z.notdefined | m.one" + endl);
+a = z.notdefined | m.one;
+print("a="+a+endl);
+test(a==2,"a should be 2");
+
+print("running m.one | m.one" + endl);
+a = m.one | m.one;
+print("a="+a+endl);
+test(a==2,"a should be 2");
+
+
+var sm={"mammal","chimpanzee",
+        "fish","haddock",
+        "bird","duck"};
+var s="";
+
+print("sm=" + sm + endl);
+sm.mammal | sm.bird;
+
+
+print("running sm.mammal | sm.bird" + endl);
+s = sm.mammal | sm.bird;
+print("s="+s+endl);
+test(s=="chimpanzee","s should be chimpanzee");
 
 
 print("END" + endl);

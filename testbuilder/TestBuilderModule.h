@@ -79,13 +79,16 @@ protected:
   
 private:
 
-  std::map<std::string,BuildProfile*> m_profiles;
+  typedef std::map<std::string,BuildProfile*> ProfileMap;
+  ProfileMap m_profiles;
   // Test build profiles
 
-  std::map<std::string,std::string> m_source_methods;
+  typedef std::map<std::string,std::string> SourceMethodMap;
+  SourceMethodMap m_source_methods;
   // Source methods
   
-  std::list<Build*> m_builds;
+  typedef std::list<Build*> BuildList;
+  BuildList m_builds;
   // Test builds
   
   scx::Mutex m_builds_mutex;
