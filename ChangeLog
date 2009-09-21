@@ -1,4 +1,18 @@
 
+2009-09-21 Andrew Wedgbury <wedge@sconemad.com>
+
+	* http/Session: Session manager thread safety.
+	* http/DocRoot: Use ArgStore for docroot params.
+	Use auto_session param to auto create http sessions.
+	* sconesite/RenderMarkup: Add abort method to stop rendering.
+	Check session is valid before it is returned.
+	* sconex/ArgStatement: Implement script flow statements in
+	SconeScript, i.e. return, break and continue.
+	* sconex/ArgScript: Parse and create flow statements.
+	* sconex/ArgObject: Move ref counting from Module.
+	* sconex/Module: Move ref counting to ArgObjectInterface.
+	* test: Improve arg forloop and sub testing.
+
 2009-09-17 Andrew Wedgbury <wedge@sconemad.com>
 
 	* configure: update version to 0.8.0, update NEWS.

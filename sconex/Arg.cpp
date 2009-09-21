@@ -870,7 +870,7 @@ Arg* ArgSub::call(Arg* args)
     vargs.give(args->new_copy());
     m_body->arg_function("var",&vargs);
     
-    return m_body->run(*m_proc);
+    return m_body->execute(*m_proc);
   }
   return 0;
 }

@@ -64,8 +64,11 @@ public:
 
   enum ParseMode { SemicolonTerminated, Bracketed, Name };
   virtual ParseMode parse_mode() const;
-  
-  virtual Arg* run(ArgProc& proc) =0;
+
+  Arg* execute(ArgProc& proc);
+
+  enum FlowMode { Normal, Return, Last, Next };
+  virtual Arg* run(ArgProc& proc, FlowMode& flow) =0;
 
   // ArgObjectInterface methods
   virtual std::string name() const;
@@ -93,7 +96,7 @@ public:
   virtual ArgStatement* new_copy() const;
 
   virtual ParseResult parse(ArgScript& script, const std::string& token);
-  virtual Arg* run(ArgProc& proc);
+  virtual Arg* run(ArgProc& proc, FlowMode& flow);
 
 protected:
 
@@ -114,7 +117,7 @@ public:
   virtual ArgStatement* new_copy() const;
 
   virtual ParseResult parse(ArgScript& script, const std::string& token);
-  virtual Arg* run(ArgProc& proc);
+  virtual Arg* run(ArgProc& proc, FlowMode& flow);
 
   virtual Arg* arg_lookup(const std::string& name);
   virtual Arg* arg_function(const std::string& name, Arg* args);
@@ -144,7 +147,7 @@ public:
 
   virtual ParseResult parse(ArgScript& script, const std::string& token);
   virtual ParseMode parse_mode() const;
-  virtual Arg* run(ArgProc& proc);
+  virtual Arg* run(ArgProc& proc, FlowMode& flow);
 
 protected:
 
@@ -175,7 +178,7 @@ public:
 
   virtual ParseResult parse(ArgScript& script, const std::string& token);
   virtual ParseMode parse_mode() const;
-  virtual Arg* run(ArgProc& proc);
+  virtual Arg* run(ArgProc& proc, FlowMode& flow);
 
 protected:
 
@@ -203,7 +206,7 @@ public:
 
   virtual ParseResult parse(ArgScript& script, const std::string& token);
   virtual ParseMode parse_mode() const;
-  virtual Arg* run(ArgProc& proc);
+  virtual Arg* run(ArgProc& proc, FlowMode& flow);
 
 protected:
 
@@ -226,6 +229,33 @@ protected:
 
   
 //=============================================================================
+class SCONEX_API ArgStatementFlow : public ArgStatement {
+
+public:
+  
+  ArgStatementFlow(FlowMode flow);
+  ArgStatementFlow(const ArgStatementFlow& c);
+  virtual ~ArgStatementFlow();
+  virtual ArgStatement* new_copy() const;
+
+  virtual ParseResult parse(ArgScript& script, const std::string& token);
+  virtual ParseMode parse_mode() const;
+  virtual Arg* run(ArgProc& proc, FlowMode& flow);
+
+protected:
+
+  int m_seq;
+  // Sequence counter used for parsing
+
+  FlowMode m_flow;
+  // Flow mode to change to
+  
+  std::string m_ret_expr;
+  // Expression for return value
+};
+
+
+//=============================================================================
 class SCONEX_API ArgStatementVar : public ArgStatement {
 
 public:
@@ -237,7 +267,7 @@ public:
 
   virtual ParseResult parse(ArgScript& script, const std::string& token);
   virtual ParseMode parse_mode() const;
-  virtual Arg* run(ArgProc& proc);
+  virtual Arg* run(ArgProc& proc, FlowMode& flow);
 
 protected:
 
@@ -264,7 +294,7 @@ public:
 
   virtual ParseResult parse(ArgScript& script, const std::string& token);
   virtual ParseMode parse_mode() const;
-  virtual Arg* run(ArgProc& proc);
+  virtual Arg* run(ArgProc& proc, FlowMode& flow);
 
 protected:
 

@@ -2,9 +2,40 @@
 #
 #
 
-sub MySub
+sub func3
 {
-  ARGV[0] + 1;
+  var a = ARGV[0];
+  print("func3("+a+")... ");
+  return func1(a/57);
 }
 
-print ("MySub(100) returned " + MySub(100) + " and that was good" + endl);
+sub func2
+{
+  var a = ARGV[0];
+  print("func2("+a+")... ");
+  if (a < 100) {
+    return (4*a*a) + (32*a) + 9;
+  }
+  return 9 - func3(12 + a * 9);
+}
+
+sub func1
+{
+  var a = ARGV[0];
+  print("func1("+a+")... ");
+  if (a < 10) {
+    return (2*a*a*a) + (5*a*a) + (4*a) + 7;
+  }
+  return 3 * func2(a*5);
+}
+
+print("START"+endl);
+
+var i;
+for (i=0; i<=30; ++i) {
+  print ("CALL... ");
+  var r = func1(i);
+  print(""+r+endl);
+}
+
+print("END"+endl);

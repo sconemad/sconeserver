@@ -34,7 +34,6 @@ Module::Module(
   const VersionTag& version
 ) : m_name(name),
     m_version(version),
-    m_refs(0),
     m_autoload_config(true),
     m_mod_path(""),
     m_conf_path(""),
@@ -86,12 +85,6 @@ int Module::init()
 ModuleRef Module::ref()
 {
   return ModuleRef(this);
-}
-
-//=============================================================================
-int Module::get_num_refs() const
-{
-  return m_refs;
 }
 
 //=============================================================================
@@ -512,19 +505,6 @@ void Module::set_logger(Logger* logger)
 {
   delete m_logger;
   m_logger = logger;
-}
-
-//=============================================================================
-void Module::add_ref()
-{
-  ++m_refs;
-}
-
-//=============================================================================
-void Module::remove_ref()
-{
-  DEBUG_ASSERT(m_refs>0,"Reference count going negative!");
-  --m_refs;
 }
 
 //=============================================================================

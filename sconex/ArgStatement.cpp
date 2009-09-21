@@ -51,6 +51,13 @@ ArgStatement::ParseMode ArgStatement::parse_mode() const
 }
 
 //=============================================================================
+Arg* ArgStatement::execute(ArgProc& proc)
+{
+  ArgStatement::FlowMode flow = ArgStatement::Normal;
+  return run(proc,flow);
+}
+
+//=============================================================================
 std::string ArgStatement::name() const
 {
   return "STATEMENT";
@@ -123,7 +130,7 @@ ArgStatement::ParseResult ArgStatementExpr::parse(
 }
 
 //=============================================================================
-Arg* ArgStatementExpr::run(ArgProc& proc)
+Arg* ArgStatementExpr::run(ArgProc& proc, FlowMode& flow)
 {
   ArgObject ctx(this);
   proc.set_ctx(&ctx);
@@ -188,7 +195,7 @@ ArgStatement::ParseResult ArgStatementGroup::parse(
 }
 
 //=============================================================================
-Arg* ArgStatementGroup::run(ArgProc& proc)
+Arg* ArgStatementGroup::run(ArgProc& proc, FlowMode& flow)
 {
   Arg* ret=0;
   
@@ -196,8 +203,8 @@ Arg* ArgStatementGroup::run(ArgProc& proc)
        it != m_statements.end();
        ++it) {
     delete ret;
-    ret = (*it)->run(proc);
-    if (ret && dynamic_cast<ArgError*>(ret) != 0) {
+    ret = (*it)->run(proc,flow);
+    if (flow != Normal) {
       return ret;
     }
   }
@@ -352,7 +359,7 @@ ArgStatement::ParseMode ArgStatementConditional::parse_mode() const
 }
 
 //=============================================================================
-Arg* ArgStatementConditional::run(ArgProc& proc)
+Arg* ArgStatementConditional::run(ArgProc& proc, FlowMode& flow)
 {
   // Evaluate the condition
   ArgObject ctx(this);
@@ -362,9 +369,9 @@ Arg* ArgStatementConditional::run(ArgProc& proc)
   delete result;
 
   if (cond) {
-    if (m_true_statement) return m_true_statement->run(proc);
+    if (m_true_statement) return m_true_statement->run(proc,flow);
   } else {
-    if (m_false_statement) return m_false_statement->run(proc);
+    if (m_false_statement) return m_false_statement->run(proc,flow);
   }
   
   return 0;
@@ -442,7 +449,7 @@ ArgStatement::ParseMode ArgStatementWhile::parse_mode() const
 }
 
 //=============================================================================
-Arg* ArgStatementWhile::run(ArgProc& proc)
+Arg* ArgStatementWhile::run(ArgProc& proc, FlowMode& flow)
 {
   Arg* ret=0;
   ArgObject ctx(this);
@@ -461,9 +468,14 @@ Arg* ArgStatementWhile::run(ArgProc& proc)
 
     if (m_body) {
       delete ret;
-      ret = m_body->run(proc);
-      if (dynamic_cast<ArgError*>(ret) != 0) {
-        break;
+      ret = m_body->run(proc,flow);
+      if (flow == Return) {
+	return ret;
+      } else if (flow == Last) {
+	flow = Normal;
+	return ret;
+      } else if (flow == Next) {
+	flow = Normal;
       }
     }
   }
@@ -548,7 +560,7 @@ ArgStatement::ParseMode ArgStatementFor::parse_mode() const
 }
 
 //=============================================================================
-Arg* ArgStatementFor::run(ArgProc& proc)
+Arg* ArgStatementFor::run(ArgProc& proc, FlowMode& flow)
 {
   Arg* ret=0;
   ArgObject ctx(this);
@@ -572,9 +584,14 @@ Arg* ArgStatementFor::run(ArgProc& proc)
 
     if (m_body) {
       delete ret;
-      ret = m_body->run(proc);
-      if (dynamic_cast<ArgError*>(ret) != 0) {
-        break;
+      ret = m_body->run(proc,flow);
+      if (flow == Return) {
+	return ret;
+      } else if (flow == Last) {
+	flow = Normal;
+	return ret;
+      } else if (flow == Next) {
+	flow = Normal;
       }
     }
 
@@ -584,6 +601,78 @@ Arg* ArgStatementFor::run(ArgProc& proc)
     delete result;
   }
 
+  return ret;
+}
+
+
+//=============================================================================
+ArgStatementFlow::ArgStatementFlow(FlowMode flow)
+  : m_seq(0),
+    m_flow(flow)
+{
+  DEBUG_COUNT_CONSTRUCTOR(ArgStatementFlow);
+}
+
+//=============================================================================
+ArgStatementFlow::ArgStatementFlow(const ArgStatementFlow& c)
+  : ArgStatement(c),
+    m_seq(c.m_seq),
+    m_flow(c.m_flow),
+    m_ret_expr(c.m_ret_expr)
+{
+  DEBUG_COUNT_CONSTRUCTOR(ArgStatementFlow);
+}
+
+//=============================================================================
+ArgStatementFlow::~ArgStatementFlow()
+{
+  DEBUG_COUNT_DESTRUCTOR(ArgStatementFlow);
+}
+
+//=============================================================================
+ArgStatement* ArgStatementFlow::new_copy() const
+{
+  return new ArgStatementFlow(*this);
+}
+
+//=============================================================================
+ArgStatement::ParseResult ArgStatementFlow::parse(
+  ArgScript& script,
+  const std::string& token
+)
+{
+  switch (++m_seq) {
+    case 1: {
+      if (!token.empty()) {
+        m_ret_expr = token;
+      }
+    } break;
+
+    default: {
+      return ArgStatement::Pop;
+    }
+  }
+
+  return ArgStatement::Continue;
+}
+
+//=============================================================================
+ArgStatement::ParseMode ArgStatementFlow::parse_mode() const
+{
+  return ArgStatement::SemicolonTerminated;
+}
+
+//=============================================================================
+Arg* ArgStatementFlow::run(ArgProc& proc, FlowMode& flow)
+{
+  Arg* ret=0;
+  if (!m_ret_expr.empty()) {
+    ArgObject ctx(this);
+    proc.set_ctx(&ctx);
+    ret = proc.evaluate(m_ret_expr);
+  }
+
+  flow = m_flow;
   return ret;
 }
 
@@ -652,7 +741,7 @@ ArgStatement::ParseMode ArgStatementVar::parse_mode() const
 }
 
 //=============================================================================
-Arg* ArgStatementVar::run(ArgProc& proc)
+Arg* ArgStatementVar::run(ArgProc& proc, FlowMode& flow)
 {
   Arg* initialiser=0;
   if (!m_initialiser.empty()) {
@@ -740,7 +829,7 @@ ArgStatement::ParseMode ArgStatementSub::parse_mode() const
 }
 
 //=============================================================================
-Arg* ArgStatementSub::run(ArgProc& proc)
+Arg* ArgStatementSub::run(ArgProc& proc, FlowMode& flow)
 {
   ArgList args;
   args.give(new ArgString(m_name));

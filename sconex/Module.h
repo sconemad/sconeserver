@@ -59,9 +59,6 @@ public:
   ModuleRef ref();
   // Get a reference to ourself
 
-  int get_num_refs() const;
-  // Get the number of references
-  
   ModuleRef get_module(const std::string& name);
   // Get sub-module
 
@@ -117,11 +114,6 @@ protected:
   
 private:
 
-  void add_ref();
-  void remove_ref();
-  friend class ModuleRef;
-  // Referencing (ModuleRef can call this)
-
   void set_parent(Module* parent);
   friend class ModuleLoader;
   // Parent module (ModuleLoader can set this)
@@ -132,9 +124,6 @@ private:
   VersionTag m_version;
   // Module version
   
-  int m_refs;
-  // Reference count
-
   Date m_loadtime;
   // Load time
   
@@ -160,6 +149,7 @@ private:
   // Logger instance
 
 };
+
 
 //=============================================================================
 class SCONEX_API ArgModule : public ArgObject {

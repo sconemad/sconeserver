@@ -224,13 +224,16 @@ scx::Arg* RenderMarkupContext::arg_lookup(const std::string& name)
       "process_article" == name ||
       "edit_article" == name ||
       "template" == name ||
-      "get_files" == name) {
+      "get_files" == name ||
+      "abort" == name) {
     return new scx::ArgObjectFunction(new scx::ArgObject(this),name);
   }
 
   // Sub-objects
   if ("request" == name) return new scx::ArgObject(&m_request);
-  if ("session" == name) return new scx::ArgObject(m_request.get_session());
+  if ("session" == name && m_request.get_session()) {
+    return new scx::ArgObject(m_request.get_session());
+  }
   if ("realms" == name) {
     scx::ModuleRef http = scx::Kernel::get()->get_module("http");
     if (http.valid()) return http.module()->arg_lookup("realms");
@@ -344,6 +347,11 @@ scx::Arg* RenderMarkupContext::arg_function(const std::string& name,scx::Arg* ar
       }
     }
     return filelist;
+  }
+
+  if (name == "abort") {
+    m_output->close();
+    return 0;
   }
 
   return Context::arg_function(name,args);

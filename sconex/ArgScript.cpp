@@ -96,9 +96,9 @@ Condition ArgScript::event(Stream::Event e)
 
       if (m_stack.top() == m_root || c==End) {
         ArgScript_DEBUG_LOG("event: Run");
-        Arg* ret = m_root->run(m_proc);
+        Arg* ret = m_root->execute(m_proc);
         if (ret && m_error_des) {
-          m_error_des->write(ret->get_string() + "\n");
+	  m_error_des->write(ret->get_string() + "\n");
         }
         delete ret;
         m_root->clear();
@@ -131,6 +131,18 @@ ArgStatement* ArgScript::parse_token(const std::string& token)
   } else if (token == "for") {
     ArgScript_DEBUG_LOG("parse_token: New for loop");
     s = new ArgStatementFor();
+
+  } else if (token == "return") {
+    ArgScript_DEBUG_LOG("parse_token: New flow return");
+    s = new ArgStatementFlow(ArgStatement::Return);
+
+  } else if (token == "break") {
+    ArgScript_DEBUG_LOG("parse_token: New flow last");
+    s = new ArgStatementFlow(ArgStatement::Last);
+
+  } else if (token == "continue") {
+    ArgScript_DEBUG_LOG("parse_token: New flow next");
+    s = new ArgStatementFlow(ArgStatement::Next);
 
   } else if (token == "var") {
     ArgScript_DEBUG_LOG("parse_token: New variable declaration");
@@ -188,6 +200,9 @@ bool ArgScript::next_token(
             str == "else" ||
             str == "while" ||
             str == "for" ||
+            str == "return" ||
+            str == "break" ||
+            str == "continue" ||
             str == "var" ||
             str == "sub" ||
             str == "{" ||

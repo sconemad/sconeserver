@@ -24,16 +24,22 @@ Free Software Foundation, Inc.,
 
 namespace scx {
 
+Mutex* ArgObjectInterface::m_ref_mutex = 0;
+
 //=============================================================================
 ArgObjectInterface::ArgObjectInterface()
+  : m_refs(0)
 {
-
+  if (!m_ref_mutex) {
+    m_ref_mutex = new Mutex();
+  }
 }
   
 //=============================================================================
 ArgObjectInterface::~ArgObjectInterface()
 {
-
+  MutexLocker locker(*m_ref_mutex);
+  DEBUG_ASSERT(m_refs==0,"Destroying object which has refs");
 }
 
 //=============================================================================
@@ -77,24 +83,48 @@ Arg* ArgObjectInterface::arg_function(const std::string& name, Arg* args)
 }
 
 //=============================================================================
+int ArgObjectInterface::get_num_refs() const
+{
+  return m_refs;
+}
+
+//=============================================================================
+void ArgObjectInterface::add_ref()
+{
+  MutexLocker locker(*m_ref_mutex);
+  ++m_refs;
+}
+
+//=============================================================================
+void ArgObjectInterface::remove_ref()
+{
+  MutexLocker locker(*m_ref_mutex);
+  DEBUG_ASSERT(m_refs>0,"Reference count going negative!");
+  --m_refs;
+}
+
+//=============================================================================
 ArgObject::ArgObject(
   ArgObjectInterface* obj
 )
   : m_obj(obj)
 {
-
+  DEBUG_ASSERT(m_obj,"Constructing NULL ArgObject");
+  m_obj->add_ref();
 }
 
 //=============================================================================
 ArgObject::ArgObject(const ArgObject& c)
   : m_obj(c.m_obj)
 {
+  DEBUG_ASSERT(m_obj,"Copy constructing NULL ArgObject");
+  m_obj->add_ref();
 }
 
 //=============================================================================
 ArgObject::~ArgObject()
 {
-
+  m_obj->remove_ref();
 }
 
 //=============================================================================

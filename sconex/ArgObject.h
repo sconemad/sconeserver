@@ -62,7 +62,24 @@ public:
   virtual Arg* arg_function(const std::string& name, Arg* args);
   // Call named arg function on this object
 
+  int get_num_refs() const;
+  // Get the number of references to this object
+
 protected:
+
+private:
+
+  friend class ArgObject;
+  friend class ModuleRef;
+  void add_ref();
+  void remove_ref();
+  // Reference counting (ArgObject can call this)
+
+  static Mutex* m_ref_mutex;
+  // Global mutex for reference counts
+
+  int m_refs;
+  // Reference count
 
 };
 

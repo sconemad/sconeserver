@@ -47,6 +47,8 @@ SessionManager::~SessionManager()
 Session* SessionManager::lookup_session(const std::string& id)
 {
   check_sessions();
+
+  scx::MutexLocker locker(m_mutex);
   SessionMap::iterator it = m_sessions.find(id);
   if (it != m_sessions.end()) {
     return (*it).second;
@@ -58,7 +60,10 @@ Session* SessionManager::lookup_session(const std::string& id)
 Session* SessionManager::new_session()
 {
   check_sessions();
+
   Session* s = new Session(m_module);
+
+  scx::MutexLocker locker(m_mutex);
   m_sessions[s->get_id()] = s;
   return s;
 }
@@ -66,12 +71,14 @@ Session* SessionManager::new_session()
 //=========================================================================
 int SessionManager::check_sessions()
 {
+  scx::MutexLocker locker(m_mutex);
+
   int n=0;
   for (SessionMap::iterator it = m_sessions.begin();
        it != m_sessions.end();
        ++it) {
-    Session* session = (*it).second;
-    if (!session->valid()) {
+    Session* session = it->second;
+    if (!session->valid() && session->get_num_refs() == 0) {
       DEBUG_LOG("Removing session " << session->get_id() << " due to timeout");
       delete session;
       m_sessions.erase(it);
@@ -94,19 +101,20 @@ scx::Arg* SessionManager::arg_lookup(
 {
   // Methods
   
-  if ("add" == name ||
-      "remove" == name) {
+  if ("check" == name) {
     return new scx::ArgObjectFunction(new scx::ArgObject(this),name);
   }
 
   // Properties
 
   if ("list" == name) {
+    scx::MutexLocker locker(m_mutex);
     std::ostringstream oss;
     for (SessionMap::const_iterator it = m_sessions.begin();
 	 it != m_sessions.end();
 	 ++it) {
-      oss << (*it).first << "\n";
+      Session* s = it->second;
+      oss << it->first << " " << s->get_num_refs() << "\n";
     }
     return new scx::ArgString(oss.str());
   }
@@ -127,6 +135,11 @@ scx::Arg* SessionManager::arg_function(
 )
 {
   scx::ArgList* l = dynamic_cast<scx::ArgList*>(args);
+
+  if ("check" == name) {
+    check_sessions();
+    return 0;
+  }
 
   return ArgObjectInterface::arg_function(name,args);
 }

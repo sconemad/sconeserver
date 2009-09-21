@@ -78,7 +78,8 @@ DocRoot::DocRoot(
 ) : m_module(module),
     m_host(host),
     m_profile(profile),
-    m_path(path)
+    m_path(path),
+    m_params("")
 {
   // A bit of a hack really, but set up default module mappings so it will
   // do something sensible if there is no host config file present.
@@ -145,7 +146,6 @@ bool DocRoot::connect_request(scx::Descriptor* endpoint, Request& request, Respo
 
     // Check for session cookie
     std::string cookie = request.get_header("Cookie");
-    DEBUG_LOG("COOKIE: " << cookie);
     std::string scxid;
     if (!cookie.empty()) {
       const std::string pattern = "scxid=";
@@ -161,6 +161,9 @@ bool DocRoot::connect_request(scx::Descriptor* endpoint, Request& request, Respo
       }
     }
 
+    const scx::Arg* a_auto_session = get_param("auto_session");
+    bool b_auto_session = (a_auto_session && a_auto_session->get_int());
+
     // Lookup the session
     Session* s = m_module.get_sessions().lookup_session(scxid);
     if (s!=0) {
@@ -168,10 +171,12 @@ bool DocRoot::connect_request(scx::Descriptor* endpoint, Request& request, Respo
       DEBUG_LOG("Existing session: " << s->get_id());
 
     } else {
-      // Create new session
-      s = m_module.get_sessions().new_session();
-      response.set_header("Set-Cookie","scxid="+s->get_id()+"; path=/");
-      DEBUG_LOG("New session: " << s->get_id());
+      // Create new session if auto_session enabled
+      if (b_auto_session) {
+	s = m_module.get_sessions().new_session();
+	response.set_header("Set-Cookie","scxid="+s->get_id()+"; path=/");
+	DEBUG_LOG("New session: " << s->get_id());
+      }
     }
 
     if (s) {
@@ -304,19 +309,17 @@ const std::string DocRoot::get_profile() const
 //=============================================================================
 const scx::Arg* DocRoot::get_param(const std::string& name) const
 {
-  ParamMap::const_iterator it = m_params.find(name);
-  if (it != m_params.end()) {
-    return it->second;
-  }
-  return 0;
+  DocRoot* uc = const_cast<DocRoot*>(this);
+  return uc->m_params.arg_lookup(name);
 }
 
 //=============================================================================
 void DocRoot::set_param(const std::string& name, scx::Arg* value)
 {
-  const scx::Arg* existing_value = get_param(name);
-  delete existing_value;
-  m_params[name] = value;
+  scx::ArgList l;
+  l.give(new scx::ArgString(name));
+  l.give(value);
+  m_params.arg_function("set",&l);
 }
 
 //=========================================================================
@@ -345,12 +348,12 @@ scx::Arg* DocRoot::arg_lookup(const std::string& name)
   if ("map" == name ||
       "map_path" == name ||
       "add_realm" == name ||
-      "map_realm" == name ||
-      "set_param" == name) {
+      "map_realm" == name) {
     return new scx::ArgObjectFunction(new scx::ArgObject(this),name);
   }
 
   // Sub-objects
+  if ("params" == name) return new scx::ArgObject(&m_params);
   
   return SCXBASE ArgObjectInterface::arg_lookup(name);
 }
@@ -454,21 +457,7 @@ scx::Arg* DocRoot::arg_function(
     return 0;
   }
 
-  if ("set_param" == name) {
-    const scx::ArgString* a_name =
-      dynamic_cast<const scx::ArgString*>(l->get(0));
-    if (!a_name) {
-      return new scx::ArgError("set_param() No parameter name specified");
-    }
-    std::string s_name = a_name->get_string();
-
-    scx::Arg* value = l->take(1);
-    set_param(s_name,value);
-
-    return 0;
-  }
-
-  return 0;
+  return SCXBASE ArgObjectInterface::arg_function(name,args);
 }
 
 //=============================================================================

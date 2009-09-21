@@ -24,6 +24,7 @@ Free Software Foundation, Inc.,
 
 #include "http/HTTPModule.h"
 #include "sconex/ArgObject.h"
+#include "sconex/ArgStore.h"
 namespace http {
 
 class HostMapper;
@@ -105,9 +106,8 @@ private:
 
   typedef std::map<std::string,std::string> RealmMap;
   RealmMap m_realm_maps;
-  
-  typedef std::map<std::string,scx::Arg*> ParamMap;
-  ParamMap m_params;
+
+  scx::ArgStore m_params;
 };
 
 };
