@@ -50,7 +50,6 @@ private:
 
   ArgProc m_proc;
   ArgModule* m_argmod;
-  std::string m_prompt;
   bool m_shutdown_on_exit;
   
 };

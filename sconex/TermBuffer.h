@@ -49,7 +49,8 @@ protected:
 private:
 
   termios m_saved_termios;
-  int m_prev;
+  std::string m_prompt;
+  std::string m_line;
 };
 
 };

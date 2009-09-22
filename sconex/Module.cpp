@@ -176,8 +176,7 @@ Arg* Module::arg_lookup(const std::string& name)
       "load_config" == name ||
       "set_mod_path" == name ||
       "set_conf_path" == name ||
-      "set_var_path" == name ||
-      "VER" == name) {
+      "set_var_path" == name) {
     return new ArgObjectFunction(new ArgModule(ref()),name);
   }
 
@@ -397,10 +396,6 @@ Arg* Module::arg_function(
     }
     m_var_path = a_path->get_string();
     return 0;
-  }
-
-  if ("VER" == name) {
-    return new VersionTag(args);
   }
 
   return ArgObjectInterface::arg_function(name,args);

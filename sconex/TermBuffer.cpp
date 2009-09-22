@@ -23,11 +23,17 @@ Free Software Foundation, Inc.,
 namespace scx {
 
 //=============================================================================
+std::string ansi(const std::string& code) {
+  return std::string("\x1b[")+code;
+}
+
+//=============================================================================
 TermBuffer::TermBuffer(
   const std::string& stream_name
 )
   : Stream(stream_name),
-    m_prev(0)
+    m_prompt(ansi("33m") + "sconeserver" + ansi("31m") + "> " + ansi("00m"))
+
 {
   DEBUG_COUNT_CONSTRUCTOR(TermBuffer);
 }
@@ -41,9 +47,58 @@ TermBuffer::~TermBuffer()
 //=============================================================================
 Condition TermBuffer::read(void* buffer,int n,int& na)
 {
-  Condition c = Stream::read(buffer,n,na);
-  int wna;
-  Stream::write(buffer,na,wna);
+  char ch;
+  Condition c = Stream::read(&ch,1,na);
+  int nw;
+
+  if (c == Wait) {
+    enable_event(Stream::Writeable,true);
+    return c;
+  }
+
+  c = Wait;
+  na = 0;
+
+  if (isgraph(ch) || ch==' ') {
+    m_line += ch;
+    Stream::write(ansi("32m"));
+    Stream::write(&ch,1,nw);
+    Stream::write(ansi("00m"));
+
+  } else {
+    switch (ch) {
+    
+    case 0x1b: // Arrow key
+      Stream::read(&ch,1,na);
+      Stream::read(&ch,1,na);
+      break;
+      
+    case 0x7f: // Backspace
+      if (m_line.length() > 0) {
+	m_line.erase(m_line.length()-1,1);
+	ch = '\b';
+	Stream::write(&ch,1,nw);
+	Stream::write(" ");
+	Stream::write(&ch,1,nw);
+      }
+      break;
+      
+    case 0x0a: // Enter
+      m_line += ch;
+      na = m_line.length();
+      memcpy(buffer,m_line.data(),na);
+      m_line = "";
+      c = Ok;
+      Stream::write(ansi("31m")+";"+ansi("00m")+"\n");
+      break;
+
+    }
+  }
+
+  //  std::ostringstream oss;
+  //  oss << "<" << m_line << ">";
+  //  Stream::write(oss.str());
+
   return c;
 }
 
@@ -66,6 +121,8 @@ Condition TermBuffer::event(Stream::Event e)
       new_termios.c_cc[VMIN] = 1;
       tcsetattr(fd,TCSANOW,&new_termios);
 
+      Stream::write(ansi("31m") + "*" + ansi("33m") + " SconeServer configuration console " + ansi("31m") + "*" + ansi("00m") + "\n\n");
+      enable_event(Stream::Writeable,true);
     } break;
    
     case Stream::Closing: { // CLOSING
@@ -77,6 +134,11 @@ Condition TermBuffer::event(Stream::Event e)
     
     case Stream::Readable: { // READABLE
       
+    } break;
+
+    case Stream::Writeable: { // WRITEABLE
+      Stream::write(m_prompt);
+      enable_event(Stream::Writeable,false);
     } break;
     
     default:

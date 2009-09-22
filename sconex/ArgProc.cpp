@@ -524,15 +524,23 @@ void ArgProc::next()
   // Quote delimited string
   if ('"'==c || '\''==c) {
     char delim = c;
+    bool escape = false;
+    m_name = "";
     while (++i < len) {
       c = m_expr[i];
-      if (c==delim) {
-        m_name = m_expr.substr(m_pos+1,i-m_pos-1);
+      if (c==delim && !escape) {
+        // was: m_name = m_expr.substr(m_pos+1,i-m_pos-1); // does not handle escapes
         m_pos = i+1;
         m_type = ArgProc::Value;
         m_value = new ArgString(m_name);
         ArgProc_DEBUG_LOG("next: (string) " << m_name);
         return;
+      }
+      if (c=='\\') {
+	escape = true;
+      } else {
+	escape = false;
+	m_name += c;
       }
     }
     // No closing delimiter!

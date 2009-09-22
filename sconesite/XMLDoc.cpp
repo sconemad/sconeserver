@@ -144,18 +144,18 @@ void XMLDoc::process_node(Context& context, xmlNode* start)
        node = node->next) {
     
     switch (node->type) {
-
+      
       case XML_TEXT_NODE: {
-        context.handle_text((char*)node->content);
+	context.handle_text((char*)node->content);
       } break;
-
+	
       case XML_PI_NODE: {
-        std::string name((char*)node->name);
-        context.handle_process(name,(char*)node->content);
+	std::string name((char*)node->name);
+	context.handle_process(name,(char*)node->content);
       } break;
-
+	
       case XML_ELEMENT_NODE: {
-        std::string name((char*)node->name);
+	std::string name((char*)node->name);
         XMLAttrs attrs;
         for (xmlAttr* attr = node->properties;
              attr != 0; 
@@ -169,13 +169,17 @@ void XMLDoc::process_node(Context& context, xmlNode* start)
           } while (context.handle_end(name,attrs));
         }
       } break;
-
+	
       case XML_COMMENT_NODE: {
-        context.handle_comment((char*)node->content);
+	context.handle_comment((char*)node->content);
+      } break;
+	
+      case XML_CDATA_SECTION_NODE: {
+	DEBUG_LOG("CDATA: \n" << (char*)node->content);
       } break;
 
       default: {
-        std::cerr << "XMLDoc: Unknown node type " << node->type << "\n";
+        DEBUG_LOG("XMLDoc: Unknown node type " << node->type);
       } break;
     }
   }

@@ -37,18 +37,20 @@ const int SECONDS_PER_HOUR   = 3600;
 const int SECONDS_PER_MINUTE = 60;
 
 class Date;
+class Arg;
 
 //=============================================================================
 class SCONEX_API Time : public Arg {
 
 public:
 
-  explicit Time(time_t t=0);
+  explicit Time(int t=0);
   Time(int minutes,int seconds);
   Time(int hours,int minutes,int seconds);
   Time(int days,int hours,int minutes,int seconds);
   Time(int weeks,int days,int hours,int minutes,int seconds);
   Time(const std::string& str);
+  explicit Time(Arg* args);
   Time(const Time& c);
   ~Time();
 

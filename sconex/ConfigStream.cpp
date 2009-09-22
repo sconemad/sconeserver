@@ -35,7 +35,6 @@ ConfigStream::ConfigStream(
 {
   m_argmod = new ArgModule(root_ref);
   m_proc.set_ctx(m_argmod);
-  m_prompt = root_ref.module()->name() + "> ";
   enable_event(Stream::Readable,true);
 }
 
@@ -51,9 +50,7 @@ Condition ConfigStream::event(Stream::Event e)
   switch (e) {
     
     case Stream::Opening: { // OPENING
-      Stream::write("* SconeServer configuration console *\n\n");
-      
-      Stream::write(m_prompt); 
+
     } break;
    
     case Stream::Closing: { // CLOSING
@@ -81,8 +78,6 @@ Condition ConfigStream::event(Stream::Event e)
 	} else {
 	  Stream::write("NULL\n");
 	}
-	
-	Stream::write(m_prompt); 
       }
     } break;
     

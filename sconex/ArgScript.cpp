@@ -182,7 +182,8 @@ bool ArgScript::next_token(
   }
 
   const char* start = cur;
-  bool in_dquote = false;
+  char in_quote = 0; // Holds the current quote char (" or ') when in quote
+  bool escape = false; // Was the last char an escape (\)
   bool in_comment = false;
   bool first = true;
 
@@ -210,11 +211,17 @@ bool ArgScript::next_token(
           return true;
         }
         
-        if (in_dquote) {
-          // Ignore everything until end quote
-          if ((*cur) == '"') {
-            in_dquote = false;
+        if (in_quote) {
+          // Ignore everything until (unescaped) end quote
+          if ((*cur) == in_quote && !escape) {
+            in_quote = 0;
           }
+	  // Check for escape sequences
+	  if ((*cur) == '\\') {
+	    escape = true;
+	  } else {
+	    escape = false;
+	  }
           
         } else if (in_comment) {
           // Ignore everything until end of line
@@ -233,7 +240,8 @@ bool ArgScript::next_token(
               ++post_skip;
               return true;
             case '"':
-              in_dquote = true;
+            case '\'':
+              in_quote = (*cur);
               break;
             case '#':
               in_comment = true;
@@ -246,16 +254,23 @@ bool ArgScript::next_token(
       case ArgStatement::Bracketed: {
         // BRACKETED parse mode
 
-        if (in_dquote) {
-          // Ignore everything until end quote
-          if ((*cur) == '"') {
-            in_dquote = false;
+        if (in_quote) {
+          // Ignore everything until (unescaped) end quote
+          if ((*cur) == in_quote && !escape) {
+            in_quote = 0;
           }
+	  // Check for escape sequences
+	  if ((*cur) == '\\') {
+	    escape = true;
+	  } else {
+	    escape = false;
+	  }
           
         } else {
           switch (*cur) {
             case '"':
-              in_dquote = true;
+            case '\'':
+              in_quote = (*cur);
               break;
             case '(':
               if (in_bracket==0) {

@@ -26,7 +26,7 @@ Free Software Foundation, Inc.,
 namespace scx {
 
 //=============================================================================
-Time::Time(time_t t)
+Time::Time(int t)
   : m_time(t)
 {
   DEBUG_COUNT_CONSTRUCTOR(Time);
@@ -72,6 +72,21 @@ Time::Time(int weeks,int days,int hours,int minutes,int seconds)
            (abs(minutes)*SECONDS_PER_MINUTE) + 
            abs(seconds);
   m_time *= (weeks<0) ? -1:1;
+}
+
+//=============================================================================
+Time::Time(Arg* args)
+{
+  DEBUG_COUNT_CONSTRUCTOR(Time);
+
+  ArgList* l = dynamic_cast<ArgList*>(args);
+  Arg* a = l->get(0);
+  ArgInt* a_int = dynamic_cast<ArgInt*>(a);
+  if (a_int) {
+    m_time = a->get_int();
+  } else {
+    m_time = 0;
+  }
 }
 
 //=============================================================================

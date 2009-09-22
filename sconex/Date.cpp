@@ -28,7 +28,7 @@ Date::MonthNameMap* Date::s_month_table = 0;
 
 //=============================================================================
 Date::Date(
-  time_t t,
+  int t,
   bool local
 )
 {
@@ -179,6 +179,28 @@ Date::Date(
 
   // Adjust to UTC from given timezone
   m_time -= tz.seconds();
+}
+
+//=============================================================================
+Date::Date(Arg* args)
+{
+  DEBUG_COUNT_CONSTRUCTOR(Date);
+  init_tables();
+
+  ArgList* l = dynamic_cast<ArgList*>(args);
+
+  Arg* a = l->get(0);
+  ArgInt* a_int = dynamic_cast<ArgInt*>(a);
+  if (a_int) {
+    m_time = a->get_int();
+    
+  } else {
+    time_t tmp;
+    m_time = ::time(&tmp);
+  }
+
+  Arg* local = l->get(1);
+  m_local = (local ? local->get_int() : 0);
 }
 
 //=============================================================================
@@ -563,6 +585,7 @@ Arg* Date::op(OpType optype, const std::string& opname, Arg* right)
       if (name == "code") return new ArgString(code());
       if (name == "string") return new ArgString(string());
       if (name == "ansi") return new ArgString(ansi_string());
+      if (name == "epoch_seconds") return new ArgInt(m_time);
     }
   }
   return Arg::op(optype,opname,right);

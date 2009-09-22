@@ -95,7 +95,7 @@ int Kernel::run()
 void Kernel::connect_config_console()
 {
   Console* c = new Console();
-  //  c->add_stream( new TermBuffer("term") );
+  c->add_stream( new TermBuffer("term") );
   c->add_stream( new ConfigStream(ref(),true) );
   connect(c,0);
 }

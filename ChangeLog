@@ -1,4 +1,20 @@
 
+2009-09-22 Andrew Wedgbury <wedge@sconemad.com>
+
+	* sconex/ArgProc: Allow escape sequences in strings.
+	* sconex/ArgScript: Ignore escaped characters in parser.
+	* sconex/ArgObject: Allow various arg types to be constructed.
+	* sconex/Time: Add arg constructor.
+	* sconex/Date: Add arg constructor.
+        * sconex/TermBuffer: Use ansi colours and buffer lines.
+	* sconed: Don't create new console when resetting.
+	* http/HostMapper: Replace maps with aliases and redirects.
+	Handle connect requests locally.
+	* http/MessageStream: Pass connects on to host mapper.
+	* sconesite/RenderMarkup: Never return NULL from lookup.
+	Implement meta-sorting for get_articles arg method.
+	* sconesite/Article: Implement ArticleMetaSort functor.
+
 2009-09-21 Andrew Wedgbury <wedge@sconemad.com>
 
 	* http/Session: Session manager thread safety.

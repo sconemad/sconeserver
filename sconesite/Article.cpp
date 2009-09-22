@@ -34,13 +34,45 @@ Free Software Foundation, Inc.,
 //=========================================================================
 bool ArticleSortDate(const Article* a, const Article* b)
 {
-  return (a->get_modtime() > b->get_modtime());
+  const scx::Arg* a_time = a->get_meta("time");
+  const scx::Arg* b_time = b->get_meta("time");
+
+  int a_int = a_time ? a_time->get_int() : 0;
+  int b_int = b_time ? b_time->get_int() : 0;
+
+  return (a_int > b_int);
 }
 
 //=========================================================================
 bool ArticleSortName(const Article* a, const Article* b)
 {
   return (a->get_name() < b->get_name());
+}
+
+//=========================================================================
+ArticleMetaSorter::ArticleMetaSorter(const std::string& meta, bool reverse)
+  : m_meta(meta),
+    m_reverse(reverse)
+{
+
+}
+
+//=========================================================================
+bool ArticleMetaSorter::operator()(const Article* a, const Article* b)
+{
+  const scx::Arg* a_arg = a->get_meta(m_meta);
+  if (!a_arg) return !m_reverse;
+
+  const scx::Arg* b_arg = b->get_meta(m_meta);
+  if (!b_arg) return m_reverse;
+
+  if (dynamic_cast<const scx::ArgInt*>(a_arg) != 0) {
+    int a_int = a_arg ? a_arg->get_int() : 0;
+    int b_int = b_arg ? b_arg->get_int() : 0;
+    return (m_reverse ? (a_int >= b_int) : (a_int < b_int));
+  }
+
+  return (m_reverse ? (a_arg->get_string() >= b_arg->get_string()) : (a_arg->get_string() < b_arg->get_string()));
 }
 
 //=========================================================================
@@ -66,6 +98,13 @@ Article::~Article()
 const scx::FilePath& Article::get_root() const
 {
   return m_root;
+}
+
+//=========================================================================
+const scx::Arg* Article::get_meta(const std::string& name) const
+{
+  Article* uc = const_cast<Article*>(this);
+  return uc->m_metastore.arg_lookup(name);
 }
 
 //=========================================================================

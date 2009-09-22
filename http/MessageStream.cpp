@@ -278,19 +278,10 @@ bool MessageStream::connect_request_module(bool error)
       m_module.log(id + " User-Agent: " + useragent);
     }
   }
-  
-  // Lookup host object
-  Host* host = m_module.get_hosts().host_lookup(uri.get_host());
-  if (host==0) {
-    // This is bad, user should have setup a default host
-    m_module.log(id + " Unknown host '" + uri.get_host() + "'",
-                 scx::Logger::Error);
-    m_response.set_status(http::Status::NotFound);
-    return false;
-  }
-  
-  m_request->set_host(host);
-  return host->connect_request(&endpoint(),*m_request,m_response);
+
+  // Pass through to host mapper for connection to appropriate host object
+  HostMapper& mapper = m_module.get_hosts();
+  return mapper.connect_request(&endpoint(),*m_request,m_response);
 }
   
 //=============================================================================

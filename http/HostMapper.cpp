@@ -23,6 +23,8 @@ Free Software Foundation, Inc.,
 #include "http/HostMapper.h"
 #include "http/Host.h"
 #include "http/HTTPModule.h"
+#include "http/Request.h"
+#include "http/Response.h"
 namespace http {
 
 //=========================================================================
@@ -43,49 +45,54 @@ HostMapper::~HostMapper()
 }
 
 //=============================================================================
-Host* HostMapper::host_lookup(
-  const std::string& name
-)
+bool HostMapper::connect_request(scx::Descriptor* endpoint, Request& request, Response& response)
 {
-  int bailout=100;
-  std::string::size_type idot;
-  std::string key=name;
-
-  while (--bailout > 0) {
+  const scx::Uri& uri = request.get_uri();
+  const std::string& host = uri.get_host();
+  std::string mapped_host;
+  bool redirect = false;
   
-    HostRedirectMap::const_iterator it = m_redirects.find(key);
-    if (it != m_redirects.end()) {
-      std::string id = it->second;
-      HostMap::const_iterator it2 = m_hosts.find(id);
-      if (it2 != m_hosts.end()) {
-        Host* h = it2->second;
-        return h;
-      }
-      log(std::string("Lookup failure: '") + name + 
-        "' maps to unknown host '" + id + "'");
-      return 0; // maps to unknown host?
-    }      
+  if (lookup(m_redirects,host,mapped_host)) {
+    // Redirect
+    redirect = true;
 
-    if (key.size()<=0 || key=="*") {
-      log(std::string("Lookup failure: '") + name + "'");
-      return 0; // No match
-    }
+  } else if (lookup(m_aliases,host,mapped_host)) {
+    // Alias map
 
-    if (key[0]=='*') {
-      idot = key.find(".",2);
-    } else {
-      idot = key.find_first_of(".");
-    }
-    
-    if (idot==key.npos) {
-      key="*";
-    } else {
-      key = "*" + key.substr(idot);
-    }
-    
+  } else {
+    // This is bad, user should have setup a default host
+    m_module.log("Unknown host '" + uri.get_host() + "'",scx::Logger::Error);
+    response.set_status(http::Status::NotFound);
+    response.set_header("Content-Type","text/html");
+    endpoint->write("<html><head></head><body><h1>Host not found</h1></body></html>");
+    return false;
   }
-  log(std::string("Lookup failure (BAILOUT): '") + name + "'");
-  return 0; //Bailed out
+
+  HostMap::const_iterator it = m_hosts.find(mapped_host);
+  if (it == m_hosts.end()) {
+    log(std::string("Lookup failure: '") + host + "' maps to unknown host '" + mapped_host + "'");
+    response.set_status(http::Status::NotFound);
+    response.set_header("Content-Type","text/html");
+    endpoint->write("<html><head></head><body><h1>Host not found</h1></body></html>");
+    return false;
+  }
+  Host* h = it->second;
+
+  if (redirect) {
+    // Redirect to host's uri
+    scx::Uri new_uri = uri;
+    new_uri.set_host(h->get_hostname());
+    log("Host redirect '" + uri.get_string() + "' to '" + new_uri.get_string() + "'"); 
+    
+    response.set_status(http::Status::Found);
+    response.set_header("Content-Type","text/html");
+    response.set_header("Location",new_uri.get_string());
+    endpoint->write("<html><head></head><body><h1>Host redirect</h1></body></html>");
+    return false;
+  }
+  
+  request.set_host(h);
+  return h->connect_request(endpoint,request,response);
 }
 
 //=============================================================================
@@ -103,7 +110,8 @@ scx::Arg* HostMapper::arg_lookup(
   
   if ("add" == name ||
       "remove" == name ||
-      "map" == name) {
+      "alias" == name ||
+      "redirect" == name) {
     return new scx::ArgObjectFunction(new scx::ArgObject(this),name);
   }
 
@@ -121,8 +129,8 @@ scx::Arg* HostMapper::arg_lookup(
 
   if ("lsmap" == name) {
     std::ostringstream oss;
-    HostRedirectMap::const_iterator it = m_redirects.begin();
-    while (it != m_redirects.end()) {
+    HostNameMap::const_iterator it = m_aliases.begin();
+    while (it != m_aliases.end()) {
       oss << "'" << it->first << "' -> " << it->second << "\n";
       it++;
     }
@@ -190,7 +198,7 @@ scx::Arg* HostMapper::arg_function(
     Host* host = new Host(m_module,*this,s_id,s_hostname,path.path());
     host->init();
     m_hosts[s_id] = host;
-    m_redirects[s_hostname] = s_id;
+    m_aliases[s_hostname] = s_id;
     return 0;
   }
 
@@ -213,7 +221,7 @@ scx::Arg* HostMapper::arg_function(
     return 0;
   }
   
-  if ("map" == name) {
+  if ("alias" == name) {
     const scx::ArgString* a_pattern =
       dynamic_cast<const scx::ArgString*>(l->get(0));
     if (!a_pattern) {
@@ -229,11 +237,69 @@ scx::Arg* HostMapper::arg_function(
     std::string s_target = a_target->get_string();
 
     log("Mapping host pattern '" + s_pattern + "' to ID '" + s_target + "'"); 
+    m_aliases[s_pattern] = s_target;
+    return 0;
+  }
+
+  if ("redirect" == name) {
+    const scx::ArgString* a_pattern =
+      dynamic_cast<const scx::ArgString*>(l->get(0));
+    if (!a_pattern) {
+      return new scx::ArgError("redirect() No pattern specified");
+    }
+    std::string s_pattern = a_pattern->get_string();
+    
+    const scx::ArgString* a_target =
+      dynamic_cast<const scx::ArgString*>(l->get(1));
+    if (!a_target) {
+      return new scx::ArgError("redirect() No target specified");
+    }
+    std::string s_target = a_target->get_string();
+
+    log("Redirecting host pattern '" + s_pattern + "' to ID '" + s_target + "'"); 
     m_redirects[s_pattern] = s_target;
     return 0;
   }
     
   return ArgObjectInterface::arg_function(name,args);
 }
+
+//=============================================================================
+bool HostMapper::lookup(const HostNameMap& map, const std::string& pattern, std::string& result)
+{
+  int bailout = 100;
+  std::string::size_type idot;
+  std::string key = pattern;
+
+  while (--bailout > 0) {
+  
+    HostNameMap::const_iterator it = map.find(key);
+    if (it != map.end()) {
+      result = it->second;
+      return true;
+    }
+
+    if (key.size()<=0 || key=="*") {
+      return false;
+    }
+
+    if (key[0]=='*') {
+      idot = key.find(".",2);
+    } else {
+      idot = key.find_first_of(".");
+    }
+    
+    if (idot==key.npos) {
+      key="*";
+    } else {
+      key = "*" + key.substr(idot);
+    }
+    
+  }
+  log(std::string("Lookup failure (BAILOUT): '") + pattern + "'");
+  return false;
+}
+
+
 
 };

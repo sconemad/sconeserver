@@ -64,9 +64,9 @@ scx::Arg* TestModule::arg_lookup(const std::string& name)
     std::ostringstream oss;
 #ifdef _DEBUG
     static scx::Debug::InstanceCounterMap prev_counters;
-      
+
     oss << "Instance counts:\n"
-        << "CLASS NAME                     TOTAL    CURRENT  DELTA\n";
+        << "CLASS NAME                        TOTAL  CURRENT    DELTA   ALLOCS\n";
     scx::Debug::InstanceCounterMap counters;
     scx::Debug::get()->get_counters(counters);
     scx::Debug::InstanceCounterMap::iterator it = counters.begin();
@@ -80,8 +80,8 @@ scx::Arg* TestModule::arg_lookup(const std::string& name)
       oss << std::setw(30) << class_name << " "
           << std::setw(8) << stat_max << " "
           << std::setw(8) << stat_num << " "
-          << std::setw(8) << stat_delta << "\n";
-      if (stat_delta) oss << counter.get_deltas() << "\n";
+          << std::setw(8) << stat_delta << " | "
+	  << counter.get_deltas() << "\n";
       
       it++;
     }

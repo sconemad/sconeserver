@@ -69,6 +69,7 @@ int run()
     // Connect console if running in foreground
     if (opt_foreground) {
       kernel->connect_config_console();
+      opt_foreground = false;
     }
 
     // Run server

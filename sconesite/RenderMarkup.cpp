@@ -105,7 +105,7 @@ bool RenderMarkupContext::handle_start(const std::string& name, XMLAttrs& attrs,
     for (XMLAttrs::const_iterator it = attrs.begin();
          it != attrs.end();
          ++it) {
-      oss << " " << (*it).first << "='" << (*it).second << "'";
+      oss << " " << (*it).first << "=\"" << (*it).second << "\"";
     }
     
     if (!empty) {
@@ -231,8 +231,12 @@ scx::Arg* RenderMarkupContext::arg_lookup(const std::string& name)
 
   // Sub-objects
   if ("request" == name) return new scx::ArgObject(&m_request);
-  if ("session" == name && m_request.get_session()) {
-    return new scx::ArgObject(m_request.get_session());
+  if ("session" == name) {
+    if (m_request.get_session()) {
+      return new scx::ArgObject(m_request.get_session());
+    } else {
+      return new scx::ArgError("No session");
+    }
   }
   if ("realms" == name) {
     scx::ModuleRef http = scx::Kernel::get()->get_module("http");
@@ -244,7 +248,7 @@ scx::Arg* RenderMarkupContext::arg_lookup(const std::string& name)
     if (m_article) {
       return new scx::ArgObject(m_article);
     } else {
-      return 0;
+      return new scx::ArgError("No article");
     }
   }
 
@@ -308,17 +312,15 @@ scx::Arg* RenderMarkupContext::arg_function(const std::string& name,scx::Arg* ar
   if (name == "get_articles") {
     std::list<Article*> articles = m_profile.articles();
 
-    const scx::ArgString* a_sort = dynamic_cast<const scx::ArgString*>(l->get(0));
+    const scx::Arg* a_sort = l->get(0);
+    const scx::Arg* a_rev = l->get(1);
     if (a_sort) {
       std::string sort = a_sort->get_string();
-      if (sort == "date") {
-	articles.sort(ArticleSortDate);
-      } else if (sort == "name") {
-	articles.sort(ArticleSortName);
-      }
+      bool reverse = (a_rev ? a_rev->get_int() : false);
+      articles.sort(ArticleMetaSorter(sort,reverse));
     }
     int count = 9999;
-    const scx::ArgInt* a_max = dynamic_cast<const scx::ArgInt*>(l->get(1));
+    const scx::ArgInt* a_max = dynamic_cast<const scx::ArgInt*>(l->get(2));
     if (a_max) {
       count = a_max->get_int();
     }

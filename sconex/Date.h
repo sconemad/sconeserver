@@ -35,7 +35,7 @@ public:
   enum Month { Jan, Feb, Mar, Apr, May, Jun, Jul, Aug, Sep, Oct, Nov, Dec };
 
   Date(
-    time_t t=0,
+    int t=0,
     bool local=false
   );
   
@@ -53,6 +53,8 @@ public:
     const std::string& str,
     bool local=false
   );
+
+  Date(Arg* args);
   
   Date(const Date& c);
   

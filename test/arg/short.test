@@ -89,5 +89,8 @@ s = sm.mammal | sm.bird;
 print("s="+s+endl);
 test(s=="chimpanzee","s should be chimpanzee");
 
+print('Hey; what is it?');
+print("Hello let\'s use a lot of \" quotes and whatnot."+endl);
+
 
 print("END" + endl);

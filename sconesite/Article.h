@@ -38,6 +38,18 @@ bool ArticleSortDate(const Article* a, const Article* b);
 bool ArticleSortName(const Article* a, const Article* b);
 
 //=========================================================================
+class ArticleMetaSorter {
+public:
+  ArticleMetaSorter(const std::string& meta, bool reverse);
+  bool operator()(const Article* a, const Article* b);
+
+private:
+  std::string m_meta;
+  bool m_reverse;
+};
+
+
+//=========================================================================
 class Article : public XMLDoc {
 
 public:
@@ -49,6 +61,7 @@ public:
   ~Article();
 
   const scx::FilePath& get_root() const;
+  const scx::Arg* get_meta(const std::string& name) const;
   
   // ArgObject interface
   virtual std::string name() const;

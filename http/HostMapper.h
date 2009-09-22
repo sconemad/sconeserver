@@ -28,6 +28,8 @@ namespace http {
 
 class Host;
 class HTTPModule;
+class Request;
+class Response;
 
 //=============================================================================
 class HTTP_API HostMapper : public scx::ArgObjectInterface {
@@ -36,12 +38,17 @@ public:
   HostMapper(HTTPModule& module);
   virtual ~HostMapper();
   
-  Host* host_lookup(const std::string& name);
+  bool connect_request(scx::Descriptor* endpoint, Request& request, Response& response);
 
   virtual std::string name() const;
   virtual scx::Arg* arg_lookup(const std::string& name);
   virtual scx::Arg* arg_resolve(const std::string& name);
   virtual scx::Arg* arg_function(const std::string& name,scx::Arg* args);
+
+protected:
+
+  typedef HASH_TYPE<std::string,std::string> HostNameMap;
+  bool lookup(const HostNameMap& map, const std::string& pattern, std::string& result);
   
 private:
 
@@ -50,8 +57,8 @@ private:
   typedef std::map<std::string,Host*> HostMap;
   HostMap m_hosts;
 
-  typedef HASH_TYPE<std::string,std::string> HostRedirectMap;
-  HostRedirectMap m_redirects;
+  HostNameMap m_aliases;
+  HostNameMap m_redirects;
 
 };
 
