@@ -23,11 +23,58 @@ Free Software Foundation, Inc.,
 #define scxMultiplexer_h
 
 #include "sconex/sconex.h"
-#include "sconex/Mutex.h"
+#include "sconex/Thread.h"
 namespace scx {
 
-class Descriptor;
-class DescriptorThread;
+class Multiplexer;
+
+//=============================================================================
+class SCONEX_API Job {
+
+public:
+
+  Job(const std::string& type);
+  virtual ~Job();
+
+  virtual bool run() =0;
+  virtual std::string describe() const;
+
+  const std::string& type() const;
+
+private:
+  std::string m_type;
+
+  friend class Multiplexer;
+  friend class JobThread;
+
+  enum JobState { Wait, Run, Cycle, Purge };
+  JobState m_job_state;
+
+};
+
+//=============================================================================
+class SCONEX_API JobThread : public Thread {
+
+public:
+
+  JobThread(Multiplexer& manager);
+  virtual ~JobThread();
+
+  virtual void* run();
+  // Thread entry point
+
+  void allocate_job(Job* job);
+
+private:
+
+  Multiplexer& m_manager;
+
+  Job* m_job;
+
+  Mutex m_job_mutex;
+  ConditionEvent m_job_condition;
+  
+};
 
 //=============================================================================
 class SCONEX_API Multiplexer {
@@ -37,8 +84,8 @@ public:
   Multiplexer();
   virtual ~Multiplexer();
 
-  void add(Descriptor* d);
-  // Add a descriptor
+  void add(Job* job);
+  // Add a job
 
   int spin();
   // select() to determine waiting descriptors and dispatch events
@@ -54,18 +101,20 @@ protected:
 
 private:
 
-  friend class DescriptorThread;
+  friend class JobThread;
 
-  bool allocate_job(Descriptor* d, int events);
-  bool finished_job(DescriptorThread* dt, Descriptor* d, int retval);
+  bool allocate_job(Job* job);
+  bool finished_job(JobThread* thread, Job* job, bool purge);
   
   void check_thread_pool();
 
-  std::list<Descriptor*> m_des;
-  std::list<Descriptor*> m_des_new;
+  typedef std::list<Job*> JobList;
+  JobList m_jobs;
+  JobList m_jobs_new;
 
-  std::list<DescriptorThread*> m_threads_pool;
-  std::list<DescriptorThread*> m_threads_busy;
+  typedef std::list<JobThread*> ThreadList;
+  ThreadList m_threads_pool;
+  ThreadList m_threads_busy;
   unsigned int m_num_threads;
   
   mutable Mutex m_job_mutex;

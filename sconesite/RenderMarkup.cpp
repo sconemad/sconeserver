@@ -363,7 +363,7 @@ scx::Arg* RenderMarkupContext::arg_function(const std::string& name,scx::Arg* ar
 
 //=========================================================================
 RenderMarkupJob::RenderMarkupJob(RenderMarkupContext* ctx)
-  : WorkerJob("RenderMarkupJob: " + (ctx->get_article() ? ctx->get_article()->get_name() : "(no article)")),
+  : Job("RenderMarkupJob"),
     m_context(ctx)
 {
 
@@ -376,15 +376,26 @@ RenderMarkupJob::~RenderMarkupJob()
 }
 
 //=========================================================================
-void RenderMarkupJob::run()
+bool RenderMarkupJob::run()
 {
+  DEBUG_LOG("Running " << type() << " " << describe());
+
   std::string tplname = "default";
 
   Template* tpl = m_context->get_profile().lookup_template(tplname);
+
   if (!tpl) {
     m_context->handle_error("No template");
-    return;
+
+  } else {
+    tpl->process(*m_context);
   }
 
-  tpl->process(*m_context);
+  return true;
+}
+
+//=========================================================================
+std::string RenderMarkupJob::describe() const
+{
+  return std::string(m_context->get_article() ? m_context->get_article()->get_name() : "(no article)");
 }

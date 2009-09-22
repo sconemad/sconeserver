@@ -62,6 +62,7 @@ Free Software Foundation, Inc.,
 
 #include "sconex/sconex.h"
 #include "sconex/Date.h"
+#include "sconex/Multiplexer.h"
 namespace scx {
 
 class Stream;
@@ -147,9 +148,9 @@ protected:
 
 private:
 
-  friend class Multiplexer;
   friend class Stream;
-  friend class DescriptorThread;
+  friend class DescriptorJob;
+  friend class Multiplexer;
   friend class DatagramHandler;
  
   std::list<Stream*> m_streams;
@@ -165,9 +166,6 @@ private:
   // Dispatch events to this descriptor
   // Return value indicates whether the socket is to remain open
 
-  enum RunState { Select, Run, Cycle, Purge };
-  RunState m_runstate;
-  
   Time m_timeout_interval;
   Date m_timeout;
   bool check_timeout() const;
@@ -179,6 +177,27 @@ private:
   static int s_des_count;
   // Descriptor count, used to generate UIDs.
   
+};
+
+//=============================================================================
+class SCONEX_API DescriptorJob : public Job {
+
+public:
+
+  DescriptorJob(Descriptor* d);
+  virtual ~DescriptorJob();
+
+  virtual bool run();
+  virtual std::string describe() const;
+
+  Descriptor* get_descriptor();
+  void set_events(int events);
+  
+private:
+
+  Descriptor* m_descriptor;
+  int m_events;
+
 };
 
 };

@@ -525,4 +525,58 @@ void Descriptor::set_blocking(bool onoff)
   }
 }
 
+
+//=============================================================================
+DescriptorJob::DescriptorJob(Descriptor* d)
+  : Job("DES"),
+    m_descriptor(d),
+    m_events(0)
+{
+  DEBUG_COUNT_CONSTRUCTOR(DescriptorJob);
+}
+	
+//=============================================================================
+DescriptorJob::~DescriptorJob()
+{
+  m_descriptor->close();
+  delete m_descriptor;
+  DEBUG_COUNT_DESTRUCTOR(DescriptorJob);
+}
+
+//=============================================================================
+bool DescriptorJob::run()
+{
+  int retval = m_descriptor->dispatch(m_events);
+
+  return (bool)retval;
+}
+
+//=============================================================================
+std::string DescriptorJob::describe() const
+{
+  std::ostringstream oss;
+  oss << "[" << m_descriptor->uid() << "] " << m_descriptor->describe() << "\n";
+
+  std::list<Stream*>::const_iterator its = m_descriptor->m_streams.begin();
+  while (its != m_descriptor->m_streams.end()) {
+    oss << " - " << (*its)->stream_name()
+	<< " " << (*its)->stream_status() << "\n";
+    its++;
+  }
+
+  return oss.str();
+}
+
+//=============================================================================
+Descriptor* DescriptorJob::get_descriptor()
+{
+  return m_descriptor;
+}
+
+//=============================================================================
+void DescriptorJob::set_events(int events)
+{
+  m_events = events;
+}
+
 };

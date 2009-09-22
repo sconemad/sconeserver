@@ -113,9 +113,14 @@ bool Kernel::connect(
   ArgList* args
 )
 {
-  m_spinner.add(d);
-  //  if (!args || args->size() == 0) return false;
+  m_spinner.add(new DescriptorJob(d));
   return true;
+}
+
+//=============================================================================
+void Kernel::add_job(Job* job)
+{
+  m_spinner.add(job);
 }
 
 //=============================================================================

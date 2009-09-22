@@ -33,8 +33,7 @@ SCONESERVER_MODULE(SconesiteModule);
 
 //=========================================================================
 SconesiteModule::SconesiteModule()
-  : scx::Module("sconesite",scx::version()),
-    m_manager(*this)
+  : scx::Module("sconesite",scx::version())
 {
 
 }
@@ -77,12 +76,6 @@ bool SconesiteModule::connect(
 }
 
 //=========================================================================
-ThreadManager& SconesiteModule::get_thread_manager()
-{
-  return m_manager;
-}
-
-//=========================================================================
 Profile* SconesiteModule::lookup_profile(const std::string& profile)
 {
   ProfileMap::const_iterator it = m_profiles.find(profile);
@@ -98,21 +91,13 @@ scx::Arg* SconesiteModule::arg_lookup(const std::string& name)
 {
   // Methods
 
-  if ("add" == name ||
-      "set_thread_pool" == name) {
+  if ("add" == name) {
     return new scx::ArgObjectFunction(
       new scx::ArgModule(ref()),name);
   }      
 
   // Properties
   
-  if ("thread_pool" == name) {
-    return new scx::ArgInt(m_manager.get_num_threads());
-  }
-  if ("jobs" == name) {
-    return new scx::ArgString(m_manager.describe());
-  }
-
   return SCXBASE Module::arg_lookup(name);
 }
 
@@ -151,25 +136,5 @@ scx::Arg* SconesiteModule::arg_function(
     return 0;
   }
   
-  if ("set_thread_pool" == name) {
-    const scx::ArgInt* a_threads =
-      dynamic_cast<const scx::ArgInt*>(l->get(0));
-    if (!a_threads) {
-      return new scx::ArgError("set_thread_pool() Must specify number of threads");
-    }
-    int n_threads = a_threads->get_int();
-    if (n_threads < 0) {
-      return new scx::ArgError("set_thread_pool() Must specify >= 0 threads");
-    }
-
-    std::ostringstream oss;
-    oss << "Setting thread pool to " << n_threads
-        << (n_threads ? "" : " (multiplexed mode)");
-    log(oss.str());
-
-    m_manager.set_num_threads((unsigned int)n_threads);
-    return 0;
-  }
-
   return SCXBASE Module::arg_function(name,args);
 }

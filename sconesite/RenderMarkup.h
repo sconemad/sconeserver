@@ -22,8 +22,8 @@ Free Software Foundation, Inc.,
 #ifndef sconesiteRenderMarkup_h
 #define sconesiteRenderMarkup_h
 
+#include "Context.h"
 #include "XMLDoc.h"
-#include "WorkerThread.h"
 #include "http/Request.h"
 
 #include "sconex/ArgObject.h"
@@ -31,6 +31,7 @@ Free Software Foundation, Inc.,
 #include "sconex/Descriptor.h"
 #include "sconex/FilePath.h"
 #include "sconex/FileDir.h"
+#include "sconex/Multiplexer.h"
 
 class Profile;
 class Article;
@@ -77,14 +78,15 @@ protected:
 };
 
 //=========================================================================
-class RenderMarkupJob : public WorkerJob {
+class RenderMarkupJob : public scx::Job {
 
 public:
 
   RenderMarkupJob(RenderMarkupContext* ctx);
   virtual ~RenderMarkupJob();
 
-  virtual void run();
+  virtual bool run();
+  virtual std::string describe() const;
 
 protected:
 

@@ -50,6 +50,9 @@ public:
   );
   // Connect descriptor
 
+  void add_job(Job* job);
+  // Add a job to the multiplexer
+
   virtual Arg* arg_lookup(const std::string& name);
   virtual Arg* arg_function(const std::string& name,Arg* args);
   

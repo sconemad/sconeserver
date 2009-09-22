@@ -1,6 +1,17 @@
 
 2009-09-22 Andrew Wedgbury <wedge@sconemad.com>
 
+	* sconex/Multiplexer: Make into a generic job scheduler.
+	* sconex/Descriptor: Add DescriptorJob.
+	* sconex/DescriptorThread: Remove, use JobThread.
+	* sconex/Kernel: Add add_job, use DescriptorJob.
+	* sconesite/ThreadManager: Remove, use Multiplexer.
+	* sconesite/WorkerThread: Moved to Multiplexer, JobThread.
+	* sconesite/RenderMarkup: Return true to purge jobs.
+	* sconesite/SconesiteStream: Use Multiplexer for jobs.
+
+2009-09-22 Andrew Wedgbury <wedge@sconemad.com>
+
 	* sconex/ArgProc: Allow escape sequences in strings.
 	* sconex/ArgScript: Ignore escaped characters in parser.
 	* sconex/ArgObject: Allow various arg types to be constructed.

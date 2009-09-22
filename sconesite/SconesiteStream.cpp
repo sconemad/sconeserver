@@ -26,7 +26,6 @@ Free Software Foundation, Inc.,
 #include "Profile.h"
 #include "Template.h"
 #include "RenderMarkup.h"
-#include "ThreadManager.h"
 
 #include "http/HTTPModule.h"
 #include "http/Request.h"
@@ -181,7 +180,7 @@ scx::Condition SconesiteStream::send_response()
   
   // Create and add a job to render this page
   RenderMarkupJob* job = new RenderMarkupJob(ctx);
-  m_module.get_thread_manager().add(job);
+  scx::Kernel::get()->add_job(job);
   
   // Don't need us any more!
   return scx::End;
