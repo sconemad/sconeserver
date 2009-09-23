@@ -559,7 +559,7 @@ std::string DescriptorJob::describe() const
 
   std::list<Stream*>::const_iterator its = m_descriptor->m_streams.begin();
   while (its != m_descriptor->m_streams.end()) {
-    oss << " - " << (*its)->stream_name()
+    oss << "   - " << (*its)->stream_name()
 	<< " " << (*its)->stream_status() << "\n";
     its++;
   }

@@ -41,7 +41,7 @@ Job::~Job()
 //=============================================================================
 std::string Job::describe() const
 {
-  return "";
+  return "\n";
 }
 
 //=============================================================================
@@ -148,7 +148,6 @@ int Multiplexer::spin()
   fd_set fds_write; FD_ZERO(&fds_write);
   fd_set fds_except; FD_ZERO(&fds_except);
 
-  static int pna=0;
   int num_added=0;
   int maxfd=0;
 
@@ -226,15 +225,15 @@ int Multiplexer::spin()
     // Do a non-blocking select to immediately check if there are
     // any events to send
     time.tv_usec = 0; time.tv_sec = 0;
-    std::cout << "<IM>\n";
   } else {
     // Wait upto the specified timeout for an event
-    time.tv_usec = 1; time.tv_sec = 0;
+    //    time.tv_usec = 1; time.tv_sec = 0;
+    time.tv_usec = 1000; time.tv_sec = 0;
   }
 
   // Select
   num = select(maxfd+1, &fds_read, &fds_write, &fds_except, &time);
-  
+
   if (num < 0) {
     DEBUG_LOG("select failed, errno=" << errno);
     return 0;
@@ -288,18 +287,24 @@ std::string Multiplexer::describe() const
   m_job_mutex.lock();
 
   std::ostringstream oss;
+
+  oss << " " << m_jobs.size() << " jobs /" 
+      << " " << (m_threads_busy.size() + m_threads_pool.size()) << " threads /"
+      << " " << m_threads_busy.size() << " running"
+      << "\n\n";
+
   for (JobList::const_iterator it = m_jobs.begin(); it != m_jobs.end(); ++it) {
     Job* job = *it;
 
-    char c = 'U';
+    std::string state="?";
     switch (job->m_job_state) {
-      case Job::Wait:  c = 'W'; break;
-      case Job::Run:   c = 'R'; break;
-      case Job::Cycle: c = 'C'; break;
-      case Job::Purge: c = 'X'; break;
+      case Job::Wait:  state = "z"; break;
+      case Job::Run:   state = ">"; break;
+      case Job::Cycle: state = "z"; break;
+      case Job::Purge: state = "!"; break;
     }
     
-    oss << " {" <<  c << ":" << job->type() << "} " << job->describe() << "\n";
+    oss << " " << state << " " << job->type() << " " << job->describe();
   }
 
   m_job_mutex.unlock();

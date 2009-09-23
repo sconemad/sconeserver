@@ -46,11 +46,18 @@ public:
   
 protected:
 
+  void erase_line();
+
 private:
 
   termios m_saved_termios;
   std::string m_prompt;
   std::string m_line;
+
+  typedef std::vector<std::string> HistoryVec;
+  HistoryVec m_history;
+  unsigned int m_history_pos;
+  bool m_history_add;
 };
 
 };

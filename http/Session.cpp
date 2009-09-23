@@ -38,7 +38,7 @@ SessionManager::~SessionManager()
   for (SessionMap::iterator it = m_sessions.begin();
        it != m_sessions.end();
        ++it) {
-    Session* session = (*it).second;
+    Session* session = it->second;
     delete session;
   }
 }
@@ -51,7 +51,7 @@ Session* SessionManager::lookup_session(const std::string& id)
   scx::MutexLocker locker(m_mutex);
   SessionMap::iterator it = m_sessions.find(id);
   if (it != m_sessions.end()) {
-    return (*it).second;
+    return it->second;
   }
   return 0;
 }
@@ -74,15 +74,16 @@ int SessionManager::check_sessions()
   scx::MutexLocker locker(m_mutex);
 
   int n=0;
-  for (SessionMap::iterator it = m_sessions.begin();
-       it != m_sessions.end();
-       ++it) {
+  for (SessionMap::iterator it = m_sessions.begin(); 
+       it != m_sessions.end(); ) {
     Session* session = it->second;
     if (!session->valid() && session->get_num_refs() == 0) {
       DEBUG_LOG("Removing session " << session->get_id() << " due to timeout");
       delete session;
-      m_sessions.erase(it);
+      m_sessions.erase(it++);
       ++n;
+    } else {
+      ++it;
     }
   }
   return n;

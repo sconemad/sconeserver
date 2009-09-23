@@ -1,4 +1,10 @@
 
+2009-09-23 Andrew Wedgbury <wedge@sconemad.com>
+
+	* http/Session: Correct use of *_map::erase in iter loop.
+	* sconesite/SconesiteStream: Check for dodgy paths.
+        * sconex/TermBuffer: Clever command history buffer.
+	
 2009-09-22 Andrew Wedgbury <wedge@sconemad.com>
 
 	* sconex/Multiplexer: Make into a generic job scheduler.

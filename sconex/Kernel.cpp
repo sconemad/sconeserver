@@ -138,7 +138,8 @@ Arg* Kernel::arg_lookup(const std::string& name)
 
   // Properties
 
-  if ("lsdes" == name) {
+  if ("lsdes" == name ||
+      "jobs" == name) {
     return new scx::ArgString(m_spinner.describe());
   }
   if ("root" == name) {

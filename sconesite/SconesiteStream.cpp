@@ -125,6 +125,13 @@ scx::Condition SconesiteStream::send_response()
     art_file = pathinfo.substr(is+1);
   }
   m_article = profile->lookup_article(art_name);
+
+  if (pathinfo.find("//") != std::string::npos ||
+      pathinfo.find("..") != std::string::npos) {
+    m_module.log("Dodgy pathinfo '" + pathinfo + "' - rejecting");
+    resp.set_status(http::Status::Forbidden);
+    return scx::Close;
+  }
   
   if (pathinfo == "") {
     m_module.log("Sending index"); 

@@ -397,5 +397,5 @@ bool RenderMarkupJob::run()
 //=========================================================================
 std::string RenderMarkupJob::describe() const
 {
-  return std::string(m_context->get_article() ? m_context->get_article()->get_name() : "(no article)");
+  return std::string(m_context->get_article() ? m_context->get_article()->get_name() : "(no article)") + "\n";
 }
