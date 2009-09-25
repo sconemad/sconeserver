@@ -21,9 +21,6 @@ Free Software Foundation, Inc.,
 
 #include "sconex/ArgObject.h"
 #include "sconex/ArgProc.h"
-#include "sconex/VersionTag.h"
-#include "sconex/Uri.h"
-#include "sconex/MimeType.h"
 
 namespace scx {
 
@@ -70,14 +67,6 @@ void ArgObjectInterface::log(
 //=============================================================================
 Arg* ArgObjectInterface::arg_lookup(const std::string& name)
 {
-  if ("Version" == name ||
-      "Date" == name ||
-      "Time" == name ||
-      "Uri" == name ||
-      "MimeType" == name) {
-    return new ArgObjectFunction(new ArgObject(this),name);
-  }
-
   return new ArgError("Unknown name '" + name + "'");
 }
 
@@ -90,22 +79,6 @@ Arg* ArgObjectInterface::arg_resolve(const std::string& name)
 //=============================================================================
 Arg* ArgObjectInterface::arg_function(const std::string& name, Arg* args)
 {
-  if ("Version" == name) {
-    return new VersionTag(args);
-  }
-  if ("Date" == name) {
-    return new Date(args);
-  }
-  if ("Time" == name) {
-    return new Time(args);
-  }
-  if ("Uri" == name) {
-    return new Uri(args);
-  }
-  if ("MimeType" == name) {
-    return new MimeType(args);
-  }
-
   return new ArgError("Unknown function '" + name + "'");  
 }
 
@@ -182,7 +155,7 @@ Arg* ArgObject::op(OpType optype, const std::string& opname, Arg* right)
   if (m_obj) {
     if (Arg::Binary == optype) {
       // Lookup
-      if ("." == opname) {
+      if ("." == opname || "[" == opname) {
         return m_obj->arg_lookup(right->get_string());
       }
       // Resolve

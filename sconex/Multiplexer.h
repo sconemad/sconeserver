@@ -1,8 +1,21 @@
 /* SconeServer (http://www.sconemad.com)
 
-I/O Multiplexer and event dispatcher
+Job scheduler/multiplexer
 
-Copyright (c) 2000-2004 Andrew Wedgbury <wedge@sconemad.com>
+Job states:
+
+(New job)
+   |
+  \ /                   +--> Purge ------> (Delete job)
+  Wait -----> Run ------|
+  / \                   +--> Cycle ---+
+   |                                  |
+   +----------------------------------+
+
+A pool of JobThreads is maintained, to which jobs can be allocated 
+to run.
+
+Copyright (c) 2000-2009 Andrew Wedgbury <wedge@sconemad.com>
 
 This program is free software; you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -78,6 +91,7 @@ private:
   ConditionEvent m_job_condition;
   
   Mutex m_new_mutex;
+  ConditionEvent m_end_condition;
 
   pthread_t m_main_thread;
 

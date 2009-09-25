@@ -334,7 +334,7 @@ std::string DocRoot::name() const
 scx::Arg* DocRoot::arg_resolve(const std::string& name)
 {
   scx::Arg* a = SCXBASE ArgObjectInterface::arg_resolve(name);
-  if (a==0 || (dynamic_cast<scx::ArgError*>(a)!=0)) {
+  if (BAD_ARG(a)) {
     delete a;
     return m_host.arg_resolve(name);
   }
@@ -353,6 +353,8 @@ scx::Arg* DocRoot::arg_lookup(const std::string& name)
   }
 
   // Sub-objects
+  if ("profile" == name) return new scx::ArgString(m_profile);
+  if ("path" == name) return new scx::ArgString(m_path.path());
   if ("params" == name) return new scx::ArgObject(&m_params);
   
   return SCXBASE ArgObjectInterface::arg_lookup(name);

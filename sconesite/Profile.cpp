@@ -80,6 +80,7 @@ void Profile::refresh()
        ++it_a) {
     Article* article = (*it_a);
     if (!scx::FileStat(article->get_path()).is_file()) {
+      m_module.log("Removing article '" + article->get_name() + "'");
       it_a = m_articles.erase(it_a);
       delete article;
     }
@@ -110,6 +111,7 @@ void Profile::refresh()
        ++it_t) {
     Template* tpl = (*it_t);
     if (!scx::FileStat(tpl->get_path()).is_file()) {
+      m_module.log("Removing template '" + tpl->get_name() + "'");
       it_t = m_templates.erase(it_t);
       delete tpl;
     }

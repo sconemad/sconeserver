@@ -62,5 +62,5 @@ scx::Arg* Context::arg_function(const std::string& name,scx::Arg* args)
 {
   scx::ArgList* l = dynamic_cast<scx::ArgList*>(args);
 
-  return 0;
+  return SCXBASE ArgObjectInterface::arg_function(name,args);
 }

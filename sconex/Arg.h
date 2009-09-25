@@ -38,6 +38,8 @@ namespace scx {
 
 class ArgStatement;
 class ArgProc;
+
+#define BAD_ARG(a) (!a || (typeid(*a) == typeid(scx::ArgError)))
   
 //=============================================================================
 class SCONEX_API Arg {

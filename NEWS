@@ -6,6 +6,10 @@
          - map (associative array) type.
          - Lots of bug fixes.
          - Scripted test system.
+	* Combined I/O multiplexer and job scheduling system:
+         - Low CPU overhead
+	 - Flexible thread pool system.
+	 - Job scheduling system for running background tasks.
         * HTTP module improvements:
          - Reliable multi-threading support.
          - HTTP Authentication support with realms.

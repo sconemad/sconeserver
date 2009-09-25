@@ -184,6 +184,8 @@ Free Software Foundation, Inc.,
 #  endif
 #endif
 
+#include <typeinfo>
+
 // sconex Debugging
 #include "sconex/Debug.h"
 

@@ -27,6 +27,9 @@ Free Software Foundation, Inc.,
 #include "sconex/Logger.h"
 #include "sconex/Debug.h"
 #include "sconex/User.h"
+#include "sconex/VersionTag.h"
+#include "sconex/Uri.h"
+#include "sconex/MimeType.h"
 
 #include <sys/utsname.h>
 
@@ -69,6 +72,7 @@ int Kernel::init()
 int Kernel::run()
 {
   m_state = Run;
+  log("Init complete, entering scheduler loop");
   
   while (true) {
 
@@ -134,9 +138,16 @@ Arg* Kernel::arg_lookup(const std::string& name)
       "shutdown" == name ||
       "set_user" == name ||
       "set_thread_pool" == name) {
-    return new ArgObjectFunction(
-      new ArgModule(ref()),name);
+    return new ArgObjectFunction(new ArgModule(ref()),name);
   }      
+
+  if ("Version" == name ||
+      "Date" == name ||
+      "Time" == name ||
+      "Uri" == name ||
+      "MimeType" == name) {
+    return new ArgObjectFunction(new ArgModule(ref()),name);
+  }
 
   // Properties
 
@@ -234,7 +245,23 @@ Arg* Kernel::arg_function(
     m_spinner.set_num_threads((unsigned int)n_threads);
     return 0;
   }
-  
+
+  if ("Version" == name) {
+    return new VersionTag(args);
+  }
+  if ("Date" == name) {
+    return new Date(args);
+  }
+  if ("Time" == name) {
+    return new Time(args);
+  }
+  if ("Uri" == name) {
+    return new Uri(args);
+  }
+  if ("MimeType" == name) {
+    return new MimeType(args);
+  }
+
   return Module::arg_function(name,args);
 }
 

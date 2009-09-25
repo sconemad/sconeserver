@@ -22,7 +22,6 @@ Free Software Foundation, Inc.,
 #include "sconex/ArgStore.h"
 #include "sconex/ArgProc.h"
 #include "sconex/File.h"
-#include <typeinfo>
 namespace scx {
 
 // Uncomment to enable debug info

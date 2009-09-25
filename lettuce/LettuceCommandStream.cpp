@@ -210,6 +210,7 @@ scx::Condition LettuceCommandStream::event(scx::Stream::Event e)
 {
   if (e == scx::Stream::Opening) {
     m_module.log("Opening lettuce command stream");
+    endpoint().set_timeout(scx::Time(125));
   } 
 
   if (e == scx::Stream::Readable) {

@@ -212,6 +212,10 @@ std::string RenderMarkupContext::name() const
 scx::Arg* RenderMarkupContext::arg_resolve(const std::string& name)
 {
   scx::Arg* a = Context::arg_resolve(name);
+  if (BAD_ARG(a)) {
+    delete a;
+    return m_profile.get_module().arg_resolve(name);
+  }
   return a;
 }
 

@@ -23,6 +23,7 @@ Free Software Foundation, Inc.,
 #define sconesiteModule_h
 
 #include "sconex/Module.h"
+#include "sconex/Job.h"
 
 class Profile;
 
@@ -41,6 +42,7 @@ public:
     scx::ArgList* args
   );
 
+  void refresh();
   Profile* lookup_profile(const std::string& name);
   
   virtual scx::Arg* arg_lookup(const std::string& name);
@@ -52,6 +54,8 @@ private:
 
   typedef HASH_TYPE<std::string,Profile*> ProfileMap;
   ProfileMap m_profiles;
+
+  scx::JobID m_job;
   
 };
 

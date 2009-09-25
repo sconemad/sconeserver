@@ -1,4 +1,16 @@
 
+2009-09-25 Andrew Wedgbury <wedge@sconemad.com>
+
+	* sconex/Multiplexer: Speed up end_job wait sequence.
+	* sconex/Descriptor: Include timeout in describe string.
+	Send Opening events to Listening descriptors.
+	* sconex/Kernel: Move Arg ctors here.
+	* sconex/Module: Allow resolution to parent modules.
+	* sconex/ArgObject: Allow lookups with [] syntax.
+	* http: Improve Arg interface for Host, DocRoot, etc.
+	* sconesite/SconesiteModule: Add periodic refresh job.
+	* lettuce/LettuceCommandStream: Increase timeout.
+	
 2009-09-24 Andrew Wedgbury <wedge@sconemad.com>
 
 	* sconex/Multiplexer: Allow periodic job scheduling.
@@ -18,7 +30,7 @@
 
 	* http/Session: Correct use of *_map::erase in iter loop.
 	* sconesite/SconesiteStream: Check for dodgy paths.
-        * sconex/TermBuffer: Clever command history buffer.
+	* sconex/TermBuffer: Clever command history buffer.
 	
 2009-09-22 Andrew Wedgbury <wedge@sconemad.com>
 

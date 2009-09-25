@@ -28,19 +28,43 @@ Free Software Foundation, Inc.,
 #include "sconex/Module.h"
 #include "sconex/Arg.h"
 #include "sconex/Stream.h"
+#include "sconex/Kernel.h"
 
 SCONESERVER_MODULE(SconesiteModule);
+
+//=========================================================================
+class SconesiteJob : public scx::PeriodicJob {
+
+public:
+
+  SconesiteJob(SconesiteModule& module, const scx::Time& period)
+    : scx::PeriodicJob("sconesite::SconesiteModule",period),
+      m_module(module) {};
+
+  virtual bool run()
+  {
+    //DEBUG_LOG("SconesiteJob running");
+    m_module.refresh();
+    reset_timeout();
+    return false;
+  };
+
+protected:
+  SconesiteModule& m_module;
+};
 
 //=========================================================================
 SconesiteModule::SconesiteModule()
   : scx::Module("sconesite",scx::version())
 {
-
+  m_job = scx::Kernel::get()->add_job(new SconesiteJob(*this,scx::Time(7)));
 }
 
 //=========================================================================
 SconesiteModule::~SconesiteModule()
 {
+  scx::Kernel::get()->end_job(m_job);
+
   for (ProfileMap::const_iterator it = m_profiles.begin();
        it != m_profiles.end();
        ++it) {
@@ -73,6 +97,17 @@ bool SconesiteModule::connect(
   
   endpoint->add_stream(s);
   return true;
+}
+
+//=========================================================================
+void SconesiteModule::refresh()
+{
+  for (ProfileMap::iterator it = m_profiles.begin();
+       it != m_profiles.end();
+       ++it) {
+    Profile* profile = it->second;
+    profile->refresh();
+  }
 }
 
 //=========================================================================

@@ -2,6 +2,22 @@ SconeServer (http://www.sconemad.com)
 TODO List and ideas for future development
 
 ------------------------
+For 0.8.0 release
+------------------------
+
+* Sort out config files
+* Mime should use data file
+
+* HTTP
+ - AuthRealm passwords stored in sha1
+
+* Sconesite 
+ - Artile file/upload file manager object
+ - Hierarchical article trees 
+ - Image handler
+
+
+------------------------
 NEW MODULES
 ------------------------
 
@@ -14,11 +30,9 @@ NEW MODULES
 * HTTP:Perl
   For running perl in process.
 
-* Forward
-  Route connections through to a specified destination.
-
 * TFTP
   A good one to test connected UDP once implemented.
+  Started but not working very well.
 
 ------------------------
 SCONEX
@@ -27,16 +41,6 @@ SCONEX
 * Seamless File & MemFile operation
   To allow files to be cached in memory but read from using the regular file
   interface.
-
-* Multithreading
-  Configurable number of 'worker' threads (>= 0).
-  Multiplexer dispatches events to free threads.
-  Must implement required sync functions for OpenSSL.
-  Condition variable wrapper,  
-  for Win32, see http://www.cs.wustl.edu/~schmidt/win32-cv-1.html
-
-* Datagram socket support
-  Need to investigate exact operation of connected UDP sockets.
 
 * Refactor SconeScript(Arg) and framework classes.
   Arg, ArgProc, ArgObject
@@ -74,20 +78,11 @@ SCONEX
     End   - Suspend closing, connection should remain open.
     Error - Force the connection closed at earliest oppurtunity
 
-* Exec/Process
-  Fork from surrogate process, Fork, Exec
-  (Win32) CreateProcessAsUser
-
-* User
-
 ------------------------
 HTTP
 ------------------------
 
 * Standards compliant HTTP
-
-* Improved FS synching for http/FS* classes
-  Current FS system may have problems with large directory trees.
 
 * content-encoding: (gzip,compress)
 
@@ -106,10 +101,3 @@ GzipStream          CONTENT-ENCODING
 <filter>
 
 GetFileStream       HANDLER
-
-------------------------
-ALL
-------------------------
-
-* Windows installer!
-

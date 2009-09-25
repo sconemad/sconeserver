@@ -85,13 +85,12 @@ bool Multiplexer::end_job(JobID jobid)
     job->m_job_state = Job::Purge;
   }
 
-  m_job_mutex.unlock();
+  interrupt_select();
 
+  // Wait for the job to be purged
   while (found) {
-    sleep(1);
-
+    m_end_condition.wait(m_job_mutex);
     found = false;
-    m_job_mutex.lock();
     for (it = m_jobs.begin(); it != m_jobs.end(); ++it) {
       job = *it;
       if (job->get_id() == jobid) {
@@ -99,9 +98,9 @@ bool Multiplexer::end_job(JobID jobid)
 	break;
       }
     }
-    m_job_mutex.unlock();
   }
 
+  m_job_mutex.unlock();
   return !found;
 }
 
@@ -182,7 +181,7 @@ int Multiplexer::spin()
     return 0;
   }
 
-  // Select
+  // Determine timeval to use depending on mode
   timeval time;
   if (immediate) {
     // * Immediate mode select *
@@ -195,40 +194,41 @@ int Multiplexer::spin()
     // reached, unless we are interrupted by a signal sent from another thread.
     time.tv_usec = 0; time.tv_sec = 1;
   }
-  num = select(maxfd+1, &fds_read, &fds_write, &fds_except, &time);
 
-  if (num < 0) {
+  // Make the select call
+  if (select(maxfd+1, &fds_read, &fds_write, &fds_except, &time) < 0) {
+    // Select returned an error or it was interrupted
     if (errno != EINTR) {
       DEBUG_LOG("select failed, errno=" << errno);
     }
-    return 0;
-  }
 
-  // Decode events and allocate dispatch jobs
-  for (it = m_jobs.begin(); it != m_jobs.end(); ++it) {
-    Job* job = *it;
-    Job::JobState js = job->m_job_state;
-    if (js == Job::Wait) {
-      DescriptorJob* djob = dynamic_cast<DescriptorJob*>(job);
-      if (djob) {
-	Descriptor* d = djob->get_descriptor();
-	int fd = d->fd();
-	int events = 0;
-	
-	if (fd >= 0) {
-	  events |= (FD_ISSET(fd,&fds_read) ? (1<<Stream::Readable) : 0);
-	  events |= (FD_ISSET(fd,&fds_write) ? (1<<Stream::Writeable) : 0);
+  } else {
+    // Select succeeded, decode events and allocate jobs
+    for (it = m_jobs.begin(); it != m_jobs.end(); ++it) {
+      Job* job = *it;
+      Job::JobState js = job->m_job_state;
+      if (js == Job::Wait) {
+	DescriptorJob* djob = dynamic_cast<DescriptorJob*>(job);
+	if (djob) {
+	  Descriptor* d = djob->get_descriptor();
+	  int fd = d->fd();
+	  int events = 0;
+	  
+	  if (fd >= 0) {
+	    events |= (FD_ISSET(fd,&fds_read) ? (1<<Stream::Readable) : 0);
+	    events |= (FD_ISSET(fd,&fds_write) ? (1<<Stream::Writeable) : 0);
+	  }
+	  djob->set_events(events);
+	} 
+	if (job->should_run()) {
+	  // Run the job
+	  allocate_job(job);
 	}
-	djob->set_events(events);
-      } 
-      if (job->should_run()) {
-	// Run the job
-	allocate_job(job);
       }
     }
   }
 
-  // Purge closed descriptors
+  // Purge jobs
   m_job_mutex.lock();
   for (it = m_jobs.begin(); it != m_jobs.end(); ) {
     Job* job = *it;
@@ -239,9 +239,10 @@ int Multiplexer::spin()
       it++;
     }
   }
+  m_end_condition.signal();
   m_job_mutex.unlock();
-  
-  return num;
+
+  return 0;
 }
 
 //=============================================================================

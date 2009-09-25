@@ -133,15 +133,20 @@ scx::Arg* Host::arg_lookup(
   }
 
   // Properties
+
+  if ("id" == name) return new scx::ArgString(m_id);
+  if ("hostname" == name) return new scx::ArgString(m_hostname);
+  if ("path" == name) return new scx::ArgString(m_dir.path());
   
-  if ("list" == name) {
-    std::ostringstream oss;
+  if ("docroots" == name) {
+    scx::ArgList* list = new scx::ArgList();
     for (DocRootMap::const_iterator it = m_docroots.begin();
          it != m_docroots.end();
          ++it) {
-      oss << it->first << "\n";
+      DocRoot* docroot = it->second;
+      list->give(new scx::ArgObject(docroot));
     }
-    return new scx::ArgString(oss.str());
+    return list;
   }
 
   // Sub-objects
@@ -159,7 +164,7 @@ scx::Arg* Host::arg_lookup(
 scx::Arg* Host::arg_resolve(const std::string& name)
 {
   scx::Arg* a = SCXBASE ArgObjectInterface::arg_resolve(name);
-  if (a==0 || (dynamic_cast<scx::ArgError*>(a)!=0)) {
+  if (BAD_ARG(a)) {
     delete a;
     return m_mapper.arg_resolve(name);
   }

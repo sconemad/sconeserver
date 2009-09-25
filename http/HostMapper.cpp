@@ -118,23 +118,34 @@ scx::Arg* HostMapper::arg_lookup(
   // Properties
   
   if ("list" == name) {
-    std::ostringstream oss;
+    scx::ArgList* list = new scx::ArgList();
     for (HostMap::const_iterator it = m_hosts.begin();
 	 it != m_hosts.end();
 	 ++it) {
-      oss << it->first << "\n";
+      Host* host = it->second;
+      list->give(new scx::ArgObject(host));
     }
-    return new scx::ArgString(oss.str());
+    return list;
   }
 
-  if ("lsmap" == name) {
-    std::ostringstream oss;
-    HostNameMap::const_iterator it = m_aliases.begin();
-    while (it != m_aliases.end()) {
-      oss << "'" << it->first << "' -> " << it->second << "\n";
-      it++;
+  if ("aliases" == name) {
+    scx::ArgMap* map = new scx::ArgMap();
+    for (HostNameMap::const_iterator it = m_aliases.begin();
+	 it != m_aliases.end();
+	 ++it) {
+      map->give(it->first,new scx::ArgString(it->second));
     }
-    return new scx::ArgString(oss.str());
+    return map;
+  }
+
+  if ("redirects" == name) {
+    scx::ArgMap* map = new scx::ArgMap();
+    for (HostNameMap::const_iterator it = m_redirects.begin();
+	 it != m_redirects.end();
+	 ++it) {
+      map->give(it->first,new scx::ArgString(it->second));
+    }
+    return map;
   }
 
   // Sub-objects

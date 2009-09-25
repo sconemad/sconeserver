@@ -107,14 +107,22 @@ Descriptor::State Descriptor::state() const
 //=============================================================================
 std::string Descriptor::describe() const
 {
+  std::ostringstream oss;
   switch (m_state) {
-    case Closed:     return "Closed";
-    case Closing:    return "Closing";
-    case Connected:  return "Connected";
-    case Connecting: return "Connecting";
-    case Listening:  return "Listening";
+    case Closed: oss << "Closed"; break;
+    case Closing: oss << "Closing"; break;
+    case Connected: oss << "Connected"; break;
+    case Connecting: oss << "Connecting"; break;
+    case Listening: oss << "Listening"; break;
+    default: oss << "Unknown"; break;
   }
-  return "Unknown";
+
+  if (m_timeout.valid()) {
+    Time left = (m_timeout - Date::now());
+    oss << " t:" + left.string();
+  }
+  
+  return oss.str();
 }
 
 //=============================================================================
@@ -306,7 +314,7 @@ int Descriptor::dispatch(int events)
   events |= m_virtual_events;
 
   // Decode individual events
-  bool event_opened    = (state() == Connected);
+  bool event_opened    = (state() == Connected || state() == Listening);
   bool event_readable  = events & (1<<Stream::Readable); 
   bool event_writeable = events & (1<<Stream::Writeable);
   //  bool event_except    = FD_ISSET(fd(),except_set);
@@ -516,7 +524,7 @@ bool Descriptor::check_timeout() const
   if (!m_timeout.valid()) {
     return false;
   }
-  return (scx::Date::now() > m_timeout);
+  return (scx::Date::now() >= m_timeout);
 }
 
 //=============================================================================

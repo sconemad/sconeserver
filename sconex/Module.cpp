@@ -241,7 +241,12 @@ Arg* Module::arg_lookup(const std::string& name)
 //=============================================================================
 Arg* Module::arg_resolve(const std::string& name)
 {
-  return ArgObjectInterface::arg_resolve(name);
+  Arg* a = ArgObjectInterface::arg_resolve(name);
+  if (m_parent && BAD_ARG(a)) {
+    delete a;
+    a = m_parent->arg_resolve(name);
+  }
+  return a;
 }
 
 //=============================================================================
