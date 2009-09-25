@@ -238,9 +238,15 @@ const std::string& Request::get_path_info() const
 }
 
 //=============================================================================
+void Request::set_param(const std::string& name, scx::Arg* value)
+{
+  m_params.give(name,value);
+}
+
+//=============================================================================
 void Request::set_param(const std::string& name, const std::string& value)
 {
-  m_params.give(name, new scx::ArgString(value));
+  set_param(name,new scx::ArgString(value));
 }
 
 //=============================================================================

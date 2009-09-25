@@ -41,6 +41,77 @@ Free Software Foundation, Inc.,
 #include "sconex/Kernel.h"
 #include "sconex/StreamDebugger.h"
 
+
+//=============================================================================
+class ArgFile : public scx::Arg {
+
+public:
+
+  ArgFile(const scx::FilePath& path);
+  ArgFile(const ArgFile& c);
+  virtual ~ArgFile();
+  virtual scx::Arg* new_copy() const;
+
+  virtual std::string get_string() const;
+  virtual int get_int() const;
+
+  virtual scx::Arg* op(scx::Arg::OpType optype, const std::string& opname, scx::Arg* right);
+
+protected:
+
+  scx::FilePath m_path;
+
+};
+
+//=========================================================================
+ArgFile::ArgFile(const scx::FilePath& path)
+  : m_path(path)
+{
+
+}
+
+//=========================================================================
+ArgFile::ArgFile(const ArgFile& c)
+  : m_path(c.m_path)
+{
+
+}
+
+//=========================================================================
+ArgFile::~ArgFile()
+{
+
+}
+
+//=========================================================================
+scx::Arg* ArgFile::new_copy() const
+{
+  return new ArgFile(*this);
+}
+
+//=========================================================================
+std::string ArgFile::get_string() const
+{
+  return m_path.path();
+}
+
+//=========================================================================
+int ArgFile::get_int() const
+{
+  return !m_path.path().empty();
+}
+
+//=========================================================================
+scx::Arg* ArgFile::op(scx::Arg::OpType optype, const std::string& opname, scx::Arg* right)
+{
+  if (scx::Arg::Binary == optype && "." == opname) {
+    std::string name = right->get_string();
+    if (name == "exists") return new scx::ArgInt(77);
+  }
+  return SCXBASE Arg::op(optype,opname,right);
+}
+
+
 //=========================================================================
 class ParamReaderStream : public scx::Stream {
 
@@ -201,6 +272,7 @@ scx::Condition SconesiteStream::start_section(const scx::MimeHeaderTable& header
 
   http::MessageStream* msg = GET_HTTP_MESSAGE();
   const http::Request& req = msg->get_request();
+  http::Request& ucreq = const_cast<http::Request&>(req);
   const http::Session* s = req.get_session();
 
   bool auth = (s && s->allow_upload());
@@ -221,7 +293,6 @@ scx::Condition SconesiteStream::start_section(const scx::MimeHeaderTable& header
       m_article = profile->create_article(art_name);
     }
     
-    scx::FilePath path = m_article->get_root();
     std::string name;
     scx::MimeHeader disp = headers.get_parsed("Content-Disposition");
     const scx::MimeHeaderValue* fdata = disp.get_value("form-data");
@@ -235,8 +306,14 @@ scx::Condition SconesiteStream::start_section(const scx::MimeHeaderTable& header
     const std::string file_pattern = "file_";
     std::string::size_type ip = name.find(file_pattern);
     if (ip == 0) {
-      std::string fpname = name.substr(file_pattern.length());
       // Name starts with "file_" so stream it into a file
+      scx::FilePath path = "/tmp";
+      std::string filename = "sconesite-" + s->get_id() + "-" + name;
+      path += filename;
+
+      /*
+      scx::FilePath path = m_article->get_root();
+      std::string fpname = name.substr(file_pattern.length());
       if (fpname == "article") {
 	path += "article.xml";
 	
@@ -249,11 +326,12 @@ scx::Condition SconesiteStream::start_section(const scx::MimeHeaderTable& header
 	  path += filename;
 	}
       }
+      */
       STREAM_DEBUG_LOG("Streaming section to file '" << path.path() << "'");
+      ucreq.set_param(name,new ArgFile(path));
       
       scx::File* file = new scx::File();
       if (file->open(path.path(),scx::File::Write | scx::File::Create | scx::File::Truncate) == scx::Ok) {
-	STREAM_DEBUG_LOG("Writing section to '" << path.path() << "'");
 	endpoint().add_stream(new scx::StreamDebugger("https-file"));
 	scx::StreamTransfer* xfer = new scx::StreamTransfer(&endpoint());
 	file->add_stream(xfer);
@@ -268,8 +346,7 @@ scx::Condition SconesiteStream::start_section(const scx::MimeHeaderTable& header
       
     } else {
       STREAM_DEBUG_LOG("Writing section to parameter '" << name << "'");
-      http::Request& creq = const_cast<http::Request&>(req);
-      endpoint().add_stream(new ParamReaderStream(name,creq));
+      endpoint().add_stream(new ParamReaderStream(name,ucreq));
       return scx::Ok;
     }
   }

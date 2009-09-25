@@ -70,6 +70,7 @@ public:
   void set_path_info(const std::string& pathinfo);
   const std::string& get_path_info() const;  
   
+  void set_param(const std::string& name, scx::Arg* value);
   void set_param(const std::string& name, const std::string& value);
   std::string get_param(const std::string& name) const;
   bool is_param(const std::string& name) const;

@@ -93,6 +93,8 @@ public:
   // informational purposes. Derived classes can override this if
   // they wish to supply status information which might be useful
   // for debugging.
+
+  std::string event_status() const;
   
 protected:
 

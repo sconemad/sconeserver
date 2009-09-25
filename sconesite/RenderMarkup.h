@@ -31,7 +31,7 @@ Free Software Foundation, Inc.,
 #include "sconex/Descriptor.h"
 #include "sconex/FilePath.h"
 #include "sconex/FileDir.h"
-#include "sconex/Multiplexer.h"
+#include "sconex/Job.h"
 
 class Profile;
 class Article;
@@ -85,6 +85,7 @@ public:
   RenderMarkupJob(RenderMarkupContext* ctx);
   virtual ~RenderMarkupJob();
 
+  virtual bool should_run();
   virtual bool run();
   virtual std::string describe() const;
 

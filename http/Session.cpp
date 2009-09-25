@@ -23,18 +23,46 @@ Free Software Foundation, Inc.,
 #include "http/Session.h"
 #include "http/HTTPModule.h"
 #include "sconex/ConfigFile.h"
+#include "sconex/Kernel.h"
 namespace http {
+
+class SessionManager;
+
+//=========================================================================
+class SessionCleanupJob : public scx::PeriodicJob {
+
+public:
+
+  SessionCleanupJob(SessionManager& manager, const scx::Time& period)
+    : scx::PeriodicJob("http::SessionManager",period),
+      m_manager(manager) {};
+
+  virtual ~SessionCleanupJob() {};
+
+  virtual bool run()
+  {
+    //    DEBUG_LOG("SessionCleanupJob running");
+    m_manager.check_sessions();
+    reset_timeout();
+    return false;
+  };
+
+protected:
+  SessionManager& m_manager;
+};
 
 //=========================================================================
 SessionManager::SessionManager(HTTPModule& module)
   : m_module(module)
 {
-
+  m_job = scx::Kernel::get()->add_job(new SessionCleanupJob(*this,scx::Time(30)));
 }
 
 //=========================================================================
 SessionManager::~SessionManager()
 {
+  scx::Kernel::get()->end_job(m_job);
+
   for (SessionMap::iterator it = m_sessions.begin();
        it != m_sessions.end();
        ++it) {

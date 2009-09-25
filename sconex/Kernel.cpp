@@ -19,14 +19,14 @@ along with this program (see the file COPYING); if not, write to the
 Free Software Foundation, Inc.,
 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA */
 
-#include "Kernel.h"
-#include "ConfigStream.h"
-#include "TermBuffer.h"
-#include "Console.h"
-#include "Process.h"
-#include "Logger.h"
-#include "Debug.h"
-#include "User.h"
+#include "sconex/Kernel.h"
+#include "sconex/ConfigStream.h"
+#include "sconex/TermBuffer.h"
+#include "sconex/Console.h"
+#include "sconex/Process.h"
+#include "sconex/Logger.h"
+#include "sconex/Debug.h"
+#include "sconex/User.h"
 
 #include <sys/utsname.h>
 
@@ -108,19 +108,21 @@ void Kernel::set_logger(Logger* logger)
 }
 
 //=============================================================================
-bool Kernel::connect(
-  Descriptor* d,
-  ArgList* args
-)
+bool Kernel::connect(Descriptor* d,ArgList* args)
 {
-  m_spinner.add(new DescriptorJob(d));
-  return true;
+  return (0 != add_job(new DescriptorJob(d)));
 }
 
 //=============================================================================
-void Kernel::add_job(Job* job)
+JobID Kernel::add_job(Job* job)
 {
-  m_spinner.add(job);
+  return m_spinner.add_job(job);
+}
+
+//=============================================================================
+bool Kernel::end_job(JobID jobid)
+{
+  return m_spinner.end_job(jobid);
 }
 
 //=============================================================================

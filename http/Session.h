@@ -25,6 +25,7 @@ Free Software Foundation, Inc.,
 #include "http/http.h"
 #include "sconex/ArgObject.h"
 #include "sconex/ArgStore.h"
+#include "sconex/Job.h"
 namespace http {
 
 class Session;
@@ -55,6 +56,7 @@ public:
 
   typedef HASH_TYPE<std::string,Session*> SessionMap;
   SessionMap m_sessions;
+  scx::JobID m_job;
 
 };
  

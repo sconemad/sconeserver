@@ -62,7 +62,7 @@ Free Software Foundation, Inc.,
 
 #include "sconex/sconex.h"
 #include "sconex/Date.h"
-#include "sconex/Multiplexer.h"
+#include "sconex/Job.h"
 namespace scx {
 
 class Stream;
@@ -187,6 +187,7 @@ public:
   DescriptorJob(Descriptor* d);
   virtual ~DescriptorJob();
 
+  virtual bool should_run();
   virtual bool run();
   virtual std::string describe() const;
 

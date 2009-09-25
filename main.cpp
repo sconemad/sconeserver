@@ -46,6 +46,10 @@ static std::string mod_path = MOD_PATH;
 static std::string var_path = VAR_PATH;
 
 //===========================================================================
+void empty_handler(int /*sig*/) { }
+
+
+//===========================================================================
 int run()
 {
   // Restart loop
@@ -156,6 +160,9 @@ int main(int argc,char* argv[])
   // Don't terminate on silly signals
   signal(SIGHUP,SIG_IGN);
   signal(SIGPIPE,SIG_IGN);
+
+  // Use this for interrupting system calls
+  signal(SIGUSR1,empty_handler);
   
   return run();
 }

@@ -1,4 +1,19 @@
 
+2009-09-24 Andrew Wedgbury <wedge@sconemad.com>
+
+	* sconex/Multiplexer: Allow periodic job scheduling.
+	Reduce polling and latency by interrupting select.
+	* sconex/Job: New base class Job and JobThread.
+	TimedJob base for periodic jobs.
+	* sconex/Descriptor: Loop Opening/Closing events in 
+	dispatch if required to keep things moving.
+	Improve descriptions for debug output.
+	* sconex/Stream: Add event_status() for debug info.
+	* sconed: Catch SIGUSR1 signals and don't abort.
+	* http/Session: Add periodic job to cleanup sessions.
+	* http/Request: Allow params of any Arg type.
+	* sconesite/SconesiteStream: File upload to /tmp.
+
 2009-09-23 Andrew Wedgbury <wedge@sconemad.com>
 
 	* http/Session: Correct use of *_map::erase in iter loop.

@@ -309,7 +309,7 @@ int Descriptor::dispatch(int events)
   bool event_opened    = (state() == Connected);
   bool event_readable  = events & (1<<Stream::Readable); 
   bool event_writeable = events & (1<<Stream::Writeable);
-//  bool event_except    = FD_ISSET(fd(),except_set);
+  //  bool event_except    = FD_ISSET(fd(),except_set);
 
   if (state() == Connecting) {
     // Result of a non-blocking connect
@@ -321,182 +321,191 @@ int Descriptor::dispatch(int events)
     return 0;
   }
   
-  bool remove,error,close,open_wait;
-
-  // OPEN/READ/WRITE SEQUENCE
-  std::list<Stream*>::iterator it = m_streams.begin();
-  while (it != m_streams.end()) {
-    Stream* stream = (*it);
-    remove = error = close = open_wait = false;
-    std::string name = stream->stream_name();
-
-    if (event_opened && 
-	!stream->event_enabled(Stream::Opening)) {
-
-      EVENT_DEBUG_LOG("Dispatch OPENED -> [" << name << "] -> ");
-      switch(stream->event(Stream::Opening)) {
-        case scx::Ok:
-          EVENT_DEBUG_LOG("OK");
-          stream->enable_event(Stream::Opening,true);
-          break;
-        case scx::Wait:
-          EVENT_DEBUG_LOG("WAIT");
-          open_wait = true; 
-          break;
-        case scx::End:
-          EVENT_DEBUG_LOG("END");
-          remove = true;
-          break;
-        case scx::Close:
-          EVENT_DEBUG_LOG("CLOSE");
-          stream->enable_event(Stream::Opening,true);
-          close = true;
-          break;
-        case scx::Error:
-          EVENT_DEBUG_LOG("ERROR");
-          error = true;
-          break;
+  bool loop;
+  do { 
+    loop = false; // Don't loop unless told to
+    bool remove,error,close,open_wait;
+    
+    // OPEN/READ/WRITE SEQUENCE
+    std::list<Stream*>::iterator it = m_streams.begin();
+    while (it != m_streams.end()) {
+      Stream* stream = (*it);
+      remove = error = close = open_wait = false;
+      std::string name = stream->stream_name();
+      
+      if (event_opened && 
+	  !stream->event_enabled(Stream::Opening)) {
+	
+	EVENT_DEBUG_LOG("Dispatch OPENED -> [" << name << "] -> ");
+	switch(stream->event(Stream::Opening)) {
+          case scx::Ok:
+	    EVENT_DEBUG_LOG("OK");
+	    stream->enable_event(Stream::Opening,true);
+	    break;
+          case scx::Wait:
+	    EVENT_DEBUG_LOG("WAIT");
+	    open_wait = true; 
+	    break;
+          case scx::End:
+	    EVENT_DEBUG_LOG("END");
+	    remove = true;
+	    break;
+          case scx::Close:
+	    EVENT_DEBUG_LOG("CLOSE");
+	    stream->enable_event(Stream::Opening,true);
+	    close = true;
+	    break;
+          case scx::Error:
+	    EVENT_DEBUG_LOG("ERROR");
+	    error = true;
+	    break;
+	}
       }
+      
+      if (!remove && 
+	  !error &&
+	  event_readable && 
+	  stream->event_enabled(Stream::Readable)) {
+
+	EVENT_DEBUG_LOG("Dispatch READABLE -> [" << name << "] -> ");
+	switch(stream->event(Stream::Readable)) {
+          case scx::Ok:
+	    EVENT_DEBUG_LOG("OK");
+	    break;
+          case scx::Wait:
+	    EVENT_DEBUG_LOG("WAIT");
+	    event_readable = false;
+	    break;
+          case scx::End:
+	    EVENT_DEBUG_LOG("END");
+	    remove = true;
+	    break;
+          case scx::Close:
+	    EVENT_DEBUG_LOG("CLOSE");
+	    close = true;
+	    break;
+          case scx::Error:
+	    EVENT_DEBUG_LOG("ERROR");
+	    error = true;
+	    break;
+	}
+      }
+      
+      if (!remove && 
+	  !error &&
+	  event_writeable && 
+	  stream->event_enabled(Stream::Writeable)) {
+	
+	EVENT_DEBUG_LOG("Dispatch WRITEABLE -> [" << name << "] -> ");
+	switch(stream->event(Stream::Writeable)) {
+          case scx::Ok:
+	    EVENT_DEBUG_LOG("OK");
+	    break;
+          case scx::Wait:
+	    EVENT_DEBUG_LOG("WAIT");
+	    event_writeable = false;
+	    break;
+          case scx::End:
+	    EVENT_DEBUG_LOG("END");
+	    remove = true;
+	    break;
+          case scx::Close:
+	    EVENT_DEBUG_LOG("CLOSE");
+	    close = true;
+	    break;
+          case scx::Error:
+	    EVENT_DEBUG_LOG("ERROR");
+	    error = true;
+	    break;
+	}
+      }
+      
+      if (close && state() != Closed) {
+	m_state = Closing;
+      }
+      
+      if (open_wait &&
+	  !stream->event_enabled(Stream::Opening)) {
+	break;
+      }
+
+      if (error) {
+	// Close socket due to error
+	EVENT_DEBUG_LOG("Dispatch Closing descriptor");
+	return 1;
+      }
+      
+      if (remove) {
+	// Remove stream from list and relink
+	it = m_streams.erase(it);
+	delete stream;
+	link_streams();
+	
+      } else {
+	// See if there any events to send
+	if (!event_readable && 
+	    stream->event_enabled(Stream::SendReadable)) {
+	  EVENT_DEBUG_LOG("SEND READABLE");
+	  event_readable = true;
+	}
+	if (!event_writeable 
+	    && stream->event_enabled(Stream::SendWriteable)) {
+	  EVENT_DEBUG_LOG("SEND WRITEABLE");
+	  event_writeable = true;
+	}
+	++it;    
+      }
+    }
+
+    // CLOSE SEQUENCE    
+    if (state() == Closing) {
+      std::list<Stream*>::reverse_iterator it = m_streams.rbegin();
+      while (it != m_streams.rend()) {
+	Stream* stream = (*it);
+	std::string name = stream->stream_name();
+	
+	EVENT_DEBUG_LOG("Dispatch CLOSING -> [" << name << "] -> ");
+	Condition c = stream->event(Stream::Closing);
+	
+	if (c == scx::Wait) {
+	  // Suspend closing for now
+	  EVENT_DEBUG_LOG("WAIT");
+	  break;
+	  
+	} else if (c == scx::End) {
+	  // Cancel closing
+	  EVENT_DEBUG_LOG("CANCELLED");
+	  m_state = Connected;
+	  loop = true;
+	  break;
+
+	} else if (c == scx::Error) {
+	  EVENT_DEBUG_LOG("ERROR - Closing descriptor");
+	  return 1;
+	}
+	
+	EVENT_DEBUG_LOG("OK - Removing stream");
+	// Remove stream from list and relink
+	it = std::list<Stream*>::reverse_iterator(m_streams.erase(--(it.base())) );
+	delete stream;
+	link_streams();
+	
+	if (m_streams.size() == 0) {
+	  break;
+	}
+      }      
     }
     
-    if (!remove && 
-	!error &&
-        event_readable && 
-	stream->event_enabled(Stream::Readable)) {
-
-      EVENT_DEBUG_LOG("Dispatch READABLE -> [" << name << "] -> ");
-      switch(stream->event(Stream::Readable)) {
-        case scx::Ok:
-          EVENT_DEBUG_LOG("OK");
-          break;
-        case scx::Wait:
-          EVENT_DEBUG_LOG("WAIT");
-          event_readable = false;
-          break;
-        case scx::End:
-          EVENT_DEBUG_LOG("END");
-          remove = true;
-          break;
-        case scx::Close:
-          EVENT_DEBUG_LOG("CLOSE");
-          close = true;
-          break;
-        case scx::Error:
-          EVENT_DEBUG_LOG("ERROR");
-          error = true;
-          break;
-      }
-    }
-
-    if (!remove && 
-	!error &&
-        event_writeable && 
-	stream->event_enabled(Stream::Writeable)) {
-
-      EVENT_DEBUG_LOG("Dispatch WRITEABLE -> [" << name << "] -> ");
-      switch(stream->event(Stream::Writeable)) {
-        case scx::Ok:
-          EVENT_DEBUG_LOG("OK");
-          break;
-        case scx::Wait:
-          EVENT_DEBUG_LOG("WAIT");
-          event_writeable = false;
-          break;
-        case scx::End:
-          EVENT_DEBUG_LOG("END");
-          remove = true;
-          break;
-        case scx::Close:
-          EVENT_DEBUG_LOG("CLOSE");
-          close = true;
-          break;
-        case scx::Error:
-          EVENT_DEBUG_LOG("ERROR");
-          error = true;
-          break;
-      }
-    }
-
-    if (close && state() != Closed) {
-      m_state = Closing;
-    }
-        
-    if (open_wait &&
-	!stream->event_enabled(Stream::Opening)) {
-      break;
-    }
-
-    if (error) {
-      // Close socket due to error
-      EVENT_DEBUG_LOG("Dispatch Closing descriptor");
+    if (m_streams.size() == 0) {
+      EVENT_DEBUG_LOG("Dispatch No streams left - Closing descriptor");
       return 1;
     }
-
-    if (remove) {
-      // Remove stream from list and relink
-      it = m_streams.erase(it);
-      delete stream;
-      link_streams();
-      
-    } else {
-      // See if there any events to send
-      if (!event_readable && 
-	  stream->event_enabled(Stream::SendReadable)) {
-	EVENT_DEBUG_LOG("SEND READABLE");
-	event_readable = true;
-      }
-      if (!event_writeable 
-	  && stream->event_enabled(Stream::SendWriteable)) {
-	EVENT_DEBUG_LOG("SEND WRITEABLE");
-	event_writeable = true;
-      }
-
-      ++it;    
-    }
-
-  }
-
-  // CLOSE SEQUENCE    
-  if (state() == Closing) {
-    std::list<Stream*>::reverse_iterator it = m_streams.rbegin();
-    while (it != m_streams.rend()) {
-      Stream* stream = (*it);
-      std::string name = stream->stream_name();
-  
-      EVENT_DEBUG_LOG("Dispatch CLOSING -> [" << name << "] -> ");
-      Condition c = stream->event(Stream::Closing);
-      
-      if (c == scx::Wait) {
-        // Suspend closing for now
-        EVENT_DEBUG_LOG("WAIT");
-        break;
-        
-      } else if (c == scx::End) {
-	// Cancel closing
-        EVENT_DEBUG_LOG("CANCELLED");
-	m_state = Connected;
-	break;
-
-      } else if (c == scx::Error) {
-        EVENT_DEBUG_LOG("ERROR - Closing descriptor");
-        return 1;
-      }
-
-      EVENT_DEBUG_LOG("OK - Removing stream");
-      // Remove stream from list and relink
-      it = std::list<Stream*>::reverse_iterator(
-        m_streams.erase(--(it.base())) );
-      delete stream;
-      link_streams();
-      
-      if (m_streams.size() == 0) break;
-    }      
-  }
-
-  if (m_streams.size() == 0) {
-    EVENT_DEBUG_LOG("Dispatch No streams left - Closing descriptor");
-    return 1;
-  }
+    
+    // Don't resend these events when looping
+    event_readable = false;
+    event_writeable = false;
+    
+  } while (loop);
   
   return 0;
 }
@@ -528,7 +537,7 @@ void Descriptor::set_blocking(bool onoff)
 
 //=============================================================================
 DescriptorJob::DescriptorJob(Descriptor* d)
-  : Job("DES"),
+  : Job("Descriptor"),
     m_descriptor(d),
     m_events(0)
 {
@@ -544,6 +553,12 @@ DescriptorJob::~DescriptorJob()
 }
 
 //=============================================================================
+bool DescriptorJob::should_run()
+{
+  return true;
+}
+
+//=============================================================================
 bool DescriptorJob::run()
 {
   int retval = m_descriptor->dispatch(m_events);
@@ -555,12 +570,14 @@ bool DescriptorJob::run()
 std::string DescriptorJob::describe() const
 {
   std::ostringstream oss;
-  oss << "[" << m_descriptor->uid() << "] " << m_descriptor->describe() << "\n";
+  oss << "[" << m_descriptor->uid() << "] " << m_descriptor->describe();
 
   std::list<Stream*>::const_iterator its = m_descriptor->m_streams.begin();
   while (its != m_descriptor->m_streams.end()) {
-    oss << "   - " << (*its)->stream_name()
-	<< " " << (*its)->stream_status() << "\n";
+    oss << "\n"
+	<< "     Stream " << (*its)->event_status() 
+	<< " " << (*its)->stream_name()
+	<< " " << (*its)->stream_status();
     its++;
   }
 

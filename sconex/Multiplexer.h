@@ -23,58 +23,9 @@ Free Software Foundation, Inc.,
 #define scxMultiplexer_h
 
 #include "sconex/sconex.h"
-#include "sconex/Thread.h"
+#include "sconex/Mutex.h"
+#include "sconex/Job.h"
 namespace scx {
-
-class Multiplexer;
-
-//=============================================================================
-class SCONEX_API Job {
-
-public:
-
-  Job(const std::string& type);
-  virtual ~Job();
-
-  virtual bool run() =0;
-  virtual std::string describe() const;
-
-  const std::string& type() const;
-
-private:
-  std::string m_type;
-
-  friend class Multiplexer;
-  friend class JobThread;
-
-  enum JobState { Wait, Run, Cycle, Purge };
-  JobState m_job_state;
-
-};
-
-//=============================================================================
-class SCONEX_API JobThread : public Thread {
-
-public:
-
-  JobThread(Multiplexer& manager);
-  virtual ~JobThread();
-
-  virtual void* run();
-  // Thread entry point
-
-  void allocate_job(Job* job);
-
-private:
-
-  Multiplexer& m_manager;
-
-  Job* m_job;
-
-  Mutex m_job_mutex;
-  ConditionEvent m_job_condition;
-  
-};
 
 //=============================================================================
 class SCONEX_API Multiplexer {
@@ -84,8 +35,11 @@ public:
   Multiplexer();
   virtual ~Multiplexer();
 
-  void add(Job* job);
+  JobID add_job(Job* job);
   // Add a job
+
+  bool end_job(JobID jobid);
+  // End a job
 
   int spin();
   // select() to determine waiting descriptors and dispatch events
@@ -98,6 +52,9 @@ public:
   // Set/get the number of threads used in the thread pool
   
 protected:
+
+  void interrupt_select();
+  // Interrupt any ongoing select call in the main thread
 
 private:
 
@@ -121,6 +78,8 @@ private:
   ConditionEvent m_job_condition;
   
   Mutex m_new_mutex;
+
+  pthread_t m_main_thread;
 
 };
 

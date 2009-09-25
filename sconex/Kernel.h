@@ -22,8 +22,9 @@ Free Software Foundation, Inc.,
 #ifndef scxKernel_h
 #define scxKernel_h
 
-#include "Module.h"
-#include "Multiplexer.h"
+#include "sconex/Module.h"
+#include "sconex/Multiplexer.h"
+#include "sconex/Job.h"
 
 namespace scx {
 
@@ -50,8 +51,11 @@ public:
   );
   // Connect descriptor
 
-  void add_job(Job* job);
+  JobID add_job(Job* job);
   // Add a job to the multiplexer
+
+  bool end_job(JobID jobid);
+  // End a job
 
   virtual Arg* arg_lookup(const std::string& name);
   virtual Arg* arg_function(const std::string& name,Arg* args);

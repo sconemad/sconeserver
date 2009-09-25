@@ -29,6 +29,7 @@ File.cpp \
 FileDir.cpp \
 FilePath.cpp \
 FileStat.cpp \
+Job.cpp \
 Kernel.cpp \
 LineBuffer.cpp \
 ListenerSocket.cpp \
@@ -87,6 +88,7 @@ File.h \
 FileDir.h \
 FilePath.h \
 FileStat.h \
+Job.h \
 Kernel.h \
 LineBuffer.h \
 ListenerSocket.h \

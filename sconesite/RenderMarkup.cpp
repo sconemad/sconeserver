@@ -363,7 +363,7 @@ scx::Arg* RenderMarkupContext::arg_function(const std::string& name,scx::Arg* ar
 
 //=========================================================================
 RenderMarkupJob::RenderMarkupJob(RenderMarkupContext* ctx)
-  : Job("RenderMarkupJob"),
+  : Job("sconesite::RenderMarkup"),
     m_context(ctx)
 {
 
@@ -373,6 +373,12 @@ RenderMarkupJob::RenderMarkupJob(RenderMarkupContext* ctx)
 RenderMarkupJob::~RenderMarkupJob()
 {
   delete m_context;
+}
+
+//=============================================================================
+bool RenderMarkupJob::should_run()
+{
+  return true;
 }
 
 //=========================================================================
@@ -397,5 +403,5 @@ bool RenderMarkupJob::run()
 //=========================================================================
 std::string RenderMarkupJob::describe() const
 {
-  return std::string(m_context->get_article() ? m_context->get_article()->get_name() : "(no article)") + "\n";
+  return std::string(m_context->get_article() ? m_context->get_article()->get_name() : "(no article)");
 }
