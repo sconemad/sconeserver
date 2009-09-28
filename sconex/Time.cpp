@@ -328,7 +328,7 @@ int Time::get_int() const
   return m_time;
 }
 //=============================================================================
-Arg* Time::op(OpType optype, const std::string& opname, Arg* right)
+Arg* Time::op(const Auth& auth, OpType optype, const std::string& opname, Arg* right)
 {
   if (optype == Arg::Binary) {
     Time* rt = dynamic_cast<Time*>(right);
@@ -350,7 +350,7 @@ Arg* Time::op(OpType optype, const std::string& opname, Arg* right)
       if (name == "string") return new ArgString(string());
     }
   }
-  return Arg::op(optype,opname,right);
+  return Arg::op(auth,optype,opname,right);
 }
 
 

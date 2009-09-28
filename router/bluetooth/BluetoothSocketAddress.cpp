@@ -122,6 +122,7 @@ std::string BluetoothSocketAddress::get_string() const
 
 //=============================================================================
 scx::Arg* BluetoothSocketAddress::op(
+  const scx::Auth& auth,
   scx::Arg::OpType optype,
   const std::string& opname,
   scx::Arg* right
@@ -133,7 +134,7 @@ scx::Arg* BluetoothSocketAddress::op(
     if (name == "address") return new scx::ArgString(get_address());
     if (name == "channel") return new scx::ArgInt((int)get_channel());
   }
-  return SCXBASE SocketAddress::op(optype,opname,right);
+  return SCXBASE SocketAddress::op(auth,optype,opname,right);
 }
 
 //=============================================================================

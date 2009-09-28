@@ -176,6 +176,7 @@ Arg* Kernel::arg_lookup(const std::string& name)
 
 //=============================================================================
 Arg* Kernel::arg_function(
+  const Auth& auth, 
   const std::string& name,
   Arg* args
 )
@@ -183,18 +184,21 @@ Arg* Kernel::arg_function(
   scx::ArgList* l = dynamic_cast<scx::ArgList*>(args);
 
   if ("restart" == name) {
+    if (!auth.admin()) return new ArgError("Not permitted");
     log("Restart requested via command");
     m_state = Restart;
     return 0;
   }
 
   if ("shutdown" == name) {
+    if (!auth.admin()) return new ArgError("Not permitted");
     log("Shutdown requested via command");
     m_state = Shutdown;
     return 0;
   }
 
   if ("set_user" == name) {
+    if (!auth.admin()) return new ArgError("Not permitted");
     User user;
     const scx::ArgString* a_name =
       dynamic_cast<const scx::ArgString*>(l->get(0));
@@ -227,6 +231,7 @@ Arg* Kernel::arg_function(
   }
 
   if ("set_thread_pool" == name) {
+    if (!auth.admin()) return new ArgError("Not permitted");
     const scx::ArgInt* a_threads =
       dynamic_cast<const scx::ArgInt*>(l->get(0));
     if (!a_threads) {
@@ -262,7 +267,7 @@ Arg* Kernel::arg_function(
     return new MimeType(args);
   }
 
-  return Module::arg_function(name,args);
+  return Module::arg_function(auth,name,args);
 }
 
 //=============================================================================

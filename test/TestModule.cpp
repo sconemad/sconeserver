@@ -98,6 +98,7 @@ scx::Arg* TestModule::arg_lookup(const std::string& name)
 
 //=============================================================================
 scx::Arg* TestModule::arg_function(
+  const scx::Auth& auth,
   const std::string& name,
   scx::Arg* args
 )
@@ -129,5 +130,5 @@ scx::Arg* TestModule::arg_function(
     
   }
 
-  return SCXBASE Module::arg_function(name,args);
+  return SCXBASE Module::arg_function(auth,name,args);
 }

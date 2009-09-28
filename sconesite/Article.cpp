@@ -136,9 +136,9 @@ scx::Arg* Article::arg_lookup(const std::string& name)
 }
 
 //=========================================================================
-scx::Arg* Article::arg_function(const std::string& name,scx::Arg* args)
+scx::Arg* Article::arg_function(const scx::Auth& auth,const std::string& name,scx::Arg* args)
 {
   scx::ArgList* l = dynamic_cast<scx::ArgList*>(args);
 
-  return XMLDoc::arg_function(name,args);
+  return XMLDoc::arg_function(auth,name,args);
 }

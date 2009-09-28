@@ -55,7 +55,7 @@ public:
   virtual std::string get_string() const;
   virtual int get_int() const;
 
-  virtual scx::Arg* op(scx::Arg::OpType optype, const std::string& opname, scx::Arg* right);
+  virtual scx::Arg* op(const scx::Auth& auth,scx::Arg::OpType optype, const std::string& opname, scx::Arg* right);
 
 protected:
 
@@ -102,13 +102,13 @@ int ArgFile::get_int() const
 }
 
 //=========================================================================
-scx::Arg* ArgFile::op(scx::Arg::OpType optype, const std::string& opname, scx::Arg* right)
+scx::Arg* ArgFile::op(const scx::Auth& auth,scx::Arg::OpType optype, const std::string& opname, scx::Arg* right)
 {
   if (scx::Arg::Binary == optype && "." == opname) {
     std::string name = right->get_string();
     if (name == "exists") return new scx::ArgInt(77);
   }
-  return SCXBASE Arg::op(optype,opname,right);
+  return SCXBASE Arg::op(auth,optype,opname,right);
 }
 
 
@@ -244,7 +244,7 @@ scx::Condition SconesiteStream::send_response()
   // Create a socketpair to connect to the render job thread
   scx::StreamSocket* source = 0;
   scx::StreamSocket* bio = 0;
-  scx::StreamSocket::pair(source,bio,"sconesite");
+  scx::StreamSocket::pair(source,bio,"sconesite","sconesite-bio");
   
   // Create a transfer to transfer from source into this stream
   scx::StreamTransfer* xfer = new scx::StreamTransfer(source,1024);

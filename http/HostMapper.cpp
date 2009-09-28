@@ -172,11 +172,14 @@ scx::Arg* HostMapper::arg_resolve(const std::string& name)
 
 //=============================================================================
 scx::Arg* HostMapper::arg_function(
+  const scx::Auth& auth,
   const std::string& name,
   scx::Arg* args
 )
 {
   scx::ArgList* l = dynamic_cast<scx::ArgList*>(args);
+
+  if (!auth.admin()) return new scx::ArgError("Not permitted");
 
   if ("add" == name) {
     const scx::ArgString* a_id =
@@ -272,7 +275,7 @@ scx::Arg* HostMapper::arg_function(
     return 0;
   }
     
-  return ArgObjectInterface::arg_function(name,args);
+  return ArgObjectInterface::arg_function(auth,name,args);
 }
 
 //=============================================================================

@@ -34,15 +34,17 @@ ArgProc::PrecedenceMap* ArgProc::s_prefix_ops = 0;
 ArgProc::PrecedenceMap* ArgProc::s_postfix_ops = 0;
 
 //===========================================================================
-ArgProc::ArgProc(Arg* ctx)
-  : m_ctx(ctx)
+ArgProc::ArgProc(const Auth& auth, Arg* ctx)
+  : m_auth(auth),
+    m_ctx(ctx)
 {
   init();
 }
 
 //===========================================================================
 ArgProc::ArgProc(const ArgProc& c)
-  : m_ctx(c.m_ctx)
+  : m_auth(c.m_auth),
+    m_ctx(c.m_ctx)
 {
   init();
 }
@@ -85,6 +87,18 @@ void ArgProc::set_ctx(Arg* ctx)
 }
 
 //===========================================================================
+void ArgProc::set_auth(const Auth& auth)
+{
+  m_auth = auth;
+}
+  
+//===========================================================================
+const Auth& ArgProc::get_auth()
+{
+  return m_auth;
+}
+  
+//===========================================================================
 Arg* ArgProc::expression(int p, bool f, bool exec)
 {
   Arg* left = primary(f,exec);
@@ -111,7 +125,7 @@ Arg* ArgProc::expression(int p, bool f, bool exec)
             return right;
           }
           Arg* new_left = 0;
-	  if (exec) new_left = left->op(Arg::Binary,op,right);
+	  if (exec) new_left = left->op(m_auth,Arg::Binary,op,right);
           delete left;
           delete right;
           left = new_left;
@@ -161,7 +175,7 @@ Arg* ArgProc::expression(int p, bool f, bool exec)
 
           ArgProc_DEBUG_LOG("call: " << left->get_string());
           Arg* new_left = 0;
-	  if (exec) new_left = left->op(Arg::Binary,op,args);
+	  if (exec) new_left = left->op(m_auth,Arg::Binary,op,args);
           delete left;
           delete args;
           left = new_left;
@@ -174,11 +188,15 @@ Arg* ArgProc::expression(int p, bool f, bool exec)
 	    // Short circuit | op - don't exec rhs if lhs is true
 	    ArgProc_DEBUG_LOG("Shorting |");
 	    right = expression(p2+1,f,false);
+	    delete right;
+	    return left;
 
 	  } else if ("&" == op && !left->get_int()) {
 	    // Short circuit & op - don't exec rhs if lhs is false
 	    ArgProc_DEBUG_LOG("Shorting &");
 	    right = expression(p2+1,f,false);
+	    delete right;
+	    return left;
 
 	  } else {
 	    right = expression(p2+1,f,exec);
@@ -199,7 +217,7 @@ Arg* ArgProc::expression(int p, bool f, bool exec)
             left=right;
           } else {
             Arg* new_left = 0;
-	    new_left = left->op(Arg::Binary,op,right);
+	    new_left = left->op(m_auth,Arg::Binary,op,right);
             delete left;
             delete right;
             left = new_left;
@@ -214,7 +232,7 @@ Arg* ArgProc::expression(int p, bool f, bool exec)
         // Unary postfix operation
         ArgProc_DEBUG_LOG("postfix op: " << op);
         Arg* new_left = 0;
-	if (exec) new_left = left->op(Arg::Postfix,op);
+	if (exec) new_left = left->op(m_auth,Arg::Postfix,op);
         delete left;
         left = new_left;
         next();
@@ -254,7 +272,7 @@ Arg* ArgProc::primary(bool f, bool exec)
         if (right) {
           ArgProc_DEBUG_LOG("prefix op: " << op);
           Arg* result = 0;
-	  if (exec) result = right->op(Arg::Prefix,op);
+	  if (exec) result = right->op(m_auth,Arg::Prefix,op);
           delete right;
           return result;
         }
@@ -265,44 +283,40 @@ Arg* ArgProc::primary(bool f, bool exec)
 
       // Sub-expression
       if ("("==op) {
+        Arg* result = expression(0,true,exec);
+
+	// Check its followed by a closing ')'
+	if (m_name != ")") {
+	  m_type = ArgProc::Null;
+	  delete result;
+	  return 0;
+	}
+        next();
+        return result;
+      }
+
+      // List initializer
+      if ("["==op) {
         int s = m_stack.size();
         m_stack.push(expression(0,true,exec));
         s = m_stack.size() - s;
-        Arg* result;
 	
         // List
-        if (s>1) {
-          ArgList* l = new ArgList();
-          for (int i=0; i<s; ++i) {
-            l->give(m_stack.top(),0);
-            m_stack.pop();
-          }
-          result = l;
-        } else {
-          result = m_stack.top();
-          m_stack.pop();
-        }
+	ArgList* list = new ArgList();
+	Arg* result = list;
+	result = list;
+	if (m_type != ArgProc::Null) {
+	  for (int i=0; i<s; ++i) {
+	    list->give(m_stack.top(),0);
+	    m_stack.pop();
+	  }
+	}
 
-        if (s==1 && result==0 && m_name==")") {
-          // Empty array, that's ok just return it
-          result = new ArgString("empty array");
-
-        } else if (m_type == ArgProc::Null) {
-          // Error in subexpression
-          delete result;
-          result = 0;
-          //          if (result != 0) {
-          //            result = result[result->size()-1];
-          //          }
-          return result;
-
-        } else {
-          // Check its followed by a closing ')'
-          if (m_type!=ArgProc::Operator || m_name!=")") {
-            m_type = ArgProc::Null;
-            delete result;
-            return 0;
-          }
+	// Check its followed by a closing ']'
+	if (m_name != "]") {
+	  m_type = ArgProc::Null;
+	  delete result;
+	  return 0;
         }
         next();
         return result;
@@ -313,45 +327,32 @@ Arg* ArgProc::primary(bool f, bool exec)
         int s = m_stack.size();
         m_stack.push(expression(0,true,exec));
         s = m_stack.size() - s;
-        Arg* result;
 
-        // List
-	if (s%2 != 0) {
-	  result = new ArgError("Map initialiser should contain an even number of values");
-	} else if (s>1) {
-	  ArgMap* m = new ArgMap();
-          for (int i=0; i<s; i+=2) {
-	    Arg* aval = m_stack.top();
-            m_stack.pop();
-	    Arg* aname = m_stack.top();
-	    m_stack.pop();
+        // Map
+	ArgMap* map = new ArgMap();
+	Arg* result = map;
+	if (m_type != ArgProc::Null) {
+	  if (s%2 != 0) {
+	    delete result;
+	    result = new ArgError("Map initialiser should contain an even number of values");
+	  } else  {
+	    for (int i=0; i<s; i+=2) {
+	      Arg* aval = m_stack.top();
+	      m_stack.pop();
+	      Arg* aname = m_stack.top();
+	      m_stack.pop();
+	      map->give(aname->get_string(),aval);
+	      delete aname;
+	    }
+	  }
+	}
 
-            m->give(aname->get_string(),aval);
-	    delete aname;
-          }
-          result = m;
-        } else {
-          result = m_stack.top();
-          m_stack.pop();
-        }
-
-        if (s==1 && result==0 && m_name=="}") {
-          // Empty array, that's ok just return it
-          result = new ArgMap();
-
-        } else if (m_type == ArgProc::Null) {
-          // Error in subexpression
-          delete result;
-          return 0;
-
-        } else {
-          // Check its followed by a closing ')'
-          if (m_type!=ArgProc::Operator || m_name!="}") {
-            m_type = ArgProc::Null;
-            delete result;
-            return 0;
-          }
-        }
+	// Check its followed by a closing ')'
+	if (m_name != "}") {
+	  m_type = ArgProc::Null;
+	  delete result;
+	  return 0;
+	}
         next();
         return result;
       }
@@ -373,7 +374,7 @@ Arg* ArgProc::primary(bool f, bool exec)
         if (m_ctx) {
           ArgProc_DEBUG_LOG("resolving: " << m_name);
           a = new ArgString(m_name);
-          Arg* b = m_ctx->op(Arg::Binary,":",a);
+          Arg* b = m_ctx->op(m_auth,Arg::Binary,":",a);
           delete a;
           a = b;
         }

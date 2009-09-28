@@ -70,7 +70,7 @@ bool SimpleModule::connect(
       scx::SocketAddress* addr =
         const_cast<scx::SocketAddress*>(sock->get_local_addr());
       scx::ArgString a_right("service");
-      scx::Arg* a_addr_service = addr->op(scx::Arg::Binary,".",&a_right);
+      scx::Arg* a_addr_service = addr->op(scx::Auth::Untrusted,scx::Arg::Binary,".",&a_right);
       service = a_addr_service->get_string();
     }
   }

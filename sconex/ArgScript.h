@@ -43,6 +43,7 @@ class SCONEX_API ArgScript : public StreamTokenizer {
 public:
 
   ArgScript(
+    const Auth& auth,
     ArgObject* ctx
   );
   // Create an ArgScript parser to run in the specified context

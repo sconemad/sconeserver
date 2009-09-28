@@ -80,8 +80,12 @@ bool XMLDoc::process(Context& context)
     return false;
 
   }
-  
-  process_node(context,xmlDocGetRootElement(m_xmldoc));
+
+  if (context.handle_doc_start(this)) {
+    do {
+      process_node(context,xmlDocGetRootElement(m_xmldoc));
+    } while (context.handle_doc_end(this));
+  }
   return true;
 }
 
@@ -131,9 +135,9 @@ scx::Arg* XMLDoc::arg_lookup(const std::string& name)
 }
 
 //=========================================================================
-scx::Arg* XMLDoc::arg_function(const std::string& name,scx::Arg* args)
+scx::Arg* XMLDoc::arg_function(const scx::Auth& auth,const std::string& name,scx::Arg* args)
 {
-  return 0;
+  return SCXBASE ArgObjectInterface::arg_function(auth,name,args);
 }
 
 //=========================================================================

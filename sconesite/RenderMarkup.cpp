@@ -93,7 +93,7 @@ bool RenderMarkupContext::handle_start(const std::string& name, XMLAttrs& attrs,
   } else if (name == "if") {
     std::string condition = attrs["condition"];
     scx::ArgObject ctx(this);
-    scx::ArgProc proc(&ctx);
+    scx::ArgProc proc(scx::Auth::Untrusted,&ctx);
     scx::Arg* arg = proc.evaluate(condition);
     bool result = (arg && arg->get_int() != 0);
     delete arg;
@@ -142,9 +142,18 @@ bool RenderMarkupContext::handle_end(const std::string& name, XMLAttrs& attrs)
 //=========================================================================
 void RenderMarkupContext::handle_process(const std::string& name, const char* data)
 {
+  //  scx::Auth auth(scx::Auth::Untrusted);
+  scx::Auth auth(scx::Auth::TCrusted);
+  XMLDoc* doc = get_current_doc();
+  const std::type_info& ti = typeid(*doc);
+  if (ti == typeid(Template)) {
+    // Trust templates
+    auth = scx::Auth(scx::Auth::Trusted);
+  }
+
   if (name == "scxp") { // Sconescript evaluate and print
     scx::ArgObject ctx(this);
-    scx::ArgProc proc(&ctx);
+    scx::ArgProc proc(auth,&ctx);
     scx::Arg* arg = proc.evaluate(data);
     if (arg) {
       std::string str = arg->get_string();
@@ -161,7 +170,7 @@ void RenderMarkupContext::handle_process(const std::string& name, const char* da
     scx::MemFile mfile(&fbuf);
 
     scx::ArgObject* ctx = new scx::ArgObject(this);
-    scx::ArgScript* script = new scx::ArgScript(ctx);
+    scx::ArgScript* script = new scx::ArgScript(auth,ctx);
     mfile.add_stream(script);
 
     while (script->event(scx::Stream::Readable) == scx::Ok);
@@ -227,6 +236,7 @@ scx::Arg* RenderMarkupContext::arg_lookup(const std::string& name)
       "get_articles" == name ||
       "process_article" == name ||
       "edit_article" == name ||
+      "update_article" == name ||
       "template" == name ||
       "get_files" == name ||
       "abort" == name) {
@@ -260,7 +270,7 @@ scx::Arg* RenderMarkupContext::arg_lookup(const std::string& name)
 }
 
 //=========================================================================
-scx::Arg* RenderMarkupContext::arg_function(const std::string& name,scx::Arg* args)
+scx::Arg* RenderMarkupContext::arg_function(const scx::Auth& auth,const std::string& name,scx::Arg* args)
 {
   scx::ArgList* l = dynamic_cast<scx::ArgList*>(args);
 
@@ -273,6 +283,8 @@ scx::Arg* RenderMarkupContext::arg_function(const std::string& name,scx::Arg* ar
   }
 
   if (name == "process_article") {
+    if (!auth.trusted()) return new scx::ArgError("Not permitted");
+
     if (m_article) {
       if (m_processing) {
 	m_output->write("<p class='scxerror'>ERROR: Already processing article</p>");
@@ -286,6 +298,27 @@ scx::Arg* RenderMarkupContext::arg_function(const std::string& name,scx::Arg* ar
   }
 
   if (name == "edit_article") {
+    if (!auth.trusted()) return new scx::ArgError("Not permitted");
+
+    if (m_article) {
+      scx::File* file = new scx::File();
+      if (scx::Ok == file->open(m_article->get_path(),scx::File::Read)) {
+        char* buffer[1024];
+	int na = 0;
+        while (scx::Ok == file->read(buffer,1024,na)) {
+          m_output->write(buffer,na,na);
+        }
+      }
+      delete file;
+    }
+    return 0;
+  }
+
+  if (name == "update_article") {
+    if (!auth.trusted()) return new scx::ArgError("Not permitted");
+
+    
+
     if (m_article) {
       scx::File* file = new scx::File();
       if (scx::Ok == file->open(m_article->get_path(),scx::File::Read)) {
@@ -301,6 +334,8 @@ scx::Arg* RenderMarkupContext::arg_function(const std::string& name,scx::Arg* ar
   }
 
   if (name == "template") {
+    if (!auth.trusted()) return new scx::ArgError("Not permitted");
+
     const scx::ArgString* a_tpl = dynamic_cast<const scx::ArgString*>(l->get(0));
     if (!a_tpl) {
       return new scx::ArgError("Template name not specified");
@@ -314,6 +349,8 @@ scx::Arg* RenderMarkupContext::arg_function(const std::string& name,scx::Arg* ar
   }
 
   if (name == "get_articles") {
+    if (!auth.trusted()) return new scx::ArgError("Not permitted");
+
     std::list<Article*> articles = m_profile.articles();
 
     const scx::Arg* a_sort = l->get(0);
@@ -342,6 +379,8 @@ scx::Arg* RenderMarkupContext::arg_function(const std::string& name,scx::Arg* ar
   }
 
   if (name == "get_files") {
+    if (!auth.trusted()) return new scx::ArgError("Not permitted");
+
     scx::ArgList* filelist = new scx::ArgList();
     if (m_article) {
       scx::FileDir files(m_article->get_root() + "files");
@@ -356,11 +395,13 @@ scx::Arg* RenderMarkupContext::arg_function(const std::string& name,scx::Arg* ar
   }
 
   if (name == "abort") {
+    if (!auth.trusted()) return new scx::ArgError("Not permitted");
+
     m_output->close();
     return 0;
   }
 
-  return Context::arg_function(name,args);
+  return Context::arg_function(auth,name,args);
 }
 
 

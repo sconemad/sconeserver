@@ -539,7 +539,7 @@ int Date::get_int() const
   return m_time;
 }
 //=============================================================================
-Arg* Date::op(OpType optype, const std::string& opname, Arg* right)
+Arg* Date::op(const Auth& auth, OpType optype, const std::string& opname, Arg* right)
 {
   if (optype == Arg::Binary) {
     
@@ -588,7 +588,7 @@ Arg* Date::op(OpType optype, const std::string& opname, Arg* right)
       if (name == "epoch_seconds") return new ArgInt(m_time);
     }
   }
-  return Arg::op(optype,opname,right);
+  return Arg::op(auth,optype,opname,right);
 }
 
 //=============================================================================

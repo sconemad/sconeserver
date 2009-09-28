@@ -183,12 +183,15 @@ scx::Arg* StatModule::arg_lookup(const std::string& name)
 
 //=============================================================================
 scx::Arg* StatModule::arg_function(
+  const scx::Auth& auth,
   const std::string& name,
   scx::Arg* args
 )
 {
   scx::ArgList* l = dynamic_cast<scx::ArgList*>(args);
   
+  if (!auth.admin()) return new scx::ArgError("Not permitted");
+
   if ("add" == name) {
     std::string s_name;
     const scx::ArgString* a_name =
@@ -227,5 +230,5 @@ scx::Arg* StatModule::arg_function(
     return 0;
   }
 
-  return SCXBASE Module::arg_function(name,args);
+  return SCXBASE Module::arg_function(auth,name,args);
 }

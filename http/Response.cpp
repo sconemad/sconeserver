@@ -100,12 +100,6 @@ std::string Response::name() const
 }
 
 //=========================================================================
-scx::Arg* Response::arg_resolve(const std::string& name)
-{
-  return SCXBASE ArgObjectInterface::arg_resolve(name);
-}
-
-//=========================================================================
 scx::Arg* Response::arg_lookup(const std::string& name)
 {
   // Methods
@@ -121,7 +115,7 @@ scx::Arg* Response::arg_lookup(const std::string& name)
 }
 
 //=========================================================================
-scx::Arg* Response::arg_function(const std::string& name,scx::Arg* args)
+scx::Arg* Response::arg_function(const scx::Auth& auth,const std::string& name,scx::Arg* args)
 {
   scx::ArgList* l = dynamic_cast<scx::ArgList*>(args);
 
@@ -129,7 +123,7 @@ scx::Arg* Response::arg_function(const std::string& name,scx::Arg* args)
     return 0;
   }
 
-  return 0;
+  return SCXBASE ArgObjectInterface::arg_function(auth,name,args);
 }
 
 };

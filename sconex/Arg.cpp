@@ -50,7 +50,7 @@ Arg* Arg::var_copy()
 }
 
 //===========================================================================
-Arg* Arg::op(OpType optype, const std::string& opname, Arg* right)
+Arg* Arg::op(const Auth& auth, OpType optype, const std::string& opname, Arg* right)
 {
 
   int value = get_int();
@@ -156,7 +156,7 @@ int ArgString::get_int() const
 }
 
 //===========================================================================
-Arg* ArgString::op(OpType optype, const std::string& opname, Arg* right)
+Arg* ArgString::op(const Auth& auth, OpType optype, const std::string& opname, Arg* right)
 {
   if (optype == Arg::Binary) {
 
@@ -183,7 +183,7 @@ Arg* ArgString::op(OpType optype, const std::string& opname, Arg* right)
     }
   }
 
-  return Arg::op(optype,opname,right);
+  return Arg::op(auth,optype,opname,right);
 }
 
 
@@ -235,7 +235,7 @@ int ArgInt::get_int() const
 }
 
 //===========================================================================
-Arg* ArgInt::op(OpType optype, const std::string& opname, Arg* right)
+Arg* ArgInt::op(const Auth& auth, OpType optype, const std::string& opname, Arg* right)
 {
 
   switch (optype) {
@@ -316,7 +316,7 @@ Arg* ArgInt::op(OpType optype, const std::string& opname, Arg* right)
 
   }
 
-  return Arg::op(optype,opname,right);
+  return Arg::op(auth,optype,opname,right);
 }
 
 
@@ -368,7 +368,7 @@ int ArgReal::get_int() const
 }
 
 //===========================================================================
-Arg* ArgReal::op(OpType optype, const std::string& opname, Arg* right)
+Arg* ArgReal::op(const Auth& auth, OpType optype, const std::string& opname, Arg* right)
 {
 
   switch (optype) {
@@ -440,7 +440,7 @@ Arg* ArgReal::op(OpType optype, const std::string& opname, Arg* right)
 
   }
 
-  return Arg::op(optype,opname,right);
+  return Arg::op(auth,optype,opname,right);
 }
 
 //===========================================================================
@@ -497,15 +497,15 @@ std::string ArgList::get_string() const
   if (m_orig) return m_orig->get_string();
 
   std::ostringstream oss;
-  oss << "(";
-  ArgListData::const_iterator iter = m_list.begin();
-  int i=0;
-  while (iter != m_list.end()) {
-    const Arg* arg = *iter;
-    oss << (++i>1 ? "," : "") << arg->get_string();
-    ++iter;
+  oss << "[";
+  for (ArgListData::const_iterator it = m_list.begin();
+       it != m_list.end();
+       ++it) {
+    const Arg* arg = *it;
+    oss << (it==m_list.begin() ? "" : ",") 
+	<< arg->get_string();
   }
-  oss << ")";
+  oss << "]";
   return oss.str();
 }
 
@@ -518,9 +518,9 @@ int ArgList::get_int() const
 }
 
 //===========================================================================
-Arg* ArgList::op(OpType optype, const std::string& opname, Arg* right)
+Arg* ArgList::op(const Auth& auth, OpType optype, const std::string& opname, Arg* right)
 {
-  if (m_orig) return m_orig->op(optype,opname,right);
+  if (m_orig) return m_orig->op(auth,optype,opname,right);
 
   if (optype == Arg::Binary) {
     if (opname == "[") {
@@ -542,7 +542,7 @@ Arg* ArgList::op(OpType optype, const std::string& opname, Arg* right)
     }
   }
 
-  return Arg::op(optype,opname,right);
+  return Arg::op(auth,optype,opname,right);
 }
 
 //===========================================================================
@@ -691,9 +691,9 @@ int ArgMap::get_int() const
 }
 
 //===========================================================================
-Arg* ArgMap::op(OpType optype, const std::string& opname, Arg* right)
+Arg* ArgMap::op(const Auth& auth, OpType optype, const std::string& opname, Arg* right)
 {
-  if (m_orig) return m_orig->op(optype,opname,right);
+  if (m_orig) return m_orig->op(auth,optype,opname,right);
 
   if (optype == Arg::Binary) {
     if (opname == "[") {
@@ -724,7 +724,7 @@ Arg* ArgMap::op(OpType optype, const std::string& opname, Arg* right)
     }
   }
 
-  return Arg::op(optype,opname,right);
+  return Arg::op(auth,optype,opname,right);
 }
 
 //===========================================================================
@@ -850,25 +850,25 @@ int ArgSub::get_int() const
 }
 
 //===========================================================================
-Arg* ArgSub::op(OpType optype, const std::string& opname, Arg* right)
+Arg* ArgSub::op(const Auth& auth, OpType optype, const std::string& opname, Arg* right)
 {
   // Only allow binary ( operator - subroutine call
   if (Arg::Binary == optype && "(" == opname) {
-    return call(right);
+    return call(auth,right);
   }
   
-  return Arg::op(optype,opname,right);
+  return Arg::op(auth,optype,opname,right);
 }
 
 //=============================================================================
-Arg* ArgSub::call(Arg* args)
+Arg* ArgSub::call(const Auth& auth, Arg* args)
 {
   if (m_body) {
     // Setup the argument vector
     ArgList vargs;
     vargs.give(new ArgString("ARGV"));
     vargs.give(args->new_copy());
-    m_body->arg_function("var",&vargs);
+    m_body->arg_function(auth,"var",&vargs);
     
     return m_body->execute(*m_proc);
   }
@@ -920,9 +920,9 @@ int ArgError::get_int() const
 }
 
 //===========================================================================
-Arg* ArgError::op(OpType optype, const std::string& opname, Arg* right)
+Arg* ArgError::op(const Auth& auth, OpType optype, const std::string& opname, Arg* right)
 {
-  return Arg::op(optype,opname,right);
+  return Arg::op(auth,optype,opname,right);
 }
 
 

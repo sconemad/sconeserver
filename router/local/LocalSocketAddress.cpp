@@ -124,6 +124,7 @@ std::string LocalSocketAddress::get_string() const
 
 //=============================================================================
 scx::Arg* LocalSocketAddress::op(
+  const scx::Auth& auth,
   scx::Arg::OpType optype,
   const std::string& opname,
   scx::Arg* right
@@ -134,7 +135,7 @@ scx::Arg* LocalSocketAddress::op(
     if (name == "family") return new scx::ArgString("local");
     if (name == "path") return new scx::ArgString(get_path());
   }
-  return SCXBASE SocketAddress::op(optype,opname,right);
+  return SCXBASE SocketAddress::op(auth,optype,opname,right);
 }
 
 //=============================================================================

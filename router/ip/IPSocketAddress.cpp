@@ -202,6 +202,7 @@ std::string IPSocketAddress::get_string() const
 
 //=============================================================================
 scx::Arg* IPSocketAddress::op(
+  const scx::Auth& auth, 
   scx::Arg::OpType optype,
   const std::string& opname,
   scx::Arg* right
@@ -215,7 +216,7 @@ scx::Arg* IPSocketAddress::op(
     if (name == "service") return new scx::ArgString(get_service());
     if (name == "port") return new scx::ArgInt((int)get_port());
   }
-  return SCXBASE SocketAddress::op(optype,opname,right);
+  return SCXBASE SocketAddress::op(auth,optype,opname,right);
 }
 
 //=============================================================================

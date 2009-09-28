@@ -34,6 +34,8 @@ public:
   ~Context();
 
   // XMLDoc interface
+  virtual bool handle_doc_start(XMLDoc* doc);
+  virtual bool handle_doc_end(XMLDoc* doc);
   virtual bool handle_start(const std::string& name, XMLAttrs& attrs, bool empty) =0;
   virtual bool handle_end(const std::string& name, XMLAttrs& attrs) =0;
   virtual void handle_process(const std::string& name, const char* data) =0;
@@ -45,9 +47,14 @@ public:
   virtual std::string name() const;
   virtual scx::Arg* arg_resolve(const std::string& name);
   virtual scx::Arg* arg_lookup(const std::string& name);
-  virtual scx::Arg* arg_function(const std::string& name,scx::Arg* args);
-  
+  virtual scx::Arg* arg_function(const scx::Auth& auth,const std::string& name,scx::Arg* args);
+
 protected:
+
+  XMLDoc* get_current_doc();
+  
+  typedef std::stack<XMLDoc*> XMLDocStack;
+  XMLDocStack m_doc_stack;
   
 };
 

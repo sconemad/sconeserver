@@ -106,12 +106,6 @@ std::string ArgStore::name() const
 }
 
 //=========================================================================
-scx::Arg* ArgStore::arg_resolve(const std::string& name)
-{
-  return ArgObjectInterface::arg_resolve(name);
-}
-
-//=========================================================================
 Arg* ArgStore::arg_lookup(const std::string& name)
 {
   // Methods
@@ -132,7 +126,7 @@ Arg* ArgStore::arg_lookup(const std::string& name)
 }
 
 //=========================================================================
-Arg* ArgStore::arg_function(const std::string& name,Arg* args)
+Arg* ArgStore::arg_function(const Auth& auth, const std::string& name,Arg* args)
 {
   ArgList* l = dynamic_cast<ArgList*>(args);
 
@@ -178,7 +172,7 @@ Arg* ArgStore::arg_function(const std::string& name,Arg* args)
     return 0;
   }
 
-  return ArgObjectInterface::arg_function(name,args);
+  return ArgObjectInterface::arg_function(auth,name,args);
 }
 
 
@@ -218,7 +212,7 @@ Condition ArgStoreStream::event(Stream::Event e)
       m_data += std::string(buffer,na);
     }
     if (c == End) {
-      scx::ArgProc proc(0);
+      scx::ArgProc proc(Auth::Untrusted,0);
       delete m_arg;
       m_arg = 0;
       m_arg = proc.evaluate(m_data);
@@ -264,13 +258,13 @@ bool ArgStoreStream::write_arg(const Arg* arg)
 
   } else if (typeid(ArgList) == ti) {
     const ArgList* l = dynamic_cast<const ArgList*>(arg);
-    write("(");
+    write("[");
     int max = l->size();
     for (int i=0; i<max; ++i) {
       if (i>0) write(",");
       write_arg(l->get(i));
     }
-    write(")");
+    write("]");
 
   } else if (typeid(ArgMap) == ti) {
     const ArgMap* m = dynamic_cast<const ArgMap*>(arg);

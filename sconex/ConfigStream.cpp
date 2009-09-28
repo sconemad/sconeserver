@@ -31,6 +31,7 @@ ConfigStream::ConfigStream(
   bool shutdown_on_exit
 )
   : LineBuffer("config"),
+    m_proc(Auth::Admin),
     m_shutdown_on_exit(shutdown_on_exit)
 {
   m_argmod = new ArgModule(root_ref);

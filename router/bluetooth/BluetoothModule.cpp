@@ -37,7 +37,7 @@ public:
   virtual int init();
   
   virtual scx::Arg* arg_lookup(const std::string& name);
-  virtual scx::Arg* arg_function(const std::string& name,scx::Arg* args);
+  virtual scx::Arg* arg_function(const scx::Auth& auth,const std::string& name,scx::Arg* args);
 
 protected:
 
@@ -86,14 +86,16 @@ scx::Arg* BluetoothModule::arg_lookup(const std::string& name)
 
 //=============================================================================
 scx::Arg* BluetoothModule::arg_function(
+  const scx::Auth& auth, 
   const std::string& name,
   scx::Arg* args
 )
 {
   if ("addr" == name) {
+    if (!auth.trusted()) return new scx::ArgError("Not permitted");
     return new BluetoothSocketAddress(args);
   }
   
-  return SCXBASE Module::arg_function(name,args);
+  return SCXBASE Module::arg_function(auth,name,args);
 }
 

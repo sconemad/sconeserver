@@ -61,11 +61,12 @@ scx::Arg* TFTPProfile::arg_lookup(
 
 //=============================================================================
 scx::Arg* TFTPProfile::arg_function(
+  const scx::Auth& auth,
   const std::string& name,
   scx::Arg* args
 )
 {
   scx::ArgList* l = dynamic_cast<scx::ArgList*>(args);
 
-  return SCXBASE ArgObjectInterface::arg_function(name,args);
+  return SCXBASE ArgObjectInterface::arg_function(auth,name,args);
 }

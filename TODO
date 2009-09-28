@@ -5,14 +5,14 @@ TODO List and ideas for future development
 For 0.8.0 release
 ------------------------
 
-* Sort out config files
-* Mime should use data file
+* sconex
+ - Arg authority parameters
 
 * HTTP
  - AuthRealm passwords stored in sha1
 
 * Sconesite 
- - Artile file/upload file manager object
+ - Article file/upload file manager object
  - Hierarchical article trees 
  - Image handler
 

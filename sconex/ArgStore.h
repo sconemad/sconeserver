@@ -49,10 +49,9 @@ public:
 
   // ArgObject interface
   virtual std::string name() const;
-  virtual Arg* arg_resolve(const std::string& name);
   virtual Arg* arg_lookup(const std::string& name);
-  virtual Arg* arg_function(const std::string& name,Arg* args);
-
+  virtual Arg* arg_function(const Auth& auth, const std::string& name,Arg* args);
+  
 protected:
 
   FilePath m_path;

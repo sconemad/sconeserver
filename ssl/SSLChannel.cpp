@@ -70,11 +70,14 @@ scx::Arg* SSLChannel::arg_lookup(
 
 //=============================================================================
 scx::Arg* SSLChannel::arg_function(
+  const scx::Auth& auth,
   const std::string& name,
   scx::Arg* args
 )
 {
   scx::ArgList* l = dynamic_cast<scx::ArgList*>(args);
+
+  if (!auth.admin()) return new scx::ArgError("Not permitted");
 
   if ("load_key" == name) {
 
@@ -115,5 +118,5 @@ scx::Arg* SSLChannel::arg_function(
     return 0;
   }
   
-  return SCXBASE ArgObjectInterface::arg_function(name,args);
+  return SCXBASE ArgObjectInterface::arg_function(auth,name,args);
 }

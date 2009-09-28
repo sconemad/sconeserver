@@ -159,6 +159,7 @@ scx::Arg* SessionManager::arg_resolve(const std::string& name)
 
 //=============================================================================
 scx::Arg* SessionManager::arg_function(
+  const scx::Auth& auth,
   const std::string& name,
   scx::Arg* args
 )
@@ -170,7 +171,7 @@ scx::Arg* SessionManager::arg_function(
     return 0;
   }
 
-  return ArgObjectInterface::arg_function(name,args);
+  return ArgObjectInterface::arg_function(auth,name,args);
 }
 
 
@@ -264,6 +265,7 @@ scx::Arg* Session::arg_resolve(const std::string& name)
 
 //=============================================================================
 scx::Arg* Session::arg_function(
+  const scx::Auth& auth,
   const std::string& name,
   scx::Arg* args
 )
@@ -276,7 +278,7 @@ scx::Arg* Session::arg_function(
     return 0;
   }
 
-  return ArgObjectInterface::arg_function(name,args);
+  return ArgObjectInterface::arg_function(auth,name,args);
 }
 
 };

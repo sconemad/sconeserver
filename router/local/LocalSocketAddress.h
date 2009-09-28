@@ -54,6 +54,7 @@ public:
 
   virtual std::string get_string() const;
   virtual scx::Arg* op(
+    const scx::Auth& auth,
     scx::Arg::OpType optype,
     const std::string& opname,
     scx::Arg* right

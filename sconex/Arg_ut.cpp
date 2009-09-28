@@ -30,7 +30,7 @@ void test_op(
   const Arg& right,
   const Arg& expected)
 {
-  UTCOD(Arg* result = const_cast<Arg&>(left).op(optype,opname,&const_cast<Arg&>(right)));
+  UTCOD(Arg* result = const_cast<Arg&>(left).op(Auth::Admin,optype,opname,&const_cast<Arg&>(right)));
   UTEST(result != 0);
   std::cout << " result '" << result->get_string()
             << "' type '" << typeid(*result).name() << "'\n";
@@ -323,46 +323,46 @@ void test_ArgList()
 
   UTCOD(ArgList al1);
   UTEST(al1.get_int() == 0);
-  UTEST(al1.get_string() == "()");
+  UTEST(al1.get_string() == "[]");
   UTEST(al1.size() == 0);
 
   UTMSG("add elements to end");
   
   UTCOD(al1.give(new ArgInt(1)));
   UTEST(al1.get_int() == 1);
-  UTEST(al1.get_string() == "(1)");
+  UTEST(al1.get_string() == "[1]");
   UTEST(al1.size() == 1);
 
   UTCOD(al1.give(new ArgInt(2)));
   UTEST(al1.get_int() == 2);
-  UTEST(al1.get_string() == "(1,2)");
+  UTEST(al1.get_string() == "[1,2]");
   UTEST(al1.size() == 2);
 
   UTCOD(al1.give(new ArgInt(3)));
   UTEST(al1.get_int() == 3);
-  UTEST(al1.get_string() == "(1,2,3)");
+  UTEST(al1.get_string() == "[1,2,3]");
   UTEST(al1.size() == 3);
 
   UTCOD(al1.give(new ArgInt(4)));
   UTEST(al1.get_int() == 4);
-  UTEST(al1.get_string() == "(1,2,3,4)");
+  UTEST(al1.get_string() == "[1,2,3,4]");
   UTEST(al1.size() == 4);
 
   UTMSG("insert elements");
 
   UTCOD(al1.give(new ArgInt(0),0));
   UTEST(al1.get_int() == 5);
-  UTEST(al1.get_string() == "(0,1,2,3,4)");
+  UTEST(al1.get_string() == "[0,1,2,3,4]");
   UTEST(al1.size() == 5);
 
   UTCOD(al1.give(new ArgInt(5),5));
   UTEST(al1.get_int() == 6);
-  UTEST(al1.get_string() == "(0,1,2,3,4,5)");
+  UTEST(al1.get_string() == "[0,1,2,3,4,5]");
   UTEST(al1.size() == 6);
 
   UTCOD(al1.give(new ArgString("hello"),3));
   UTEST(al1.get_int() == 7);
-  UTEST(al1.get_string() == "(0,1,2,hello,3,4,5)");
+  UTEST(al1.get_string() == "[0,1,2,hello,3,4,5]");
   UTEST(al1.size() == 7);
 
   UTMSG("remove elements");
@@ -372,7 +372,7 @@ void test_ArgList()
   delete a1;
   
   UTEST(al1.get_int() == 6);
-  UTEST(al1.get_string() == "(0,1,2,hello,4,5)");
+  UTEST(al1.get_string() == "[0,1,2,hello,4,5]");
   UTEST(al1.size() == 6);
   
   UTMSG("access elements");
@@ -390,17 +390,17 @@ void test_ArgList()
 
   UTCOD(ArgList al2(al1));
   UTEST(al2.get_int() == 6);
-  UTEST(al2.get_string() == "(0,1,2,hello,4,5)");
+  UTEST(al2.get_string() == "[0,1,2,hello,4,5]");
   UTEST(al2.size() == 6);
 
   UTCOD(Arg* a2 = al2.new_copy());
   UTEST(a2 != 0);
-  UTEST(a2->get_string() == "(0,1,2,hello,4,5)");
+  UTEST(a2->get_string() == "[0,1,2,hello,4,5]");
   
   UTCOD(ArgList* al3 = dynamic_cast<ArgList*>(a2));
   UTEST(al3 != 0);
   UTEST(al3->get_string() == al2.get_string());
-  UTEST(al3->get_string() == "(0,1,2,hello,4,5)");
+  UTEST(al3->get_string() == "[0,1,2,hello,4,5]");
 
   delete a2;
 }

@@ -138,12 +138,13 @@ scx::Arg* SconesiteModule::arg_lookup(const std::string& name)
 
 //=============================================================================
 scx::Arg* SconesiteModule::arg_function(
+  const scx::Auth& auth,
   const std::string& name,
   scx::Arg* args
 )
 {
   scx::ArgList* l = dynamic_cast<scx::ArgList*>(args);
-  
+
   if ("add" == name) {
     const scx::ArgString* a_profile =
       dynamic_cast<const scx::ArgString*>(l->get(0));
@@ -171,5 +172,5 @@ scx::Arg* SconesiteModule::arg_function(
     return 0;
   }
   
-  return SCXBASE Module::arg_function(name,args);
+  return SCXBASE Module::arg_function(auth,name,args);
 }

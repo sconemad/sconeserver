@@ -40,7 +40,27 @@ class ArgStatement;
 class ArgProc;
 
 #define BAD_ARG(a) (!a || (typeid(*a) == typeid(scx::ArgError)))
+
+//=============================================================================
+class SCONEX_API Auth {
+
+public:
+
+  enum AuthType { Admin, Trusted, Untrusted };
   
+  Auth(AuthType type) : m_type(type) {};
+  Auth(const Auth& c) : m_type(c.m_type) {};
+  ~Auth() {};
+  
+  bool admin() const { return (m_type == Admin); };
+  bool trusted() const { return (m_type == Trusted || m_type == Admin); };
+
+private:
+
+  AuthType m_type;
+
+};
+
 //=============================================================================
 class SCONEX_API Arg {
 
@@ -56,7 +76,7 @@ public:
   virtual int get_int() const =0;
 
   enum OpType { Prefix, Postfix, Binary };
-  virtual Arg* op(OpType optype, const std::string& opname, Arg* right=0);
+  virtual Arg* op(const Auth& auth, OpType optype, const std::string& opname, Arg* right=0);
 
 };
 
@@ -75,7 +95,7 @@ public:
   virtual std::string get_string() const;
   virtual int get_int() const;
 
-  virtual Arg* op(OpType optype, const std::string& opname, Arg* right);
+  virtual Arg* op(const Auth& auth, OpType optype, const std::string& opname, Arg* right);
 
 protected:
 
@@ -99,7 +119,7 @@ public:
   virtual std::string get_string() const;
   virtual int get_int() const;
 
-  virtual Arg* op(OpType optype, const std::string& opname, Arg* right);
+  virtual Arg* op(const Auth& auth, OpType optype, const std::string& opname, Arg* right);
 
 protected:
 
@@ -123,7 +143,7 @@ public:
   virtual std::string get_string() const;
   virtual int get_int() const;
 
-  virtual Arg* op(OpType optype, const std::string& opname, Arg* right);
+  virtual Arg* op(const Auth& auth, OpType optype, const std::string& opname, Arg* right);
 
   double get_real() const;
 
@@ -149,7 +169,7 @@ public:
   virtual std::string get_string() const;
   virtual int get_int() const;
 
-  virtual Arg* op(OpType optype, const std::string& opname, Arg* right);
+  virtual Arg* op(const Auth& auth, OpType optype, const std::string& opname, Arg* right);
 
   int size() const;
 
@@ -182,7 +202,7 @@ public:
   virtual std::string get_string() const;
   virtual int get_int() const;
 
-  virtual Arg* op(OpType optype, const std::string& opname, Arg* right);
+  virtual Arg* op(const Auth& auth, OpType optype, const std::string& opname, Arg* right);
 
   int size() const;
   void keys(std::vector<std::string>& keyvec) const;
@@ -215,9 +235,9 @@ public:
   virtual std::string get_string() const;
   virtual int get_int() const;
 
-  virtual Arg* op(OpType optype, const std::string& opname, Arg* right);
+  virtual Arg* op(const Auth& auth, OpType optype, const std::string& opname, Arg* right);
 
-  Arg* call(Arg* args);
+  Arg* call(const Auth& auth, Arg* args);
   
 protected:
 
@@ -244,7 +264,7 @@ public:
   virtual std::string get_string() const;
   virtual int get_int() const;
 
-  virtual Arg* op(OpType optype, const std::string& opname, Arg* right);
+  virtual Arg* op(const Auth& auth, OpType optype, const std::string& opname, Arg* right);
 
 protected:
 

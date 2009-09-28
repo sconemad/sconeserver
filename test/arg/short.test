@@ -43,11 +43,11 @@ print("running 0 & ++b" + endl);
 a = 0 & ++b;
 test(b==2,"b should not be incremented");
 
-
 var m = {"one",1};
 
 print("running (1 | ++m.one) & f()" + endl);
 a = (1 | ++m.one) & f();
+print("a=" + a + endl);
 test(c==3,"f() should be called");
 test(m.one==1,"m.one should not be incremented");
 

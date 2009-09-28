@@ -74,7 +74,7 @@ public:
   virtual std::string name() const;
   virtual Arg* arg_lookup(const std::string& name);
   virtual Arg* arg_resolve(const std::string& name);
-  virtual Arg* arg_function(const std::string& name, Arg* args);
+  virtual Arg* arg_function(const Auth& auth, const std::string& name, Arg* args);
 
   void set_parent(ArgObjectInterface* parent);
 
@@ -120,7 +120,7 @@ public:
   virtual Arg* run(ArgProc& proc, FlowMode& flow);
 
   virtual Arg* arg_lookup(const std::string& name);
-  virtual Arg* arg_function(const std::string& name, Arg* args);
+  virtual Arg* arg_function(const Auth& auth, const std::string& name, Arg* args);
 
   void clear();
   

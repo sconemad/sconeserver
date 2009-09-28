@@ -80,11 +80,14 @@ scx::Arg* BuildProfile::arg_lookup(
 
 //=============================================================================
 scx::Arg* BuildProfile::arg_function(
+  const scx::Auth& auth,
   const std::string& name,
   scx::Arg* args
 )
 {
   scx::ArgList* l = dynamic_cast<scx::ArgList*>(args);
+
+  if (!auth.trusted()) return new scx::ArgError("Not permitted");
 
   const scx::Arg* value = l->get(0);
   if (value) {
@@ -106,7 +109,7 @@ scx::Arg* BuildProfile::arg_function(
     }
   }
   
-  return SCXBASE ArgObjectInterface::arg_function(name,args);
+  return SCXBASE ArgObjectInterface::arg_function(auth,name,args);
 }
 
 //=============================================================================

@@ -115,24 +115,15 @@ scx::Arg* RouterChain::arg_lookup(
 }
 
 //=============================================================================
-scx::Arg* RouterChain::arg_resolve(const std::string& name)
-{
-  scx::Arg* a = SCXBASE ArgObjectInterface::arg_resolve(name);
-
-  if (a==0 || (dynamic_cast<scx::ArgError*>(a)!=0)) {
-    delete a;
-    return m_module.arg_resolve(name);
-  }
-  return a;
-}
-
-//=============================================================================
 scx::Arg* RouterChain::arg_function(
+  const scx::Auth& auth,
   const std::string& name,
   scx::Arg* args
 )
 {
   scx::ArgList* l = dynamic_cast<scx::ArgList*>(args);
+
+  if (!auth.admin()) return new scx::ArgError("Not permitted");
 
   if ("add" == name) {
     // Module name
@@ -274,7 +265,7 @@ scx::Arg* RouterChain::arg_function(
     }
   }
   
-  return SCXBASE ArgObjectInterface::arg_function(name,args);
+  return SCXBASE ArgObjectInterface::arg_function(auth,name,args);
 }
 
 //###---
@@ -339,7 +330,7 @@ bool RouterNode::connect(
 
   if ("sconescript" == m_name) {
     scx::ArgModule* ctx = new scx::ArgModule(scx::Kernel::get()->ref());
-    d->add_stream( new scx::ArgScript(ctx) );
+    d->add_stream( new scx::ArgScript(scx::Auth::Admin,ctx) );
     return true;
   }
 

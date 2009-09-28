@@ -37,7 +37,7 @@ public:
   virtual int init();
   
   virtual scx::Arg* arg_lookup(const std::string& name);
-  virtual scx::Arg* arg_function(const std::string& name,scx::Arg* args);
+  virtual scx::Arg* arg_function(const scx::Auth& auth, const std::string& name,scx::Arg* args);
 
 protected:
 
@@ -86,13 +86,15 @@ scx::Arg* LocalModule::arg_lookup(const std::string& name)
 
 //=============================================================================
 scx::Arg* LocalModule::arg_function(
+  const scx::Auth& auth, 
   const std::string& name,
   scx::Arg* args
 )
 {
   if ("addr" == name) {
+    if (!auth.trusted()) return new scx::ArgError("Not permitted");
     return new LocalSocketAddress(args);
   }
   
-  return SCXBASE Module::arg_function(name,args);
+  return SCXBASE Module::arg_function(auth,name,args);
 }

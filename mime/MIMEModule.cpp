@@ -78,6 +78,7 @@ scx::Arg* MIMEModule::arg_lookup(const std::string& name)
 
 //=============================================================================
 scx::Arg* MIMEModule::arg_function(
+  const scx::Auth& auth,
   const std::string& name,
   scx::Arg* args
 )
@@ -122,6 +123,8 @@ scx::Arg* MIMEModule::arg_function(
   }
 
   if ("add" == name) {
+    if (!auth.admin()) return new scx::ArgError("Not permitted");
+
     const scx::ArgString* a_pattern =
       dynamic_cast<const scx::ArgString*>(l->get(0));
     if (!a_pattern) {
@@ -141,6 +144,8 @@ scx::Arg* MIMEModule::arg_function(
   }
   
   if ("remove" == name) {
+    if (!auth.admin()) return new scx::ArgError("Not permitted");
+
     const scx::ArgString* a_pattern =
       dynamic_cast<const scx::ArgString*>(l->get(0));
     if (!a_pattern) {
@@ -152,5 +157,5 @@ scx::Arg* MIMEModule::arg_function(
     return 0;
   }
 
-  return SCXBASE Module::arg_function(name,args);
+  return SCXBASE Module::arg_function(auth,name,args);
 }

@@ -72,19 +72,23 @@ Arg* ArgStatement::arg_lookup(const std::string& name)
 //=============================================================================
 Arg* ArgStatement::arg_resolve(const std::string& name)
 {
-  Arg* a = ArgObjectInterface::arg_resolve(name);
-  if ( m_parent && (a==0 || (dynamic_cast<ArgError*>(a))!=0) ) {
+  Arg* a = arg_lookup(name);
+  if (BAD_ARG(a)) {
     delete a;
-    return m_parent->arg_resolve(name);
+    if (m_parent) {
+      a = m_parent->arg_resolve(name);
+    } else {
+      a = ArgObjectInterface::arg_resolve(name);
+    }
   }
   return a;
 }
 
 //=============================================================================
-Arg* ArgStatement::arg_function(const std::string& name, Arg* args)
+Arg* ArgStatement::arg_function(const Auth& auth, const std::string& name, Arg* args)
 {
   // Cascade to parent
-  return m_parent->arg_function(name,args);
+  return m_parent->arg_function(auth,name,args);
 }
 
 //=============================================================================
@@ -228,7 +232,7 @@ Arg* ArgStatementGroup::arg_lookup(const std::string& name)
 }
 
 //=============================================================================
-Arg* ArgStatementGroup::arg_function(const std::string& name, Arg* args)
+Arg* ArgStatementGroup::arg_function(const Auth& auth, const std::string& name, Arg* args)
 {
   ArgList* l = dynamic_cast<ArgList*> (args);
   
@@ -246,7 +250,7 @@ Arg* ArgStatementGroup::arg_function(const std::string& name, Arg* args)
     return 0;
   }
   
-  return ArgObjectInterface::arg_function(name,args);
+  return ArgObjectInterface::arg_function(auth,name,args);
 }
 
 //=============================================================================
@@ -754,7 +758,7 @@ Arg* ArgStatementVar::run(ArgProc& proc, FlowMode& flow)
   args.give(new ArgString(m_name));
   if (initialiser) args.give(initialiser);
   
-  return m_parent->arg_function("var",&args);
+  return m_parent->arg_function(proc.get_auth(),"var",&args);
 }
 
 
@@ -836,7 +840,7 @@ Arg* ArgStatementSub::run(ArgProc& proc, FlowMode& flow)
   args.give(new ArgSub(m_name,m_body,proc));
   m_body = 0;
 
-  return m_parent->arg_function("var",&args);
+  return m_parent->arg_function(proc.get_auth(),"var",&args);
 }
 
 

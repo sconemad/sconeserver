@@ -34,15 +34,15 @@ namespace scx {
  
 //=============================================================================
 ArgScript::ArgScript(
+  const Auth& auth, 
   ArgObject* ctx
 )
   : StreamTokenizer("ArgScript",4096),
+    m_proc(auth,ctx),
     m_ctx(ctx),
     m_error_des(0)
 {
   DEBUG_COUNT_CONSTRUCTOR(ArgScript);
-
-  m_proc.set_ctx(m_ctx);
 
   // Make an enclosing group and push onto parse stack
   m_root = new ArgStatementGroup();

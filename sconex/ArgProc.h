@@ -35,13 +35,16 @@ class SCONEX_API ArgProc {
 
 public:
 
-  ArgProc(Arg* ctx=0);
+  ArgProc(const Auth& auth, Arg* ctx=0);
   ArgProc(const ArgProc& c);
   ~ArgProc();
 
   Arg* evaluate(const std::string& expr);
 
   void set_ctx(Arg* ctx);
+
+  void set_auth(const Auth& auth);
+  const Auth& get_auth();
 
 protected:
 
@@ -59,6 +62,9 @@ protected:
   std::string m_name;
   Arg* m_value;
   // Current token data
+
+  Auth m_auth;
+  // Current authority
 
   Arg* m_ctx;
   // Current context

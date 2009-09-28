@@ -47,7 +47,7 @@ public:
   SSLChannel* find_channel(const std::string& name);
   
   virtual scx::Arg* arg_lookup(const std::string& name);
-  virtual scx::Arg* arg_function(const std::string& name,scx::Arg* args);
+  virtual scx::Arg* arg_function(const scx::Auth& auth,const std::string& name,scx::Arg* args);
   
 protected:
 

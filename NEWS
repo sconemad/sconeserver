@@ -4,6 +4,7 @@
         * Major SconeScript improvements:
          - Short circuit | and & operators.
          - map (associative array) type.
+	 - Authority levels allowing arg call security.
          - Lots of bug fixes.
          - Scripted test system.
 	* Combined I/O multiplexer and job scheduling system:

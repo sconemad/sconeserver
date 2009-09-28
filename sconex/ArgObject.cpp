@@ -21,6 +21,7 @@ Free Software Foundation, Inc.,
 
 #include "sconex/ArgObject.h"
 #include "sconex/ArgProc.h"
+#include "sconex/Kernel.h"
 
 namespace scx {
 
@@ -57,7 +58,8 @@ void ArgObjectInterface::log(
       args.give( new ArgString(message) );
       args.give( new ArgInt((int)level) );
       
-      Arg* ret = logger->call(&args);
+      Auth auth(Auth::Untrusted);
+      Arg* ret = logger->call(auth,&args);
       delete ret;
     }
     delete a_logger;
@@ -73,11 +75,19 @@ Arg* ArgObjectInterface::arg_lookup(const std::string& name)
 //=============================================================================
 Arg* ArgObjectInterface::arg_resolve(const std::string& name)
 {
-  return arg_lookup(name);
+  Arg* a = arg_lookup(name);
+  if (BAD_ARG(a)) {
+    Kernel* k = Kernel::get();
+    if (k != this) {
+      delete a;
+      a = k->arg_resolve(name);
+    }
+  }
+  return a;
 }
 
 //=============================================================================
-Arg* ArgObjectInterface::arg_function(const std::string& name, Arg* args)
+Arg* ArgObjectInterface::arg_function(const Auth& auth, const std::string& name, Arg* args)
 {
   return new ArgError("Unknown function '" + name + "'");  
 }
@@ -110,7 +120,7 @@ ArgObject::ArgObject(
   : m_obj(obj)
 {
   DEBUG_ASSERT(m_obj,"Constructing NULL ArgObject");
-  m_obj->add_ref();
+  if (m_obj) m_obj->add_ref();
 }
 
 //=============================================================================
@@ -118,13 +128,13 @@ ArgObject::ArgObject(const ArgObject& c)
   : m_obj(c.m_obj)
 {
   DEBUG_ASSERT(m_obj,"Copy constructing NULL ArgObject");
-  m_obj->add_ref();
+  if (m_obj) m_obj->add_ref();
 }
 
 //=============================================================================
 ArgObject::~ArgObject()
 {
-  m_obj->remove_ref();
+  if (m_obj) m_obj->remove_ref();
 }
 
 //=============================================================================
@@ -150,7 +160,7 @@ int ArgObject::get_int() const
 }
 
 //=============================================================================
-Arg* ArgObject::op(OpType optype, const std::string& opname, Arg* right)
+Arg* ArgObject::op(const Auth& auth, OpType optype, const std::string& opname, Arg* right)
 {
   if (m_obj) {
     if (Arg::Binary == optype) {
@@ -165,7 +175,7 @@ Arg* ArgObject::op(OpType optype, const std::string& opname, Arg* right)
     }
   }
   
-  return Arg::op(optype,opname,right);
+  return Arg::op(auth,optype,opname,right);
 }
 
 //=============================================================================
@@ -232,6 +242,7 @@ int ArgObjectFunction::get_int() const
 
 //=============================================================================
 Arg* ArgObjectFunction::op(
+  const Auth& auth, 
   OpType optype,
   const std::string& opname,
   Arg* right
@@ -239,18 +250,18 @@ Arg* ArgObjectFunction::op(
 {
   // Only allow binary ( operator - object method call
   if (Arg::Binary == optype && "(" == opname) {
-    return call(right);
+    return call(auth,right);
   }
   
-  return Arg::op(optype,opname,right);
+  return Arg::op(auth,optype,opname,right);
 }
 
 //=============================================================================
-Arg* ArgObjectFunction::call(Arg* args)
+Arg* ArgObjectFunction::call(const Auth& auth, Arg* args)
 {
   ArgObjectInterface* obj = m_obj->get_object();
   if (obj) {
-    return obj->arg_function(m_name,args);
+    return obj->arg_function(auth,m_name,args);
   }
   return 0;
 }

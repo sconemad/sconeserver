@@ -181,7 +181,7 @@ int Uri::get_int() const
 }
 
 //=============================================================================
-Arg* Uri::op(OpType optype, const std::string& opname, Arg* right)
+Arg* Uri::op(const Auth& auth, OpType optype, const std::string& opname, Arg* right)
 {
   switch (optype) {
     case Arg::Binary: {
@@ -208,7 +208,7 @@ Arg* Uri::op(OpType optype, const std::string& opname, Arg* right)
       break;
   }
   
-  return Arg::op(optype,opname,right);
+  return Arg::op(auth,optype,opname,right);
 }
 
 //=============================================================================

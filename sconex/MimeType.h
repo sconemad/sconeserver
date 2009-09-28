@@ -61,7 +61,7 @@ public:
   virtual std::string get_string() const;
   virtual int get_int() const;
   
-  virtual Arg* op(OpType optype, const std::string& opname, Arg* right);
+  virtual Arg* op(const Auth& auth, OpType optype, const std::string& opname, Arg* right);
   
   bool operator==(const MimeType& v) const;
   bool operator!=(const MimeType& v) const;

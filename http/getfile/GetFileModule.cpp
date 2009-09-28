@@ -106,7 +106,7 @@ protected:
       if (mime.valid()) {
         scx::ArgList args;
         args.give( new scx::ArgString(path.path()) );
-        scx::Arg* ret = mime.module()->arg_function("lookup",&args);
+        scx::Arg* ret = mime.module()->arg_function(scx::Auth::Untrusted,"lookup",&args);
         scx::MimeType* mimetype = 0;
         if (ret && (mimetype = dynamic_cast<scx::MimeType*>(ret))) {
           resp.set_header("Content-Type",mimetype->get_string());

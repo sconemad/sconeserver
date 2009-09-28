@@ -107,6 +107,7 @@ int SocketAddress::get_int() const
 
 //=============================================================================
 Arg* SocketAddress::op(
+  const Auth& auth, 
   OpType optype,
   const std::string& opname,
   Arg* right
@@ -124,7 +125,7 @@ Arg* SocketAddress::op(
     }
   }
 
-  return Arg::op(optype,opname,right);
+  return Arg::op(auth,optype,opname,right);
 }
 
 

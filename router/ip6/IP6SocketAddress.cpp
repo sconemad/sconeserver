@@ -141,6 +141,7 @@ std::string IP6SocketAddress::get_string() const
 
 //=============================================================================
 scx::Arg* IP6SocketAddress::op(
+  const scx::Auth& auth,
   scx::Arg::OpType optype,
   const std::string& opname,
   scx::Arg* right
@@ -154,7 +155,7 @@ scx::Arg* IP6SocketAddress::op(
     if (name == "service") return new scx::ArgString(get_service());
     if (name == "port") return new scx::ArgInt((int)get_port());
   }
-  return SCXBASE SocketAddress::op(optype,opname,right);
+  return SCXBASE SocketAddress::op(auth,optype,opname,right);
 }
 
 //=============================================================================

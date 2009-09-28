@@ -112,11 +112,12 @@ scx::Arg* HTTPModule::arg_lookup(const std::string& name)
 
 //=============================================================================
 scx::Arg* HTTPModule::arg_function(
+  const scx::Auth& auth,
   const std::string& name,
   scx::Arg* args
 )
 {
-  return SCXBASE Module::arg_function(name,args);
+  return SCXBASE Module::arg_function(auth,name,args);
 }
 
 };

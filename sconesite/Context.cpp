@@ -35,6 +35,21 @@ Context::~Context()
 }
 
 //=========================================================================
+bool Context::handle_doc_start(XMLDoc* doc)
+{
+  m_doc_stack.push(doc);
+  return true;
+}
+
+//=========================================================================
+bool Context::handle_doc_end(XMLDoc* doc)
+{
+  DEBUG_ASSERT(m_doc_stack.top() == doc,"Doc stack mismatch");
+  m_doc_stack.pop();
+  return false;
+}
+
+//=========================================================================
 std::string Context::name() const
 {
   return "context";
@@ -58,9 +73,16 @@ scx::Arg* Context::arg_lookup(const std::string& name)
 }
 
 //=========================================================================
-scx::Arg* Context::arg_function(const std::string& name,scx::Arg* args)
+scx::Arg* Context::arg_function(const scx::Auth& auth,const std::string& name,scx::Arg* args)
 {
   scx::ArgList* l = dynamic_cast<scx::ArgList*>(args);
 
-  return SCXBASE ArgObjectInterface::arg_function(name,args);
+  return SCXBASE ArgObjectInterface::arg_function(auth,name,args);
+}
+
+//=========================================================================
+XMLDoc* Context::get_current_doc()
+{
+  if (m_doc_stack.empty()) return 0;
+  return m_doc_stack.top();
 }

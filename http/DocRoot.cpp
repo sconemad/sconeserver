@@ -319,7 +319,7 @@ void DocRoot::set_param(const std::string& name, scx::Arg* value)
   scx::ArgList l;
   l.give(new scx::ArgString(name));
   l.give(value);
-  m_params.arg_function("set",&l);
+  m_params.arg_function(scx::Auth::Trusted,"set",&l);
 }
 
 //=========================================================================
@@ -362,11 +362,14 @@ scx::Arg* DocRoot::arg_lookup(const std::string& name)
 
 //=============================================================================
 scx::Arg* DocRoot::arg_function(
+  const scx::Auth& auth,
   const std::string& name,
   scx::Arg* args
 )
 {
   scx::ArgList* l = dynamic_cast<scx::ArgList*>(args);
+
+  if (!auth.admin()) return new scx::ArgError("Not permitted");
 
   if ("map" == name) {
     const scx::ArgString* a_pattern =
@@ -459,7 +462,7 @@ scx::Arg* DocRoot::arg_function(
     return 0;
   }
 
-  return SCXBASE ArgObjectInterface::arg_function(name,args);
+  return SCXBASE ArgObjectInterface::arg_function(auth,name,args);
 }
 
 //=============================================================================

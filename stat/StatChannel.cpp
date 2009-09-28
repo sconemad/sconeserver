@@ -91,13 +91,16 @@ scx::Arg* StatChannel::arg_lookup(
 
 //=============================================================================
 scx::Arg* StatChannel::arg_function(
+  const scx::Auth& auth,
   const std::string& name,
   scx::Arg* args
 )
 {
+  if (!auth.admin()) return new scx::ArgError("Not permitted");
+
   if ("reset" == name) {
     reset();
   }
   
-  return SCXBASE ArgObjectInterface::arg_function(name,args);
+  return SCXBASE ArgObjectInterface::arg_function(auth,name,args);
 }

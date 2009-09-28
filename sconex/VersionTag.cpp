@@ -147,7 +147,7 @@ int VersionTag::get_int() const
 }
 
 //=============================================================================
-Arg* VersionTag::op(OpType optype, const std::string& opname, Arg* right)
+Arg* VersionTag::op(const Auth& auth, OpType optype, const std::string& opname, Arg* right)
 {
   switch (optype) {
     case Arg::Binary: {
@@ -179,7 +179,7 @@ Arg* VersionTag::op(OpType optype, const std::string& opname, Arg* right)
       break;
   }
   
-  return Arg::op(optype,opname,right);
+  return Arg::op(auth,optype,opname,right);
 }
 
 //=============================================================================

@@ -97,6 +97,7 @@ scx::Arg* AuthRealm::arg_lookup(const std::string& name)
 
 //=============================================================================
 scx::Arg* AuthRealm::arg_function(
+  const scx::Auth& auth,
   const std::string& name,
   scx::Arg* args
 )
@@ -104,6 +105,7 @@ scx::Arg* AuthRealm::arg_function(
   scx::ArgList* l = dynamic_cast<scx::ArgList*>(args);
 
   if ("add" == name) {
+    if (!auth.admin()) return new scx::ArgError("Not permitted");
     const scx::ArgString* a_user =
       dynamic_cast<const scx::ArgString*>(l->get(0));
     if (!a_user) {
@@ -127,6 +129,7 @@ scx::Arg* AuthRealm::arg_function(
   }
 
   if ("auth" == name) {
+    if (!auth.trusted()) return new scx::ArgError("Not permitted");
     const scx::ArgString* a_user =
       dynamic_cast<const scx::ArgString*>(l->get(0));
     if (!a_user) {
@@ -144,7 +147,7 @@ scx::Arg* AuthRealm::arg_function(
     return new scx::ArgInt(authorised(s_user,s_pass));
   }
 
-  return 0;
+  return SCXBASE ArgObjectInterface::arg_function(auth,name,args);
 }
 
 //=========================================================================
@@ -259,11 +262,14 @@ scx::Arg* AuthRealmManager::arg_lookup(const std::string& name)
 
 //=============================================================================
 scx::Arg* AuthRealmManager::arg_function(
+  const scx::Auth& auth,
   const std::string& name,
   scx::Arg* args
 )
 {
   scx::ArgList* l = dynamic_cast<scx::ArgList*>(args);
+
+  if (!auth.admin()) return new scx::ArgError("Not permitted");
 
   if ("add" == name) {
     const scx::ArgString* a_realm =
@@ -311,7 +317,7 @@ scx::Arg* AuthRealmManager::arg_function(
     return 0;
   }
 
-  return 0;
+  return SCXBASE ArgObjectInterface::arg_function(auth,name,args);
 }
 
 };

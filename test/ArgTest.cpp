@@ -42,7 +42,7 @@ public:
 
   virtual Arg* arg_lookup(const std::string& name);
   virtual Arg* arg_resolve(const std::string& name);
-  virtual Arg* arg_function(const std::string& name, Arg* args);
+  virtual Arg* arg_function(const Auth& auth,const std::string& name, Arg* args);
 
 };
 
@@ -91,6 +91,7 @@ Arg* ArgTest::arg_resolve(const std::string& name)
 
 //=============================================================================
 Arg* ArgTest::arg_function(
+  const Auth& auth,
   const std::string& name,
   Arg* args
 )
@@ -131,7 +132,7 @@ Arg* ArgTest::arg_function(
     return 0;
   }
 
-  return ArgObjectInterface::arg_function(name,args);
+  return ArgObjectInterface::arg_function(auth,name,args);
 }
 
 //=============================================================================
@@ -153,12 +154,12 @@ int main(int argc,char* argv[])
   
   ArgTest argtest;
   ArgObject* ctx = new ArgObject(&argtest);
-  ArgScript* script = new ArgScript(ctx);
+  ArgScript* script = new ArgScript(Auth::Admin,ctx);
   //  script->set_error_des(con);
   in->add_stream(script);
 
   Multiplexer spinner;
-  spinner.add(in);
+  spinner.add_job(new DescriptorJob(in));
 
   while (spinner.spin() >= 0) ;
 

@@ -1,4 +1,15 @@
 
+2009-09-28 Andrew Wedgbury <wedge@sconemad.com>
+
+	* sconex/ArgProc: Use [] for lists - this eliminates
+	confusion between 0, 1, and many item lists with ().
+	* sconex/ArgObject: Pass unresolved to kernel.
+	* sconex/Module: Don't use hierarchical resolution.
+	Allow config filenames to be specified.
+	* sconex/ArgStatement: Lookup before resolve.
+	* all: Add Authority argument to all Arg::op and 
+	ArgObjectInterface::arg_function methods.
+	
 2009-09-25 Andrew Wedgbury <wedge@sconemad.com>
 
 	* sconex/Multiplexer: Speed up end_job wait sequence.

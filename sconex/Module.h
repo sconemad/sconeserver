@@ -99,10 +99,9 @@ public:
   //
   
   virtual Arg* arg_lookup(const std::string& name);
-  virtual Arg* arg_resolve(const std::string& name);
-  virtual Arg* arg_function(const std::string& name,Arg* args);
+  virtual Arg* arg_function(const Auth& auth, const std::string& name,Arg* args);
 
-  Arg* arg_eval(const std::string& expr);
+  //  Arg* arg_eval(const std::string& expr);
   
 protected:
 
@@ -137,6 +136,7 @@ private:
   // Path to locate sub-modules
 
   FilePath m_conf_path;
+  std::string m_conf_file;
   // Path to configuration files
 
   FilePath m_var_path;

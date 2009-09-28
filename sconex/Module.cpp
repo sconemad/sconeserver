@@ -130,7 +130,16 @@ FilePath Module::get_mod_path() const
 //=============================================================================
 void Module::set_conf_path(const FilePath& path)
 {
-  m_conf_path = path;
+  if (FileStat(path).is_file()) {
+    std::string pathstr = path.path();
+    std::string::size_type is = pathstr.find_last_of("/");
+    if (is != std::string::npos) {
+      m_conf_path = pathstr.substr(0,is);
+      m_conf_file = pathstr.substr(is+1);
+    }
+  } else {
+    m_conf_path = path;
+  }
 }
 
 //=============================================================================
@@ -239,18 +248,8 @@ Arg* Module::arg_lookup(const std::string& name)
 }
 
 //=============================================================================
-Arg* Module::arg_resolve(const std::string& name)
-{
-  Arg* a = ArgObjectInterface::arg_resolve(name);
-  if (m_parent && BAD_ARG(a)) {
-    delete a;
-    a = m_parent->arg_resolve(name);
-  }
-  return a;
-}
-
-//=============================================================================
 Arg* Module::arg_function(
+  const Auth& auth, 
   const std::string& name,
   Arg* args
 )
@@ -403,9 +402,9 @@ Arg* Module::arg_function(
     return 0;
   }
 
-  return ArgObjectInterface::arg_function(name,args);
+  return ArgObjectInterface::arg_function(auth,name,args);
 }
-
+/*
 //=============================================================================
 Arg* Module::arg_eval(const std::string& expr)
 {
@@ -413,7 +412,7 @@ Arg* Module::arg_eval(const std::string& expr)
   ArgProc evaluator(&argmod);
   return evaluator.evaluate(expr);
 }
-
+*/
 //=============================================================================
 void Module::add_module(ModuleLoader* loader)
 {
@@ -454,17 +453,21 @@ bool Module::load_config_file(FilePath path)
     do {
       switch (++i) {
         case 1:
+          // confpath/conf_file
+          path = get_conf_path() + m_conf_file;
+          break;
+        case 2:
           // confpath/module.conf
           path = get_conf_path() +
                  FilePath(m_name + ".conf");
           break;
-        case 2:
+        case 3:
           // confpath/module/module.conf (DEV)
           path = get_conf_path() +
                  FilePath(m_name) + 
                  FilePath(m_name + ".conf");
           break;
-        case 3:
+        case 4:
           // confpath/parent/module/module.conf (DEV)
           if (!m_parent) continue;
           path = get_conf_path() +

@@ -267,12 +267,15 @@ scx::Arg* TestBuilderModule::arg_lookup(const std::string& name)
 
 //=============================================================================
 scx::Arg* TestBuilderModule::arg_function(
+  const scx::Auth& auth,
   const std::string& name,
   scx::Arg* args
 )
 {
   scx::ArgList* l = dynamic_cast<scx::ArgList*>(args);
   
+  if (!auth.trusted()) return new scx::ArgError("Not permitted");
+
   if ("add" == name) {
     const scx::ArgString* a_name =
       dynamic_cast<const scx::ArgString*>(l->get(0));
@@ -432,7 +435,7 @@ scx::Arg* TestBuilderModule::arg_function(
     return 0;
   }
   
-  return SCXBASE Module::arg_function(name,args);
+  return SCXBASE Module::arg_function(auth,name,args);
 }
 
 //=============================================================================

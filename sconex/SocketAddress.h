@@ -86,7 +86,7 @@ public:
   // Arg methods
   virtual std::string get_string() const =0;
   virtual int get_int() const;
-  virtual Arg* op(OpType optype, const std::string& opname, Arg* right);
+  virtual Arg* op(const Auth& auth, OpType optype, const std::string& opname, Arg* right);
 
 
 protected:
