@@ -44,15 +44,21 @@ class SCONEX_API Time : public Arg {
 
 public:
 
-  explicit Time(int t=0);
+  Time();
+  Time(int t);
   Time(int minutes,int seconds);
   Time(int hours,int minutes,int seconds);
   Time(int days,int hours,int minutes,int seconds);
   Time(int weeks,int days,int hours,int minutes,int seconds);
   Time(const std::string& str);
-  explicit Time(Arg* args);
+  Time(Arg* args);
+
   Time(const Time& c);
+  Time(RefType ref, Time& c);
   ~Time();
+
+  virtual Arg* new_copy() const;
+  virtual Arg* ref_copy(RefType ref);
 
   // Get the time in seconds
   int seconds() const;
@@ -68,13 +74,14 @@ public:
   void get(int& days,int& hours,int& minutes,int& seconds) const;
   void get(int& weeks,int& days,int& hours,int& minutes,int& seconds) const;
 
+  Time& operator=(const Time& t);
+
   Time operator+(const Time& t) const;
   Time operator-(const Time& t) const;
 
   std::string string() const;
 
   // Arg:
-  virtual Arg* new_copy() const;
   virtual std::string get_string() const;
   virtual int get_int() const;
   virtual Arg* op(const Auth& auth, OpType optype, const std::string& opname, Arg* right);
@@ -82,7 +89,7 @@ public:
 protected:
   friend class Date;
   friend class TimeZone;
-  time_t m_time;
+  time_t* m_time;
   
 };
 
@@ -95,7 +102,13 @@ public:
   explicit TimeZone(time_t t=0);
   TimeZone(int hours,int minutes);
   TimeZone(const std::string& str);
+
+  TimeZone(const TimeZone& c);
+  TimeZone(RefType ref, TimeZone& c);
   ~TimeZone();
+
+  virtual Arg* new_copy() const;
+  virtual Arg* ref_copy(RefType ref);
 
   static TimeZone utc();
   // Get the UTC timezone (i.e. +0000 or GMT)

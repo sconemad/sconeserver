@@ -63,8 +63,7 @@ IP6Module::~IP6Module()
 //=========================================================================
 std::string IP6Module::info() const
 {
-  return "Copyright (c) 2000-2005 Andrew Wedgbury\n"
-         "Router protocol module for TCP/IP version 6\n";
+  return "Router protocol module for TCP/IP version 6";
 }
 
 //=========================================================================

@@ -26,56 +26,67 @@ Free Software Foundation, Inc.,
 namespace scx {
 
 //=============================================================================
+Time::Time()
+  : m_time(new time_t(0))
+{
+  DEBUG_COUNT_CONSTRUCTOR(Time);
+}
+
+//=============================================================================
 Time::Time(int t)
-  : m_time(t)
+  : m_time(new time_t(t))
 {
   DEBUG_COUNT_CONSTRUCTOR(Time);
 }
 
 //=============================================================================
 Time::Time(int minutes,int seconds)
+  : m_time(new time_t())
 {
   DEBUG_COUNT_CONSTRUCTOR(Time);
-  m_time = (abs(minutes)*SECONDS_PER_MINUTE) + 
-           abs(seconds);
-  m_time *= (minutes<0) ? -1:1;
+  *m_time = (abs(minutes)*SECONDS_PER_MINUTE) + abs(seconds);
+  *m_time *= (minutes<0) ? -1:1;
 }
 
 //=============================================================================
 Time::Time(int hours,int minutes,int seconds)
+  : m_time(new time_t())
 {
   DEBUG_COUNT_CONSTRUCTOR(Time);
-  m_time = (abs(hours)*SECONDS_PER_HOUR) + 
-           (abs(minutes)*SECONDS_PER_MINUTE) + 
-           abs(seconds);
-  m_time *= (hours<0) ? -1:1;
+  *m_time = (abs(hours)*SECONDS_PER_HOUR) + 
+            (abs(minutes)*SECONDS_PER_MINUTE) + 
+            abs(seconds);
+  *m_time *= (hours<0) ? -1:1;
 }
 
 //=============================================================================
 Time::Time(int days,int hours,int minutes,int seconds)
+  : m_time(new time_t())
 {
   DEBUG_COUNT_CONSTRUCTOR(Time);
-  m_time = (abs(days)*SECONDS_PER_DAY) + 
-           (abs(hours)*SECONDS_PER_HOUR) + 
-           (abs(minutes)*SECONDS_PER_MINUTE) + 
-           abs(seconds);
-  m_time *= (days<0) ? -1:1;
+  *m_time = (abs(days)*SECONDS_PER_DAY) + 
+            (abs(hours)*SECONDS_PER_HOUR) + 
+            (abs(minutes)*SECONDS_PER_MINUTE) + 
+            abs(seconds);
+  *m_time *= (days<0) ? -1:1;
 }
 
 //=============================================================================
 Time::Time(int weeks,int days,int hours,int minutes,int seconds)
+  : m_time(new time_t())
 {
   DEBUG_COUNT_CONSTRUCTOR(Time);
-  m_time = (abs(weeks)*SECONDS_PER_WEEK) + 
-           (abs(days)*SECONDS_PER_DAY) + 
-           (abs(hours)*SECONDS_PER_HOUR) + 
-           (abs(minutes)*SECONDS_PER_MINUTE) + 
-           abs(seconds);
-  m_time *= (weeks<0) ? -1:1;
+  *m_time = (abs(weeks)*SECONDS_PER_WEEK) + 
+            (abs(days)*SECONDS_PER_DAY) + 
+            (abs(hours)*SECONDS_PER_HOUR) + 
+            (abs(minutes)*SECONDS_PER_MINUTE) + 
+            abs(seconds);
+  *m_time *= (weeks<0) ? -1:1;
 }
 
 //=============================================================================
 Time::Time(Arg* args)
+  : m_time(new time_t(0))
 {
   DEBUG_COUNT_CONSTRUCTOR(Time);
 
@@ -83,17 +94,8 @@ Time::Time(Arg* args)
   Arg* a = l->get(0);
   ArgInt* a_int = dynamic_cast<ArgInt*>(a);
   if (a_int) {
-    m_time = a->get_int();
-  } else {
-    m_time = 0;
+    *m_time = a->get_int();
   }
-}
-
-//=============================================================================
-Time::Time(const Time& c)
-{
-  DEBUG_COUNT_CONSTRUCTOR(Time);
-  m_time=c.m_time;
 }
 
 struct time_tok {
@@ -103,9 +105,9 @@ struct time_tok {
 
 //=============================================================================
 Time::Time(const std::string& str)
+  : m_time(new time_t(0))
 {
   DEBUG_COUNT_CONSTRUCTOR(Time);
-  m_time=0;
   std::queue<time_tok> ts;
   std::string::const_iterator it = str.begin();
   time_tok cur;
@@ -169,56 +171,87 @@ Time::Time(const std::string& str)
       seq=0;
     }
     switch (seq++) {
-      case 0: m_time += sign*cur.value*SECONDS_PER_WEEK; break;
-      case 1: m_time += sign*cur.value*SECONDS_PER_DAY; break;
-      case 2: m_time += sign*cur.value*SECONDS_PER_HOUR; break;
-      case 3: m_time += sign*cur.value*SECONDS_PER_MINUTE; break;
-      case 4: m_time += sign*cur.value; break;
+      case 0: *m_time += sign*cur.value*SECONDS_PER_WEEK; break;
+      case 1: *m_time += sign*cur.value*SECONDS_PER_DAY; break;
+      case 2: *m_time += sign*cur.value*SECONDS_PER_HOUR; break;
+      case 3: *m_time += sign*cur.value*SECONDS_PER_MINUTE; break;
+      case 4: *m_time += sign*cur.value; break;
     }
     ts.pop();
   }
 }
 
 //=============================================================================
+Time::Time(const Time& c)
+  : Arg(c),
+    m_time(new time_t(*c.m_time))
+{
+  DEBUG_COUNT_CONSTRUCTOR(Time);
+}
+
+//=============================================================================
+Time::Time(RefType ref, Time& c)
+  : Arg(ref,c),
+    m_time(c.m_time)
+{
+  DEBUG_COUNT_CONSTRUCTOR(Time);
+}
+
+//=============================================================================
 Time::~Time()
 {
+  if (*m_refs == 1) {
+    delete m_time;
+  }
   DEBUG_COUNT_DESTRUCTOR(Time);
+}
+
+//=============================================================================
+Arg* Time::new_copy() const
+{
+  return new Time(*this);
+}
+
+//=============================================================================
+Arg* Time::ref_copy(RefType ref)
+{
+  return new Time(ref,*this);
 }
 
 //=============================================================================
 int Time::seconds() const
 {
-  return (int)m_time;
+  return (int)(*m_time);
 }
 
 //=============================================================================
 double Time::to_weeks() const
 {
-  return m_time / (double)SECONDS_PER_WEEK;
+  return *m_time / (double)SECONDS_PER_WEEK;
 }
 
 //=============================================================================
 double Time::to_days() const
 {
-  return m_time / (double)SECONDS_PER_DAY;
+  return *m_time / (double)SECONDS_PER_DAY;
 }
 
 //=============================================================================
 double Time::to_hours() const
 {
-  return m_time / (double)SECONDS_PER_HOUR;
+  return *m_time / (double)SECONDS_PER_HOUR;
 }
 
 //=============================================================================
 double Time::to_minutes() const
 {
-  return m_time / (double)SECONDS_PER_MINUTE;
+  return *m_time / (double)SECONDS_PER_MINUTE;
 }
 
 //=============================================================================
 void Time::get(int& minutes,int& seconds) const
 {
-  seconds = m_time;
+  seconds = *m_time;
   
   minutes = (int)(seconds / SECONDS_PER_MINUTE);
   seconds -= minutes*SECONDS_PER_MINUTE;
@@ -227,7 +260,7 @@ void Time::get(int& minutes,int& seconds) const
 //=============================================================================
 void Time::get(int& hours,int& minutes,int& seconds) const
 {
-  seconds = m_time;
+  seconds = *m_time;
 
   hours = (int)(seconds / SECONDS_PER_HOUR);
   seconds -= hours*SECONDS_PER_HOUR;
@@ -239,7 +272,7 @@ void Time::get(int& hours,int& minutes,int& seconds) const
 //=============================================================================
 void Time::get(int& days,int& hours,int& minutes,int& seconds) const
 {
-  seconds = m_time;
+  seconds = *m_time;
 
   days = (int)(seconds / SECONDS_PER_DAY);
   seconds -= days*SECONDS_PER_DAY;
@@ -254,7 +287,7 @@ void Time::get(int& days,int& hours,int& minutes,int& seconds) const
 //=============================================================================
 void Time::get(int& weeks,int& days,int& hours,int& minutes,int& seconds) const
 {
-  seconds = m_time;
+  seconds = *m_time;
 
   weeks = (int)(seconds / SECONDS_PER_WEEK);
   seconds -= weeks*SECONDS_PER_WEEK;
@@ -281,7 +314,7 @@ std::string Time::string() const
   seconds = abs(seconds);
 
   std::ostringstream oss;
-  oss << (m_time < 0 ? "-" : "");
+  oss << (*m_time < 0 ? "-" : "");
   
   if (weeks > 0) {
     oss << weeks << " " << (weeks==1 ? "Week" : "Weeks") << " ";
@@ -299,21 +332,24 @@ std::string Time::string() const
 }
 
 //=============================================================================
+Time& Time::operator=(const Time& t)
+{
+  if (!m_const) {
+    *m_time = *t.m_time;
+  }
+  return *this;
+}
+
+//=============================================================================
 Time Time::operator+(const Time& t) const
 {
-  return Time(m_time+t.m_time);
+  return Time(*m_time + *t.m_time);
 }
 
 //=============================================================================
 Time Time::operator-(const Time& t) const
 {
-  return Time(m_time-t.m_time);
-}
-
-//=============================================================================
-Arg* Time::new_copy() const
-{
-  return new Time(*this);
+  return Time(*m_time - *t.m_time);
 }
 
 //=============================================================================
@@ -325,7 +361,7 @@ std::string Time::get_string() const
 //=============================================================================
 int Time::get_int() const
 {
-  return m_time;
+  return *m_time;
 }
 //=============================================================================
 Arg* Time::op(const Auth& auth, OpType optype, const std::string& opname, Arg* right)
@@ -369,22 +405,22 @@ TimeZone::TimeZone(int hours,int minutes)
 {
   DEBUG_COUNT_CONSTRUCTOR(TimeZone);
   init_tables();
-  m_time = (abs(hours)*SECONDS_PER_HOUR) +
-           (abs(minutes)*SECONDS_PER_MINUTE);
-  m_time *= (hours<0 || minutes<0) ? -1:1;
+  *m_time = (abs(hours)*SECONDS_PER_HOUR) +
+            (abs(minutes)*SECONDS_PER_MINUTE);
+  *m_time *= (hours<0 || minutes<0) ? -1:1;
 }
 
 //=============================================================================
 TimeZone::TimeZone(const std::string& str)
+  : Time(0)
 {
   DEBUG_COUNT_CONSTRUCTOR(TimeZone);
   init_tables();
-  m_time=0;
 
   // First lookup in zone table
   TimeZoneOffsetMap::const_iterator zit = s_zone_table->find(str);
   if (zit != s_zone_table->end()) {
-    m_time = zit->second;
+    *m_time = zit->second;
     
   } else {
     std::string::const_iterator it = str.begin();
@@ -399,7 +435,7 @@ TimeZone::TimeZone(const std::string& str)
         int value = atoi(token.c_str());
         int hours = value/100;
         int minutes = value - (hours*100);
-        m_time = (hours*SECONDS_PER_HOUR) + (minutes*SECONDS_PER_MINUTE);
+        *m_time = (hours*SECONDS_PER_HOUR) + (minutes*SECONDS_PER_MINUTE);
         break;
         
       } else if (isalpha(*it)) {
@@ -416,15 +452,43 @@ TimeZone::TimeZone(const std::string& str)
         ++it;
       }
     }
-    m_time *= sign;
+    *m_time *= sign;
   }
 
+}
+
+//=============================================================================
+TimeZone::TimeZone(const TimeZone& c)
+  : Time(c)
+{
+  DEBUG_COUNT_CONSTRUCTOR(TimeZone);
+  init_tables();
+}
+
+//=============================================================================
+TimeZone::TimeZone(RefType ref, TimeZone& c)
+  : Time(ref,c)
+{
+  DEBUG_COUNT_CONSTRUCTOR(TimeZone);
+  init_tables();
 }
 
 //=============================================================================
 TimeZone::~TimeZone()
 {
   DEBUG_COUNT_DESTRUCTOR(TimeZone);
+}
+
+//=============================================================================
+Arg* TimeZone::new_copy() const
+{
+  return new TimeZone(*this);
+}
+
+//=============================================================================
+Arg* TimeZone::ref_copy(RefType ref)
+{
+  return new TimeZone(ref,*this);
 }
 
 //=============================================================================
@@ -462,13 +526,13 @@ TimeZone TimeZone::local(const Date& date)
 //=============================================================================
 TimeZone TimeZone::operator+(const Time& t) const
 {
-  return TimeZone(m_time+t.m_time);
+  return TimeZone(*m_time + *t.m_time);
 }
 
 //=============================================================================
 TimeZone TimeZone::operator-(const Time& t) const
 {
-  return TimeZone(m_time-t.m_time);
+  return TimeZone(*m_time - *t.m_time);
 }
 
 //=============================================================================
@@ -480,7 +544,7 @@ std::string TimeZone::string() const
   minutes = abs(minutes);
 
   std::ostringstream oss;
-  oss << (m_time < 0 ? "-" : "+")
+  oss << (*m_time < 0 ? "-" : "+")
       << std::setfill('0') << std::setw(2) << hours
       << std::setfill('0') << std::setw(2) << minutes;
 

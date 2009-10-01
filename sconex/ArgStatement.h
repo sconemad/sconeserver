@@ -20,6 +20,14 @@ used to evaluate and run SconeScript programs.
 * ArgStatementFor - A 'for' loop with initialiser, condition and test
   expressions. 
 
+* ArgStatementFlow - Program flow control statements, i.e. return, break 
+  and continue.
+
+* ArgStatementDecl - Declaration statement, for declaring variables,
+  references and constants.
+
+* ArgStatementSub - Subroutine definition
+
 Copyright (c) 2000-2006 Andrew Wedgbury <wedge@sconemad.com>
 
 This program is free software; you can redistribute it and/or modify
@@ -256,13 +264,15 @@ protected:
 
 
 //=============================================================================
-class SCONEX_API ArgStatementVar : public ArgStatement {
+class SCONEX_API ArgStatementDecl : public ArgStatement {
 
 public:
+
+  enum DefType { Var, Ref, Const };
   
-  ArgStatementVar(const std::string& name = "");
-  ArgStatementVar(const ArgStatementVar& c);
-  virtual ~ArgStatementVar();
+  ArgStatementDecl(DefType deftype, const std::string& name = "");
+  ArgStatementDecl(const ArgStatementDecl& c);
+  virtual ~ArgStatementDecl();
   virtual ArgStatement* new_copy() const;
 
   virtual ParseResult parse(ArgScript& script, const std::string& token);
@@ -273,6 +283,9 @@ protected:
 
   int m_seq;
   // Sequence counter used for parsing
+
+  DefType m_deftype;
+  // Definition type
 
   std::string m_name;
   // Variable name

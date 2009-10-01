@@ -49,8 +49,7 @@ Kernel* Kernel::get()
 //=============================================================================
 std::string Kernel::info() const
 {
-  return "Copyright (c) 2000-2009 Andrew Wedgbury\n"
-         "An object orientated network server framework\n";
+  return "An object orientated network server framework";
 }
 
 //=============================================================================
@@ -141,6 +140,8 @@ Arg* Kernel::arg_lookup(const std::string& name)
     return new ArgObjectFunction(new ArgModule(ref()),name);
   }      
 
+  // Constructors for sconex Arg classes
+
   if ("Version" == name ||
       "Date" == name ||
       "Time" == name ||
@@ -151,25 +152,12 @@ Arg* Kernel::arg_lookup(const std::string& name)
 
   // Properties
 
-  if ("lsdes" == name ||
-      "jobs" == name) {
-    return new scx::ArgString(m_spinner.describe());
-  }
-  if ("root" == name) {
-    return new scx::ArgInt(geteuid() == 0);
-  }
-  if ("thread_pool" == name) {
-    return new scx::ArgInt(m_spinner.get_num_threads());
-  }
-  if ("system_nodename" == name) {
-    return new scx::ArgString(get_system_nodename());
-  }
-  if ("system_version" == name) {
-    return new scx::ArgString(get_system_version());
-  }
-  if ("system_hardware" == name) {
-    return new scx::ArgString(get_system_hardware());
-  }
+  if ("jobs" == name) return new scx::ArgString(m_spinner.describe());
+  if ("root" == name) return new scx::ArgInt(geteuid() == 0);
+  if ("thread_pool" == name) return new scx::ArgInt(m_spinner.get_num_threads());
+  if ("system_nodename" == name) return new scx::ArgString(get_system_nodename());
+  if ("system_version" == name) return new scx::ArgString(get_system_version());
+  if ("system_hardware" == name) return new scx::ArgString(get_system_hardware());
   
   return Module::arg_lookup(name);
 }

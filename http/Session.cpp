@@ -137,15 +137,14 @@ scx::Arg* SessionManager::arg_lookup(
   // Properties
 
   if ("list" == name) {
+    scx::ArgList* list = new scx::ArgList();
     scx::MutexLocker locker(m_mutex);
-    std::ostringstream oss;
     for (SessionMap::const_iterator it = m_sessions.begin();
 	 it != m_sessions.end();
 	 ++it) {
-      Session* s = it->second;
-      oss << it->first << " " << s->get_num_refs() << "\n";
+      list->give(new scx::ArgObject(it->second));
     }
-    return new scx::ArgString(oss.str());
+    return list;
   }
   
   return ArgObjectInterface::arg_lookup(name);

@@ -1,4 +1,14 @@
 
+2009-10-01 Andrew Wedgbury <wedge@sconemad.com>
+
+	* sconex/Arg: Use reference-counted storage scheme.
+	* sconex/Module: Cleanup module info and copyrights.
+	* sconex/ArgStatement: Add ref and const declarations.
+	* sconex/ArgScript: Use dictionary map to match tokens.
+	* all: Update Arg classes to use ref counted storage.
+	Update arg methods to return data structures rather 
+	than formatted text output.
+
 2009-09-28 Andrew Wedgbury <wedge@sconemad.com>
 
 	* sconex/ArgProc: Use [] for lists - this eliminates

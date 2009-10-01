@@ -200,7 +200,10 @@ class Date;
 SCONEX_API VersionTag& version();
 // Get sconex version number
 
-SCONEX_API std::string& build_type();
+SCONEX_API const std::string& sconeserver_copyright();
+// Get copyright message
+
+SCONEX_API const std::string& build_type();
 // Get sconex build type (arch-platform-etc)
 
 SCONEX_API Date& build_time();

@@ -117,7 +117,7 @@ IPSocketAddress::IPSocketAddress(scx::Arg* args)
     dynamic_cast<const scx::ArgString*>(l->get(2));
   if (a_type) {
     if (a_type->get_string() == "datagram") {
-      m_type = SOCK_DGRAM;
+      *m_type = SOCK_DGRAM;
     }
   }
   // type defaults to SOCK_STREAM
@@ -163,7 +163,7 @@ bool IPSocketAddress::valid_for_connect() const
 void IPSocketAddress::set_sockaddr(const struct sockaddr* sa)
 {
   DEBUG_ASSERT(sa!=0,"set_sockaddr() Invalid sockaddr pointer");
-  DEBUG_ASSERT(sa->sa_family == m_domain,"set_sockaddr() Socket domain mismatch");
+  DEBUG_ASSERT(sa->sa_family == *m_domain,"set_sockaddr() Socket domain mismatch");
 
   memcpy(&m_addr,sa,sizeof(m_addr));
   m_host = "";
@@ -392,7 +392,7 @@ const std::string& IPSocketAddress::get_service() const
 //=============================================================================
 std::string IPSocketAddress::get_type_name() const
 {
-  switch (m_type) {
+  switch (*m_type) {
   case SOCK_STREAM: return "tcp";
   case SOCK_DGRAM: return "udp";
   }

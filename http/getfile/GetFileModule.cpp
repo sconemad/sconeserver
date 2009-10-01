@@ -184,8 +184,7 @@ GetFileModule::~GetFileModule()
 //=========================================================================
 std::string GetFileModule::info() const
 {
-  return "Copyright (c) 2000-2005 Andrew Wedgbury\n"
-         "HTTP file transfer\n";
+  return "HTTP file transfer";
 }
 
 //=========================================================================

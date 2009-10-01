@@ -88,6 +88,11 @@ private:
 
   Descriptor* m_error_des;
   // Descriptor to write error output to
+
+  static void init();
+
+  typedef std::map<std::string,int> TokenMap;
+  static TokenMap* s_tokens;
   
 };
 

@@ -221,8 +221,7 @@ DirIndexModule::~DirIndexModule()
 //=========================================================================
 std::string DirIndexModule::info() const
 {
-  return "Copyright (c) 2000-2005 Andrew Wedgbury\n"
-         "HTTP directory and index file handler\n";
+  return "HTTP directory and index file redirector";
 }
 
 //=========================================================================

@@ -89,8 +89,10 @@ class SCONEX_API ArgObject : public Arg {
 public:
   
   ArgObject(ArgObjectInterface* obj);
+
   ArgObject(const ArgObject& c);
   virtual ~ArgObject();
+
   virtual Arg* new_copy() const;
   
   virtual std::string get_string() const;
@@ -120,8 +122,10 @@ public:
     ArgObject* obj,
     const std::string& name
   );
+
   ArgObjectFunction(const ArgObjectFunction& c);
   virtual ~ArgObjectFunction();
+
   virtual Arg* new_copy() const;
 
   virtual std::string get_string() const;

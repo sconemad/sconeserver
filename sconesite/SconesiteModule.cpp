@@ -75,8 +75,7 @@ SconesiteModule::~SconesiteModule()
 //=========================================================================
 std::string SconesiteModule::info() const
 {
-  return "Copyright (c) 2000-2009 Andrew Wedgbury\n"
-         "Sconesite\n";
+  return "Sconesite content management system";
 }
 
 //=========================================================================

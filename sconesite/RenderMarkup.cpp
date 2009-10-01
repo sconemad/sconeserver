@@ -25,6 +25,7 @@ Free Software Foundation, Inc.,
 #include "Article.h"
 #include "Template.h"
 #include "SconesiteModule.h"
+#include "SconesiteStream.h"
 
 #include "sconex/Stream.h"
 #include "sconex/StreamTransfer.h"
@@ -143,7 +144,7 @@ bool RenderMarkupContext::handle_end(const std::string& name, XMLAttrs& attrs)
 void RenderMarkupContext::handle_process(const std::string& name, const char* data)
 {
   //  scx::Auth auth(scx::Auth::Untrusted);
-  scx::Auth auth(scx::Auth::TCrusted);
+  scx::Auth auth(scx::Auth::Trusted);
   XMLDoc* doc = get_current_doc();
   const std::type_info& ti = typeid(*doc);
   if (ti == typeid(Template)) {
@@ -317,18 +318,19 @@ scx::Arg* RenderMarkupContext::arg_function(const scx::Auth& auth,const std::str
   if (name == "update_article") {
     if (!auth.trusted()) return new scx::ArgError("Not permitted");
 
-    
+    scx::Arg* a_file = l->get(0);
+    ArgFile* f_file = dynamic_cast<ArgFile*>(a_file);
+    if (!f_file) {
+      return new scx::ArgError("No file specified");
+    }
+    scx::FilePath srcpath = f_file->get_string();
 
     if (m_article) {
-      scx::File* file = new scx::File();
-      if (scx::Ok == file->open(m_article->get_path(),scx::File::Read)) {
-        char* buffer[1024];
-	int na = 0;
-        while (scx::Ok == file->read(buffer,1024,na)) {
-          m_output->write(buffer,na,na);
-        }
+      scx::FilePath dstpath = m_article->get_path();
+      DEBUG_LOG("Update article copying '" << srcpath.path() << "' to '" << dstpath.path() << "'");
+      if (::rename(srcpath.path().c_str(),dstpath.path().c_str()) < 0) {
+	return new scx::ArgError("Could not replace article");
       }
-      delete file;
     }
     return 0;
   }

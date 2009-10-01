@@ -39,7 +39,7 @@ Descriptor::Descriptor()
     m_uid(++s_des_count)
 {
   DEBUG_COUNT_CONSTRUCTOR(Descriptor);
-  set_timeout(scx::Time(0));
+  //  set_timeout(scx::Time(0));
 }
 
 

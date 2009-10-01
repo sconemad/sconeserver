@@ -25,12 +25,18 @@ namespace scx {
 
 //=============================================================================
 MimeType::MimeType()
+  : m_type(new std::string()),
+    m_subtype(new std::string()),
+    m_params(new ParamMap())
 {
 
 }
 
 //=============================================================================
 MimeType::MimeType(const std::string& str)
+  : m_type(new std::string()),
+    m_subtype(new std::string()),
+    m_params(new ParamMap())
 {
   from_string(str);
 }
@@ -40,16 +46,20 @@ MimeType::MimeType(
   const std::string& type,
   const std::string& subtype,
   const std::string& params
-) : m_type(type),
-    m_subtype(subtype)
+) : m_type(new std::string(type)),
+    m_subtype(new std::string(subtype)),
+    m_params(new ParamMap())
 {
-  strlow(m_type);
-  strlow(m_subtype);
+  strlow(*m_type);
+  strlow(*m_subtype);
   params_from_string(params);
 }
 
 //=============================================================================
 MimeType::MimeType(Arg* args)
+  : m_type(new std::string()),
+    m_subtype(new std::string()),
+    m_params(new ParamMap())
 {
   ArgList* l = dynamic_cast<ArgList*>(args);
 
@@ -62,7 +72,18 @@ MimeType::MimeType(Arg* args)
 
 //=============================================================================
 MimeType::MimeType(const MimeType& c)
-  : m_type(c.m_type),
+  : Arg(c),
+    m_type(new std::string(*c.m_type)),
+    m_subtype(new std::string(*c.m_subtype)),
+    m_params(new ParamMap(*c.m_params))
+{
+
+}
+
+//=============================================================================
+MimeType::MimeType(RefType ref, MimeType& c)
+  : Arg(ref,c),
+    m_type(c.m_type),
     m_subtype(c.m_subtype),
     m_params(c.m_params)
 {
@@ -72,7 +93,11 @@ MimeType::MimeType(const MimeType& c)
 //=============================================================================
 MimeType::~MimeType()
 {
-
+  if (*m_refs == 1) {
+    delete m_type;
+    delete m_subtype;
+    delete m_params;
+  }
 }
  
 //=============================================================================
@@ -82,17 +107,23 @@ Arg* MimeType::new_copy() const
 }
 
 //=============================================================================
+Arg* MimeType::ref_copy(RefType ref)
+{
+  return new MimeType(ref,*this);
+}
+
+//=============================================================================
 void MimeType::set_type(const std::string& type)
 {
-  m_type = type;
-  strlow(m_type);
+  *m_type = type;
+  strlow(*m_type);
 }
 
 //=============================================================================
 void MimeType::set_subtype(const std::string& subtype)
 {
-  m_subtype = subtype;
-  strlow(m_subtype);
+  *m_subtype = subtype;
+  strlow(*m_subtype);
 }
 
 //=============================================================================
@@ -100,37 +131,37 @@ void MimeType::set_param(const std::string& name, const std::string& value)
 {
   std::string ci_name(name);
   strlow(ci_name);
-  m_params[ci_name] = value;
+  (*m_params)[ci_name] = value;
 }
 
 //=============================================================================
 bool MimeType::erase_param(const std::string& name)
 {
-  ParamMap::iterator it = m_params.find(name);
-  if (it == m_params.end()) {
+  ParamMap::iterator it = m_params->find(name);
+  if (it == m_params->end()) {
     return false;
   }
-  m_params.erase(it);
+  m_params->erase(it);
   return true;
 }
 
 //=============================================================================
 const std::string& MimeType::get_type() const
 {
-  return m_type;
+  return *m_type;
 }
 
 //=============================================================================
 const std::string& MimeType::get_subtype() const
 {
-  return m_subtype;
+  return *m_subtype;
 }
 
 //=============================================================================
 std::string MimeType::get_param(const std::string& name) const
 {
-  ParamMap::const_iterator it = m_params.find(name);
-  if (it == m_params.end()) {
+  ParamMap::const_iterator it = m_params->find(name);
+  if (it == m_params->end()) {
     return "";
   }
   return it->second;  
@@ -140,10 +171,10 @@ std::string MimeType::get_param(const std::string& name) const
 std::string MimeType::get_string() const
 {
   std::ostringstream oss;
-  oss << m_type << "/" << m_subtype;
+  oss << *m_type << "/" << *m_subtype;
 
-  for (ParamMap::const_iterator it = m_params.begin();
-       it != m_params.end();
+  for (ParamMap::const_iterator it = m_params->begin();
+       it != m_params->end();
        it++) {
     oss << "; " << it->first << "=\"" << it->second << "\"";
   }
@@ -154,7 +185,7 @@ std::string MimeType::get_string() const
 //=============================================================================
 int MimeType::get_int() const
 {
-  return (!m_type.empty() || !m_subtype.empty());
+  return (!m_type->empty() || !m_subtype->empty());
 }
 
 //=============================================================================
@@ -169,6 +200,21 @@ Arg* MimeType::op(const Auth& auth, OpType optype, const std::string& opname, Ar
 
         } else if ("!="==opname) { // Inequality
           return new ArgInt(*this != *rv);
+	}
+      }
+
+      if ("." == opname) { // Scope resolution
+	std::string name = right->get_string();
+	if (name == "type") return new scx::ArgString(*m_type);
+	if (name == "subtype") return new scx::ArgString(*m_subtype);
+	if (name == "params") {
+	  ArgMap* map = new ArgMap();
+	  for (ParamMap::const_iterator it = m_params->begin();
+	       it != m_params->end();
+	       it++) {
+	    map->give(it->first, new ArgString(it->second));
+	  }
+	  return map;
         }
       }
     } break;
@@ -182,20 +228,29 @@ Arg* MimeType::op(const Auth& auth, OpType optype, const std::string& opname, Ar
 }
 
 //=============================================================================
+MimeType& MimeType::operator=(const MimeType& v)
+{
+  *m_type = *v.m_type;
+  *m_subtype = *v.m_subtype;
+  *m_params = *v.m_params;
+  return *this;
+}
+
+//=============================================================================
 bool MimeType::operator==(const MimeType& v) const
 {
-  if (m_type != v.m_type) return false;
-  if (m_subtype != v.m_subtype) return false;
+  if (*m_type != *v.m_type) return false;
+  if (*m_subtype != *v.m_subtype) return false;
   
   ParamMap::const_iterator it;
-  for (it = m_params.begin();
-       it != m_params.end();
+  for (it = m_params->begin();
+       it != m_params->end();
        it++) {
     if (v.get_param(it->first) != it->second) return false;
   }
   
-  for (it = v.m_params.begin();
-       it != v.m_params.end();
+  for (it = v.m_params->begin();
+       it != v.m_params->end();
        it++) {
     if (get_param(it->first) != it->second) return false;
   }
@@ -218,20 +273,20 @@ void MimeType::from_string(const std::string& str)
   // Find type
   end = str.find("/",start);
   if (end != std::string::npos) {
-    m_type = std::string(str,start,end-start);
-    strlow(m_type);
+    *m_type = std::string(str,start,end-start);
+    strlow(*m_type);
     start = end + 1;
   }
 
   // Find subtype
   end = str.find(";",start);
   if (end == std::string::npos) {
-    m_subtype = std::string(str,start);
-    strlow(m_subtype);
+    *m_subtype = std::string(str,start);
+    strlow(*m_subtype);
     start = end;
   } else {
-    m_subtype = std::string(str,start,end-start);
-    strlow(m_subtype);
+    *m_subtype = std::string(str,start,end-start);
+    strlow(*m_subtype);
     start = end + 1;
     params_from_string(std::string(str,start));
   }

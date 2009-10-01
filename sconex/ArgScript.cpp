@@ -31,6 +31,24 @@ namespace scx {
 #ifndef ArgScript_DEBUG_LOG
 #  define ArgScript_DEBUG_LOG(m)
 #endif
+
+  ArgScript::TokenMap* ArgScript::s_tokens = 0;
+
+enum ArgScriptToken {
+  ArgScriptToken_IF,
+  ArgScriptToken_ELSE,
+  ArgScriptToken_WHILE,
+  ArgScriptToken_FOR,
+  ArgScriptToken_RETURN,
+  ArgScriptToken_BREAK,
+  ArgScriptToken_CONTINUE,
+  ArgScriptToken_VAR,
+  ArgScriptToken_REF,
+  ArgScriptToken_CONST,
+  ArgScriptToken_SUB,
+  ArgScriptToken_OPEN_BRACE,
+  ArgScriptToken_CLOSE_BRACE
+};
  
 //=============================================================================
 ArgScript::ArgScript(
@@ -43,6 +61,7 @@ ArgScript::ArgScript(
     m_error_des(0)
 {
   DEBUG_COUNT_CONSTRUCTOR(ArgScript);
+  init();
 
   // Make an enclosing group and push onto parse stack
   m_root = new ArgStatementGroup();
@@ -114,49 +133,76 @@ Condition ArgScript::event(Stream::Event e)
 //=============================================================================
 ArgStatement* ArgScript::parse_token(const std::string& token)
 {
-  ArgStatement* s=0;
-  
-  if (token == "{") {
-    ArgScript_DEBUG_LOG("parse_token: New statement group");
-    s = new ArgStatementGroup();
-    
-  } else if (token == "if") {
-    ArgScript_DEBUG_LOG("parse_token: New conditional");
-    s = new ArgStatementConditional();
+  TokenMap::const_iterator it = s_tokens->find(token);
 
-  } else if (token == "while") {
-    ArgScript_DEBUG_LOG("parse_token: New while loop");
-    s = new ArgStatementWhile();
-
-  } else if (token == "for") {
-    ArgScript_DEBUG_LOG("parse_token: New for loop");
-    s = new ArgStatementFor();
-
-  } else if (token == "return") {
-    ArgScript_DEBUG_LOG("parse_token: New flow return");
-    s = new ArgStatementFlow(ArgStatement::Return);
-
-  } else if (token == "break") {
-    ArgScript_DEBUG_LOG("parse_token: New flow last");
-    s = new ArgStatementFlow(ArgStatement::Last);
-
-  } else if (token == "continue") {
-    ArgScript_DEBUG_LOG("parse_token: New flow next");
-    s = new ArgStatementFlow(ArgStatement::Next);
-
-  } else if (token == "var") {
-    ArgScript_DEBUG_LOG("parse_token: New variable declaration");
-    s = new ArgStatementVar();
-
-  } else if (token == "sub") {
-    ArgScript_DEBUG_LOG("parse_token: New subroutine declaration");
-    s = new ArgStatementSub();
-    
-  } else {
+  if (it == s_tokens->end()) {
+    // Not a reserved token, so treat as an expression
     ArgScript_DEBUG_LOG("parse_token: New expression");
-    s = new ArgStatementExpr(token);
+    return new ArgStatementExpr(token);
     // (don't need to stack plain expressions)
-    return s;
+  }
+  
+  ArgStatement* s=0;
+  switch (it->second) {
+
+    case ArgScriptToken_OPEN_BRACE:
+      ArgScript_DEBUG_LOG("parse_token: New statement group");
+      s = new ArgStatementGroup();
+      break;
+
+    case ArgScriptToken_IF:
+      ArgScript_DEBUG_LOG("parse_token: New conditional");
+      s = new ArgStatementConditional();
+      break;
+
+    case ArgScriptToken_WHILE:
+      ArgScript_DEBUG_LOG("parse_token: New while loop");
+      s = new ArgStatementWhile();
+      break;
+
+    case ArgScriptToken_FOR:
+      ArgScript_DEBUG_LOG("parse_token: New for loop");
+      s = new ArgStatementFor();
+      break;
+
+    case ArgScriptToken_RETURN:
+      ArgScript_DEBUG_LOG("parse_token: New flow return");
+      s = new ArgStatementFlow(ArgStatement::Return);
+      break;
+
+    case ArgScriptToken_BREAK:
+      ArgScript_DEBUG_LOG("parse_token: New flow last");
+      s = new ArgStatementFlow(ArgStatement::Last);
+      break;
+
+    case ArgScriptToken_CONTINUE:
+      ArgScript_DEBUG_LOG("parse_token: New flow next");
+      s = new ArgStatementFlow(ArgStatement::Next);
+      break;
+
+    case ArgScriptToken_VAR:
+      ArgScript_DEBUG_LOG("parse_token: New variable declaration");
+      s = new ArgStatementDecl(ArgStatementDecl::Var);
+      break;
+
+    case ArgScriptToken_REF:
+      ArgScript_DEBUG_LOG("parse_token: New reference declaration");
+      s = new ArgStatementDecl(ArgStatementDecl::Ref);
+      break;
+
+    case ArgScriptToken_CONST:
+      ArgScript_DEBUG_LOG("parse_token: New constant declaration");
+      s = new ArgStatementDecl(ArgStatementDecl::Const);
+      break;
+
+    case ArgScriptToken_SUB:
+      ArgScript_DEBUG_LOG("parse_token: New subroutine declaration");
+      s = new ArgStatementSub();
+      break;
+ 
+    default:
+      DEBUG_LOG("Unknown token type:" << it->second);
+      return 0;
   }
 
   m_stack.push(s);
@@ -197,17 +243,7 @@ bool ArgScript::next_token(
         // SEMICOLON TERMINATED parse mode
         
         std::string str(start,length);
-        if (str == "if" ||
-            str == "else" ||
-            str == "while" ||
-            str == "for" ||
-            str == "return" ||
-            str == "break" ||
-            str == "continue" ||
-            str == "var" ||
-            str == "sub" ||
-            str == "{" ||
-            str == "}") {
+	if (s_tokens->count(str)) {
           return true;
         }
         
@@ -320,5 +356,26 @@ void ArgScript::set_error_des(Descriptor* error_des)
   m_error_des = error_des;
 }
 
+//=============================================================================
+void ArgScript::init()
+{
+  if (s_tokens) return;
+
+  s_tokens = new TokenMap();
+
+  (*s_tokens)["if"] = ArgScriptToken_IF;
+  (*s_tokens)["else"] = ArgScriptToken_ELSE;
+  (*s_tokens)["while"] = ArgScriptToken_WHILE;
+  (*s_tokens)["for"] = ArgScriptToken_FOR;
+  (*s_tokens)["return"] = ArgScriptToken_RETURN;
+  (*s_tokens)["break"] = ArgScriptToken_BREAK;
+  (*s_tokens)["continue"] = ArgScriptToken_CONTINUE;
+  (*s_tokens)["var"] = ArgScriptToken_VAR;
+  (*s_tokens)["ref"] = ArgScriptToken_REF;
+  (*s_tokens)["const"] = ArgScriptToken_CONST;
+  (*s_tokens)["sub"] = ArgScriptToken_SUB;
+  (*s_tokens)["{"] = ArgScriptToken_OPEN_BRACE;
+  (*s_tokens)["}"] = ArgScriptToken_CLOSE_BRACE;
+}
 
 };

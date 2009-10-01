@@ -25,14 +25,22 @@ namespace scx {
 
 //=============================================================================
 Uri::Uri()
-  : m_port(0)
+  : m_scheme(new std::string()),
+    m_host(new std::string()),
+    m_port(new short(0)),
+    m_path(new std::string()),
+    m_query(new std::string())
 {
 
 }
 
 //=============================================================================
 Uri::Uri(const std::string& str)
-  : m_port(0)
+  : m_scheme(new std::string()),
+    m_host(new std::string()),
+    m_port(new short(0)),
+    m_path(new std::string()),
+    m_query(new std::string())
 {
   from_string(str);
 }
@@ -44,19 +52,23 @@ Uri::Uri(
   short port,
   const std::string& path,
   const std::string& query
-) : m_scheme(scheme),
-    m_host(host),
-    m_port(port),
-    m_path(path),
-    m_query(query)
+) : m_scheme(new std::string(scheme)),
+    m_host(new std::string(host)),
+    m_port(new short(port)),
+    m_path(new std::string(path)),
+    m_query(new std::string(query))
 {
-  scx::strlow(m_scheme);
-  scx::strlow(m_host);
+  scx::strlow(*m_scheme);
+  scx::strlow(*m_host);
 }
 
 //=============================================================================
 Uri::Uri(Arg* args)
-  : m_port(0)
+  : m_scheme(new std::string()),
+    m_host(new std::string()),
+    m_port(new short(0)),
+    m_path(new std::string()),
+    m_query(new std::string())
 {
   ArgList* l = dynamic_cast<ArgList*>(args);
 
@@ -69,7 +81,20 @@ Uri::Uri(Arg* args)
 
 //=============================================================================
 Uri::Uri(const Uri& c)
-  : m_scheme(c.m_scheme),
+  : Arg(c),
+    m_scheme(new std::string(*c.m_scheme)),
+    m_host(new std::string(*c.m_host)),
+    m_port(new short(*c.m_port)),
+    m_path(new std::string(*c.m_path)),
+    m_query(new std::string(*c.m_query))
+{
+
+}
+
+//=============================================================================
+Uri::Uri(RefType ref, Uri& c)
+  : Arg(ref,c),
+    m_scheme(c.m_scheme),
     m_host(c.m_host),
     m_port(c.m_port),
     m_path(c.m_path),
@@ -81,7 +106,13 @@ Uri::Uri(const Uri& c)
 //=============================================================================
 Uri::~Uri()
 {
-
+  if (*m_refs == 1) {
+    delete m_scheme;
+    delete m_host;
+    delete m_port;
+    delete m_path;
+    delete m_query;
+  }
 }
  
 //=============================================================================
@@ -91,85 +122,91 @@ Arg* Uri::new_copy() const
 }
 
 //=============================================================================
+Arg* Uri::ref_copy(RefType ref)
+{
+  return new Uri(ref,*this);
+}
+
+//=============================================================================
 void Uri::set_scheme(const std::string& scheme)
 {
-  m_scheme = scheme;
-  scx::strlow(m_scheme);
+  *m_scheme = scheme;
+  scx::strlow(*m_scheme);
 }
 
 //=============================================================================
 void Uri::set_host(const std::string& host)
 {
-  m_host = host;
-  scx::strlow(m_host);
+  *m_host = host;
+  scx::strlow(*m_host);
 }
 
 //=============================================================================
 void Uri::set_port(short port)
 {
-  m_port = port;
+  *m_port = port;
 }
 
 //=============================================================================
 void Uri::set_path(const std::string& path)
 {
-  m_path = path;
+  *m_path = path;
 }
 
 //=============================================================================
 void Uri::set_query(const std::string& query)
 {
-  m_query = query;
+  *m_query = query;
 }
 
 //=============================================================================
 const std::string& Uri::get_scheme() const
 {
-  return m_scheme;
+  return *m_scheme;
 }
 
 //=============================================================================
 const std::string& Uri::get_host() const
 {
-  return m_host;
+  return *m_host;
 }
 
 //=============================================================================
 short Uri::get_port() const
 {
-  return (m_port > 0) ? m_port : default_port(m_scheme);
+  return (*m_port > 0) ? *m_port : default_port(*m_scheme);
 }
 
 //=============================================================================
 const std::string& Uri::get_path() const
 {
-  return m_path;
+  return *m_path;
 }
 
 //=============================================================================
 const std::string& Uri::get_query() const
 {
-  return m_query;
+  return *m_query;
 }
 
 //=============================================================================
 std::string Uri::get_string() const
 {
   std::ostringstream oss;
-  if (!m_scheme.empty()) {
-    oss << m_scheme << "://";
+  if (!m_scheme->empty()) {
+    oss << *m_scheme << "://";
   }
-  if (!m_host.empty()) {
-    oss << m_host;
+  if (!m_host->empty()) {
+    oss << *m_host;
   }
-  if (m_port > 0) {
-    oss << ":" << m_port;
+  if (*m_port > 0) {
+    oss << ":" << *m_port;
   }
-  if (!m_path.empty()) {
-    oss << "/" << m_path;
+  if (!m_path->empty()) {
+    oss << "/" << *m_path;
   }
-  if (!m_query.empty()) {
-    oss << "?" << m_query;
+  if (!m_query->empty()) {
+    oss << "?" << *m_query;
   }
   return oss.str();
 }
@@ -177,7 +214,7 @@ std::string Uri::get_string() const
 //=============================================================================
 int Uri::get_int() const
 {
-  return (!m_host.empty() || !m_path.empty());
+  return (!m_host->empty() || !m_path->empty());
 }
 
 //=============================================================================
@@ -195,11 +232,11 @@ Arg* Uri::op(const Auth& auth, OpType optype, const std::string& opname, Arg* ri
 
       } else if ("." == opname) { // Scope resolution
 	std::string name = right->get_string();
-	if (name == "scheme") return new scx::ArgString(m_scheme);
-	if (name == "host") return new scx::ArgString(m_host);
-	if (name == "port") return new scx::ArgInt(m_port);
-	if (name == "path") return new scx::ArgString(m_path);
-	if (name == "query") return new scx::ArgString(m_query);
+	if (name == "scheme") return new scx::ArgString(*m_scheme);
+	if (name == "host") return new scx::ArgString(*m_host);
+	if (name == "port") return new scx::ArgInt(*m_port);
+	if (name == "path") return new scx::ArgString(*m_path);
+	if (name == "query") return new scx::ArgString(*m_query);
       }
     } break;
     case Arg::Prefix: 
@@ -209,6 +246,17 @@ Arg* Uri::op(const Auth& auth, OpType optype, const std::string& opname, Arg* ri
   }
   
   return Arg::op(auth,optype,opname,right);
+}
+
+//=============================================================================
+Uri& Uri::operator=(const Uri& v)
+{
+  *m_scheme = *v.m_scheme;
+  *m_host = *v.m_host;
+  *m_port = *v.m_port;
+  *m_path = *v.m_path;
+  *m_query = *v.m_query;
+  return *this;
 }
 
 //=============================================================================
@@ -259,28 +307,28 @@ void Uri::from_string(const std::string& str)
   // Find scheme
   end = str.find("://",start);
   if (end != std::string::npos) {
-    m_scheme = std::string(str,start,end-start);
-    scx::strlow(m_scheme);
+    *m_scheme = std::string(str,start,end-start);
+    scx::strlow(*m_scheme);
     start = end + 3;
   }
 
   // Find address
   end = str.find("/",start);
   if (end != std::string::npos) {
-    m_host = std::string(str,start,end-start);
+    *m_host = std::string(str,start,end-start);
     start = end + 1;
   } else {
-    m_host = std::string(str,start);
+    *m_host = std::string(str,start);
     start = end;
   }
-  scx::strlow(m_host);
+  scx::strlow(*m_host);
   
   // Split address into host:port
-  std::string::size_type colon = m_host.find(":");
+  std::string::size_type colon = m_host->find(":");
   if (colon != std::string::npos) {
-    std::string port(m_host,colon+1);
-    m_port = atoi(port.c_str());
-    m_host = std::string(m_host,0,colon);
+    std::string port(*m_host,colon+1);
+    *m_port = atoi(port.c_str());
+    *m_host = std::string(*m_host,0,colon);
   }
 
   // Anything left
@@ -289,12 +337,12 @@ void Uri::from_string(const std::string& str)
     // Find path
     end = str.find("?",start);
     if (end == std::string::npos) {
-      m_path = std::string(str,start);
+      *m_path = std::string(str,start);
     } else {
 
-      m_path = std::string(str,start,end-start);
+      *m_path = std::string(str,start,end-start);
       // Remainder must be query
-      m_query = std::string(str,end+1);
+      *m_query = std::string(str,end+1);
     }
 
   }

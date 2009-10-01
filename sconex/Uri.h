@@ -47,9 +47,13 @@ public:
     const std::string& query = ""
   );
   Uri(Arg* args);
+
   Uri(const Uri& c);
+  Uri(RefType ref, Uri& c);
   virtual ~Uri();
+
   Arg* new_copy() const;
+  Arg* ref_copy(RefType ref);
 
   void set_scheme(const std::string& scheme);
   void set_host(const std::string& host);
@@ -68,6 +72,8 @@ public:
   
   virtual Arg* op(const Auth& auth, OpType optype, const std::string& opname, Arg* right);
   
+  Uri& operator=(const Uri& v);
+
   bool operator==(const Uri& v) const;
   bool operator!=(const Uri& v) const;
 
@@ -77,11 +83,11 @@ protected:
   
   void from_string(const std::string& str);
   
-  std::string m_scheme;
-  std::string m_host;
-  short m_port;
-  std::string m_path;
-  std::string m_query;
+  std::string* m_scheme;
+  std::string* m_host;
+  short* m_port;
+  std::string* m_path;
+  std::string* m_query;
 };
 
 };

@@ -86,7 +86,7 @@ bool BluetoothSocketAddress::valid_for_connect() const
 void BluetoothSocketAddress::set_sockaddr(const struct sockaddr* sa)
 {
   DEBUG_ASSERT(sa!=0,"set_sockaddr() Invalid sockaddr pointer");
-  DEBUG_ASSERT(sa->sa_family == m_domain,"set_sockaddr() Socket domain mismatch");
+  DEBUG_ASSERT(sa->sa_family == *m_domain,"set_sockaddr() Socket domain mismatch");
 
   memcpy(&m_addr,sa,sizeof(m_addr));
 }
@@ -107,7 +107,7 @@ socklen_t BluetoothSocketAddress::get_sockaddr_size() const
 std::string BluetoothSocketAddress::get_string() const
 {
   std::ostringstream oss;
-  switch (m_type) {
+  switch (*m_type) {
     case SOCK_STREAM: oss << "rfcomm:"; break;
     default:
       oss << "unknown_rfcomm:";

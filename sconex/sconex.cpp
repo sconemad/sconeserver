@@ -32,7 +32,15 @@ VersionTag& version()
 }
 
 //=========================================================================
-std::string& build_type()
+const std::string& sconeserver_copyright()
+{
+  static std::string s_copyright = 
+    "Copyright (c) 2000-2009 Andrew Wedgbury <wedge@sconemad.com>";
+  return s_copyright;
+}
+
+//=========================================================================
+const std::string& build_type()
 {
   static std::string s_build_type = TARGET;
   return s_build_type;

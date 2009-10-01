@@ -20,6 +20,7 @@ Free Software Foundation, Inc.,
 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA */
 
 #include "sconex/TermBuffer.h"
+#include "sconex/Kernel.h"
 namespace scx {
 
 //=============================================================================
@@ -189,14 +190,17 @@ Condition TermBuffer::event(Stream::Event e)
       new_termios.c_cc[VMIN] = 1;
       tcsetattr(fd,TCSANOW,&new_termios);
 
+      Kernel* k = Kernel::get();
+
       // Draw some coloured ascii art!
       std::string m = " o";
       Stream::write("\n "+ansi("01;31m")+m+ansi("00;33m")+m+ansi("01;37m")+m+ansi("00;33m")+m);
       Stream::write("\n "+ansi("00;33m")+m+ansi("01;31m")+m+ansi("01;31m")+m+ansi("00;33m")+m);
-      Stream::write(ansi("01;33m") + "  SconeServer");
+      Stream::write(ansi("01;33m") + "  " + k->name() + "-" + k->version().get_string());
       Stream::write("\n "+ansi("01;31m")+m+ansi("01;37m")+m+ansi("00;33m")+m+ansi("01;31m")+m);
-      Stream::write(ansi("01;31m") + "  Configuration console");
+      Stream::write(ansi("01;31m") + "  " + k->copyright());
       Stream::write("\n "+ansi("00;33m")+m+ansi("00;33m")+m+ansi("01;31m")+m+ansi("00;33m")+m);
+      Stream::write("\n");
       Stream::write("\n");
       Stream::write("\n");
       Stream::write(ansi("00m"));

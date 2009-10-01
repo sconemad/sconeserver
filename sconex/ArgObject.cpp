@@ -125,7 +125,8 @@ ArgObject::ArgObject(
 
 //=============================================================================
 ArgObject::ArgObject(const ArgObject& c)
-  : m_obj(c.m_obj)
+  : Arg(c),
+    m_obj(c.m_obj)
 {
   DEBUG_ASSERT(m_obj,"Copy constructing NULL ArgObject");
   if (m_obj) m_obj->add_ref();
@@ -205,7 +206,8 @@ ArgObjectFunction::ArgObjectFunction(
 
 //=============================================================================
 ArgObjectFunction::ArgObjectFunction(const ArgObjectFunction& c)
-  : m_obj(c.m_obj),
+  : Arg(c),
+    m_obj(c.m_obj),
     m_name(c.m_name)
 {
 }

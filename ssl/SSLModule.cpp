@@ -88,9 +88,8 @@ SSLModule::~SSLModule()
 std::string SSLModule::info() const
 {
   std::ostringstream oss;
-  oss << "Copyright (c) 2000-2009 Andrew Wedgbury\n"
-      << "Secure socket layer\n"
-      << "Using " << SSLeay_version(SSLEAY_VERSION) << "\n";
+  oss << "Secure socket layer\n"
+      << "Using " << SSLeay_version(SSLEAY_VERSION);
   return oss.str();
 }
 
@@ -156,14 +155,14 @@ scx::Arg* SSLModule::arg_lookup(const std::string& name)
 
   // Properties
   
-  if ("list" == name) {
-    std::ostringstream oss;
+  if ("channels" == name) {
+    scx::ArgList* list = new scx::ArgList();
     for (ChannelMap::const_iterator it = m_channels.begin();
 	 it != m_channels.end();
 	 ++it) {
-      oss << it->first << "\n";
+      list->give(new scx::ArgObject(it->second));
     }
-    return new scx::ArgString(oss.str());
+    return list;
   }
 
   // Sub-objects

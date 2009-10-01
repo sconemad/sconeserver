@@ -242,13 +242,13 @@ scx::Arg* AuthRealmManager::arg_lookup(const std::string& name)
   // Sub-objects
   
   if ("list" == name) {
-    std::ostringstream oss;
+    scx::ArgList* list = new scx::ArgList();
     for (AuthRealmMap::const_iterator it = m_realms.begin();
 	 it != m_realms.end();
 	 ++it) {
-      oss << it->first << "\n";
+      list->give(new scx::ArgObject(it->second));
     }
-    return new scx::ArgString(oss.str());
+    return list;
   }
   
   AuthRealmMap::const_iterator it = m_realms.find(name);

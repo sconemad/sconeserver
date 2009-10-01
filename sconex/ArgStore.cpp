@@ -72,6 +72,7 @@ bool ArgStore::load()
     file.close();
     return (c == End);
   }
+  
   return false;
 }
 
@@ -120,7 +121,7 @@ Arg* ArgStore::arg_lookup(const std::string& name)
 
   // Sub-objects
   Arg* a = m_data->lookup(name);
-  if (a) return a->var_copy();
+  if (a) return a->ref_copy(Arg::ConstRef);
 
   return ArgObjectInterface::arg_lookup(name);
 }
@@ -208,6 +209,7 @@ Condition ArgStoreStream::event(Stream::Event e)
     char buffer[1024];
     int na = 0;
     Condition c = Ok;
+    c = End;
     while ((c = read(buffer,1024,na)) == Ok) {
       m_data += std::string(buffer,na);
     }
@@ -276,7 +278,7 @@ bool ArgStoreStream::write_arg(const Arg* arg)
 	 ++it) {
       if (it != keys.begin()) write(",");
       std::string key = *it;
-      write("\"" + key + "\",");
+      write("\"" + key + "\":");
       write_arg(m->lookup(key));
     }
     write("}");

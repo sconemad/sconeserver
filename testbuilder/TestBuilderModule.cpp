@@ -67,8 +67,7 @@ TestBuilderModule::~TestBuilderModule()
 //=========================================================================
 std::string TestBuilderModule::info() const
 {
-  return "Copyright (c) 2000-2006 Andrew Wedgbury\n"
-         "Test Builder\n";
+  return "Test Builder";
 }
 
 //=========================================================================

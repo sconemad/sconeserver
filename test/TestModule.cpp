@@ -47,8 +47,7 @@ TestModule::~TestModule()
 //=========================================================================
 std::string TestModule::info() const
 {
-  return "Copyright (c) 2000-2005 Andrew Wedgbury\n"
-         "Test module\n";
+  return "Test module";
 }
 
 //=============================================================================

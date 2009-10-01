@@ -26,33 +26,50 @@ namespace scx {
 
 //===========================================================================
 Arg::Arg()
+  : m_refs(new int(1)),
+    m_const(0)
 {
   DEBUG_COUNT_CONSTRUCTOR(Arg);
 }
 
 //===========================================================================
 Arg::Arg(const Arg& c)
+  : m_refs(new int(1)),
+    m_const(0)
 {
   DEBUG_COUNT_CONSTRUCTOR(Arg);
 }
 
 //===========================================================================
+Arg::Arg(RefType ref, Arg& c)
+  : m_refs(c.m_refs),
+    m_const(c.m_const || ref == ConstRef)
+{
+  DEBUG_COUNT_CONSTRUCTOR(Arg);
+  ++(*m_refs);
+}
+
+//===========================================================================
 Arg::~Arg()
 {
+  if (*m_refs == 1) {
+    delete m_refs;
+  } else {
+    --(*m_refs);
+  }
   DEBUG_COUNT_DESTRUCTOR(Arg);
 }
 
 //===========================================================================
-Arg* Arg::var_copy()
+Arg* Arg::ref_copy(RefType ref)
 {
-  // Used if the arg doesn't support variable copies
+  // Used if the arg doesn't support ref copies
   return new_copy();
 }
 
 //===========================================================================
 Arg* Arg::op(const Auth& auth, OpType optype, const std::string& opname, Arg* right)
 {
-
   int value = get_int();
   int rvalue = right ? right->get_int() : 0;
   switch (optype) {
@@ -103,30 +120,43 @@ Arg* Arg::op(const Auth& auth, OpType optype, const std::string& opname, Arg* ri
   return new ArgError("Unsupported");
 }
 
+
 //===========================================================================
 ArgString::ArgString(const char* str)
-  : m_string(str),
-    m_orig(0)
+  : m_string(new std::string(str))
 {
+
 }
 
 //===========================================================================
 ArgString::ArgString(const std::string& str)
-  : m_string(str),
-    m_orig(0)
+  : m_string(new std::string(str))
 {
+
 }
 
 //===========================================================================
 ArgString::ArgString(const ArgString& c)
-  : m_string(c.m_string),
-    m_orig(c.m_orig)
+  : Arg(c),
+    m_string(new std::string(*c.m_string))
 {
+
+}
+
+//===========================================================================
+ArgString::ArgString(RefType ref, ArgString& c)
+  : Arg(ref,c),
+    m_string(c.m_string)
+{
+
 }
 
 //===========================================================================
 ArgString::~ArgString()
 {
+  if (*m_refs == 1) {
+    delete m_string;
+  }
 }
 
 //===========================================================================
@@ -136,17 +166,15 @@ Arg* ArgString::new_copy() const
 }
 
 //===========================================================================
-Arg* ArgString::var_copy()
+Arg* ArgString::ref_copy(RefType ref)
 {
-  ArgString* c = new ArgString(*this);
-  c->m_orig = (ArgString*)this;
-  return c;
+  return new ArgString(ref,*this);
 }
 
 //===========================================================================
 std::string ArgString::get_string() const
 {
-  return  m_string;
+  return *m_string;
 }
 
 //===========================================================================
@@ -161,25 +189,24 @@ Arg* ArgString::op(const Auth& auth, OpType optype, const std::string& opname, A
   if (optype == Arg::Binary) {
 
     if ("+"==opname) { // Concatenate
-      return new ArgString(m_string + right->get_string());
+      return new ArgString(*m_string + right->get_string());
       
     } else if ("=="==opname) { // Equal to
-      return new ArgInt(m_string == right->get_string());
+      return new ArgInt(*m_string == right->get_string());
       
     } else if ("!="==opname) { // Not equal to
-      return new ArgInt(m_string != right->get_string());
+      return new ArgInt(*m_string != right->get_string());
 
     } else if ("="==opname) { // Assignment
-      m_string = right->get_string();
-      if (m_orig) {
-        m_orig->m_string = m_string;
+      if (!m_const) {
+	*m_string = right->get_string();
       }
-      return new_copy();
+      return ref_copy(Ref);
 
     } else if (opname == ".") {
       std::string name = right->get_string();
-      if (name == "length") return new ArgInt(m_string.size());
-      if (name == "empty") return new ArgInt(m_string.empty());
+      if (name == "length") return new ArgInt(m_string->size());
+      if (name == "empty") return new ArgInt(m_string->empty());
     }
   }
 
@@ -189,21 +216,32 @@ Arg* ArgString::op(const Auth& auth, OpType optype, const std::string& opname, A
 
 //===========================================================================
 ArgInt::ArgInt(int value)
-  : m_value(value),
-    m_orig(0)
+  : m_value(new int(value))
 {
 }
 
 //===========================================================================
 ArgInt::ArgInt(const ArgInt& c)
-  : m_value(c.m_value),
-    m_orig(c.m_orig)
+  : Arg(c),
+    m_value(new int(*c.m_value))
 {
+
+}
+
+//===========================================================================
+ArgInt::ArgInt(RefType ref, ArgInt& c)
+  : Arg(ref,c),
+    m_value(c.m_value)
+{
+
 }
 
 //===========================================================================
 ArgInt::~ArgInt()
 {
+  if (*m_refs == 1) {
+    delete m_value;
+  }
 }
 
 //===========================================================================
@@ -213,73 +251,71 @@ Arg* ArgInt::new_copy() const
 }
 
 //===========================================================================
-Arg* ArgInt::var_copy()
+Arg* ArgInt::ref_copy(RefType ref)
 {
-  ArgInt* c = new ArgInt(*this);
-  c->m_orig = (ArgInt*)this;
-  return c;
+  return new ArgInt(ref,*this);
 }
 
 //===========================================================================
 std::string ArgInt::get_string() const
 {
   std::ostringstream oss;
-  oss << m_value;
+  oss << *m_value;
   return oss.str();
 }
 
 //===========================================================================
 int ArgInt::get_int() const
 {
-  return m_value;
+  return *m_value;
 }
 
 //===========================================================================
 Arg* ArgInt::op(const Auth& auth, OpType optype, const std::string& opname, Arg* right)
 {
-
+  int& value = *m_value;
   switch (optype) {
 
     case Arg::Prefix: {
-      if ("+"==opname) { // Positive (is there much point)
-        return new ArgInt(+m_value);
+      if ("+"==opname) { // Positive (like, duh)
+        return new ArgInt(+value);
 
       } else if ("-"==opname) { // Negative
-        return new ArgInt(-m_value);
+        return new ArgInt(-value);
 
       } else if ("++"==opname) { // Pre-increment
-        ++m_value;
-        if (m_orig) {
-          m_orig->m_value = m_value;
-        }
-        return new_copy();        
+	if (!m_const) {
+	  ++value;
+	}
+        return ref_copy(ConstRef);
 
       } else if ("--"==opname) { // Pre-decrement
-        --m_value;
-        if (m_orig) {
-          m_orig->m_value = m_value;
-        }
-        return new_copy();        
+	if (!m_const) {
+	  --value;
+	}
+        return ref_copy(ConstRef);
       }
     } break;
 
     case Arg::Postfix: {
-      if ("!"==opname) { // Factorial
+      if ("!"==opname) { // Factorial (wtf do we need this?)
         int a = 1;
-        for (int i=abs((int)m_value); i>1; --i) a *= i;
-        return new ArgInt(a * (m_value<0 ? -1 : 1));
+        for (int i=abs((int)value); i>1; --i) a *= i;
+        return new ArgInt(a * (value<0 ? -1 : 1));
 
       } else if ("++"==opname) { // Post-increment
-        if (m_orig) {
-          m_orig->m_value = m_value + 1;
+	int pre_value = value;
+        if (!m_const) {
+	  ++value;
         }
-        return new_copy();        
+        return new ArgInt(pre_value);
 
       } else if ("--"==opname) { // Post-decrement
-        if (m_orig) {
-          m_orig->m_value = m_value - 1;
+	int pre_value = value;
+        if (!m_const) {
+	  --value;
         }
-        return new_copy();        
+        return new ArgInt(pre_value);
       }
     } break;
 
@@ -289,27 +325,33 @@ Arg* ArgInt::op(const Auth& auth, OpType optype, const std::string& opname, Arg*
         int rvalue = rnum->get_int();
         
         if ("+"==opname) { // Plus
-          return new ArgInt(m_value + rvalue);
+          return new ArgInt(value + rvalue);
 
         } else if ("-"==opname) { // Minus
-          return new ArgInt(m_value - rvalue);
+          return new ArgInt(value - rvalue);
 
         } else if ("*"==opname) { // Multiply
-          return new ArgInt(m_value * rvalue);
+          return new ArgInt(value * rvalue);
 
         } else if ("/"==opname) { // Divide
           if (rvalue != 0) {
-            return new ArgInt(m_value / rvalue);
+            return new ArgInt(value / rvalue);
+          } else {
+            return new ArgError("Divide by zero");
+          }
+
+        } else if ("%"==opname) { // Modulus
+          if (rvalue != 0) {
+            return new ArgInt(value % rvalue);
           } else {
             return new ArgError("Divide by zero");
           }
 
         } else if ("="==opname) { // Assignment
-          m_value = right->get_int();
-          if (m_orig) {
-            m_orig->m_value = m_value;
-          }
-          return new_copy();
+	  if (!m_const) {
+	    value = right->get_int();
+	  }
+          return ref_copy(Ref);
         }
       }
     } break;
@@ -322,21 +364,33 @@ Arg* ArgInt::op(const Auth& auth, OpType optype, const std::string& opname, Arg*
 
 //===========================================================================
 ArgReal::ArgReal(double value)
-  : m_value(value),
-    m_orig(0)
+  : m_value(new double(value))
 {
+
 }
 
 //===========================================================================
 ArgReal::ArgReal(const ArgReal& c)
-  : m_value(c.m_value),
-    m_orig(c.m_orig)
+  : Arg(c),
+    m_value(new double(*c.m_value))
 {
+
+}
+
+//===========================================================================
+ArgReal::ArgReal(RefType ref, ArgReal& c)
+  : Arg(ref,c),
+    m_value(c.m_value)
+{
+
 }
 
 //===========================================================================
 ArgReal::~ArgReal()
 {
+  if (*m_refs == 1) {
+    delete m_value;
+  }
 }
 
 //===========================================================================
@@ -346,50 +400,48 @@ Arg* ArgReal::new_copy() const
 }
 
 //===========================================================================
-Arg* ArgReal::var_copy()
+Arg* ArgReal::ref_copy(RefType ref)
 {
-  ArgReal* c = new ArgReal(*this);
-  c->m_orig = (ArgReal*)this;
-  return c;
+  return new ArgReal(ref,*this);
 }
 
 //===========================================================================
 std::string ArgReal::get_string() const
 {
   std::ostringstream oss;
-  oss << m_value;
+  oss << *m_value;
   return oss.str();
 }
 
 //===========================================================================
 int ArgReal::get_int() const
 {
-  return (int)m_value;
+  return (int)(*m_value);
 }
 
 //===========================================================================
 Arg* ArgReal::op(const Auth& auth, OpType optype, const std::string& opname, Arg* right)
 {
-
+  double& value = *m_value;
   switch (optype) {
 
     case Arg::Prefix: {
       if ("+"==opname) { // Positive (is there much point)
-        return new ArgReal(+m_value);
+        return new ArgReal(+value);
 
       } else if ("-"==opname) { // Negative
-        return new ArgReal(-m_value);
+        return new ArgReal(-value);
 
       } else if ("!"==opname) { // Not
-        return new ArgReal(!m_value);
+        return new ArgReal(!value);
       }
     } break;
 
     case Arg::Postfix: {
       if ("!"==opname) { // Factorial
         int a = 1;
-        for (int i=abs((int)m_value); i>1; --i) a *= i;
-        return new ArgReal(a * (m_value<0 ? -1 : 1));
+        for (int i=abs((int)value); i>1; --i) a *= i;
+        return new ArgReal(a * (value<0 ? -1 : 1));
       }
     } break;
 
@@ -399,41 +451,40 @@ Arg* ArgReal::op(const Auth& auth, OpType optype, const std::string& opname, Arg
         double rvalue = rnum->get_real();
         
         if ("+"==opname) { // Plus
-          return new ArgReal(m_value + rvalue);
+          return new ArgReal(value + rvalue);
 
         } else if ("-"==opname) { // Minus
-          return new ArgReal(m_value - rvalue);
+          return new ArgReal(value - rvalue);
 
         } else if ("*"==opname) { // Multiply
-          return new ArgReal(m_value * rvalue);
+          return new ArgReal(value * rvalue);
 
         } else if ("/"==opname) { // Divide
-          return new ArgReal(m_value / rvalue);
+          return new ArgReal(value / rvalue);
 
         } else if (">"==opname) { // Greater than
-          return new ArgInt(m_value > rvalue);
+          return new ArgInt(value > rvalue);
 
         } else if ("<"==opname) { // Less than
-          return new ArgInt(m_value < rvalue);
+          return new ArgInt(value < rvalue);
 
         } else if (">="==opname) { // Greater than or equal to
-          return new ArgInt(m_value >= rvalue);
+          return new ArgInt(value >= rvalue);
 
         } else if ("<="==opname) { // Less than or equal to
-          return new ArgInt(m_value <= rvalue);
+          return new ArgInt(value <= rvalue);
 
         } else if ("=="==opname) { // Equal to
-          return new ArgInt(m_value == rvalue);
+          return new ArgInt(value == rvalue);
 
         } else if ("!="==opname) { // Not equal to
-          return new ArgInt(m_value != rvalue);
+          return new ArgInt(value != rvalue);
 
         } else if ("="==opname) { // Assignment
-          m_value = rnum->get_real();
-          if (m_orig) {
-            m_orig->m_value = m_value;
-          }
-          return new_copy();
+	  if (!m_const) {
+	    value = rvalue;
+	  }
+          return ref_copy(Ref);
         }
       }
     } break;
@@ -446,34 +497,47 @@ Arg* ArgReal::op(const Auth& auth, OpType optype, const std::string& opname, Arg
 //===========================================================================
 double ArgReal::get_real() const
 {
-  return m_value;
+  return *m_value;
 }
 
 
 //===========================================================================
 ArgList::ArgList()
-  : m_orig(0)
+  : m_list(new ArgListData())
 {
+
 }
 
 //===========================================================================
 ArgList::ArgList(const ArgList& c)
-  : m_orig(c.m_orig)
+  : Arg(c),
+    m_list(new ArgListData())
 {
-  ArgListData::const_iterator iter = c.m_list.begin();
-  while (iter != c.m_list.end()) {
-    m_list.push_back( (*iter)->new_copy() );
-    ++iter;
+  for (ArgListData::const_iterator it = c.m_list->begin();
+       it != c.m_list->end();
+       ++it) {
+    m_list->push_back( (*it)->new_copy() );
   }
+}
+
+//===========================================================================
+ArgList::ArgList(RefType ref, ArgList& c)
+  : Arg(ref,c),
+    m_list(c.m_list)
+{
+
 }
 
 //===========================================================================
 ArgList::~ArgList()
 {
-  ArgListData::iterator iter = m_list.begin();
-  while (iter != m_list.end()) {
-    delete *iter;
-    ++iter;
+  if (*m_refs == 1) {
+    for (ArgListData::iterator it = m_list->begin();
+	 it != m_list->end();
+	 ++it) {
+      delete *it;
+    }
+    delete m_list;
   }
 }
 
@@ -484,25 +548,21 @@ Arg* ArgList::new_copy() const
 }
 
 //===========================================================================
-Arg* ArgList::var_copy()
+Arg* ArgList::ref_copy(RefType ref)
 {
-  ArgList* c = new ArgList();
-  c->m_orig = this;
-  return c;
+  return new ArgList(ref,*this);
 }
 
 //===========================================================================
 std::string ArgList::get_string() const
 {
-  if (m_orig) return m_orig->get_string();
-
   std::ostringstream oss;
   oss << "[";
-  for (ArgListData::const_iterator it = m_list.begin();
-       it != m_list.end();
+  for (ArgListData::const_iterator it = m_list->begin();
+       it != m_list->end();
        ++it) {
     const Arg* arg = *it;
-    oss << (it==m_list.begin() ? "" : ",") 
+    oss << (it==m_list->begin() ? "" : ",") 
 	<< arg->get_string();
   }
   oss << "]";
@@ -512,33 +572,29 @@ std::string ArgList::get_string() const
 //===========================================================================
 int ArgList::get_int() const
 {
-  if (m_orig) return m_orig->get_int();
-
-  return m_list.size();
+  return m_list->size();
 }
 
 //===========================================================================
 Arg* ArgList::op(const Auth& auth, OpType optype, const std::string& opname, Arg* right)
 {
-  if (m_orig) return m_orig->op(auth,optype,opname,right);
-
   if (optype == Arg::Binary) {
     if (opname == "[") {
       ArgInt* aidx = dynamic_cast<ArgInt*> (right);
       if (aidx) {
 	int idx = aidx->get_int();
-	if (idx < 0 || idx >= (int)m_list.size()) {
+	if (idx < 0 || idx >= (int)m_list->size()) {
 	  return new ArgError("Array index out of bounds");
 	}
 	Arg* a = get(idx);
 	if (a) {
-	  return a->var_copy();
+	  return a->ref_copy(m_const ? ConstRef : Ref);
 	}
 	return new ArgError("Not defined");
       }
     } else if (opname == ".") {
       std::string name = right->get_string();
-      if (name == "size") return new ArgInt(m_list.size());
+      if (name == "size") return new ArgInt(size());
     }
   }
 
@@ -548,21 +604,17 @@ Arg* ArgList::op(const Auth& auth, OpType optype, const std::string& opname, Arg
 //===========================================================================
 int ArgList::size() const
 {
-  if (m_orig) return m_orig->size();
-
-  return m_list.size();
+  return m_list->size();
 }
 
 //===========================================================================
 const Arg* ArgList::get(int i) const
 {
-  if (m_orig) return m_orig->get(i);
-
-  ArgListData::const_iterator iter = m_list.begin();
   int ic=0;
-  while (iter != m_list.end()) {
-    if (ic++==i) return *iter;
-    ++iter;
+  for (ArgListData::const_iterator it = m_list->begin();
+       it != m_list->end();
+       ++it) {
+    if (ic++==i) return *it;
   }
   return 0;
 }
@@ -570,13 +622,11 @@ const Arg* ArgList::get(int i) const
 //===========================================================================
 Arg* ArgList::get(int i)
 {
-  if (m_orig) return m_orig->get(i);
-
-  ArgListData::iterator iter = m_list.begin();
   int ic=0;
-  while (iter != m_list.end()) {
-    if (ic++==i) return *iter;
-    ++iter;
+  for (ArgListData::iterator it = m_list->begin();
+       it != m_list->end();
+       ++it) {
+    if (ic++==i) return *it;
   }
   return 0;
 }
@@ -584,35 +634,32 @@ Arg* ArgList::get(int i)
 //===========================================================================
 void ArgList::give(Arg* arg, int i)
 {
-  if (m_orig) m_orig->give(arg,i);
-
   if (-1==i) {
-    m_list.push_back(arg);
+    m_list->push_back(arg);
   } else {
-    ArgListData::iterator iter = m_list.begin();
     int ic=0;
-    while (iter != m_list.end()) {
+    ArgListData::iterator it;
+    for (it = m_list->begin();
+	 it != m_list->end();
+	 ++it) {
       if (ic++==i) break;
-      ++iter;
     }
-    m_list.insert(iter,arg);
+    m_list->insert(it,arg);
   }
 }
 
 //===========================================================================
 Arg* ArgList::take(int i)
 {
-  if (m_orig) return m_orig->take(i);
-
-  ArgListData::iterator iter = m_list.begin();
   int ic=0;
-  while (iter != m_list.end()) {
+  for (ArgListData::iterator it = m_list->begin();
+       it != m_list->end();
+       ++it) {
     if (ic++==i) {
-      Arg* arg = *iter;
-      m_list.erase(iter);
+      Arg* arg = *it;
+      m_list->erase(it);
       return arg;
     }
-    ++iter;
   }
   return 0;
 }
@@ -620,31 +667,43 @@ Arg* ArgList::take(int i)
 
 //===========================================================================
 ArgMap::ArgMap()
-  : m_orig(0)
+  : m_map(new ArgMapData())
 {
 
 }
 
 //===========================================================================
 ArgMap::ArgMap(const ArgMap& c)
-  : m_orig(c.m_orig)
+  : Arg(c),
+    m_map(new ArgMapData())
 {
-  for (ArgMapData::const_iterator it = c.m_map.begin();
-       it != c.m_map.end();
+  for (ArgMapData::const_iterator it = c.m_map->begin();
+       it != c.m_map->end();
        ++it) {
     const std::string key = it->first;
     const Arg* arg = it->second;
-    m_map.insert( std::pair<std::string,Arg*>(key,arg->new_copy()) );
+    m_map->insert( std::pair<std::string,Arg*>(key,arg->new_copy()) );
   }
+}
+
+//===========================================================================
+ArgMap::ArgMap(RefType ref, ArgMap& c)
+  : Arg(ref,c),
+    m_map(c.m_map)
+{
+
 }
 
 //===========================================================================
 ArgMap::~ArgMap()
 {
-  for (ArgMapData::iterator it = m_map.begin();
-       it != m_map.end();
-       ++it) {
-    delete it->second;
+  if (*m_refs == 1) {
+    for (ArgMapData::iterator it = m_map->begin();
+	 it != m_map->end();
+	 ++it) {
+      delete it->second;
+    }
+    delete m_map;
   }
 }
 
@@ -655,26 +714,22 @@ Arg* ArgMap::new_copy() const
 }
 
 //===========================================================================
-Arg* ArgMap::var_copy()
+Arg* ArgMap::ref_copy(RefType ref)
 {
-  ArgMap* c = new ArgMap();
-  c->m_orig = this;
-  return c;
+  return new ArgMap(ref,*this);
 }
 
 //===========================================================================
 std::string ArgMap::get_string() const
 {
-  if (m_orig) return m_orig->get_string();
-
   std::ostringstream oss;
   oss << "{";
-  for (ArgMapData::const_iterator it = m_map.begin();
-       it != m_map.end();
+  for (ArgMapData::const_iterator it = m_map->begin();
+       it != m_map->end();
        ++it) {
     const std::string key = it->first;
     const Arg* arg = it->second;
-    oss << (it==m_map.begin() ? "" : ",") 
+    oss << (it==m_map->begin() ? "" : ",") 
         << key << ":"
 	<< (arg ? arg->get_string() : "NULL");
   }
@@ -685,16 +740,12 @@ std::string ArgMap::get_string() const
 //===========================================================================
 int ArgMap::get_int() const
 {
-  if (m_orig) return m_orig->get_int();
-
-  return m_map.size();
+  return m_map->size();
 }
 
 //===========================================================================
 Arg* ArgMap::op(const Auth& auth, OpType optype, const std::string& opname, Arg* right)
 {
-  if (m_orig) return m_orig->op(auth,optype,opname,right);
-
   if (optype == Arg::Binary) {
     if (opname == "[") {
       ArgString* akey = dynamic_cast<ArgString*> (right);
@@ -702,17 +753,17 @@ Arg* ArgMap::op(const Auth& auth, OpType optype, const std::string& opname, Arg*
 	const std::string key = akey->get_string();
 	Arg* a = lookup(key);
 	if (a) {
-	  return a->var_copy();
+	  return a->ref_copy(m_const ? ConstRef : Ref);
 	}
 	return new ArgError("Not defined");
       }
     } else if (opname == ".") {
       std::string name = right->get_string();
-      if (name == "size") return new ArgInt(m_map.size());
+      if (name == "size") return new ArgInt(size());
       if (name == "keys") {
 	ArgList* list = new ArgList();
-	for (ArgMapData::const_iterator it = m_map.begin();
-	     it != m_map.end();
+	for (ArgMapData::const_iterator it = m_map->begin();
+	     it != m_map->end();
 	     ++it) {
 	  list->give( new ArgString(it->first) );
 	}
@@ -720,7 +771,9 @@ Arg* ArgMap::op(const Auth& auth, OpType optype, const std::string& opname, Arg*
       }
       
       Arg* a = lookup(name);
-      if (a) return a->var_copy();
+      if (a) {
+	return a->ref_copy(m_const ? ConstRef : Ref);
+      }
     }
   }
 
@@ -730,23 +783,16 @@ Arg* ArgMap::op(const Auth& auth, OpType optype, const std::string& opname, Arg*
 //===========================================================================
 int ArgMap::size() const
 {
-  if (m_orig) return m_orig->size();
-
-  return m_map.size();
+  return m_map->size();
 }
 
 //===========================================================================
 void ArgMap::keys(std::vector<std::string>& keyvec) const
 {
-  if (m_orig) { 
-    m_orig->keys(keyvec);
-    return;
-  }
-
   keyvec.clear();
   keyvec.reserve(size());
-  for (ArgMapData::const_iterator it = m_map.begin();
-       it != m_map.end();
+  for (ArgMapData::const_iterator it = m_map->begin();
+       it != m_map->end();
        ++it) {
     keyvec.push_back(it->first);
   }
@@ -755,10 +801,8 @@ void ArgMap::keys(std::vector<std::string>& keyvec) const
 //===========================================================================
 const Arg* ArgMap::lookup(const std::string& key) const
 {
-  if (m_orig) return m_orig->lookup(key);
-
-  ArgMapData::const_iterator it = m_map.find(key);
-  if (it != m_map.end()) {
+  ArgMapData::const_iterator it = m_map->find(key);
+  if (it != m_map->end()) {
     return it->second;
   }
   return 0;
@@ -767,10 +811,8 @@ const Arg* ArgMap::lookup(const std::string& key) const
 //===========================================================================
 Arg* ArgMap::lookup(const std::string& key)
 {
-  if (m_orig) return m_orig->lookup(key);
-
-  ArgMapData::iterator it = m_map.find(key);
-  if (it != m_map.end()) {
+  ArgMapData::iterator it = m_map->find(key);
+  if (it != m_map->end()) {
     return it->second;
   }
   return 0;
@@ -779,24 +821,17 @@ Arg* ArgMap::lookup(const std::string& key)
 //===========================================================================
 void ArgMap::give(const std::string& key, Arg* arg)
 {
-  if (m_orig) {
-    m_orig->give(key,arg);
-    return;
-  }
-
   delete lookup(key);
-  m_map[key] = arg;
+  (*m_map)[key] = arg;
 }
 
 //===========================================================================
 Arg* ArgMap::take(const std::string& key)
 {
-  if (m_orig) return m_orig->take(key);
-
-  ArgMapData::iterator it = m_map.find(key);
-  if (it != m_map.end()) {
+  ArgMapData::iterator it = m_map->find(key);
+  if (it != m_map->end()) {
     Arg* arg = it->second;
-    m_map.erase(it);
+    m_map->erase(it);
     return arg;
   }
   return 0;
@@ -813,7 +848,8 @@ ArgSub::ArgSub(const std::string& name, ArgStatement* body, ArgProc& proc)
 
 //===========================================================================
 ArgSub::ArgSub(const ArgSub& c)
-  : m_name(c.m_name),
+  : Arg(c),
+    m_name(c.m_name),
     m_body(0),
     m_proc(new ArgProc(*c.m_proc))
 {
@@ -825,8 +861,10 @@ ArgSub::ArgSub(const ArgSub& c)
 //===========================================================================
 ArgSub::~ArgSub()
 {
-  delete m_body;
-  delete m_proc;
+  if (*m_refs == 1) {
+    delete m_body;
+    delete m_proc;
+  }
 }
 
 //===========================================================================
@@ -880,23 +918,28 @@ Arg* ArgSub::call(const Auth& auth, Arg* args)
 ArgError::ArgError(const char* str)
   : m_string(str)
 {
+
 }
 
 //===========================================================================
 ArgError::ArgError(const std::string& str)
   : m_string(str)
 {
+
 }
 
 //===========================================================================
 ArgError::ArgError(const ArgError& c)
-  : m_string(c.m_string)
+  : Arg(c),
+    m_string(c.m_string)
 {
+
 }
 
 //===========================================================================
 ArgError::~ArgError()
 {
+
 }
 
 //===========================================================================

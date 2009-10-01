@@ -290,8 +290,7 @@ ErrorPageModule::~ErrorPageModule()
 //=========================================================================
 std::string ErrorPageModule::info() const
 {
-  return "Copyright (c) 2000-2005 Andrew Wedgbury\n"
-         "HTTP error page handler\n";
+  return "HTTP error page handler";
 }
 
 //=========================================================================

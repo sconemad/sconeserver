@@ -41,12 +41,12 @@ public:
   // Default constructor
 
   SocketAddress(const SocketAddress& c);
-  // Copy constructor
+  SocketAddress(RefType ref, SocketAddress& c);
+  // Copy constructors
   
   virtual ~SocketAddress();
   // Destructor
 
-  
   virtual bool valid_for_bind() const;
   // Is this socket valid for binding, i.e. does it represent local
   // interface(s) and specify a valid port/channel?
@@ -91,9 +91,9 @@ public:
 
 protected:
 
-  int m_domain;
-  int m_type;
-  int m_protocol;
+  int* m_domain;
+  int* m_type;
+  int* m_protocol;
   
 private:
 
@@ -105,12 +105,15 @@ class AnonSocketAddress : public SocketAddress {
 public:
 
   AnonSocketAddress(const std::string& name);
+
   AnonSocketAddress(const AnonSocketAddress& c);
+  AnonSocketAddress(RefType ref, AnonSocketAddress& c);
   virtual ~AnonSocketAddress();
   
-  // SocketAddress methods
-  virtual scx::Arg* new_copy() const;
+  virtual Arg* new_copy() const;
+  virtual Arg* ref_copy(RefType ref);
 
+  // SocketAddress methods
   virtual bool valid_for_bind() const;
   virtual bool valid_for_connect() const;
 
@@ -124,7 +127,7 @@ public:
   
 protected:
 
-  std::string m_name;
+  std::string* m_name;
 
 };
   

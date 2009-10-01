@@ -46,9 +46,8 @@ SimpleModule::~SimpleModule()
 //=========================================================================
 std::string SimpleModule::info() const
 {
-  return "Copyright (c) 2000-2005 Andrew Wedgbury\n"
-         "Simple TCP/IP services\n"
-         "Implements: echo, discard, daytime, chargen and time\n";
+  return "Simple TCP/IP services\n"
+         "Implements: echo, discard, daytime, chargen and time";
 }
 
 //=========================================================================

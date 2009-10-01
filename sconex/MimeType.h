@@ -45,9 +45,13 @@ public:
     const std::string& params = ""
   );
   MimeType(Arg* args);
+
   MimeType(const MimeType& c);
+  MimeType(RefType ref, MimeType& c);
   virtual ~MimeType();
+
   Arg* new_copy() const;
+  Arg* ref_copy(RefType ref);
 
   void set_type(const std::string& type);
   void set_subtype(const std::string& subtype);
@@ -63,6 +67,8 @@ public:
   
   virtual Arg* op(const Auth& auth, OpType optype, const std::string& opname, Arg* right);
   
+  MimeType& operator=(const MimeType& v);
+
   bool operator==(const MimeType& v) const;
   bool operator!=(const MimeType& v) const;
 
@@ -71,11 +77,11 @@ protected:
   void from_string(const std::string& str);
   void params_from_string(const std::string& str);
   
-  std::string m_type;
-  std::string m_subtype;
+  std::string* m_type;
+  std::string* m_subtype;
 
   typedef std::map<std::string,std::string> ParamMap;
-  ParamMap m_params;
+  ParamMap* m_params;
 
 };
 

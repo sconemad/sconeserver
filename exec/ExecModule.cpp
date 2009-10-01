@@ -51,8 +51,7 @@ ExecModule::~ExecModule()
 //=========================================================================
 std::string ExecModule::info() const
 {
-  return "Copyright (c) 2000-2006 Andrew Wedgbury\n"
-         "External program execution\n";
+  return "External program execution and http CGI";
 }
 
 //=========================================================================

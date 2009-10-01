@@ -1,0 +1,65 @@
+# ArgScript test script
+#
+#
+
+print("START" + endl);
+
+var map = {
+  "one" : 1, 
+  "two" : 2,
+  "three" : 3,
+  "four" : [1,2,3,4,5,6,7,8,9,0],
+  "five" : 5
+};
+
+print("Constructed map: ");
+print(map);
+print(endl);
+
+test(map.one == 1,"Test map is initialised");
+test(map.two == 2,"Test map is initialised");
+test(map.three == 3,"Test map is initialised");
+test(map.four == [1,2,3,4,5,6,7,8,9,0],"Test map is initialised");
+test(map.five == 5,"Test map is initialised");
+
+
+# Test making a reference
+
+ref r_one = map.one;
+r_one = 100;
+test(r_one == 100,"Test reference is updated");
+test(map.one == 100,"Test referenced value is updated");
+
+
+# Test making a const reference
+
+const c_two = map.two;
+c_two = 200;
+test(c_two == 2,"Test const is unchanged");
+test(map.two == 2,"Test const referenced value is unchanged");
+
+
+# Test making a const reference to a reference
+
+const cr_one = r_one;
+cr_one = 400;
+test(cr_one == 100,"Test const is unchanged");
+test(r_one == 100,"Test const is unchanged");
+test(map.one == 100,"Test const referenced value is unchanged");
+
+
+# Test you can't make an unconst reference to a const reference
+
+ref rc_two = c_two;
+rc_two = 300;
+test(rc_two == 2,"Test const is unchanged");
+test(c_two == 2,"Test const is unchanged");
+test(map.two == 2,"Test const referenced value is unchanged");
+
+
+print("Updated map: ");
+print(map);
+print(endl);
+
+
+print("END" + endl);

@@ -52,8 +52,7 @@ StatModule::~StatModule()
 //=========================================================================
 std::string StatModule::info() const
 {
-  return "Copyright (c) 2000-2009 Andrew Wedgbury\n"
-         "Connection and I/O statistics\n";
+  return "Connection and I/O statistics";
 }
 
 //=========================================================================
@@ -137,14 +136,14 @@ scx::Arg* StatModule::arg_lookup(const std::string& name)
 
   // Properties
   
-  if ("list" == name) {
-    std::ostringstream oss;
+  if ("channels" == name) {
+    scx::ArgList* list = new scx::ArgList();
     for (ChannelMap::const_iterator it = m_channels.begin();
 	 it != m_channels.end();
 	 ++it) {
-      oss << (*it).first << "\n";
+      list->give(new scx::ArgObject(it->second));
     }
-    return new scx::ArgString(oss.str());
+    return list;
   }
 
   if ("print" == name) {

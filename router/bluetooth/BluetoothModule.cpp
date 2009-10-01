@@ -63,8 +63,7 @@ BluetoothModule::~BluetoothModule()
 //=========================================================================
 std::string BluetoothModule::info() const
 {
-  return "Copyright (c) 2000-2005 Andrew Wedgbury\n"
-         "Router protocol module for Bluetooth\n";
+  return "Router protocol module for Bluetooth";
 }
 
 //=========================================================================

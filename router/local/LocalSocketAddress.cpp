@@ -85,7 +85,7 @@ bool LocalSocketAddress::valid_for_connect() const
 void LocalSocketAddress::set_sockaddr(const struct sockaddr* sa)
 {
   DEBUG_ASSERT(sa!=0,"set_sockaddr() Invalid sockaddr pointer");
-  DEBUG_ASSERT(sa->sa_family == m_domain,"set_sockaddr() Socket domain mismatch");
+  DEBUG_ASSERT(sa->sa_family == *m_domain,"set_sockaddr() Socket domain mismatch");
 
   memcpy(&m_addr,sa,sizeof(m_addr));
 }

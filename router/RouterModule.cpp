@@ -48,8 +48,7 @@ RouterModule::~RouterModule()
 //=========================================================================
 std::string RouterModule::info() const
 {
-  return "Copyright (c) 2000-2009 Andrew Wedgbury\n"
-         "Connection router\n";
+  return "Connection router";
 }
 
 //=============================================================================

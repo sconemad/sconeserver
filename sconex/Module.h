@@ -50,6 +50,7 @@ public:
 
   const VersionTag& version() const;
   virtual std::string name() const;
+  virtual std::string copyright() const;
   virtual std::string info() const =0;
   // Access module information
 
@@ -101,8 +102,6 @@ public:
   virtual Arg* arg_lookup(const std::string& name);
   virtual Arg* arg_function(const Auth& auth, const std::string& name,Arg* args);
 
-  //  Arg* arg_eval(const std::string& expr);
-  
 protected:
 
   void add_module(ModuleLoader* loader);

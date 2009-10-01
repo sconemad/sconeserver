@@ -72,6 +72,12 @@ std::string Module::name() const
 }
 
 //=============================================================================
+std::string Module::copyright() const
+{
+  return sconeserver_copyright();
+}
+
+//=============================================================================
 int Module::init()
 {
   if (m_autoload_config) {
@@ -190,52 +196,40 @@ Arg* Module::arg_lookup(const std::string& name)
   }
 
   // See if its a property
-  if ("name" == name) {
-    return new ArgString(Module::name());
-  }
+  if ("version" == name) return new VersionTag(version());
+  if ("name" == name) return new ArgString(Module::name());
+  if ("copyright" == name) return new ArgString(copyright());
+  if ("info" == name) return new ArgString(info());
+  if ("loadtime" == name) return m_loadtime.ref_copy(Arg::ConstRef);
+  if ("mod_path" == name) return new ArgString(get_mod_path().path());
+  if ("conf_path" == name) return new ArgString(get_conf_path().path());
+  if ("var_path" == name) return new ArgString(get_var_path().path());
 
-  if ("version" == name) {
-    return new VersionTag(version());
-  }
-
-  if ("info" == name) {
+  if ("description" == name) {
     std::ostringstream oss;
-    oss << m_name << "-" << m_version.get_string() << "\n" << info();
+    oss << m_name << "-" << m_version.get_string() << "\n" 
+	<< copyright() << "\n"
+	<< info() << "\n";
     return new ArgString(oss.str());
   }
 
-  if ("loadtime" == name) {
-    return new ArgString(m_loadtime.code());
-  }
-
-  if ("lsmod" == name) {
-    std::ostringstream oss;
+  if ("modules" == name) {
+    ArgMap* modmap = new ArgMap();
     for (std::list<ModuleLoader*>::const_iterator it = m_modules.begin();
          it != m_modules.end();
          it++) {
       ModuleLoader* loader = (*it);
-      oss << loader->get_name() << " ";
-      if (loader->is_loaded()) {
+      ArgMap* entry = new ArgMap();
+      modmap->give(loader->get_name(),entry);
+      bool loaded = loader->is_loaded();
+      entry->give("loaded",new ArgInt(loaded));
+      if (loaded) {
         ModuleRef ref = loader->ref();
-        oss << ref.module()->get_num_refs() - 1;
-      } else {
-        oss << "X";
+	entry->give("refs",new ArgInt(ref.module()->get_num_refs() - 1));
+	entry->give("object",new ArgModule(ref));
       }
-      oss << "\n";
     }
-    return new scx::ArgString(oss.str());
-  }
-
-  if ("mod_path" == name) {
-    return new ArgString(get_mod_path().path());
-  }
-
-  if ("conf_path" == name) {
-    return new ArgString(get_conf_path().path());
-  }
-
-  if ("var_path" == name) {
-    return new ArgString(get_var_path().path());
+    return modmap;
   }
   
   // See if its a sub-module
@@ -404,15 +398,7 @@ Arg* Module::arg_function(
 
   return ArgObjectInterface::arg_function(auth,name,args);
 }
-/*
-//=============================================================================
-Arg* Module::arg_eval(const std::string& expr)
-{
-  ArgModule argmod(ref());
-  ArgProc evaluator(&argmod);
-  return evaluator.evaluate(expr);
-}
-*/
+
 //=============================================================================
 void Module::add_module(ModuleLoader* loader)
 {

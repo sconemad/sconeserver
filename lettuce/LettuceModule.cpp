@@ -44,9 +44,8 @@ LettuceModule::~LettuceModule()
 //=========================================================================
 std::string LettuceModule::info() const
 {
-  return "Copyright (c) 2000-2008 Andrew Wedgbury\n"
-         "Services for the Lettuce automation platform\n"
-         "See http://sconemad.com/lettuce for more details\n";
+  return "Services for the Lettuce automation platform\n"
+         "See http://sconemad.com/lettuce for more details";
 }
 
 //=========================================================================

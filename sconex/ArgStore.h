@@ -55,7 +55,7 @@ public:
 protected:
 
   FilePath m_path;
-  Date m_modtime;
+  //  Date m_modtime;
   ArgMap* m_data;
 
 };

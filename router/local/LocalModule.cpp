@@ -63,8 +63,7 @@ LocalModule::~LocalModule()
 //=========================================================================
 std::string LocalModule::info() const
 {
-  return "Copyright (c) 2000-2005 Andrew Wedgbury\n"
-         "Router protocol module for Local (UNIX domain)\n";
+  return "Router protocol module for Local (UNIX domain)";
 }
 
 //=========================================================================

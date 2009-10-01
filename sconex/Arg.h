@@ -66,17 +66,27 @@ class SCONEX_API Arg {
 
 public:
 
+  enum RefType { Ref, ConstRef };
+
   Arg();
+
   Arg(const Arg& c);
+  Arg(RefType ref, Arg& c);
   virtual ~Arg();
+
   virtual Arg* new_copy() const =0;
-  virtual Arg* var_copy();
+  virtual Arg* ref_copy(RefType ref);
 
   virtual std::string get_string() const =0;
   virtual int get_int() const =0;
 
   enum OpType { Prefix, Postfix, Binary };
   virtual Arg* op(const Auth& auth, OpType optype, const std::string& opname, Arg* right=0);
+
+protected:
+
+  int* m_refs;
+  bool m_const;
 
 };
 
@@ -87,10 +97,13 @@ public:
 
   ArgString(const char* str);
   ArgString(const std::string& str);
+
   ArgString(const ArgString& c);
+  ArgString(RefType ref, ArgString& c);
   virtual ~ArgString();
+
   virtual Arg* new_copy() const;
-  virtual Arg* var_copy();
+  virtual Arg* ref_copy(RefType ref);
 
   virtual std::string get_string() const;
   virtual int get_int() const;
@@ -99,8 +112,7 @@ public:
 
 protected:
 
-  std::string m_string;
-  ArgString* m_orig;
+  std::string* m_string;
   
 };
 
@@ -111,10 +123,13 @@ class SCONEX_API ArgInt : public Arg {
 public:
 
   ArgInt(int value);
+
   ArgInt(const ArgInt& c);
+  ArgInt(RefType ref, ArgInt& c);
   virtual ~ArgInt();
+
   virtual Arg* new_copy() const;
-  virtual Arg* var_copy();
+  virtual Arg* ref_copy(RefType ref);
 
   virtual std::string get_string() const;
   virtual int get_int() const;
@@ -123,8 +138,7 @@ public:
 
 protected:
 
-  int m_value;
-  ArgInt* m_orig;
+  int* m_value;
 
 };
 
@@ -135,10 +149,13 @@ class SCONEX_API ArgReal : public Arg {
 public:
 
   ArgReal(double value);
+
   ArgReal(const ArgReal& c);
+  ArgReal(RefType ref, ArgReal& c);
   virtual ~ArgReal();
+
   virtual Arg* new_copy() const;
-  virtual Arg* var_copy();
+  virtual Arg* ref_copy(RefType ref);
 
   virtual std::string get_string() const;
   virtual int get_int() const;
@@ -149,8 +166,7 @@ public:
 
 protected:
 
-  double m_value;
-  ArgReal* m_orig;
+  double* m_value;
 
 };
 
@@ -161,10 +177,13 @@ class SCONEX_API ArgList : public Arg {
 public:
 
   ArgList();
+
   ArgList(const ArgList& c);
+  ArgList(RefType ref, ArgList& c);
   virtual ~ArgList();
+
   virtual Arg* new_copy() const;
-  virtual Arg* var_copy();
+  virtual Arg* ref_copy(RefType ref);
 
   virtual std::string get_string() const;
   virtual int get_int() const;
@@ -182,8 +201,7 @@ public:
 protected:
 
   typedef std::list<Arg*> ArgListData;
-  ArgListData m_list;
-  ArgList* m_orig;
+  ArgListData* m_list;
 
 };
 
@@ -194,10 +212,13 @@ class SCONEX_API ArgMap : public Arg {
 public:
 
   ArgMap();
+
   ArgMap(const ArgMap& c);
+  ArgMap(RefType ref, ArgMap& c);
   virtual ~ArgMap();
+
   virtual Arg* new_copy() const;
-  virtual Arg* var_copy();
+  virtual Arg* ref_copy(RefType ref);
 
   virtual std::string get_string() const;
   virtual int get_int() const;
@@ -216,8 +237,7 @@ public:
 protected:
 
   typedef std::map<std::string,Arg*> ArgMapData;
-  ArgMapData m_map;
-  ArgMap* m_orig;
+  ArgMapData* m_map;
 
 };
 
@@ -228,8 +248,10 @@ class SCONEX_API ArgSub : public Arg {
 public:
 
   ArgSub(const std::string& name, ArgStatement* body, ArgProc& proc);
+
   ArgSub(const ArgSub& c);
   virtual ~ArgSub();
+
   virtual Arg* new_copy() const;
 
   virtual std::string get_string() const;
@@ -242,9 +264,7 @@ public:
 protected:
 
   std::string m_name;
-  
   ArgStatement* m_body;
-
   ArgProc* m_proc;
 
 };
@@ -257,8 +277,10 @@ public:
 
   ArgError(const char* str);
   ArgError(const std::string& str);
+
   ArgError(const ArgError& c);
   virtual ~ArgError();
+
   virtual Arg* new_copy() const;
 
   virtual std::string get_string() const;

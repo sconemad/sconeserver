@@ -46,8 +46,7 @@ MIMEModule::~MIMEModule()
 //=========================================================================
 std::string MIMEModule::info() const
 {
-  return "Copyright (c) 2000-2009 Andrew Wedgbury\n"
-         "File mimetype lookup module\n";
+  return "File mimetype lookup module";
 }
 
 //=============================================================================

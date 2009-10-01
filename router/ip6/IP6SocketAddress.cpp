@@ -95,7 +95,7 @@ bool IP6SocketAddress::valid_for_connect() const
 void IP6SocketAddress::set_sockaddr(const struct sockaddr* sa)
 {
   DEBUG_ASSERT(sa!=0,"set_sockaddr() Invalid sockaddr pointer");
-  DEBUG_ASSERT(sa->sa_family == m_domain,"set_sockaddr() Socket domain mismatch");
+  DEBUG_ASSERT(sa->sa_family == *m_domain,"set_sockaddr() Socket domain mismatch");
 
   memcpy(&m_addr,sa,sizeof(m_addr));
   m_host = "";
@@ -118,7 +118,7 @@ socklen_t IP6SocketAddress::get_sockaddr_size() const
 std::string IP6SocketAddress::get_string() const
 {
   std::ostringstream oss;
-  switch (m_type) {
+  switch (*m_type) {
     case SOCK_STREAM: oss << "tcp6:"; break;
     case SOCK_DGRAM: oss << "udp6:"; break;
     default:

@@ -42,27 +42,6 @@ Free Software Foundation, Inc.,
 #include "sconex/StreamDebugger.h"
 
 
-//=============================================================================
-class ArgFile : public scx::Arg {
-
-public:
-
-  ArgFile(const scx::FilePath& path);
-  ArgFile(const ArgFile& c);
-  virtual ~ArgFile();
-  virtual scx::Arg* new_copy() const;
-
-  virtual std::string get_string() const;
-  virtual int get_int() const;
-
-  virtual scx::Arg* op(const scx::Auth& auth,scx::Arg::OpType optype, const std::string& opname, scx::Arg* right);
-
-protected:
-
-  scx::FilePath m_path;
-
-};
-
 //=========================================================================
 ArgFile::ArgFile(const scx::FilePath& path)
   : m_path(path)

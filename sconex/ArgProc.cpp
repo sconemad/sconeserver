@@ -111,7 +111,7 @@ Arg* ArgProc::expression(int p, bool f, bool exec)
     } else if (ArgProc::Operator == m_type) {
       ArgProc_DEBUG_LOG("expr: (op) " << (exec?"":"(nx) ") << m_name);
       std::string op = m_name;
-      f = !("."==op || ":"==op);
+      f = !("."==op);
       int p2 = prec(Arg::Binary,op);
       if (p2 >= 0) {
         // Binary operation
@@ -212,7 +212,7 @@ Arg* ArgProc::expression(int p, bool f, bool exec)
           ArgProc_DEBUG_LOG("binary op: " << (left ? left->get_string() : "NULL") << " "
 			    << op << " " << (right ? right->get_string() : "NULL"));
           
-          if (","==op) {
+	  if (","==op || ":"==op) {
             m_stack.push(left);
             left=right;
           } else {
@@ -436,7 +436,6 @@ void ArgProc::next()
     bool ends = true;
     int ex=0;      // Counts exponentiations
     int num_dd=0;  // Counts decimal delimiters
-    int num_co=0;  // Counts colon delimiters
     char pc=c;     // Previous c
 
     while (++i < len) {
@@ -446,10 +445,6 @@ void ArgProc::next()
         case '.':
           ends=false;
           ++num_dd;
-          break;
-        case ':':
-          ends=false;
-          ++num_co;
           break;
         case 'e': case 'E':
           ends=(++ex>1);
@@ -587,6 +582,7 @@ void ArgProc::init()
   
   int p=0;
   (*s_binary_ops)[","]  = ++p; // Sequential evaluation
+  (*s_binary_ops)[":"]  = p;
 
   (*s_binary_ops)["="]  = ++p; // Assignment
 
@@ -627,7 +623,6 @@ void ArgProc::init()
   (*s_binary_ops)["("]  = ++p; // Function call
   (*s_binary_ops)["{"]  = ++p; // Map initializer
 
-  (*s_binary_ops)[":"]  = ++p; // Scope resoltion
   (*s_binary_ops)["."]  = ++p; // Member access
 }
 

@@ -51,8 +51,7 @@ TFTPModule::~TFTPModule()
 //=========================================================================
 std::string TFTPModule::info() const
 {
-  return "Copyright (c) 2000-2007 Andrew Wedgbury\n"
-         "Trivial File Transfer Protocol (TFTP)\n";
+  return "Trivial File Transfer Protocol (TFTP)";
 }
 
 //=========================================================================

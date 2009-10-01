@@ -126,6 +126,8 @@ void Debug::dbg_assert(
           << message << " (ASSERTION)";
       m_logger->log(oss.str(),Logger::Debug);
     }
+
+    //    DEBUG_BREAKPOINT;
     
     if (m_stop_on_assert) {
       // Issue a debug breakpoint if required

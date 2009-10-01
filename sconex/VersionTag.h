@@ -36,13 +36,16 @@ public:
     int minor = -1,
     int sub = -1,
     const std::string& extra = ""
-  );
-  
+  );  
   VersionTag(const std::string& str);
   VersionTag(Arg* args);
+
   VersionTag(const VersionTag& c);
+  VersionTag(RefType ref, VersionTag& c);
   virtual ~VersionTag();
+  
   Arg* new_copy() const;
+  Arg* ref_copy(RefType ref);
 
   int get_major() const;
   int get_minor() const;
@@ -54,6 +57,8 @@ public:
   
   virtual Arg* op(const Auth& auth, OpType optype, const std::string& opname, Arg* right);
   
+  VersionTag& operator=(const VersionTag& v);
+
   bool operator==(const VersionTag& v) const;
   bool operator!=(const VersionTag& v) const;
   bool operator>(const VersionTag& v) const;
@@ -65,10 +70,10 @@ protected:
   
   void from_string(const std::string& str);
   
-  int m_major;
-  int m_minor;
-  int m_sub;
-  std::string m_extra;
+  int* m_major;
+  int* m_minor;
+  int* m_sub;
+  std::string* m_extra;
 };
 
 };

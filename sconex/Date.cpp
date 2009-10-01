@@ -27,16 +27,24 @@ namespace scx {
 Date::MonthNameMap* Date::s_month_table = 0;
 
 //=============================================================================
+Date::Date()
+  : m_time(new time_t(0)),
+    m_local(new bool(false))
+{
+  DEBUG_COUNT_CONSTRUCTOR(Date);
+  init_tables();
+}
+
+//=============================================================================
 Date::Date(
   int t,
   bool local
 )
+  : m_time(new time_t(t)),
+    m_local(new bool(local))
 {
   DEBUG_COUNT_CONSTRUCTOR(Date);
   init_tables();
-
-  m_local = local;
-  m_time = t;
 }
 
 //=============================================================================
@@ -49,6 +57,8 @@ Date::Date(
   int second,
   bool local
 )
+  : m_time(new time_t()),
+    m_local(new bool(local))
 {
   DEBUG_COUNT_CONSTRUCTOR(Date);
   struct tm tms;
@@ -62,8 +72,7 @@ Date::Date(
   tms.tm_mon = month-1;
   tms.tm_year = year-1900;
 
-  m_local = local;
-  m_time = mktime(&tms) - timezone().seconds();
+  *m_time = mktime(&tms) - timezone().seconds();
 }
 
 //=============================================================================
@@ -71,10 +80,11 @@ Date::Date(
   const std::string& str,
   bool local
 )
+  : m_time(new time_t(0)),
+    m_local(new bool(local))
 {
   DEBUG_COUNT_CONSTRUCTOR(Date);
   init_tables();
-  m_time=0;
   int hour=-1;
   int minute=-1;
   int second=-1;
@@ -169,20 +179,22 @@ Date::Date(
   tms.tm_mon = month<0 ? 0 : month;
   tms.tm_year = year<1970 ? 70 : (year-1900);
 
-  m_local = local;
-  m_time = mktime(&tms);
+  *m_local = local;
+  *m_time = mktime(&tms);
 
   if (!local || got_zone) {
     // Adjust mktime results from local
-    m_time += TimeZone::local(Date(m_time)).seconds();
+    *m_time += TimeZone::local(Date(*m_time)).seconds();
   }
 
   // Adjust to UTC from given timezone
-  m_time -= tz.seconds();
+  *m_time -= tz.seconds();
 }
 
 //=============================================================================
 Date::Date(Arg* args)
+  : m_time(new time_t()),
+    m_local(new bool())
 {
   DEBUG_COUNT_CONSTRUCTOR(Date);
   init_tables();
@@ -192,30 +204,57 @@ Date::Date(Arg* args)
   Arg* a = l->get(0);
   ArgInt* a_int = dynamic_cast<ArgInt*>(a);
   if (a_int) {
-    m_time = a->get_int();
+    *m_time = a->get_int();
     
   } else {
     time_t tmp;
-    m_time = ::time(&tmp);
+    *m_time = ::time(&tmp);
   }
 
   Arg* local = l->get(1);
-  m_local = (local ? local->get_int() : 0);
+  *m_local = (local ? local->get_int() : 0);
 }
 
 //=============================================================================
 Date::Date(const Date& c)
+  : Arg(c),
+    m_time(new time_t(*c.m_time)),
+    m_local(new bool(*c.m_local))
 {
   DEBUG_COUNT_CONSTRUCTOR(Date);
   init_tables();
-  m_time = c.m_time;
-  m_local = c.m_local;
+}
+
+//=============================================================================
+Date::Date(RefType ref, Date& c)
+  : Arg(ref,c),
+    m_time(c.m_time),
+    m_local(c.m_local)
+{
+  DEBUG_COUNT_CONSTRUCTOR(Date);
+  init_tables();
 }
 
 //=============================================================================
 Date::~Date()
 {
+  if (*m_refs == 1) {
+    delete m_time;
+    delete m_local;
+  }
   DEBUG_COUNT_DESTRUCTOR(Date);
+}
+
+//=============================================================================
+Arg* Date::new_copy() const
+{
+  return new Date(*this);
+}
+
+//=============================================================================
+Arg* Date::ref_copy(RefType ref)
+{
+  return new Date(ref,*this);
 }
 
 //=============================================================================
@@ -228,7 +267,7 @@ Date Date::now(bool local)
 //=============================================================================
 bool Date::valid() const
 {
-  return m_time > 0;
+  return *m_time > 0;
 }
 
 //=============================================================================
@@ -324,77 +363,77 @@ Time Date::time() const
 //=============================================================================
 Date Date::operator+(const Time& t) const
 {
-  return Date(m_time+t.m_time,m_local);
+  return Date(*m_time + *t.m_time,*m_local);
 }
 
 //=============================================================================
 Date Date::operator-(const Time& t) const
 {
-  return Date(m_time-t.m_time,m_local);
+  return Date(*m_time - *t.m_time,*m_local);
 }
 
 //=============================================================================
 Time Date::operator-(const Date& t) const
 {
-  return Time(m_time-t.m_time);
+  return Time(*m_time - *t.m_time);
 }
 
 //=============================================================================
 Date& Date::operator=(const Date& t)
 {
-  m_time = t.m_time;
-  m_local = t.m_local;
+  *m_time = *t.m_time;
+  *m_local = *t.m_local;
   return *this;
 }
 
 //=============================================================================
 Date& Date::operator+=(const Time& t)
 {
-  m_time += t.m_time;
+  *m_time += *t.m_time;
   return *this;
 }
 
 //=============================================================================
 Date& Date::operator-=(const Time& t)
 {
-  m_time -= t.m_time;
+  *m_time -= *t.m_time;
   return *this;
 }
 
 //=============================================================================
 bool Date::operator==(const Date& t) const
 {
-  return (m_time == t.m_time);
+  return (*m_time == *t.m_time);
 }
 
 //=============================================================================
 bool Date::operator!=(const Date& t) const
 {
-  return (m_time != t.m_time);
+  return (*m_time != *t.m_time);
 }
 
 //=============================================================================
 bool Date::operator>(const Date& t) const
 {
-  return (m_time > t.m_time);
+  return (*m_time > *t.m_time);
 }
 
 //=============================================================================
 bool Date::operator>=(const Date& t) const
 {
-  return (m_time >= t.m_time);
+  return (*m_time >= *t.m_time);
 }
 
 //=============================================================================
 bool Date::operator<(const Date& t) const
 {
-  return (m_time < t.m_time);
+  return (*m_time < *t.m_time);
 }
 
 //=============================================================================
 bool Date::operator<=(const Date& t) const
 {
-  return (m_time <= t.m_time);
+  return (*m_time <= *t.m_time);
 }
 
 //=============================================================================
@@ -497,34 +536,28 @@ std::string Date::dcode() const
 //=============================================================================
 time_t Date::epoch_seconds() const
 {
-  return m_time;
+  return *m_time;
 }
  
 //=============================================================================
 const bool Date::is_local() const
 {
-  return m_local;
+  return *m_local;
 }
 
 //=============================================================================
 void Date::set_local(bool yesno)
 {
-  m_local = yesno;
+  *m_local = yesno;
 }
 
 //=============================================================================
 TimeZone Date::timezone() const
 {
-  if (m_local) {
+  if (*m_local) {
     return TimeZone::local(*this);
   }
   return TimeZone::utc();
-}
-
-//=============================================================================
-Arg* Date::new_copy() const
-{
-  return new Date(*this);
 }
 
 //=============================================================================
@@ -536,7 +569,7 @@ std::string Date::get_string() const
 //=============================================================================
 int Date::get_int() const
 {
-  return m_time;
+  return *m_time;
 }
 //=============================================================================
 Arg* Date::op(const Auth& auth, OpType optype, const std::string& opname, Arg* right)
@@ -585,7 +618,7 @@ Arg* Date::op(const Auth& auth, OpType optype, const std::string& opname, Arg* r
       if (name == "code") return new ArgString(code());
       if (name == "string") return new ArgString(string());
       if (name == "ansi") return new ArgString(ansi_string());
-      if (name == "epoch_seconds") return new ArgInt(m_time);
+      if (name == "epoch_seconds") return new ArgInt(*m_time);
     }
   }
   return Arg::op(auth,optype,opname,right);
@@ -596,9 +629,9 @@ bool Date::get_tms(struct tm& tms) const
 {
   struct tm* tmr;
   if (m_local) {
-    tmr = localtime(&m_time);
+    tmr = localtime(m_time);
   } else {
-    tmr = gmtime(&m_time);
+    tmr = gmtime(m_time);
   }
 
   if (tmr == 0) {

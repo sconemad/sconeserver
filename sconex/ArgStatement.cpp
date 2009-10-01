@@ -225,7 +225,7 @@ Arg* ArgStatementGroup::arg_lookup(const std::string& name)
 
   Arg* var = m_vars.lookup(name);
   if (var) {
-    return var->var_copy();
+    return var->ref_copy(Arg::Ref);
   }
 
   return ArgObjectInterface::arg_lookup(name);
@@ -462,7 +462,7 @@ Arg* ArgStatementWhile::run(ArgProc& proc, FlowMode& flow)
     // Evaluate the condition
     proc.set_ctx(&ctx);
     Arg* result = proc.evaluate(m_condition);
-    bool cond = (0 != result->get_int());
+    bool cond = (result && 0 != result->get_int());
     delete result;
 
     if (!cond) {
@@ -578,7 +578,7 @@ Arg* ArgStatementFor::run(ArgProc& proc, FlowMode& flow)
     // Evaluate the condition
     proc.set_ctx(&ctx);
     result = proc.evaluate(m_condition);
-    bool cond = (0 != result->get_int());
+    bool cond = (result && 0 != result->get_int());
     delete result;
 
     if (!cond) {
@@ -682,37 +682,39 @@ Arg* ArgStatementFlow::run(ArgProc& proc, FlowMode& flow)
 
 
 //=============================================================================
-ArgStatementVar::ArgStatementVar(const std::string& name)
+ArgStatementDecl::ArgStatementDecl(DefType deftype, const std::string& name)
   : m_seq(0),
+    m_deftype(deftype),
     m_name(name)
 {
-  DEBUG_COUNT_CONSTRUCTOR(ArgStatementVar);
+  DEBUG_COUNT_CONSTRUCTOR(ArgStatementDecl);
 }
 
 //=============================================================================
-ArgStatementVar::ArgStatementVar(const ArgStatementVar& c)
+ArgStatementDecl::ArgStatementDecl(const ArgStatementDecl& c)
   : ArgStatement(c),
     m_seq(c.m_seq),
+    m_deftype(c.m_deftype),
     m_name(c.m_name),
     m_initialiser(c.m_initialiser)
 {
-  DEBUG_COUNT_CONSTRUCTOR(ArgStatementVar);
+  DEBUG_COUNT_CONSTRUCTOR(ArgStatementDecl);
 }
 
 //=============================================================================
-ArgStatementVar::~ArgStatementVar()
+ArgStatementDecl::~ArgStatementDecl()
 {
-  DEBUG_COUNT_DESTRUCTOR(ArgStatementVar);
+  DEBUG_COUNT_DESTRUCTOR(ArgStatementDecl);
 }
 
 //=============================================================================
-ArgStatement* ArgStatementVar::new_copy() const
+ArgStatement* ArgStatementDecl::new_copy() const
 {
-  return new ArgStatementVar(*this);
+  return new ArgStatementDecl(*this);
 }
 
 //=============================================================================
-ArgStatement::ParseResult ArgStatementVar::parse(
+ArgStatement::ParseResult ArgStatementDecl::parse(
   ArgScript& script,
   const std::string& token
 )
@@ -737,7 +739,7 @@ ArgStatement::ParseResult ArgStatementVar::parse(
 }
 
 //=============================================================================
-ArgStatement::ParseMode ArgStatementVar::parse_mode() const
+ArgStatement::ParseMode ArgStatementDecl::parse_mode() const
 {
   return (m_seq==0 ?
           ArgStatement::Name :
@@ -745,7 +747,7 @@ ArgStatement::ParseMode ArgStatementVar::parse_mode() const
 }
 
 //=============================================================================
-Arg* ArgStatementVar::run(ArgProc& proc, FlowMode& flow)
+Arg* ArgStatementDecl::run(ArgProc& proc, FlowMode& flow)
 {
   Arg* initialiser=0;
   if (!m_initialiser.empty()) {
@@ -756,7 +758,20 @@ Arg* ArgStatementVar::run(ArgProc& proc, FlowMode& flow)
 
   ArgList args;
   args.give(new ArgString(m_name));
-  if (initialiser) args.give(initialiser);
+  if (initialiser) {
+    switch (m_deftype) {
+      case Var:
+        args.give(initialiser->new_copy());
+        break;
+      case Ref:
+        args.give(initialiser->ref_copy(Arg::Ref));
+        break;
+      case Const:
+        args.give(initialiser->ref_copy(Arg::ConstRef));
+        break;
+    }
+    delete initialiser;
+  }
   
   return m_parent->arg_function(proc.get_auth(),"var",&args);
 }

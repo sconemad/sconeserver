@@ -34,8 +34,10 @@ public:
   enum Day { Sun, Mon, Tue, Wed, Thu, Fri, Sat };
   enum Month { Jan, Feb, Mar, Apr, May, Jun, Jul, Aug, Sep, Oct, Nov, Dec };
 
+  Date();
+
   Date(
-    int t=0,
+    int t,
     bool local=false
   );
   
@@ -57,8 +59,11 @@ public:
   Date(Arg* args);
   
   Date(const Date& c);
-  
+  Date(RefType ref, Date& c);  
   ~Date();
+
+  virtual Arg* new_copy() const;
+  virtual Arg* ref_copy(RefType ref);
 
   static Date now(bool local=false);
 
@@ -109,7 +114,6 @@ public:
   time_t epoch_seconds() const;
 
   // Arg:
-  virtual Arg* new_copy() const;
   virtual std::string get_string() const;
   virtual int get_int() const;
   virtual Arg* op(const Auth& auth, OpType optype, const std::string& opname, Arg* right);
@@ -118,8 +122,8 @@ protected:
 
   bool get_tms(struct tm& tms) const;
   
-  time_t m_time;
-  bool m_local;
+  time_t* m_time;
+  bool* m_local;
   
   void init_tables();
   typedef std::map<std::string,int> MonthNameMap;
