@@ -2,7 +2,7 @@
 
 Argument classes
 
-Copyright (c) 2000-2004 Andrew Wedgbury <wedge@sconemad.com>
+Copyright (c) 2000-2009 Andrew Wedgbury <wedge@sconemad.com>
 
 This program is free software; you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -27,7 +27,7 @@ namespace scx {
 //===========================================================================
 Arg::Arg()
   : m_refs(new int(1)),
-    m_const(0)
+    m_const(false)
 {
   DEBUG_COUNT_CONSTRUCTOR(Arg);
 }
@@ -35,7 +35,7 @@ Arg::Arg()
 //===========================================================================
 Arg::Arg(const Arg& c)
   : m_refs(new int(1)),
-    m_const(0)
+    m_const(false)
 {
   DEBUG_COUNT_CONSTRUCTOR(Arg);
 }
@@ -52,7 +52,7 @@ Arg::Arg(RefType ref, Arg& c)
 //===========================================================================
 Arg::~Arg()
 {
-  if (*m_refs == 1) {
+  if (last_ref()) {
     delete m_refs;
   } else {
     --(*m_refs);
@@ -120,6 +120,18 @@ Arg* Arg::op(const Auth& auth, OpType optype, const std::string& opname, Arg* ri
   return new ArgError("Unsupported");
 }
 
+//===========================================================================
+bool Arg::last_ref() const
+{
+  return (*m_refs == 1);
+}
+
+//===========================================================================
+bool Arg::is_const() const
+{
+  return m_const;
+}
+
 
 //===========================================================================
 ArgString::ArgString(const char* str)
@@ -154,7 +166,7 @@ ArgString::ArgString(RefType ref, ArgString& c)
 //===========================================================================
 ArgString::~ArgString()
 {
-  if (*m_refs == 1) {
+  if (last_ref()) {
     delete m_string;
   }
 }
@@ -198,7 +210,7 @@ Arg* ArgString::op(const Auth& auth, OpType optype, const std::string& opname, A
       return new ArgInt(*m_string != right->get_string());
 
     } else if ("="==opname) { // Assignment
-      if (!m_const) {
+      if (!is_const()) {
 	*m_string = right->get_string();
       }
       return ref_copy(Ref);
@@ -239,7 +251,7 @@ ArgInt::ArgInt(RefType ref, ArgInt& c)
 //===========================================================================
 ArgInt::~ArgInt()
 {
-  if (*m_refs == 1) {
+  if (last_ref()) {
     delete m_value;
   }
 }
@@ -284,13 +296,13 @@ Arg* ArgInt::op(const Auth& auth, OpType optype, const std::string& opname, Arg*
         return new ArgInt(-value);
 
       } else if ("++"==opname) { // Pre-increment
-	if (!m_const) {
+	if (!is_const()) {
 	  ++value;
 	}
         return ref_copy(ConstRef);
 
       } else if ("--"==opname) { // Pre-decrement
-	if (!m_const) {
+	if (!is_const()) {
 	  --value;
 	}
         return ref_copy(ConstRef);
@@ -305,14 +317,14 @@ Arg* ArgInt::op(const Auth& auth, OpType optype, const std::string& opname, Arg*
 
       } else if ("++"==opname) { // Post-increment
 	int pre_value = value;
-        if (!m_const) {
+        if (!is_const()) {
 	  ++value;
         }
         return new ArgInt(pre_value);
 
       } else if ("--"==opname) { // Post-decrement
 	int pre_value = value;
-        if (!m_const) {
+        if (!is_const()) {
 	  --value;
         }
         return new ArgInt(pre_value);
@@ -348,7 +360,7 @@ Arg* ArgInt::op(const Auth& auth, OpType optype, const std::string& opname, Arg*
           }
 
         } else if ("="==opname) { // Assignment
-	  if (!m_const) {
+	  if (!is_const()) {
 	    value = right->get_int();
 	  }
           return ref_copy(Ref);
@@ -388,7 +400,7 @@ ArgReal::ArgReal(RefType ref, ArgReal& c)
 //===========================================================================
 ArgReal::~ArgReal()
 {
-  if (*m_refs == 1) {
+  if (last_ref()) {
     delete m_value;
   }
 }
@@ -481,7 +493,7 @@ Arg* ArgReal::op(const Auth& auth, OpType optype, const std::string& opname, Arg
           return new ArgInt(value != rvalue);
 
         } else if ("="==opname) { // Assignment
-	  if (!m_const) {
+	  if (!is_const()) {
 	    value = rvalue;
 	  }
           return ref_copy(Ref);
@@ -531,7 +543,7 @@ ArgList::ArgList(RefType ref, ArgList& c)
 //===========================================================================
 ArgList::~ArgList()
 {
-  if (*m_refs == 1) {
+  if (last_ref()) {
     for (ArgListData::iterator it = m_list->begin();
 	 it != m_list->end();
 	 ++it) {
@@ -588,7 +600,7 @@ Arg* ArgList::op(const Auth& auth, OpType optype, const std::string& opname, Arg
 	}
 	Arg* a = get(idx);
 	if (a) {
-	  return a->ref_copy(m_const ? ConstRef : Ref);
+	  return a->ref_copy(is_const() ? ConstRef : Ref);
 	}
 	return new ArgError("Not defined");
       }
@@ -697,7 +709,7 @@ ArgMap::ArgMap(RefType ref, ArgMap& c)
 //===========================================================================
 ArgMap::~ArgMap()
 {
-  if (*m_refs == 1) {
+  if (last_ref()) {
     for (ArgMapData::iterator it = m_map->begin();
 	 it != m_map->end();
 	 ++it) {
@@ -753,7 +765,7 @@ Arg* ArgMap::op(const Auth& auth, OpType optype, const std::string& opname, Arg*
 	const std::string key = akey->get_string();
 	Arg* a = lookup(key);
 	if (a) {
-	  return a->ref_copy(m_const ? ConstRef : Ref);
+	  return a->ref_copy(is_const() ? ConstRef : Ref);
 	}
 	return new ArgError("Not defined");
       }
@@ -772,7 +784,7 @@ Arg* ArgMap::op(const Auth& auth, OpType optype, const std::string& opname, Arg*
       
       Arg* a = lookup(name);
       if (a) {
-	return a->ref_copy(m_const ? ConstRef : Ref);
+	return a->ref_copy(is_const() ? ConstRef : Ref);
       }
     }
   }
@@ -861,7 +873,7 @@ ArgSub::ArgSub(const ArgSub& c)
 //===========================================================================
 ArgSub::~ArgSub()
 {
-  if (*m_refs == 1) {
+  if (last_ref()) {
     delete m_body;
     delete m_proc;
   }

@@ -93,7 +93,7 @@ MimeType::MimeType(RefType ref, MimeType& c)
 //=============================================================================
 MimeType::~MimeType()
 {
-  if (*m_refs == 1) {
+  if (last_ref()) {
     delete m_type;
     delete m_subtype;
     delete m_params;

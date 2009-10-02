@@ -22,6 +22,7 @@ Free Software Foundation, Inc.,
 #include "sconex/ArgObject.h"
 #include "sconex/ArgProc.h"
 #include "sconex/Kernel.h"
+#include "sconex/utils.h"
 
 namespace scx {
 
@@ -41,6 +42,12 @@ ArgObjectInterface::~ArgObjectInterface()
 {
   MutexLocker locker(*m_ref_mutex);
   DEBUG_ASSERT(m_refs==0,"Destroying object which has refs");
+}
+
+//=============================================================================
+std::string  ArgObjectInterface::name() const
+{
+  return "";
 }
 
 //=============================================================================
@@ -67,9 +74,13 @@ void ArgObjectInterface::log(
 }
 
 //=============================================================================
-Arg* ArgObjectInterface::arg_lookup(const std::string& name)
+Arg* ArgObjectInterface::arg_lookup(const std::string& aname)
 {
-  return new ArgError("Unknown name '" + name + "'");
+  if ("_name" == aname) {
+    return new scx::ArgString(name());
+  }
+
+  return new ArgError("Unknown name '" + aname + "'");
 }
 
 //=============================================================================
@@ -148,8 +159,13 @@ Arg* ArgObject::new_copy() const
 std::string ArgObject::get_string() const
 {
   std::ostringstream oss;
-  oss << "OBJECT: "
-      << (m_obj ? m_obj->name() : "NULL");
+
+  if (m_obj) {
+    oss << "&(" << type_name(typeid(*m_obj)) << ")" << m_obj->name();
+
+  } else {
+    oss << "&NULL";
+  }
 
   return oss.str();
 }
@@ -228,11 +244,7 @@ Arg* ArgObjectFunction::new_copy() const
 std::string ArgObjectFunction::get_string() const
 {
   std::ostringstream oss;
-  ArgObjectInterface* obj = m_obj->get_object();
-  oss << "METHOD: "
-      << (obj ? obj->name() : "NULL")
-      << "::" << m_name;
-
+  oss << "(" << (m_obj ? m_obj->get_string() : "NULL") << ")::" << m_name;
   return oss.str();
 }
 

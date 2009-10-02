@@ -106,13 +106,13 @@ scx::Arg* RouterModule::arg_lookup(
   // Properties
 
   if ("list" == name) {
-    std::ostringstream oss;
+    scx::ArgList* list = new scx::ArgList();
     for (RouterChainMap::const_iterator it = m_chains.begin();
 	 it != m_chains.end();
 	 ++it) {
-      oss << it->first << "\n";
+      list->give(new scx::ArgObject(it->second));
     }
-    return new scx::ArgString(oss.str());
+    return list;
   }
   
   // Sub-objects

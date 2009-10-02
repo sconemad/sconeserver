@@ -35,14 +35,7 @@ Multiplexer::Multiplexer()
 //=============================================================================
 Multiplexer::~Multiplexer()
 {
-  // Delete jobs
-  JobList::iterator it;
-  for (it = m_jobs.begin(); it != m_jobs.end(); ++it) {
-    delete (*it);
-  }
-  for (it = m_jobs_new.begin(); it != m_jobs_new.end(); ++it) {
-    delete (*it);
-  }
+  close();
 }
 
 //=============================================================================
@@ -246,6 +239,36 @@ int Multiplexer::spin()
 }
 
 //=============================================================================
+void Multiplexer::close()
+{
+  // Wait for any outstanding jobs to finish, no more will be allocated as the
+  // spin() loop has terminated.
+  m_job_mutex.lock();
+  while (!m_threads_busy.empty()) { 
+    DEBUG_LOG("Waiting for " << m_threads_busy.size() << " job(s) to finish");
+    m_job_condition.wait(m_job_mutex);
+  }
+  m_job_mutex.unlock();
+
+  // Stop and remove all threads
+  set_num_threads(0);
+  DEBUG_ASSERT(m_threads_pool.empty(),"Thread pool is not empty");
+
+  // Delete jobs
+  JobList::iterator it;
+  for (it = m_jobs.begin(); it != m_jobs.end(); ++it) {
+    delete (*it);
+  }
+  m_jobs.clear();
+
+  // Delete any new jobs
+  for (it = m_jobs_new.begin(); it != m_jobs_new.end(); ++it) {
+    delete (*it);
+  }
+  m_jobs_new.clear();
+}
+
+//=============================================================================
 std::string Multiplexer::describe() const
 {
   m_job_mutex.lock();
@@ -337,11 +360,8 @@ bool Multiplexer::finished_job(JobThread* thread, Job* job, bool purge)
 {
   m_job_mutex.lock();
 
-  // If the thread pool is empty, signal that a thread will now become 
-  // available in case anyone is waiting
-  if (m_threads_pool.empty()) {
-    m_job_condition.signal();
-  }
+  // Signal that a thread will become available in case anyone is waiting
+  m_job_condition.signal();
 
   // Place the thread back onto the available pool
   m_threads_busy.remove(thread);

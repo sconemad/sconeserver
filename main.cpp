@@ -21,6 +21,7 @@ Free Software Foundation, Inc.,
 
 #include "sconex/sconex.h"
 #include "sconex/Kernel.h"
+#include "sconex/Process.h"
 
 #ifdef HAVE_GETOPT_H
 #  include <getopt.h>
@@ -52,10 +53,12 @@ void empty_handler(int /*sig*/) { }
 //===========================================================================
 int run()
 {
+  scx::Process::init();
+
+  scx::Kernel* kernel = scx::Kernel::get();
+
   // Restart loop
   while (true) {
-
-    scx::Kernel* kernel = scx::Kernel::get();
     
     // Set paths
     kernel->set_conf_path(conf_path);
@@ -80,8 +83,10 @@ int run()
     if (kernel->run()) {
       break;
     }
-    
+  
   }
+
+  delete kernel;
 
   if (opt_foreground) {
     std::cout << std::endl;

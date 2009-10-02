@@ -108,10 +108,11 @@ void ModuleLoaderDLL::unload_module()
   if (m_module) {
     DEBUG_ASSERT(m_module->get_num_refs() == 0,
                 "unload_module() Deleting referenced module");
+
+    m_module->close();
+    delete m_module;
+    m_module=0;
   }
-  
-  delete m_module;
-  m_module=0;
 
   unload_dll();
 }

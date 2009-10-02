@@ -57,6 +57,9 @@ public:
   int spin();
   // select() to determine waiting descriptors and dispatch events
 
+  void close();
+  // Shutdown the multiplexer
+
   std::string describe() const;
   // Get description of the current descriptors
 

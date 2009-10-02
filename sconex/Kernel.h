@@ -35,9 +35,12 @@ public:
 
   static Kernel* get();
   
+  virtual ~Kernel();
+  
   virtual std::string info() const;
 
   virtual int init();
+  virtual void close();
 
   int run();
 
@@ -69,8 +72,6 @@ protected:
 
   Kernel();
 
-  virtual ~Kernel();
-  
 private:
 
   enum State { Init, Run, Restart, Shutdown };

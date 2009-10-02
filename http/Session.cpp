@@ -117,12 +117,6 @@ int SessionManager::check_sessions()
   return n;
 }
 
-//=========================================================================
-std::string SessionManager::name() const
-{
-  return "SESSION MANAGER";
-}
-
 //=============================================================================
 scx::Arg* SessionManager::arg_lookup(
   const std::string& name
@@ -232,9 +226,7 @@ bool Session::allow_upload() const
 //=========================================================================
 std::string Session::name() const
 {
-  std::ostringstream oss;
-  oss << "SESSION:" << get_id();
-  return oss.str();
+  return get_id();
 }
 
 //=============================================================================

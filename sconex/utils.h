@@ -34,6 +34,9 @@ void SCONEX_API strlow(std::string& s);
 char* SCONEX_API new_c_str(const std::string& str);
 // New up a c style string from a c++ string
 
+std::string SCONEX_API type_name(const std::type_info& ti);
+// Get demangled type name from a type_info
+
 };
 
 #endif

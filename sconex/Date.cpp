@@ -238,7 +238,7 @@ Date::Date(RefType ref, Date& c)
 //=============================================================================
 Date::~Date()
 {
-  if (*m_refs == 1) {
+  if (last_ref()) {
     delete m_time;
     delete m_local;
   }

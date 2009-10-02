@@ -48,11 +48,7 @@ Module::Module(
 //=============================================================================
 Module::~Module()
 {
-  for (std::list<ModuleLoader*>::iterator it = m_modules.begin();
-       it != m_modules.end();
-       it++) {
-    delete (*it);
-  }
+  close();
 
   delete m_logger;
 
@@ -85,6 +81,17 @@ int Module::init()
   }
   
   return 0;
+}
+
+//=============================================================================
+void Module::close()
+{
+  for (std::list<ModuleLoader*>::iterator it = m_modules.begin();
+       it != m_modules.end();
+       it++) {
+    delete (*it);
+  }
+  m_modules.clear();
 }
 
 //=============================================================================
@@ -518,20 +525,5 @@ ArgModule::~ArgModule()
 
 }
 
-//=============================================================================
-std::string ArgModule::get_string() const
-{
-  std::ostringstream oss;
-  oss << "MODULE: "
-      << (m_ref.valid() ? m_ref.module()->name() : "NULL");
-
-  return oss.str();
-}
-
-//===========================================================================
-int ArgModule::get_int() const
-{
-  return (m_ref.valid() ? 1 : 0);
-}
 
 };

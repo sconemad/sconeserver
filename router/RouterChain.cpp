@@ -48,10 +48,10 @@ RouterChain::RouterChain(
 //=============================================================================
 RouterChain::~RouterChain()
 {
-  std::list<RouterNode*>::iterator it = m_nodes.begin();
-  while (it != m_nodes.end()) {
+  for (RouterNodeList::iterator it = m_nodes.begin();
+       it != m_nodes.end();
+       ++it) {
     delete (*it);
-    ++it;
   }
 }
 
@@ -60,14 +60,12 @@ bool RouterChain::connect(
   scx::Descriptor* d
 )
 {
-  std::list<RouterNode*>::iterator it = m_nodes.begin();
-  while (it != m_nodes.end()) {
-  
+  for (RouterNodeList::iterator it = m_nodes.begin();
+       it != m_nodes.end();
+       ++it) {
     if (!(*it)->connect(d)) {
       return false;
     }
-
-    ++it;
   }
   return true;
 }
@@ -81,7 +79,7 @@ void RouterChain::add(RouterNode* n)
 //=============================================================================
 std::string RouterChain::name() const
 {
-  return std::string("ROUTE:") + m_name;
+  return m_name;
 }
 
 //=============================================================================
@@ -101,14 +99,21 @@ scx::Arg* RouterChain::arg_lookup(
   // Properties
   
   if ("list" == name) {
-    std::ostringstream oss;
-    std::list<RouterNode*>::iterator it = m_nodes.begin();
-    int i=0;
-    while (it != m_nodes.end()) {
-      oss << "[" << ++i << "] " << (*it)->get_string() << "\n";
-      it++;
+    scx::ArgList* nodelist = new scx::ArgList();
+    for (RouterNodeList::const_iterator it = m_nodes.begin();
+	 it != m_nodes.end();
+	 ++it) {
+      scx::ArgMap* map = new scx::ArgMap();
+      map->give("module",new scx::ArgString((*it)->get_name()));
+      const scx::ArgList* args = (*it)->get_args();
+      if (args) {
+	map->give("args",args->new_copy());
+      } else {
+	map->give("args",new scx::ArgList());
+      }
+      nodelist->give(map);
     }
-    return new scx::ArgString(oss.str());
+    return nodelist;
   }
   
   return SCXBASE ArgObjectInterface::arg_lookup(name);
@@ -168,7 +173,7 @@ scx::Arg* RouterChain::arg_function(
 
     std::list<RouterNode*>::iterator it = m_nodes.begin();
     while (it != m_nodes.end()) {
-      if (s_name == (*it)->get_string()) {
+      if (s_name == (*it)->get_name()) {
         log("Removing " + s_name);
         delete (*it);
         m_nodes.erase(it);
@@ -349,8 +354,13 @@ bool RouterNode::connect(
 }
 
 //=============================================================================
-std::string RouterNode::get_string() const
+const std::string& RouterNode::get_name() const
 {
-  return m_name + m_args->get_string();
+  return m_name;
 }
 
+//=============================================================================
+const scx::ArgList* RouterNode::get_args() const
+{
+  return m_args;
+}

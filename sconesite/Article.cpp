@@ -108,14 +108,6 @@ const scx::Arg* Article::get_meta(const std::string& name) const
 }
 
 //=========================================================================
-std::string Article::name() const
-{
-  std::ostringstream oss;
-  oss << "Article:" << m_name;
-  return oss.str();
-}
-
-//=========================================================================
 scx::Arg* Article::arg_resolve(const std::string& name)
 {
   return XMLDoc::arg_resolve(name);

@@ -5,15 +5,16 @@ The basic object types for SconeScript:
 * Arg - Abstract base for SconeScript classes
 
 * ArgString - A text string.
-* ArgInt - An integer.
-* ArgReal - A real number.
-* ArgList - A list of 0...n Arg objects.
-* ArgFunction - A callable function.
-* ArgError - An object representing an error condition.
+* ArgInt    - An integer.
+* ArgReal   - A real number.
+* ArgList   - A list of 0...n Arg objects.
+* ArgMap    - A map (associative array) of Arg objects.
+* ArgSub    - A subroutine.
+* ArgError  - An object representing an error condition.
 
 These are created dynamically during expression parsing in ArgProc.
 
-Copyright (c) 2000-2006 Andrew Wedgbury <wedge@sconemad.com>
+Copyright (c) 2000-2009 Andrew Wedgbury <wedge@sconemad.com>
 
 This program is free software; you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -69,21 +70,31 @@ public:
   enum RefType { Ref, ConstRef };
 
   Arg();
-
   Arg(const Arg& c);
   Arg(RefType ref, Arg& c);
   virtual ~Arg();
 
   virtual Arg* new_copy() const =0;
+  // Make a new Arg which is a deep copy of this Arg
+
   virtual Arg* ref_copy(RefType ref);
+  // Make a new Arg which is a (modifiable or const) reference to this Arg's data
 
   virtual std::string get_string() const =0;
   virtual int get_int() const =0;
+  // Get representations of this Arg in various standard forms
 
   enum OpType { Prefix, Postfix, Binary };
   virtual Arg* op(const Auth& auth, OpType optype, const std::string& opname, Arg* right=0);
+  // Perform an operation on an Arg object
 
-protected:
+  bool last_ref() const;
+  // Is this the last Arg refering to the underlying data
+
+  bool is_const() const;
+  // Is this Arg a const reference
+
+private:
 
   int* m_refs;
   bool m_const;
@@ -201,6 +212,7 @@ public:
 protected:
 
   typedef std::list<Arg*> ArgListData;
+  //  typedef std::vector<Arg*> ArgListData;
   ArgListData* m_list;
 
 };

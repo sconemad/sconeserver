@@ -206,19 +206,6 @@ void RenderMarkupContext::handle_error(const std::string& msg)
 }
 
 //=========================================================================
-std::string RenderMarkupContext::name() const
-{
-  std::ostringstream oss;
-  oss << "RenderMarkupContext:";
-  if (m_article) {
-    oss << m_article->get_name();
-  } else {
-    oss << "(no article)";
-  }
-  return oss.str();
-}
-
-//=========================================================================
 scx::Arg* RenderMarkupContext::arg_resolve(const std::string& name)
 {
   scx::Arg* a = Context::arg_resolve(name);

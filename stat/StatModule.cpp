@@ -45,7 +45,7 @@ StatModule::~StatModule()
   for (ChannelMap::iterator it = m_channels.begin();
        it != m_channels.end();
        ++it) {
-    delete (*it).second;
+    delete it->second;
   }
 }
 
@@ -83,6 +83,10 @@ void StatModule::add_stats(
 )
 {
   StatChannel* c = find_channel(channel);
+  if (!c) {
+    // Automatically add new channels when referenced
+    c = add_channel(channel);
+  }
   if (c) {
     c->add_stats(type,count);
   }
@@ -148,7 +152,7 @@ scx::Arg* StatModule::arg_lookup(const std::string& name)
 
   if ("print" == name) {
     std::ostringstream oss;
-    oss << "   CHANNEL    NUM-CON   BYTES-IN  BYTES-OUT\n";
+    oss << "\n";
     for (ChannelMap::const_iterator it = m_channels.begin();
 	 it != m_channels.end();
 	 ++it) {
@@ -158,11 +162,11 @@ scx::Arg* StatModule::arg_lookup(const std::string& name)
       scx::Arg* input = channel->arg_lookup("input");
       scx::Arg* output = channel->arg_lookup("output");
 
-      oss << std::setw(10) << (*it).first << " : "
-          << std::setw(8) << connections->get_string() << " "
-          << std::setw(10) << input->get_string() << " "
-          << std::setw(10) << output->get_string() << "\n";
-      
+      oss << (*it).first << ": "
+          << connections->get_string() << " connections, "
+          << input->get_string() << " bytes in, "
+          << output->get_string() << " bytes out\n";
+
       delete connections;
       delete input;
       delete output;

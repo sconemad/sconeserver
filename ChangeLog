@@ -1,4 +1,22 @@
 
+2009-10-02 Andrew Wedgbury <wedge@sconemad.com>
+
+	* sconex/Arg: Tidy ref counting by making data private,
+	access is now with last_ref and is_const methods.
+	* sconex/Descriptor: Display events in debug output.
+	* sconex/utils: type_name method to demangle RTTI names.
+	* sconex/ConfigStream: Display type names.
+	* sconex/ArgObject: Use type names in object strings.
+	Interface classes don't all need name() methods.
+	* sconex/Module: Add close() method to unload modules 
+	before destructor is called.
+	* sconex/Thread: Improve thread shutdown sequence.
+	* sconex/DatagramChannel: Fix possible leaked buffer.
+	* sconex/Multiplexer: Add close method for shutdown.
+	* sconex/Kernel: Shutdown app properly, call all dtors.
+	* sconed: Delete kernel when exiting.
+	* http/AuthRealm: Add HTTPUser for storing user details.
+	
 2009-10-01 Andrew Wedgbury <wedge@sconemad.com>
 
 	* sconex/Arg: Use reference-counted storage scheme.

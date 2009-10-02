@@ -106,7 +106,7 @@ Uri::Uri(RefType ref, Uri& c)
 //=============================================================================
 Uri::~Uri()
 {
-  if (*m_refs == 1) {
+  if (last_ref()) {
     delete m_scheme;
     delete m_host;
     delete m_port;

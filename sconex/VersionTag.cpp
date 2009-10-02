@@ -101,7 +101,7 @@ VersionTag::VersionTag(RefType ref, VersionTag& c)
 //=============================================================================
 VersionTag::~VersionTag()
 {
-  if (*m_refs == 1) {
+  if (last_ref()) {
     delete m_major;
     delete m_minor;
     delete m_sub;

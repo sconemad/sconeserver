@@ -67,7 +67,7 @@ Condition DatagramChannel::endpoint_read(void* buffer,int n,int& na)
   if (m_buffer) {
     na = std::min(n,m_buffer_size);
     memcpy(buffer,m_buffer,na);
-    delete m_buffer;
+    delete[] m_buffer;
     m_buffer = 0;
     m_buffer_size = 0;
     m_virtual_events = (1<<Stream::Writeable);
@@ -104,6 +104,11 @@ const SocketAddress* DatagramChannel::get_remote_addr() const
 //=============================================================================
 void DatagramChannel::recv_datagram(void* buffer,int n)
 {
+  if (m_buffer) {
+    delete[] m_buffer;
+    m_buffer = 0;
+    m_buffer_size = 0;
+  }
   m_buffer = (char*)buffer;
   m_buffer_size = n;
   m_virtual_events |= (1<<Stream::Readable);

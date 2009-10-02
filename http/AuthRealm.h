@@ -24,34 +24,38 @@ Free Software Foundation, Inc.,
 
 #include "http/http.h"
 #include "sconex/ArgObject.h"
+#include "sconex/ArgStore.h"
 #include "sconex/FilePath.h"
 namespace http {
 
 class HTTPModule;
 class MessageStream;
 
-/*  
 //=============================================================================
 class HTTP_API HTTPUser : public scx::ArgObjectInterface {
 public:
 
-  HTTPUser(const std::string& name,const scx::FilePath& path);
+  HTTPUser(
+    const std::string& username,
+    const std::string& password,
+    const scx::FilePath& path
+  );
+
   virtual ~HTTPUser();
 
-  bool authorised(const std::string& pass);
+  bool authorised(const std::string& password);
 
   virtual std::string name() const;
-  virtual scx::Arg* arg_resolve(const std::string& name);
   virtual scx::Arg* arg_lookup(const std::string& name);
-  virtual scx::Arg* arg_function(const std::string& name,scx::Arg* args);
+  virtual scx::Arg* arg_function(const scx::Auth& auth,const std::string& name,scx::Arg* args);
 
 private:
 
-  std::string m_name;
+  std::string m_username;
+  std::string m_password;
   scx::ArgStore m_vars;
 
 };
-*/
 
 //=============================================================================
 class HTTP_API AuthRealm : public scx::ArgObjectInterface {
@@ -62,17 +66,15 @@ public:
     const std::string name,
     const scx::FilePath& path
   );
-  
   // Create an authrealm for specified profile and root path
 
   virtual ~AuthRealm();
 
-  const std::string& get_realm() const;
+  HTTPUser* lookup_user(const std::string& username);
   
-  bool authorised(const std::string& user, const std::string& pass);
+  bool authorised(const std::string& username, const std::string& password);
 
   virtual std::string name() const;
-  virtual scx::Arg* arg_resolve(const std::string& name);
   virtual scx::Arg* arg_lookup(const std::string& name);
   virtual scx::Arg* arg_function(const scx::Auth& auth,const std::string& name,scx::Arg* args);
   
@@ -88,7 +90,8 @@ private:
   scx::Date m_modtime;
   scx::Mutex m_mutex;
 
-  typedef HASH_TYPE<std::string,std::string> UserMap;
+  //  typedef HASH_TYPE<std::string,HTTPUser*> UserMap;
+  typedef std::map<std::string,HTTPUser*> UserMap;
   UserMap m_users;
 };
 
@@ -102,8 +105,6 @@ public:
   
   AuthRealm* lookup_realm(const std::string& name);
 
-  virtual std::string name() const;
-  virtual scx::Arg* arg_resolve(const std::string& name);
   virtual scx::Arg* arg_lookup(const std::string& name);
   virtual scx::Arg* arg_function(const scx::Auth& auth,const std::string& name,scx::Arg* args);
   

@@ -5,11 +5,9 @@ TODO List and ideas for future development
 For 0.8.0 release
 ------------------------
 
-* sconex
- - Arg authority parameters
-
 * HTTP
  - AuthRealm passwords stored in sha1
+ - ArgStore per realm user
 
 * Sconesite 
  - Article file/upload file manager object
@@ -46,37 +44,6 @@ SCONEX
   Arg, ArgProc, ArgObject
   Module, ModuleLoader*
   TimeDate, Version
-
-* Docs for descriptor-stream event model, something like:
-
-  Opened - Stream has been opened
-    Ok    - Accept, opened will not be called again on this stream
-    Wait  - Don't send opened event to subsequent streams yet
-    End   - Remove this stream from the list, no further events
-    Close - Initiate close sequence for this connection
-    Error - Force the connection closed at earliest oppurtunity
-
-  Readable - Data is available to read on the connection
-    Ok    - Accept
-    Wait  - Don't send readable event to subsequent streams yet
-    End   - Remove this stream from the list, no further events
-    Close - Initiate close sequence for this connection
-    Error - Force the connection closed at earliest oppurtunity
-
-  Writeable - It is possible to write data on the connection
-    Ok    - Accept
-    Wait  - Don't send writeable event to subsequent streams yet
-    End   - Remove this stream from the list, no further events
-    Close - Initiate close sequence for this connection
-    Error - Force the connection closed at earliest oppurtunity
-
-  Closed - Connection is closing
-    Ok    - Remove this stream from the list, no further events
-    Close - Remove this stream from the list, no further events
-    Wait  - Suspend closing temporarily, don't send closing 
-            event to preceeding streams yet.
-    End   - Suspend closing, connection should remain open.
-    Error - Force the connection closed at earliest oppurtunity
 
 ------------------------
 HTTP

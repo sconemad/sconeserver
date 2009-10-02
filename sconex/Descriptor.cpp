@@ -577,8 +577,14 @@ bool DescriptorJob::run()
 //=============================================================================
 std::string DescriptorJob::describe() const
 {
+  std::string es = "--";
+  if (m_events & (1<<Stream::Readable)) es[0]='r';
+  if (m_events & (1<<Stream::Writeable)) es[1]='w';
+
   std::ostringstream oss;
-  oss << "[" << m_descriptor->uid() << "] " << m_descriptor->describe();
+  oss << "[" << m_descriptor->uid() 
+      << "] " << es 
+      << " " << m_descriptor->describe();
 
   std::list<Stream*>::const_iterator its = m_descriptor->m_streams.begin();
   while (its != m_descriptor->m_streams.end()) {

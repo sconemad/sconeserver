@@ -110,28 +110,35 @@ JobThread::~JobThread()
 //=============================================================================
 void* JobThread::run()
 {
-  m_job_mutex.lock();
+  m_mutex.lock();
   
   while (true) {
 
-    while (m_job == 0) {
-      // Wait for a job to arrive
-      m_job_condition.wait(m_job_mutex);
+    // Wait to be woken up
+    m_wakeup.wait(m_mutex);
+
+    if (should_exit()) {
+      // Time for the thread to stop
+      break;
     }
 
-    bool purge = true;
+    if (m_job) {
+      // There is a job to run
 
-    try {
-      // Run the job
-      purge = m_job->run();
-
+      bool purge = true;
+      
+      try {
+	// Run the job
+	purge = m_job->run();
+	
+      }
+      catch (...) {
+	DEBUG_LOG("EXCEPTION caught in job thread");
+      }
+      
+      m_manager.finished_job(this,m_job,purge);
+      m_job = 0;
     }
-    catch (...) {
-      DEBUG_LOG("EXCEPTION caught in job thread");
-    }
-    
-    m_manager.finished_job(this,m_job,purge);
-    m_job = 0;
   }
   
   return 0;
@@ -140,13 +147,13 @@ void* JobThread::run()
 //=============================================================================
 void JobThread::allocate_job(Job* job)
 {
-  m_job_mutex.lock();
+  m_mutex.lock();
  
   DEBUG_ASSERT(m_job==0,"JobThread already has a job allocated");
   m_job = job;
 
-  m_job_condition.signal();
-  m_job_mutex.unlock();
+  m_wakeup.signal();
+  m_mutex.unlock();
 }
 
 };

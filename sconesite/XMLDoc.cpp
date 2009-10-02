@@ -104,9 +104,7 @@ void XMLDoc::parse_error(const std::string& msg)
 //=========================================================================
 std::string XMLDoc::name() const
 {
-  std::ostringstream oss;
-  oss << "XMLDoc:" << m_name;
-  return oss.str();
+  return m_name;
 }
 
 //=========================================================================

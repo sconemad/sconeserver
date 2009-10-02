@@ -40,9 +40,6 @@ public:
   bool stop();
   // Stop the thread
   
-  void set_priority(int pri);
-  int get_priority() const;
-
   bool running() const;
   // Is this thread running?
   
@@ -54,11 +51,15 @@ public:
   
 protected:
 
+  bool should_exit() const;
+
+  Mutex m_mutex;
+  ConditionEvent m_wakeup;
+  
 private:
 
-  bool m_running;
-  
-  mutable Mutex m_mutex;
+  enum ThreadState { Stopped, Running, WaitingExit };
+  ThreadState m_state;
   
   pthread_t m_thread;
   pthread_attr_t m_attr;

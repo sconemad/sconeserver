@@ -44,7 +44,7 @@ public:
 
   virtual ~ArgObjectInterface();
   
-  virtual std::string name() const =0;
+  virtual std::string name() const;
   // Get the name of this object
 
   virtual void log(

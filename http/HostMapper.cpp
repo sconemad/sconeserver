@@ -96,12 +96,6 @@ bool HostMapper::connect_request(scx::Descriptor* endpoint, Request& request, Re
 }
 
 //=============================================================================
-std::string HostMapper::name() const
-{
-  return "HOST MAPPER";
-}
-
-//=============================================================================
 scx::Arg* HostMapper::arg_lookup(
   const std::string& name
 )

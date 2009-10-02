@@ -56,6 +56,9 @@ public:
 
   virtual int init();
   // Initialize the module
+
+  virtual void close();
+  // Close the module
   
   ModuleRef ref();
   // Get a reference to ourself
@@ -157,9 +160,6 @@ public:
   
   ArgModule(ModuleRef ref);
   virtual ~ArgModule();
-
-  virtual std::string get_string() const;
-  virtual int get_int() const;
 
 protected:
 

@@ -40,7 +40,6 @@ public:
   
   bool connect_request(scx::Descriptor* endpoint, Request& request, Response& response);
 
-  virtual std::string name() const;
   virtual scx::Arg* arg_lookup(const std::string& name);
   virtual scx::Arg* arg_resolve(const std::string& name);
   virtual scx::Arg* arg_function(const scx::Auth& auth,const std::string& name,scx::Arg* args);

@@ -23,15 +23,12 @@ Free Software Foundation, Inc.,
 #include "sconex/ConfigStream.h"
 #include "sconex/TermBuffer.h"
 #include "sconex/Console.h"
-#include "sconex/Process.h"
 #include "sconex/Logger.h"
 #include "sconex/Debug.h"
 #include "sconex/User.h"
 #include "sconex/VersionTag.h"
 #include "sconex/Uri.h"
 #include "sconex/MimeType.h"
-
-#include <sys/utsname.h>
 
 namespace scx {
 
@@ -44,6 +41,12 @@ Kernel* Kernel::get()
     s_kernel = new Kernel();
   }
   return s_kernel;
+}
+
+//=============================================================================
+Kernel::~Kernel()
+{
+
 }
 
 //=============================================================================
@@ -68,6 +71,16 @@ int Kernel::init()
 }
 
 //=============================================================================
+void Kernel::close()
+{
+  log("Stopping threads");
+  m_spinner.close();
+
+  log("Unloading modules");
+  Module::close();
+}
+
+//=============================================================================
 int Kernel::run()
 {
   m_state = Run;
@@ -76,22 +89,24 @@ int Kernel::run()
   while (true) {
 
     if (m_spinner.spin() < 0) {
-      log("Exiting (descriptor table empty)");
-      return 1;
+      log("Descriptor table empty, shutting down");
+      break;
     }
     
     if (m_state == Shutdown) {
-      log("Exiting");
-      return 1;
+      break;
     }
 
     if (m_state == Restart) {
+      close();
       log("Restarting");
       return 0;
     }
   }
   
-  return 0;
+  close();
+  log("Exiting");
+  return 1;
 }
 
 //=============================================================================
@@ -125,6 +140,9 @@ JobID Kernel::add_job(Job* job)
 //=============================================================================
 bool Kernel::end_job(JobID jobid)
 {
+  if (m_state != Run) {
+    return false;
+  }
   return m_spinner.end_job(jobid);
 }
 
@@ -288,13 +306,6 @@ Kernel::Kernel()
     m_system_version = std::string(sysinf.sysname) + " " + sysinf.release;
     m_system_hardware = sysinf.machine;
   }
-  Process::init();
-}
-
-//=============================================================================
-Kernel::~Kernel()
-{
-
 }
 
 };

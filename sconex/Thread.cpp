@@ -32,7 +32,7 @@ static void* thread_run(void* data)
 
 //=============================================================================
 Thread::Thread()
-  : m_running(false)
+  : m_state(Stopped)
 {
   DEBUG_COUNT_CONSTRUCTOR(Thread);
 }
@@ -48,13 +48,13 @@ bool Thread::start()
 {
   MutexLocker locker(m_mutex);
 
-  if (m_running) {
+  if (m_state != Stopped) {
     DEBUG_LOG("start() Thread already running");
     return false;
   }
   
   pthread_attr_init(&m_attr);
-  pthread_attr_setdetachstate(&m_attr,PTHREAD_CREATE_DETACHED);
+  //  pthread_attr_setdetachstate(&m_attr,PTHREAD_CREATE_DETACHED);
   if (pthread_create(
         &m_thread,
         &m_attr,
@@ -64,7 +64,7 @@ bool Thread::start()
     return false;
   }
 
-  m_running = true;
+  m_state = Running;
   
   return true;
 }
@@ -72,43 +72,47 @@ bool Thread::start()
 //=============================================================================
 bool Thread::stop()
 {
-  MutexLocker locker(m_mutex);
-
-  if (!m_running) {
+  if (m_state != Running) {
+    // Thread is not running
     return false;
   }
 
   if (current()) {
-    pthread_exit(0);
-  } else {
-    //    pthread_kill(m_thread,SIGKILL);
-    pthread_cancel(m_thread);
+    // Called from within the thread, what to do?
+    return false;
   }
 
-  m_running = false;
-  
+  // Tell the thread that we're waiting for it to exit
+  m_state = WaitingExit;
+  m_wakeup.signal();
+
+  // Wait until the thread exits
+  pthread_join(m_thread,0);
+  m_state = Stopped;
+
   return true;
 }
 
 //=============================================================================
 bool Thread::running() const
 {
-  MutexLocker locker(m_mutex);
-
-  return m_running;
+  return (m_state == Running);
 }
 
 //=============================================================================
 bool Thread::current() const
 {
-  MutexLocker locker(m_mutex);
-
-  if (!m_running) {
+  if (m_state != Running) {
     return false;
   }
   
   return pthread_equal(m_thread,pthread_self());
 }
 
+//=============================================================================
+bool Thread::should_exit() const
+{
+  return (m_state == WaitingExit);
+}
 
 };

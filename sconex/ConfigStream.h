@@ -46,6 +46,8 @@ public:
 
   virtual Condition event(Stream::Event e);
 
+  bool write_arg(const Arg* arg, int indent=0);
+
 private:
 
   ArgProc m_proc;

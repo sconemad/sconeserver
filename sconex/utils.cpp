@@ -49,4 +49,14 @@ char* new_c_str(const std::string& str)
   return c_str;
 }
 
+//============================================================================
+std::string type_name(const std::type_info& ti)
+{
+  int status;
+  char* realname = abi::__cxa_demangle(ti.name(),0,0,&status);
+  std::string ret(realname);
+  free(realname);
+  return ret;
+}
+
 };

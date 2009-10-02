@@ -57,7 +57,7 @@ SocketAddress::SocketAddress(RefType ref, SocketAddress& c)
 //=============================================================================
 SocketAddress::~SocketAddress()
 {
-  if (*m_refs == 1) {
+  if (last_ref()) {
     delete m_domain;
     delete m_type;
     delete m_protocol;
@@ -172,7 +172,7 @@ AnonSocketAddress::AnonSocketAddress(RefType ref, AnonSocketAddress& c)
 //=============================================================================
 AnonSocketAddress::~AnonSocketAddress()
 {
-  if (*m_refs == 1) {
+  if (last_ref()) {
     delete m_name;
   }
   DEBUG_COUNT_DESTRUCTOR(AnonSocketAddress);

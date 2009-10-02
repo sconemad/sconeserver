@@ -104,6 +104,10 @@ void* TestBuilderModule::run()
     
     sleep(1);
 
+    if (should_exit()) {
+      break;
+    }
+
     int nrun = 0;
     
     m_builds_mutex.lock();

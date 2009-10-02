@@ -325,9 +325,7 @@ void DocRoot::set_param(const std::string& name, scx::Arg* value)
 //=========================================================================
 std::string DocRoot::name() const
 {
-  std::ostringstream oss;
-  oss << "DOCROOT:" << get_profile();
-  return oss.str();
+  return get_profile();
 }
 
 //=============================================================================

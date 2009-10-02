@@ -60,16 +60,13 @@ scx::Arg* MIMEModule::arg_lookup(const std::string& name)
   }      
 
   if ("list" == name) {
-    std::ostringstream oss;
-    oss << "PATTERN      MIME-TYPE\n";
+    scx::ArgMap* map = new scx::ArgMap();
     for (MimeMap::const_iterator it = m_mimemap.begin();
 	 it != m_mimemap.end();
 	 it++) {
-      oss << std::setiosflags(std::ios_base::left) << std::setw(12) 
-	  << it->first << " "
-	  << it->second << "\n";
+      map->give(it->first,new scx::MimeType(it->second));
     }
-    return new scx::ArgString(oss.str());
+    return map;
   }
 
   return SCXBASE Module::arg_lookup(name);

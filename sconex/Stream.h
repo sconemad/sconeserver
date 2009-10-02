@@ -53,28 +53,45 @@ public:
   };
   
   virtual Condition event(Event e);
-  // Event notification
+  // Handle event notification
+  //
+  // Streams need to override this method in order to handle events.
   // 
   // Opening
   //   This event is sent to each stream in order proceeding up the chain when
-  //   a connection is opened. Returning Wait will delay sending Opening to
-  //   subsequent streams - Opening events will then continue to be sent until
-  //   Ok is returned, when the Opening event will then proceed up the chain.
-  //   Any new streams added to the chain while the connection is opened will
-  //   recieve an Opening event, and will continue to do so until they
-  //   return Ok.
+  //   a connection is opened (or to new streams that are added to the chain).
+  //   Return values:
+  //     Ok    - Accept, opened will not be called again on this stream
+  //     Wait  - Don't send opened event to subsequent streams yet
+  //     End   - Remove this stream from the list, no further events
+  //     Close - Initiate close sequence for this connection
+  //     Error - Force the connection closed at earliest oppurtunity
   //
   // Closing
   //   This event is sent to each stream is order proceeding DOWN the chain
   //   when a connection is closing.
+  //   Return values:
+  //     Ok    - Remove this stream from the list, no further events
+  //     Close - Remove this stream from the list, no further events
+  //     Wait  - Suspend closing temporarily, don't send closing 
+  //             event to preceeding streams yet.
+  //     End   - Suspend closing, connection should remain open.
+  //     Error - Force the connection closed at earliest oppurtunity
   //
-  // Readable, Writeable
+  //
+  // Readable and Writeable
   //   These are sent to streams that have enabled these events (using
   //   enable_event) when it is possible to read data from, or write data to,
-  //   the endpoint or any preceeding streams. Returning Ok will cause the
+  //   the endpoint, or any preceeding streams. Returning Ok will cause the
   //   event to be proporgated to the next interested stream UP the chain,
   //   while returning Wait will cause event processing to stop at this stream.
-  //   
+  //   Return values:
+  //     Ok    - Accept
+  //     Wait  - Don't send event to subsequent streams yet
+  //     End   - Remove this stream from the list, no further events
+  //     Close - Initiate close sequence for this connection
+  //     Error - Force the connection closed at earliest oppurtunity  
+  //
 
   void set_endpoint(Descriptor* endpoint);
   void set_chain(Stream* chain);
@@ -95,6 +112,7 @@ public:
   // for debugging.
 
   std::string event_status() const;
+  // Get a string indicating the current event status of this stream.
   
 protected:
 
@@ -120,18 +138,24 @@ protected:
   // Try and find named stream in the chain of preceeding streams
 
   Descriptor& endpoint();
-  // Allow const access to the endpoint
+  // Allow access to the endpoint
 
   std::string m_stream_name;
+  // The name of the stream
       
 private:
 
   int m_events;
+  // Event status
 
   std::list<ModuleRef*> m_module_refs;
+  // List of modules used by this stream
   
   Stream* m_chain;
+  // Upstream pointer
+
   Descriptor* m_endpoint;
+  // Endpoint (where the data is ultimately written to and read from)
   
 };
 

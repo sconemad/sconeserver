@@ -50,12 +50,6 @@ bool Context::handle_doc_end(XMLDoc* doc)
 }
 
 //=========================================================================
-std::string Context::name() const
-{
-  return "context";
-}
-
-//=========================================================================
 scx::Arg* Context::arg_resolve(const std::string& name)
 {
   return SCXBASE ArgObjectInterface::arg_resolve(name);

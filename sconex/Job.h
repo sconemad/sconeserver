@@ -106,9 +106,6 @@ private:
 
   Job* m_job;
 
-  Mutex m_job_mutex;
-  ConditionEvent m_job_condition;
-  
 };
 
 };

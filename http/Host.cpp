@@ -115,9 +115,7 @@ DocRoot* Host::get_docroot(const std::string& profile)
 //=========================================================================
 std::string Host::name() const
 {
-  std::ostringstream oss;
-  oss << "HOST:" << get_id();
-  return oss.str();
+  return get_id();
 }
 
 //=============================================================================

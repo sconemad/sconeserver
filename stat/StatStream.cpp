@@ -81,6 +81,8 @@ std::string StatStream::stream_status() const
     a = channel->arg_lookup("output");
     oss << " w:" << (a ? a->get_string() : "?");
     delete a;
+  } else {
+    oss << " (channel does not exist)";
   }
   
   return oss.str();

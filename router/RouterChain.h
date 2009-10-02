@@ -54,7 +54,8 @@ protected:
 
   std::string m_name;
   
-  std::list<RouterNode*> m_nodes;
+  typedef std::list<RouterNode*> RouterNodeList;
+  RouterNodeList m_nodes;
 
   scx::Module& m_module;
 
@@ -79,7 +80,8 @@ public:
     scx::Descriptor* d
   );
 
-  std::string get_string() const;
+  const std::string& get_name() const;
+  const scx::ArgList* get_args() const;
   
 protected:
 

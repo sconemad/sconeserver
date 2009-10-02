@@ -43,7 +43,7 @@ TFTPProfile::~TFTPProfile()
 //=============================================================================
 std::string TFTPProfile::name() const
 {
-  return std::string("PROFILE:") + m_name;
+  return m_name;
 }
 
 //=============================================================================

@@ -60,7 +60,7 @@ void StatChannel::reset()
 //=============================================================================
 std::string StatChannel::name() const
 {
-  return std::string("CHANNEL:") + m_name;
+  return m_name;
 }
 
 //=============================================================================

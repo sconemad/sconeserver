@@ -184,7 +184,10 @@ Free Software Foundation, Inc.,
 #  endif
 #endif
 
+// Misc stuff
+#include <sys/utsname.h>
 #include <typeinfo>
+#include <cxxabi.h>
 
 // sconex Debugging
 #include "sconex/Debug.h"

@@ -200,7 +200,7 @@ Time::Time(RefType ref, Time& c)
 //=============================================================================
 Time::~Time()
 {
-  if (*m_refs == 1) {
+  if (last_ref()) {
     delete m_time;
   }
   DEBUG_COUNT_DESTRUCTOR(Time);
@@ -334,9 +334,7 @@ std::string Time::string() const
 //=============================================================================
 Time& Time::operator=(const Time& t)
 {
-  if (!m_const) {
-    *m_time = *t.m_time;
-  }
+  *m_time = *t.m_time;
   return *this;
 }
 
