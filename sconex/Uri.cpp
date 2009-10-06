@@ -31,7 +31,7 @@ Uri::Uri()
     m_path(new std::string()),
     m_query(new std::string())
 {
-
+  DEBUG_COUNT_CONSTRUCTOR(Uri);
 }
 
 //=============================================================================
@@ -42,6 +42,7 @@ Uri::Uri(const std::string& str)
     m_path(new std::string()),
     m_query(new std::string())
 {
+  DEBUG_COUNT_CONSTRUCTOR(Uri);
   from_string(str);
 }
 
@@ -58,6 +59,7 @@ Uri::Uri(
     m_path(new std::string(path)),
     m_query(new std::string(query))
 {
+  DEBUG_COUNT_CONSTRUCTOR(Uri);
   scx::strlow(*m_scheme);
   scx::strlow(*m_host);
 }
@@ -70,6 +72,7 @@ Uri::Uri(Arg* args)
     m_path(new std::string()),
     m_query(new std::string())
 {
+  DEBUG_COUNT_CONSTRUCTOR(Uri);
   ArgList* l = dynamic_cast<ArgList*>(args);
 
   const ArgString* str = dynamic_cast<const ArgString*>(l->get(0));
@@ -88,7 +91,7 @@ Uri::Uri(const Uri& c)
     m_path(new std::string(*c.m_path)),
     m_query(new std::string(*c.m_query))
 {
-
+  DEBUG_COUNT_CONSTRUCTOR(Uri);
 }
 
 //=============================================================================
@@ -100,7 +103,7 @@ Uri::Uri(RefType ref, Uri& c)
     m_path(c.m_path),
     m_query(c.m_query)
 {
-
+  DEBUG_COUNT_CONSTRUCTOR(Uri);
 }
 
 //=============================================================================
@@ -113,6 +116,7 @@ Uri::~Uri()
     delete m_path;
     delete m_query;
   }
+  DEBUG_COUNT_DESTRUCTOR(Uri);
 }
  
 //=============================================================================

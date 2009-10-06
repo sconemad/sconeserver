@@ -8,68 +8,68 @@ var a;
 var c = 0;
 sub f { ++c; }
 
-print("running 1 | f()" + endl);
+print("running 1 | f()\n");
 a = 1 | f();
 test(c==0,"f() should not be called");
 
-print("running 0 | f()" + endl);
+print("running 0 | f()\n");
 a = 0 | f();
 test(c==1,"f() should be called");
 
-print("running 1 & f()" + endl);
+print("running 1 & f()\n");
 a = 1 & f();
 test(c==2,"f() should be called");
 
-print("running 0 & f()" + endl);
+print("running 0 & f()\n");
 a = 0 & f();
 test(c==2,"f() should not be called");
 
 
 var b = 0;
 
-print("running 1 | ++b" + endl);
+print("running 1 | ++b\n");
 a = 1 | ++b
 test(b==0,"b should not be incremented");
 
-print("running 0 | ++b" + endl);
+print("running 0 | ++b\n");
 a = 0 | ++b;
 test(b==1,"b should be incremented");
 
-print("running 1 & ++b" + endl);
+print("running 1 & ++b\n");
 a = 1 & ++b;
 test(b==2,"b should be incremented");
 
-print("running 0 & ++b" + endl);
+print("running 0 & ++b\n");
 a = 0 & ++b;
 test(b==2,"b should not be incremented");
 
 var m = {"one",1};
 
-print("running (1 | ++m.one) & f()" + endl);
+print("running (1 | ++m.one) & f()\n");
 a = (1 | ++m.one) & f();
 print("a=" + a + endl);
 test(c==3,"f() should be called");
 test(m.one==1,"m.one should not be incremented");
 
-print("running (1 & ++m.one) | f()" + endl);
+print("running (1 & ++m.one) | f()\n");
 a = (1 & ++m.one) | f();
 test(c==3,"f() should not be called");
 test(m.one==2,"m.one should be incremented");
 
 
 
-print("running z.notdefined | f()" + endl);
+print("running z.notdefined | f()\n");
 a = z.notdefined | f();
 test(c==4,"f() should be called");
 print("a="+a+endl);
 test(a==4,"a should be 4");
 
-print("running z.notdefined | m.one" + endl);
+print("running z.notdefined | m.one\n");
 a = z.notdefined | m.one;
 print("a="+a+endl);
 test(a==2,"a should be 2");
 
-print("running m.one | m.one" + endl);
+print("running m.one | m.one\n");
 a = m.one | m.one;
 print("a="+a+endl);
 test(a==2,"a should be 2");
@@ -84,13 +84,13 @@ print("sm=" + sm + endl);
 sm.mammal | sm.bird;
 
 
-print("running sm.mammal | sm.bird" + endl);
+print("running sm.mammal | sm.bird\n");
 s = sm.mammal | sm.bird;
 print("s="+s+endl);
 test(s=="chimpanzee","s should be chimpanzee");
 
-print('Hey; what is it?');
-print("Hello let\'s use a lot of \" quotes and whatnot."+endl);
+print('Hey; what is it?\n');
+print("Hello let\'s use a lot of \" quotes and whatnot.\n");
 
 
-print("END" + endl);
+print("END\n");

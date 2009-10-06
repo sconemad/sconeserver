@@ -29,7 +29,7 @@ MimeType::MimeType()
     m_subtype(new std::string()),
     m_params(new ParamMap())
 {
-
+  DEBUG_COUNT_CONSTRUCTOR(MimeType);
 }
 
 //=============================================================================
@@ -38,6 +38,7 @@ MimeType::MimeType(const std::string& str)
     m_subtype(new std::string()),
     m_params(new ParamMap())
 {
+  DEBUG_COUNT_CONSTRUCTOR(MimeType);
   from_string(str);
 }
 
@@ -50,6 +51,7 @@ MimeType::MimeType(
     m_subtype(new std::string(subtype)),
     m_params(new ParamMap())
 {
+  DEBUG_COUNT_CONSTRUCTOR(MimeType);
   strlow(*m_type);
   strlow(*m_subtype);
   params_from_string(params);
@@ -61,6 +63,7 @@ MimeType::MimeType(Arg* args)
     m_subtype(new std::string()),
     m_params(new ParamMap())
 {
+  DEBUG_COUNT_CONSTRUCTOR(MimeType);
   ArgList* l = dynamic_cast<ArgList*>(args);
 
   const ArgString* str = dynamic_cast<const ArgString*>(l->get(0));
@@ -77,7 +80,7 @@ MimeType::MimeType(const MimeType& c)
     m_subtype(new std::string(*c.m_subtype)),
     m_params(new ParamMap(*c.m_params))
 {
-
+  DEBUG_COUNT_CONSTRUCTOR(MimeType);
 }
 
 //=============================================================================
@@ -87,7 +90,7 @@ MimeType::MimeType(RefType ref, MimeType& c)
     m_subtype(c.m_subtype),
     m_params(c.m_params)
 {
-
+  DEBUG_COUNT_CONSTRUCTOR(MimeType);
 }
 
 //=============================================================================
@@ -98,6 +101,7 @@ MimeType::~MimeType()
     delete m_subtype;
     delete m_params;
   }
+  DEBUG_COUNT_DESTRUCTOR(MimeType);
 }
  
 //=============================================================================

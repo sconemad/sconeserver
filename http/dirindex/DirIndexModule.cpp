@@ -96,6 +96,7 @@ protected:
       const scx::Arg* a_default_page = 0; docroot->get_param("default_page");
       std::string s_default_page =
         (a_default_page ? a_default_page->get_string() : "index.html");
+      delete a_default_page;
       
       std::string url = uri.get_string();
       std::string uripath = uri.get_path();
@@ -128,6 +129,7 @@ protected:
 
       const scx::Arg* a_allow_list = docroot->get_param("allow_list");
       bool allow_list = (a_allow_list ? a_allow_list->get_int() : false);
+      delete a_allow_list;
       
       if (allow_list) {
         // Send directory listing if allowed

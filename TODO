@@ -7,7 +7,6 @@ For 0.8.0 release
 
 * HTTP
  - AuthRealm passwords stored in sha1
- - ArgStore per realm user
 
 * Sconesite 
  - Article file/upload file manager object

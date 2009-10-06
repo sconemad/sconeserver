@@ -65,8 +65,22 @@ Arg* ArgProc::evaluate(const std::string& expr)
 
   ArgProc_DEBUG_LOG("evaluate: " << expr);
   
-  // Procuate the expression
-  Arg* result = expression(0,true);
+  Arg* result = 0;
+
+  try {
+
+    // Evaluate the expression
+    result = expression(0,true);
+
+  } catch (...) {
+    delete result;
+    while (!m_stack.empty()) {
+      delete m_stack.top();
+      m_stack.pop();
+    }
+    DEBUG_LOG("EXCEPTION in ArgProc");
+    throw;
+  }
 
   ArgProc_DEBUG_LOG("result: " << (result ? result->get_string() : "NULL"));
   
@@ -125,7 +139,14 @@ Arg* ArgProc::expression(int p, bool f, bool exec)
             return right;
           }
           Arg* new_left = 0;
-	  if (exec) new_left = left->op(m_auth,Arg::Binary,op,right);
+	  try {
+	    if (exec) new_left = left->op(m_auth,Arg::Binary,op,right);
+	  } catch (...) {
+	    delete left;
+	    delete right;
+	    delete new_left;
+	    throw;
+	  }
           delete left;
           delete right;
           left = new_left;
@@ -175,7 +196,14 @@ Arg* ArgProc::expression(int p, bool f, bool exec)
 
           ArgProc_DEBUG_LOG("call: " << left->get_string());
           Arg* new_left = 0;
-	  if (exec) new_left = left->op(m_auth,Arg::Binary,op,args);
+	  try {
+	    if (exec) new_left = left->op(m_auth,Arg::Binary,op,args);
+	  } catch (...) {
+	    delete left;
+	    delete args;
+	    delete new_left;
+	    throw;
+	  }
           delete left;
           delete args;
           left = new_left;
@@ -216,8 +244,16 @@ Arg* ArgProc::expression(int p, bool f, bool exec)
             m_stack.push(left);
             left=right;
           } else {
+	    // Normal binary op, handled by left Arg object
             Arg* new_left = 0;
-	    new_left = left->op(m_auth,Arg::Binary,op,right);
+	    try {
+	      new_left = left->op(m_auth,Arg::Binary,op,right);
+	    } catch (...) {
+	      delete left;
+	      delete right;
+	      delete new_left;
+	      throw;
+	    }
             delete left;
             delete right;
             left = new_left;
@@ -232,7 +268,13 @@ Arg* ArgProc::expression(int p, bool f, bool exec)
         // Unary postfix operation
         ArgProc_DEBUG_LOG("postfix op: " << op);
         Arg* new_left = 0;
-	if (exec) new_left = left->op(m_auth,Arg::Postfix,op);
+	try {
+	  if (exec) new_left = left->op(m_auth,Arg::Postfix,op);
+	} catch (...) {
+	  delete left;
+	  delete new_left;
+	  throw;
+	}
         delete left;
         left = new_left;
         next();
@@ -272,7 +314,13 @@ Arg* ArgProc::primary(bool f, bool exec)
         if (right) {
           ArgProc_DEBUG_LOG("prefix op: " << op);
           Arg* result = 0;
-	  if (exec) result = right->op(m_auth,Arg::Prefix,op);
+	  try {
+	    if (exec) result = right->op(m_auth,Arg::Prefix,op);
+	  } catch (...) {
+	    delete right;
+	    delete result;
+	    throw;
+	  }
           delete right;
           return result;
         }
@@ -374,7 +422,14 @@ Arg* ArgProc::primary(bool f, bool exec)
         if (m_ctx) {
           ArgProc_DEBUG_LOG("resolving: " << m_name);
           a = new ArgString(m_name);
-          Arg* b = m_ctx->op(m_auth,Arg::Binary,":",a);
+          Arg* b = 0;
+	  try {
+	    b = m_ctx->op(m_auth,Arg::Binary,":",a);
+	  } catch (...) {
+	    delete b;
+	    delete a;
+	    throw;
+	  }
           delete a;
           a = b;
         }
@@ -520,23 +575,48 @@ void ArgProc::next()
   // Quote delimited string
   if ('"'==c || '\''==c) {
     char delim = c;
-    bool escape = false;
     m_name = "";
     while (++i < len) {
       c = m_expr[i];
-      if (c==delim && !escape) {
-        // was: m_name = m_expr.substr(m_pos+1,i-m_pos-1); // does not handle escapes
+
+      if (c==delim) {
+	// Delimiter reached
         m_pos = i+1;
         m_type = ArgProc::Value;
         m_value = new ArgString(m_name);
         ArgProc_DEBUG_LOG("next: (string) " << m_name);
         return;
       }
-      if (c=='\\') {
-	escape = true;
-      } else {
-	escape = false;
+
+      if (c!='\\') {
+	// Normal character
 	m_name += c;
+
+      } else {
+	// Escape sequence
+	if (++i >= len) {
+	  break;
+	}
+	c = m_expr[i];
+	switch (c) {
+	  case 'n': m_name += '\n'; break;
+	  case 'r': m_name += '\r'; break;
+	  case 'b': m_name += '\b'; break;
+	  case 't': m_name += '\t'; break;
+	  case 'f': m_name += '\f'; break;
+	  case 'a': m_name += '\a'; break;
+	  case 'v': m_name += '\v'; break;
+	  case '0': m_name += '\0'; break;
+  	  case 'x': {
+	    if (i+3 < len) {
+	      char sx[3] = {m_expr[i+1],m_expr[i+2],0};
+	      long x = strtol(sx,0,16);
+	      i += 2;
+	      m_name += (char)x;
+	    }
+	  } break;
+  	  default: m_name += c; break;
+	}
       }
     }
     // No closing delimiter!

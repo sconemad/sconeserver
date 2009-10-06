@@ -266,12 +266,6 @@ bool Request::is_param(const std::string& name) const
 }
 
 //=========================================================================
-std::string Request::name() const
-{
-  return "request";
-}
-
-//=========================================================================
 scx::Arg* Request::arg_lookup(const std::string& name)
 {
   // Methods

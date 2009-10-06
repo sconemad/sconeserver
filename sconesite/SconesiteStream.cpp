@@ -191,7 +191,6 @@ scx::Condition SconesiteStream::send_response()
     new_uri.set_path(new_uri.get_path() + "/");
     m_module.log("Redirect '" + uri.get_string() + "' to '" + new_uri.get_string() + "'"); 
     resp.set_status(http::Status::Found);
-    resp.set_header("Content-Type","text/html");
     resp.set_header("Location",new_uri.get_string());
     return scx::Close;
     
@@ -209,10 +208,8 @@ scx::Condition SconesiteStream::send_response()
       return scx::End;
     }
 
-    //  } else if (m_article) {
   } else if (!art_name.empty()) {
     m_module.log("Sending article '" + art_name + "'");
-    resp.set_header("Content-Type","text/html");
     
   } else {
     m_module.log("Sending NotFound, pathinfo is '" + pathinfo + "'");
@@ -232,7 +229,7 @@ scx::Condition SconesiteStream::send_response()
   scx::Kernel::get()->connect(source,0);
   
   // Create context for rendering HTML to the bio socket
-  RenderMarkupContext* ctx = new RenderMarkupContext(*profile,bio,req);
+  RenderMarkupContext* ctx = new RenderMarkupContext(*profile,bio,req,resp);
   ctx->set_article(m_article);
   
   // Create and add a job to render this page

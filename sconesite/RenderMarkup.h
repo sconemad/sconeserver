@@ -25,7 +25,7 @@ Free Software Foundation, Inc.,
 #include "Context.h"
 #include "XMLDoc.h"
 #include "http/Request.h"
-
+#include "http/Response.h"
 #include "sconex/ArgObject.h"
 #include "sconex/Stream.h"
 #include "sconex/Descriptor.h"
@@ -41,9 +41,12 @@ class RenderMarkupContext : public Context {
 
 public:
 
-  RenderMarkupContext(Profile& profile,
-		      scx::Descriptor* output,
-		      const http::Request& request);
+  RenderMarkupContext(
+    Profile& profile,
+    scx::Descriptor* output,
+    const http::Request& request,
+    http::Response& response
+  );
 
   ~RenderMarkupContext();
 
@@ -71,6 +74,7 @@ protected:
   Profile& m_profile;
   scx::Descriptor* m_output;
   http::Request m_request;
+  scx::ArgObject* m_response_obj;
 
   Article* m_article;
   bool m_processing;

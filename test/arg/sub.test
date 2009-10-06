@@ -29,13 +29,13 @@ sub func1
   return 3 * func2(a*5);
 }
 
-print("START"+endl);
+print("START\n");
 
 var i;
 for (i=0; i<=30; ++i) {
   print ("CALL... ");
   var r = func1(i);
-  print(""+r+endl);
+  print(""+r+"\n");
 }
 
-print("END"+endl);
+print("END\n");

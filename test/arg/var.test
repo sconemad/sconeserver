@@ -2,7 +2,7 @@
 #
 #
 
-print("START" + endl);
+print("START\n");
 
 var map = {
   "one" : 1, 
@@ -14,7 +14,7 @@ var map = {
 
 print("Constructed map: ");
 print(map);
-print(endl);
+print("\n");
 
 test(map.one == 1,"Test map is initialised");
 test(map.two == 2,"Test map is initialised");
@@ -59,7 +59,7 @@ test(map.two == 2,"Test const referenced value is unchanged");
 
 print("Updated map: ");
 print(map);
-print(endl);
+print("\n");
 
 
-print("END" + endl);
+print("END\n");

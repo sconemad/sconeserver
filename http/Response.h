@@ -51,18 +51,16 @@ public:
   std::string build_header_string();
   
   // ArgObject interface
-  virtual std::string name() const;
   virtual scx::Arg* arg_lookup(const std::string& name);
   virtual scx::Arg* arg_function(const scx::Auth& auth,const std::string& name,scx::Arg* args);
   
-protected:
+private:
 
   scx::VersionTag m_version;
   Status m_status;
 
   scx::MimeHeaderTable m_headers;
-  
-private:
+
 
 };
 

@@ -41,7 +41,7 @@ class SCONEX_API ArgObjectInterface {
 public:
 
   ArgObjectInterface();
-
+  ArgObjectInterface(const ArgObjectInterface& c);
   virtual ~ArgObjectInterface();
   
   virtual std::string name() const;
@@ -89,7 +89,6 @@ class SCONEX_API ArgObject : public Arg {
 public:
   
   ArgObject(ArgObjectInterface* obj);
-
   ArgObject(const ArgObject& c);
   virtual ~ArgObject();
 
@@ -122,7 +121,6 @@ public:
     ArgObject* obj,
     const std::string& name
   );
-
   ArgObjectFunction(const ArgObjectFunction& c);
   virtual ~ArgObjectFunction();
 

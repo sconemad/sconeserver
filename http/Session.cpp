@@ -145,19 +145,13 @@ scx::Arg* SessionManager::arg_lookup(
 }
 
 //=============================================================================
-scx::Arg* SessionManager::arg_resolve(const std::string& name)
-{
-  return SCXBASE ArgObjectInterface::arg_resolve(name);
-}
-
-//=============================================================================
 scx::Arg* SessionManager::arg_function(
   const scx::Auth& auth,
   const std::string& name,
   scx::Arg* args
 )
 {
-  scx::ArgList* l = dynamic_cast<scx::ArgList*>(args);
+  //  scx::ArgList* l = dynamic_cast<scx::ArgList*>(args);
 
   if ("check" == name) {
     check_sessions();
@@ -174,10 +168,11 @@ unsigned long long int Session::m_next_id = 0x1234567812345678ULL;
 Session::Session(
   HTTPModule& module,
   const std::string& id
-) : m_module(module),
-    m_id(id),
-    m_vars("")
+) : scx::ArgStore(""),
+    m_module(module),
+    m_id(id)
 {
+  DEBUG_COUNT_CONSTRUCTOR(Session);
   if (id.empty()) {
     // Create a new session ID
     std::ostringstream oss;
@@ -193,7 +188,7 @@ Session::Session(
 //=========================================================================
 Session::~Session()
 {
-
+  DEBUG_COUNT_DESTRUCTOR(Session);
 }
 
 //=========================================================================
@@ -219,7 +214,7 @@ bool Session::allow_upload() const
 {
   Session* uc = const_cast<Session*>(this);
 
-  const scx::Arg* a = uc->m_vars.arg_lookup("allow_upload");
+  const scx::Arg* a = uc->arg_lookup("allow_upload");
   return (a && a->get_int());
 }
 
@@ -234,24 +229,9 @@ scx::Arg* Session::arg_lookup(
   const std::string& name
 )
 {
-  // Methods
-  
-  if ("reset" == name) {
-    return new scx::ArgObjectFunction(new scx::ArgObject(this),name);
-  }
-
-  // Properties
-  
   if ("id" == name) return new scx::ArgString(m_id);
-  if ("vars" == name) return new scx::ArgObject(&m_vars);
 
-  return ArgObjectInterface::arg_lookup(name);
-}
-
-//=============================================================================
-scx::Arg* Session::arg_resolve(const std::string& name)
-{
-  return SCXBASE ArgObjectInterface::arg_resolve(name);
+  return SCXBASE ArgStore::arg_lookup(name);
 }
 
 //=============================================================================
@@ -261,15 +241,15 @@ scx::Arg* Session::arg_function(
   scx::Arg* args
 )
 {
-  scx::ArgList* l = dynamic_cast<scx::ArgList*>(args);
+  //  scx::ArgList* l = dynamic_cast<scx::ArgList*>(args);
 
   if ("reset" == name) {
     m_timeout = scx::Date(0);
-    m_vars.reset();
-    return 0;
+    // Let ArgStore do its reset stuff too
+    return SCXBASE ArgStore::arg_function(auth,name,args);
   }
 
-  return ArgObjectInterface::arg_function(auth,name,args);
+  return SCXBASE ArgStore::arg_function(auth,name,args);
 }
 
 };

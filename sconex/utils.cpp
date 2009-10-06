@@ -50,6 +50,57 @@ char* new_c_str(const std::string& str)
 }
 
 //============================================================================
+std::string escape_quotes(const std::string& s)
+{
+  std::string r;
+  int n = s.length();
+  for (int i=0; i<n; ++i) {
+    char c = s[i];
+    if (isgraph(c) || ' '==c) {
+      r += c;
+    } else {
+      char e = 0;
+      switch (c) {
+        case '\\': r += "\\\\"; break;
+        case '\"': r += "\\\""; break;
+        case '\'': r += "\\\'"; break;
+        case '\n': r += "\\n"; break;
+        case '\r': r += "\\r"; break;
+        case '\b': r += "\\b"; break;
+        case '\t': r += "\\t"; break;
+        case '\f': r += "\\f"; break;
+        case '\a': r += "\\a"; break;
+        case '\v': r += "\\v"; break;
+        case '\0': r += "\\0"; break;
+        default: {
+	  char x[5];
+	  r += sprintf(x,"\\x%02x",c);
+	} break;
+      }
+    }
+  }
+  return r;
+}
+
+//============================================================================
+std::string escape_html(const std::string& s)
+{
+  std::string r;
+  int n = s.length();
+  for (int i=0; i<n; ++i) {
+    char c = s[i];
+    switch (c) {
+      case '&': r += "&amp;"; break;
+      case '<': r += "&lt;"; break;
+      case '>': r += "&gt;"; break;
+      case '\"': r += "&quot;"; break;
+      default: r += c; break;
+    }
+  }
+  return r;
+}
+
+//============================================================================
 std::string type_name(const std::type_info& ti)
 {
   int status;

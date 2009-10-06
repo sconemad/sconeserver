@@ -94,16 +94,11 @@ std::string Response::build_header_string()
 }
 
 //=========================================================================
-std::string Response::name() const
-{
-  return "request";
-}
-
-//=========================================================================
 scx::Arg* Response::arg_lookup(const std::string& name)
 {
   // Methods
-  if ("test" == name) {
+  if ("set_header" == name ||
+      "set_status" == name) {
     return new scx::ArgObjectFunction(new scx::ArgObject(this),name);
   }
   
@@ -119,7 +114,25 @@ scx::Arg* Response::arg_function(const scx::Auth& auth,const std::string& name,s
 {
   scx::ArgList* l = dynamic_cast<scx::ArgList*>(args);
 
-  if (name == "test") {
+  if (name == "set_header") {
+    const scx::ArgString* a_header =  dynamic_cast<const scx::ArgString*>(l->get(0));
+    if (!a_header) return new scx::ArgError("set_header() No name specified");
+
+    const scx::ArgString* a_value = dynamic_cast<const scx::ArgString*>(l->get(1));
+    if (!a_value) return new scx::ArgError("set_header() No value specified");
+
+    set_header(a_header->get_string(),a_value->get_string());
+    return 0;
+  }
+
+  if (name == "set_status") {
+    const scx::ArgInt* i_status =  dynamic_cast<const scx::ArgInt*>(l->get(0));
+    if (!i_status) return new scx::ArgError("set_status() No status code specified");
+
+    Status status((Status::Code)i_status->get_int());
+    if (!status.valid()) return new scx::ArgError("set_status() Invalid status code specified");
+
+    set_status(status);
     return 0;
   }
 

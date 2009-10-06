@@ -1,4 +1,22 @@
 
+2009-10-06 Andrew Wedgbury <wedge@sconemad.com>
+	
+	* sconex/ArgProc: Handle escape sequences in literals.
+	Cleanup if exception occurs within op() calls.
+	* sconex/utils: Add quote and html string escape utils.
+	* sconex/ArgStore: Escape strings before writing.
+	Factor out store_arg as static method allowing reuse.
+	* sconex/VersionTag: Fix bug in get_string().
+	* http/Session: Simplify by deriving from ArgStore.
+	* http/AuthRealm: Simplify by deriving from ArgStore.
+	* http/Request: Add plenty of comments.
+	* http/MessageStream: Share Response object.
+	* http/DocRoot: Fix leaked params.
+	* dirindex: Fix leaked params from DocRoot.
+	* sconesite/RenderMarkup: Add escaping methods.
+	Receive Response object, deleting if required.
+	* sconesite/Article: Fix leaked meta Args in sorter.
+	
 2009-10-02 Andrew Wedgbury <wedge@sconemad.com>
 
 	* sconex/Arg: Tidy ref counting by making data private,

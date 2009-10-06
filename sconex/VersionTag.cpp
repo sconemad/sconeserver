@@ -33,7 +33,7 @@ VersionTag::VersionTag(
     m_sub(new int(sub)),
     m_extra(new std::string(extra))
 {
-  
+  DEBUG_COUNT_CONSTRUCTOR(VersionTag);
 }
 
 //=============================================================================
@@ -43,6 +43,7 @@ VersionTag::VersionTag(const std::string& str)
     m_sub(new int(-1)),
     m_extra(new std::string())
 {
+  DEBUG_COUNT_CONSTRUCTOR(VersionTag);
   from_string(str);
 }
 
@@ -53,6 +54,7 @@ VersionTag::VersionTag(Arg* args)
     m_sub(new int(-1)),
     m_extra(new std::string())
 {
+  DEBUG_COUNT_CONSTRUCTOR(VersionTag);
   ArgList* l = dynamic_cast<ArgList*>(args);
 
   const ArgString* str = dynamic_cast<const ArgString*>(l->get(0));
@@ -84,7 +86,7 @@ VersionTag::VersionTag(const VersionTag& c)
     m_sub(new int(*c.m_sub)),
     m_extra(new std::string(*c.m_extra))
 {
-
+  DEBUG_COUNT_CONSTRUCTOR(VersionTag);
 }
 
 //=============================================================================
@@ -95,7 +97,7 @@ VersionTag::VersionTag(RefType ref, VersionTag& c)
     m_sub(c.m_sub),
     m_extra(c.m_extra)
 {
-
+  DEBUG_COUNT_CONSTRUCTOR(VersionTag);
 }
 
 //=============================================================================
@@ -107,6 +109,7 @@ VersionTag::~VersionTag()
     delete m_sub;
     delete m_extra;
   }
+  DEBUG_COUNT_DESTRUCTOR(VersionTag);
 }
 
 //=============================================================================
@@ -153,7 +156,7 @@ std::string VersionTag::get_string() const
     oss << *m_major;
     if (*m_minor>=0) {
       oss << "." << *m_minor;
-      if (m_sub>=0) {
+      if (*m_sub>=0) {
         oss << "." << *m_sub;
       }
     }

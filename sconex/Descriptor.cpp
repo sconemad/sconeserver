@@ -549,7 +549,7 @@ DescriptorJob::DescriptorJob(Descriptor* d)
     m_descriptor(d),
     m_events(0)
 {
-  DEBUG_COUNT_CONSTRUCTOR(DescriptorJob);
+
 }
 	
 //=============================================================================
@@ -557,7 +557,6 @@ DescriptorJob::~DescriptorJob()
 {
   m_descriptor->close();
   delete m_descriptor;
-  DEBUG_COUNT_DESTRUCTOR(DescriptorJob);
 }
 
 //=============================================================================

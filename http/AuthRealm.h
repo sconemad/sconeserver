@@ -32,7 +32,7 @@ class HTTPModule;
 class MessageStream;
 
 //=============================================================================
-class HTTP_API HTTPUser : public scx::ArgObjectInterface {
+class HTTP_API HTTPUser : public scx::ArgStore {
 public:
 
   HTTPUser(
@@ -53,7 +53,6 @@ private:
 
   std::string m_username;
   std::string m_password;
-  scx::ArgStore m_vars;
 
 };
 

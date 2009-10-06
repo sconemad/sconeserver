@@ -31,6 +31,12 @@ void SCONEX_API strup(std::string& s);
 void SCONEX_API strlow(std::string& s);
 // Convert string to lowercase
 
+std::string SCONEX_API escape_quotes(const std::string& s);
+// Escape string to remove quotes
+
+std::string SCONEX_API escape_html(const std::string& s);
+// Escape string to remove html control chars
+
 char* SCONEX_API new_c_str(const std::string& str);
 // New up a c style string from a c++ string
 

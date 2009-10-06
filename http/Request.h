@@ -36,8 +36,7 @@ class HTTP_API Request : public scx::ArgObjectInterface {
 
 public:
 
-  Request(const std::string& profile);
-  
+  Request(const std::string& profile);  
   virtual ~Request();
 
   const std::string& get_method() const;
@@ -48,6 +47,7 @@ public:
   std::string get_header(const std::string& name) const;
   scx::MimeHeader get_header_parsed(const std::string& name) const;
   bool parse_header(const std::string& str);
+
 
   void set_host(Host* host);
   const Host* get_host() const;
@@ -76,31 +76,60 @@ public:
   bool is_param(const std::string& name) const;
 
   // ArgObject interface
-  virtual std::string name() const;
   virtual scx::Arg* arg_lookup(const std::string& name);
   virtual scx::Arg* arg_function(const scx::Auth& auth,const std::string& name,scx::Arg* args);
   
-protected:
-
-  std::string m_method;
-  scx::Uri m_uri;
-  scx::VersionTag m_version;
-
-  scx::MimeHeaderTable m_headers;
-
-  Host* m_host;
-  std::string m_profile;
-  DocRoot* m_docroot;
-  Session* m_session;
-  scx::FilePath m_path;
-
-  std::string m_auth_user;
-  std::string m_pathinfo;
-
-  scx::ArgMap m_params;
-  
 private:
 
+  // ----
+  // The following data comes directly from the HTTP Message, which looks like:
+  // <METHOD> <URI> HTTP/<VERSION><CR><LF>
+  // <HEADER-NAME>: <HEADER-VALUE><CR><LF>
+  // <HEADER-NAME>: <HEADER-VALUE><CR><LF>
+  // ...
+  // <CR><LF>
+  //
+
+  std::string m_method;
+  // The request method (GET|POST|HEAD)
+
+  scx::Uri m_uri;
+  // The uniform resource indicator being requested
+
+  scx::VersionTag m_version;
+  // The HTTP version being used by the client
+  
+  scx::MimeHeaderTable m_headers;
+  // Table containing request headers
+
+
+  // ----
+  // Decoded data:
+  
+  Host* m_host;
+  // The HTTP Host
+
+  std::string m_profile;
+  // The profile
+
+  DocRoot* m_docroot;
+  // The document root corresponding to the above profile
+
+  Session* m_session;
+  // The HTTP session (if applicable)
+
+  scx::FilePath m_path;
+  // Local file corresponding to the remote URI (if applicable)
+  
+  std::string m_auth_user;
+  // Username authenticated using HTTP authentication (empty if not authenticated)
+
+  std::string m_pathinfo;
+  // Extra path information following path of invoked object
+    
+  scx::ArgMap m_params;
+  // Parameters sent with the request
+  
 };
 
 };

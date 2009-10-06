@@ -33,17 +33,19 @@ HTTPUser::HTTPUser(
   const std::string& username,
   const std::string& password,
   const scx::FilePath& path
-) : m_username(username),
-    m_password(password),
-    m_vars(path)
+) : scx::ArgStore(path),
+    m_username(username),
+    m_password(password)
 {
-  m_vars.load();
+  DEBUG_COUNT_CONSTRUCTOR(HTTPUser);
+  load();
 }
 
 //=========================================================================
 HTTPUser::~HTTPUser()
 {
-  m_vars.save();
+  save();
+  DEBUG_COUNT_DESTRUCTOR(HTTPUser);
 }
 
 //=========================================================================
@@ -63,17 +65,7 @@ scx::Arg* HTTPUser::arg_lookup(
   const std::string& name
 )
 {
-  // Methods
-  
-  if ("reset" == name) {
-    return new scx::ArgObjectFunction(new scx::ArgObject(this),name);
-  }
-
-  // Properties
-  
-  if ("vars" == name) return new scx::ArgObject(&m_vars);
-
-  return ArgObjectInterface::arg_lookup(name);
+  return SCXBASE ArgStore::arg_lookup(name);
 }
 
 //=============================================================================
@@ -86,11 +78,12 @@ scx::Arg* HTTPUser::arg_function(
   scx::ArgList* l = dynamic_cast<scx::ArgList*>(args);
 
   if ("reset" == name) {
-    m_vars.reset();
-    return 0;
+
+    // Let ArgStore do its reset stuff too
+    return SCXBASE ArgStore::arg_function(auth,name,args);
   }
 
-  return ArgObjectInterface::arg_function(auth,name,args);
+  return SCXBASE ArgStore::arg_function(auth,name,args);
 }
 
 
@@ -103,7 +96,7 @@ AuthRealm::AuthRealm(
     m_name(name),
     m_path(path)
 {
-
+  DEBUG_COUNT_CONSTRUCTOR(AuthRealm);
 }
 
 //=========================================================================
@@ -114,6 +107,7 @@ AuthRealm::~AuthRealm()
        ++it) {
     delete it->second;
   }
+  DEBUG_COUNT_DESTRUCTOR(AuthRealm);
 }
 
 //=========================================================================

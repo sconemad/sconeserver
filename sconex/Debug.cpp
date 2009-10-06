@@ -27,7 +27,7 @@ namespace scx {
 #define DEBUG_BREAKPOINT asm("int $3");
 
 // Swtich on debug instance counting
-#define DEBUG_INSTANCE_COUNT
+//#define DEBUG_INSTANCE_COUNT
 
 //=============================================================================
 DebugInstanceCounter::DebugInstanceCounter()
@@ -127,7 +127,7 @@ void Debug::dbg_assert(
       m_logger->log(oss.str(),Logger::Debug);
     }
 
-    //    DEBUG_BREAKPOINT;
+    //DEBUG_BREAKPOINT;
     
     if (m_stop_on_assert) {
       // Issue a debug breakpoint if required
@@ -165,9 +165,11 @@ void Debug::count_constuctor(const std::string& class_name, void* addr)
   m_mutex->lock();
 
   // Place breakpoints for particular instance construction
-  if (class_name == "Arg") {
-    // if (m_inst_counts[class_name].get_max() == 2433) DEBUG_BREAKPOINT;
+  /*
+  if (class_name == "ArgInt") {
+      if (m_inst_counts[class_name].get_max() == 238) DEBUG_BREAKPOINT;
   }
+  */
 
   m_inst_counts[class_name].count_constructor(addr);
   m_mutex->unlock();

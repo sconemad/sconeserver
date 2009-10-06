@@ -22,6 +22,7 @@ Free Software Foundation, Inc.,
 #include "sconex/ArgStore.h"
 #include "sconex/ArgProc.h"
 #include "sconex/File.h"
+#include "sconex/utils.h"
 namespace scx {
 
 // Uncomment to enable debug info
@@ -36,6 +37,7 @@ ArgStore::ArgStore(const FilePath& path)
   : m_path(path),
     m_data(0)
 {
+  DEBUG_COUNT_CONSTRUCTOR(ArgStore);
   reset();
 }
  
@@ -43,6 +45,7 @@ ArgStore::ArgStore(const FilePath& path)
 ArgStore::~ArgStore()
 {
   delete m_data;
+  DEBUG_COUNT_DESTRUCTOR(ArgStore);
 }
 
 //=============================================================================
@@ -176,6 +179,56 @@ Arg* ArgStore::arg_function(const Auth& auth, const std::string& name,Arg* args)
   return ArgObjectInterface::arg_function(auth,name,args);
 }
 
+//=============================================================================
+void ArgStore::store_arg(Descriptor& out, const Arg* arg)
+{
+  if (arg == 0) {
+    out.write("0");
+    return;
+  }
+
+  const std::type_info& ti = typeid(*arg);
+  
+  if (typeid(ArgString) == ti) {
+    out.write("\"" + escape_quotes(arg->get_string()) + "\"");
+
+  } else if (typeid(ArgInt) == ti) {
+    out.write(arg->get_string());
+    
+  } else if (typeid(ArgReal) == ti) {
+    out.write(arg->get_string());
+
+  } else if (typeid(ArgList) == ti) {
+    const ArgList* l = dynamic_cast<const ArgList*>(arg);
+    out.write("[");
+    int max = l->size();
+    for (int i=0; i<max; ++i) {
+      if (i>0) out.write(",");
+      store_arg(out,l->get(i));
+    }
+    out.write("]");
+    
+  } else if (typeid(ArgMap) == ti) {
+    const ArgMap* m = dynamic_cast<const ArgMap*>(arg);
+    out.write("{");
+    std::vector<std::string> keys;
+    m->keys(keys);
+    for (std::vector<std::string>::const_iterator it = keys.begin();
+	 it != keys.end();
+	 ++it) {
+      if (it != keys.begin()) out.write(",");
+      std::string key = *it;
+      out.write("\"" + key + "\":");
+      store_arg(out,m->lookup(key));
+    }
+    out.write("}");
+
+  } else {
+    out.write("");
+    //    write("\"" + arg->get_string() + "\"");
+  }
+}
+
 
 //=============================================================================
 ArgStoreStream::ArgStoreStream(Mode mode, Arg* arg_write)
@@ -183,8 +236,6 @@ ArgStoreStream::ArgStoreStream(Mode mode, Arg* arg_write)
     m_mode(mode),
     m_arg(arg_write)
 {
-  DEBUG_COUNT_CONSTRUCTOR(ArgStoreStream);
-
   if (m_mode == Read) {
     enable_event(Stream::Readable,true);
   } else if (m_mode == Write) {
@@ -198,8 +249,6 @@ ArgStoreStream::~ArgStoreStream()
   if (m_mode == Read) {
     delete m_arg;
   }
-
-  DEBUG_COUNT_DESTRUCTOR(ArgStoreStream);
 }
 
 //=============================================================================
@@ -224,7 +273,7 @@ Condition ArgStoreStream::event(Stream::Event e)
   }
 
   if (e == Stream::Writeable) {
-    write_arg(m_arg);
+    ArgStore::store_arg(endpoint(),m_arg);
     return End;
   }
 
@@ -237,58 +286,6 @@ Arg* ArgStoreStream::take_arg_read()
   Arg* ret = m_arg;
   m_arg = 0;
   return ret;
-}
-
-//=============================================================================
-bool ArgStoreStream::write_arg(const Arg* arg)
-{
-  if (arg == 0) {
-    write("0");
-    return true;
-  }
-
-  const std::type_info& ti = typeid(*arg);
-  
-  if (typeid(ArgString) == ti) {
-    write("\"" + arg->get_string() + "\"");
-
-  } else if (typeid(ArgInt) == ti) {
-    write(arg->get_string());
-    
-  } else if (typeid(ArgReal) == ti) {
-    write(arg->get_string());
-
-  } else if (typeid(ArgList) == ti) {
-    const ArgList* l = dynamic_cast<const ArgList*>(arg);
-    write("[");
-    int max = l->size();
-    for (int i=0; i<max; ++i) {
-      if (i>0) write(",");
-      write_arg(l->get(i));
-    }
-    write("]");
-
-  } else if (typeid(ArgMap) == ti) {
-    const ArgMap* m = dynamic_cast<const ArgMap*>(arg);
-    write("{");
-    std::vector<std::string> keys;
-    m->keys(keys);
-    for (std::vector<std::string>::const_iterator it = keys.begin();
-	 it != keys.end();
-	 ++it) {
-      if (it != keys.begin()) write(",");
-      std::string key = *it;
-      write("\"" + key + "\":");
-      write_arg(m->lookup(key));
-    }
-    write("}");
-
-  } else {
-    write("\"" + arg->get_string() + "\"");
-
-  }
-
-  return true;
 }
 
 };

@@ -91,7 +91,13 @@ DocRoot::DocRoot(
 //=========================================================================
 DocRoot::~DocRoot()
 {
-
+  PatternMap::iterator it; 
+  for (it = m_extn_mods.begin(); it != m_extn_mods.end(); ++it) {
+    delete it->second;
+  }
+  for (it = m_path_mods.begin(); it != m_path_mods.end();  ++it) {
+    delete it->second;
+  }
 }
 
 //=========================================================================
@@ -163,6 +169,7 @@ bool DocRoot::connect_request(scx::Descriptor* endpoint, Request& request, Respo
 
     const scx::Arg* a_auto_session = get_param("auto_session");
     bool b_auto_session = (a_auto_session && a_auto_session->get_int());
+    delete a_auto_session;
 
     // Lookup the session
     Session* s = m_module.get_sessions().lookup_session(scxid);
@@ -171,6 +178,11 @@ bool DocRoot::connect_request(scx::Descriptor* endpoint, Request& request, Respo
       DEBUG_LOG("Existing session: " << s->get_id());
 
     } else {
+      if (!scxid.empty()) {
+	// Timed-out session
+	
+      }
+      
       // Create new session if auto_session enabled
       if (b_auto_session) {
 	s = m_module.get_sessions().new_session();

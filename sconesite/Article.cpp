@@ -60,19 +60,28 @@ ArticleMetaSorter::ArticleMetaSorter(const std::string& meta, bool reverse)
 //=========================================================================
 bool ArticleMetaSorter::operator()(const Article* a, const Article* b)
 {
+  bool ret = !m_reverse;
+  
   const scx::Arg* a_arg = a->get_meta(m_meta);
-  if (!a_arg) return !m_reverse;
-
   const scx::Arg* b_arg = b->get_meta(m_meta);
-  if (!b_arg) return m_reverse;
 
-  if (dynamic_cast<const scx::ArgInt*>(a_arg) != 0) {
-    int a_int = a_arg ? a_arg->get_int() : 0;
-    int b_int = b_arg ? b_arg->get_int() : 0;
-    return (m_reverse ? (a_int >= b_int) : (a_int < b_int));
+  if (a_arg) {
+    ret = m_reverse;
+    if (b_arg) {
+      if (dynamic_cast<const scx::ArgInt*>(a_arg) != 0) {
+	int a_int = a_arg ? a_arg->get_int() : 0;
+	int b_int = b_arg ? b_arg->get_int() : 0;
+	ret = (m_reverse ? (a_int >= b_int) : (a_int < b_int));
+      } else {
+	ret = (m_reverse ? (a_arg->get_string() >= b_arg->get_string()) : (a_arg->get_string() < b_arg->get_string()));
+      }
+    }
   }
 
-  return (m_reverse ? (a_arg->get_string() >= b_arg->get_string()) : (a_arg->get_string() < b_arg->get_string()));
+  delete a_arg;
+  delete b_arg;
+
+  return ret;
 }
 
 //=========================================================================

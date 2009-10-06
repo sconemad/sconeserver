@@ -137,14 +137,14 @@ bool Arg::is_const() const
 ArgString::ArgString(const char* str)
   : m_string(new std::string(str))
 {
-
+  DEBUG_COUNT_CONSTRUCTOR(ArgString);
 }
 
 //===========================================================================
 ArgString::ArgString(const std::string& str)
   : m_string(new std::string(str))
 {
-
+  DEBUG_COUNT_CONSTRUCTOR(ArgString);
 }
 
 //===========================================================================
@@ -152,7 +152,7 @@ ArgString::ArgString(const ArgString& c)
   : Arg(c),
     m_string(new std::string(*c.m_string))
 {
-
+  DEBUG_COUNT_CONSTRUCTOR(ArgString);
 }
 
 //===========================================================================
@@ -160,7 +160,7 @@ ArgString::ArgString(RefType ref, ArgString& c)
   : Arg(ref,c),
     m_string(c.m_string)
 {
-
+  DEBUG_COUNT_CONSTRUCTOR(ArgString);
 }
 
 //===========================================================================
@@ -169,6 +169,7 @@ ArgString::~ArgString()
   if (last_ref()) {
     delete m_string;
   }
+  DEBUG_COUNT_DESTRUCTOR(ArgString);
 }
 
 //===========================================================================
@@ -230,6 +231,7 @@ Arg* ArgString::op(const Auth& auth, OpType optype, const std::string& opname, A
 ArgInt::ArgInt(int value)
   : m_value(new int(value))
 {
+  DEBUG_COUNT_CONSTRUCTOR(ArgInt);
 }
 
 //===========================================================================
@@ -237,7 +239,7 @@ ArgInt::ArgInt(const ArgInt& c)
   : Arg(c),
     m_value(new int(*c.m_value))
 {
-
+  DEBUG_COUNT_CONSTRUCTOR(ArgInt);
 }
 
 //===========================================================================
@@ -245,7 +247,7 @@ ArgInt::ArgInt(RefType ref, ArgInt& c)
   : Arg(ref,c),
     m_value(c.m_value)
 {
-
+  DEBUG_COUNT_CONSTRUCTOR(ArgInt);
 }
 
 //===========================================================================
@@ -254,6 +256,7 @@ ArgInt::~ArgInt()
   if (last_ref()) {
     delete m_value;
   }
+  DEBUG_COUNT_DESTRUCTOR(ArgInt);
 }
 
 //===========================================================================
@@ -378,7 +381,7 @@ Arg* ArgInt::op(const Auth& auth, OpType optype, const std::string& opname, Arg*
 ArgReal::ArgReal(double value)
   : m_value(new double(value))
 {
-
+  DEBUG_COUNT_CONSTRUCTOR(ArgReal);
 }
 
 //===========================================================================
@@ -386,7 +389,7 @@ ArgReal::ArgReal(const ArgReal& c)
   : Arg(c),
     m_value(new double(*c.m_value))
 {
-
+  DEBUG_COUNT_CONSTRUCTOR(ArgReal);
 }
 
 //===========================================================================
@@ -394,7 +397,7 @@ ArgReal::ArgReal(RefType ref, ArgReal& c)
   : Arg(ref,c),
     m_value(c.m_value)
 {
-
+  DEBUG_COUNT_CONSTRUCTOR(ArgReal);
 }
 
 //===========================================================================
@@ -403,6 +406,7 @@ ArgReal::~ArgReal()
   if (last_ref()) {
     delete m_value;
   }
+  DEBUG_COUNT_DESTRUCTOR(ArgReal);
 }
 
 //===========================================================================
@@ -517,7 +521,7 @@ double ArgReal::get_real() const
 ArgList::ArgList()
   : m_list(new ArgListData())
 {
-
+  DEBUG_COUNT_CONSTRUCTOR(ArgList);
 }
 
 //===========================================================================
@@ -525,6 +529,7 @@ ArgList::ArgList(const ArgList& c)
   : Arg(c),
     m_list(new ArgListData())
 {
+  DEBUG_COUNT_CONSTRUCTOR(ArgList);
   for (ArgListData::const_iterator it = c.m_list->begin();
        it != c.m_list->end();
        ++it) {
@@ -537,7 +542,7 @@ ArgList::ArgList(RefType ref, ArgList& c)
   : Arg(ref,c),
     m_list(c.m_list)
 {
-
+  DEBUG_COUNT_CONSTRUCTOR(ArgList);
 }
 
 //===========================================================================
@@ -551,6 +556,7 @@ ArgList::~ArgList()
     }
     delete m_list;
   }
+  DEBUG_COUNT_DESTRUCTOR(ArgList);
 }
 
 //===========================================================================
@@ -681,7 +687,7 @@ Arg* ArgList::take(int i)
 ArgMap::ArgMap()
   : m_map(new ArgMapData())
 {
-
+  DEBUG_COUNT_CONSTRUCTOR(ArgMap);
 }
 
 //===========================================================================
@@ -689,6 +695,7 @@ ArgMap::ArgMap(const ArgMap& c)
   : Arg(c),
     m_map(new ArgMapData())
 {
+  DEBUG_COUNT_CONSTRUCTOR(ArgMap);
   for (ArgMapData::const_iterator it = c.m_map->begin();
        it != c.m_map->end();
        ++it) {
@@ -703,7 +710,7 @@ ArgMap::ArgMap(RefType ref, ArgMap& c)
   : Arg(ref,c),
     m_map(c.m_map)
 {
-
+  DEBUG_COUNT_CONSTRUCTOR(ArgMap);
 }
 
 //===========================================================================
@@ -717,6 +724,7 @@ ArgMap::~ArgMap()
     }
     delete m_map;
   }
+  DEBUG_COUNT_DESTRUCTOR(ArgMap);
 }
 
 //===========================================================================
@@ -856,6 +864,7 @@ ArgSub::ArgSub(const std::string& name, ArgStatement* body, ArgProc& proc)
     m_body(body),
     m_proc(new ArgProc(proc))
 {
+  DEBUG_COUNT_CONSTRUCTOR(ArgSub);
 }
 
 //===========================================================================
@@ -865,6 +874,7 @@ ArgSub::ArgSub(const ArgSub& c)
     m_body(0),
     m_proc(new ArgProc(*c.m_proc))
 {
+  DEBUG_COUNT_CONSTRUCTOR(ArgSub);
   if (c.m_body) {
     m_body = c.m_body->new_copy();
   }
@@ -877,6 +887,7 @@ ArgSub::~ArgSub()
     delete m_body;
     delete m_proc;
   }
+  DEBUG_COUNT_DESTRUCTOR(ArgSub);
 }
 
 //===========================================================================
@@ -930,14 +941,14 @@ Arg* ArgSub::call(const Auth& auth, Arg* args)
 ArgError::ArgError(const char* str)
   : m_string(str)
 {
-
+  DEBUG_COUNT_CONSTRUCTOR(ArgError);
 }
 
 //===========================================================================
 ArgError::ArgError(const std::string& str)
   : m_string(str)
 {
-
+  DEBUG_COUNT_CONSTRUCTOR(ArgError);
 }
 
 //===========================================================================
@@ -945,13 +956,13 @@ ArgError::ArgError(const ArgError& c)
   : Arg(c),
     m_string(c.m_string)
 {
-
+  DEBUG_COUNT_CONSTRUCTOR(ArgError);
 }
 
 //===========================================================================
 ArgError::~ArgError()
 {
-
+  DEBUG_COUNT_DESTRUCTOR(ArgError);
 }
 
 //===========================================================================

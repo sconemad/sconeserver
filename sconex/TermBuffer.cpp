@@ -38,13 +38,13 @@ TermBuffer::TermBuffer(
     m_history_add(true)
 
 {
-  DEBUG_COUNT_CONSTRUCTOR(TermBuffer);
+
 }
 
 //=============================================================================
 TermBuffer::~TermBuffer()
 {
-  DEBUG_COUNT_DESTRUCTOR(TermBuffer);
+
 }
 
 //=============================================================================

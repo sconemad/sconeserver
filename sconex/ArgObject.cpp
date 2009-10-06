@@ -32,6 +32,17 @@ Mutex* ArgObjectInterface::m_ref_mutex = 0;
 ArgObjectInterface::ArgObjectInterface()
   : m_refs(0)
 {
+  DEBUG_COUNT_CONSTRUCTOR(ArgObjectInterface);
+  if (!m_ref_mutex) {
+    m_ref_mutex = new Mutex();
+  }
+}
+
+//=============================================================================
+ArgObjectInterface::ArgObjectInterface(const ArgObjectInterface& c)
+  : m_refs(0)
+{
+  DEBUG_COUNT_CONSTRUCTOR(ArgObjectInterface);
   if (!m_ref_mutex) {
     m_ref_mutex = new Mutex();
   }
@@ -42,6 +53,7 @@ ArgObjectInterface::~ArgObjectInterface()
 {
   MutexLocker locker(*m_ref_mutex);
   DEBUG_ASSERT(m_refs==0,"Destroying object which has refs");
+  DEBUG_COUNT_DESTRUCTOR(ArgObjectInterface);
 }
 
 //=============================================================================
@@ -130,6 +142,7 @@ ArgObject::ArgObject(
 )
   : m_obj(obj)
 {
+  DEBUG_COUNT_CONSTRUCTOR(ArgObject);
   DEBUG_ASSERT(m_obj,"Constructing NULL ArgObject");
   if (m_obj) m_obj->add_ref();
 }
@@ -139,6 +152,7 @@ ArgObject::ArgObject(const ArgObject& c)
   : Arg(c),
     m_obj(c.m_obj)
 {
+  DEBUG_COUNT_CONSTRUCTOR(ArgObject);
   DEBUG_ASSERT(m_obj,"Copy constructing NULL ArgObject");
   if (m_obj) m_obj->add_ref();
 }
@@ -147,6 +161,7 @@ ArgObject::ArgObject(const ArgObject& c)
 ArgObject::~ArgObject()
 {
   if (m_obj) m_obj->remove_ref();
+  DEBUG_COUNT_DESTRUCTOR(ArgObject);
 }
 
 //=============================================================================
@@ -217,7 +232,7 @@ ArgObjectFunction::ArgObjectFunction(
   : m_obj(obj),
     m_name(name)
 {
-
+  DEBUG_COUNT_CONSTRUCTOR(ArgObjectFunction);
 }
 
 //=============================================================================
@@ -226,12 +241,14 @@ ArgObjectFunction::ArgObjectFunction(const ArgObjectFunction& c)
     m_obj(c.m_obj),
     m_name(c.m_name)
 {
+  DEBUG_COUNT_CONSTRUCTOR(ArgObjectFunction);
 }
 
 //=============================================================================
 ArgObjectFunction::~ArgObjectFunction()
 {
   delete m_obj;
+  DEBUG_COUNT_DESTRUCTOR(ArgObjectFunction);
 }
 
 //=============================================================================

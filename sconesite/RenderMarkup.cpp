@@ -35,15 +35,19 @@ Free Software Foundation, Inc.,
 #include "sconex/ArgProc.h"
 #include "sconex/MemFile.h"
 #include "sconex/ArgScript.h"
+#include "sconex/utils.h"
 
 //=========================================================================
 RenderMarkupContext::RenderMarkupContext(
   Profile& profile,
   scx::Descriptor* output,
-  const http::Request& request
+  const http::Request& request,
+  http::Response& response
+
 ) : m_profile(profile),
     m_output(output),
     m_request(request),
+    m_response_obj(new scx::ArgObject(&response)),
     m_article(0),
     m_processing(false)
 {
@@ -53,6 +57,12 @@ RenderMarkupContext::RenderMarkupContext(
 //=========================================================================
 RenderMarkupContext::~RenderMarkupContext()
 {
+  http::Response* response = dynamic_cast<http::Response*>(m_response_obj->get_object());
+  delete m_response_obj;
+  if (response->get_num_refs() == 0) {
+    DEBUG_LOG("--- RMC deleting response")
+    delete response;
+  }
   delete m_output;
 }
 
@@ -155,26 +165,38 @@ void RenderMarkupContext::handle_process(const std::string& name, const char* da
   if (name == "scxp") { // Sconescript evaluate and print
     scx::ArgObject ctx(this);
     scx::ArgProc proc(auth,&ctx);
-    scx::Arg* arg = proc.evaluate(data);
-    if (arg) {
-      std::string str = arg->get_string();
-      if (!str.empty()) {
-	m_output->write(str);
+    scx::Arg* arg = 0;
+    try {
+      arg = proc.evaluate(data);
+      if (arg) {
+	std::string str = arg->get_string();
+	if (!str.empty()) {
+	  m_output->write(str);
+	}
       }
+    } catch (...) {
+      delete arg;
+      DEBUG_LOG("EXCEPTION in RenderMarkup::handle_process(scxp)");
+      throw;
     }
     delete arg;
 
   } else if (name == "scx") { // Sconescript
-    int len = strlen(data);
-    scx::MemFileBuffer fbuf(len);
-    fbuf.get_buffer()->push_from(data,len);
-    scx::MemFile mfile(&fbuf);
-
-    scx::ArgObject* ctx = new scx::ArgObject(this);
-    scx::ArgScript* script = new scx::ArgScript(auth,ctx);
-    mfile.add_stream(script);
-
-    while (script->event(scx::Stream::Readable) == scx::Ok);
+    try {
+      int len = strlen(data);
+      scx::MemFileBuffer fbuf(len);
+      fbuf.get_buffer()->push_from(data,len);
+      scx::MemFile mfile(&fbuf);
+      
+      scx::ArgObject* ctx = new scx::ArgObject(this);
+      scx::ArgScript* script = new scx::ArgScript(auth,ctx);
+      mfile.add_stream(script);
+      
+      while (script->event(scx::Stream::Readable) == scx::Ok);
+    } catch (...) { 
+      DEBUG_LOG("EXCEPTION in RenderMarkup::handle_process(scx)"); 
+      throw; 
+    }
   }
 }
 
@@ -221,6 +243,9 @@ scx::Arg* RenderMarkupContext::arg_lookup(const std::string& name)
 {
   // Methods
   if ("print" == name ||
+      "print_esc" == name ||
+      "print_json" == name ||
+      "escape" == name ||
       "get_articles" == name ||
       "process_article" == name ||
       "edit_article" == name ||
@@ -233,6 +258,7 @@ scx::Arg* RenderMarkupContext::arg_lookup(const std::string& name)
 
   // Sub-objects
   if ("request" == name) return new scx::ArgObject(&m_request);
+  if ("response" == name) return m_response_obj->new_copy();
   if ("session" == name) {
     if (m_request.get_session()) {
       return new scx::ArgObject(m_request.get_session());
@@ -268,6 +294,27 @@ scx::Arg* RenderMarkupContext::arg_function(const scx::Auth& auth,const std::str
       m_output->write(l->get(i)->get_string());
     }
     return 0;
+  }
+
+  if (name == "print_esc") {
+    int n = l->size();
+    for (int i=0; i<n; ++i) { 
+      m_output->write(scx::escape_html(l->get(i)->get_string()));
+    }
+    return 0;
+  }
+  
+  if (name == "print_json") {
+    scx::ArgStore::store_arg(*m_output,l->get(0));
+    return 0;
+  }
+
+  if (name == "escape") {
+    scx::Arg* a_str = l->get(0);
+    if (!a_str) {
+      return new scx::ArgString("");
+    }
+    return new scx::ArgString(scx::escape_html(a_str->get_string()));
   }
 
   if (name == "process_article") {
@@ -420,7 +467,10 @@ bool RenderMarkupJob::run()
 {
   DEBUG_LOG("Running " << type() << " " << describe());
 
-  std::string tplname = "default";
+  std::string tplname = m_context->get_request().get_param("tpl");
+  if (tplname.empty()) {
+    tplname = "default";
+  }
 
   Template* tpl = m_context->get_profile().lookup_template(tplname);
 
