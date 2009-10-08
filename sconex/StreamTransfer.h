@@ -32,7 +32,8 @@ namespace scx {
 #define StreamTransfer_DEFAULT_BUFFER 65536
 
 class StreamTransferSource;
-
+class StreamTransferManager;
+  
 //=============================================================================
 class SCONEX_API StreamTransfer : public Stream {
 
@@ -67,16 +68,65 @@ public:
 
 protected:
 
-  friend class StreamTransferSource;
+  friend class StreamTransferManager;
   void source_event(Event e);
 
   Status m_status;
   
-  StreamTransferSource* m_source;
+  StreamTransferManager* m_manager;
 
   Buffer m_buffer;
 
   bool m_close_when_finished;
+  
+};
+
+//=============================================================================
+class SCONEX_API StreamTransferSource : public Stream {
+
+public:
+
+  StreamTransferSource(StreamTransferManager* manager);
+  virtual ~StreamTransferSource();
+
+  virtual Condition event(Event e);
+
+  virtual std::string stream_status() const;
+  
+protected:
+
+  friend class StreamTransferManager;
+  void dest_event(Event e);
+
+  StreamTransferManager* m_manager;
+  bool m_close;
+
+};
+
+//=============================================================================
+class SCONEX_API StreamTransferManager {
+
+public:
+  
+  StreamTransferManager(StreamTransfer* dest);
+  ~StreamTransferManager();
+  
+  void set_source(StreamTransferSource* source);
+  StreamTransferSource* get_source();
+
+  void dest_event(Stream::Event e);
+  void source_event(Stream::Event e);
+  
+  bool dest_finished();
+  bool source_finished();
+
+  int get_uid() const;
+  
+private:
+
+  StreamTransfer* m_dest;
+  StreamTransferSource* m_source;
+  Mutex m_mutex;
 
   int m_uid;
   // Unique ID for this transfer
@@ -86,30 +136,6 @@ protected:
   
 };
 
-//=============================================================================
-class SCONEX_API StreamTransferSource : public Stream {
-
-public:
-
-  StreamTransferSource(StreamTransfer* dest);
-  virtual ~StreamTransferSource();
-
-  virtual Condition event(Event e);
-
-  virtual std::string stream_status() const;
   
-protected:
-
-  friend class StreamTransfer;
-  void dest_event(Event e);
-
-  StreamTransfer* m_dest;
-  bool m_close;
-
-  int m_dest_uid;
-
-};
-
-
 };
 #endif

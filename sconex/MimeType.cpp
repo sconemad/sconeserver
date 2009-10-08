@@ -204,9 +204,16 @@ Arg* MimeType::op(const Auth& auth, OpType optype, const std::string& opname, Ar
 
         } else if ("!="==opname) { // Inequality
           return new ArgInt(*this != *rv);
-	}
-      }
 
+
+        } else if ("="==opname) { // Assignment
+          if (!is_const()) {
+            *this = *rv;
+          }
+          return ref_copy(Ref);
+        }
+      }
+        
       if ("." == opname) { // Scope resolution
 	std::string name = right->get_string();
 	if (name == "type") return new scx::ArgString(*m_type);

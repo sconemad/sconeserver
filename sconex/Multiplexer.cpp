@@ -22,12 +22,22 @@ Free Software Foundation, Inc.,
 #include "sconex/Multiplexer.h"
 #include "sconex/Descriptor.h"
 #include "sconex/Stream.h"
+
+#include <sys/time.h>
+
 namespace scx {
 
 //=============================================================================
 Multiplexer::Multiplexer()
   : m_num_threads(0),
-    m_main_thread(pthread_self())
+    m_main_thread(pthread_self()),
+    m_loop_time(0),
+    m_jobs_run(0),
+    m_job_waits(0),
+    m_start(0),
+    m_loops(0),
+    m_jobs_run_acc(0),
+    m_job_waits_acc(0)
 {
 
 }
@@ -142,14 +152,13 @@ int Multiplexer::spin()
 	int mask = d->get_event_mask();
 	int fd = d->fd();
 	if (fd >= 0) {
-	  if (0 != (mask & (1<<Stream::Readable))) {
-	    FD_SET(fd,&fds_read);
-	    ++num_added;
-	  }
-	  if (0 != (mask & (1<<Stream::Writeable))) {
-	    FD_SET(fd,&fds_write);
-	    ++num_added;
-	  }
+          ++num_added;
+          if (job->m_job_state == Job::Wait) {
+            // Don't select readable/writable for running jobs
+            if (0 != (mask & (1<<Stream::Readable))) FD_SET(fd,&fds_read);
+            if (0 != (mask & (1<<Stream::Writeable))) FD_SET(fd,&fds_write);
+          }
+          FD_SET(fd,&fds_except);
 	}
 	if (0 != (mask & (1<<Stream::SendReadable)) ||
 	    0 != (mask & (1<<Stream::SendWriteable))) {
@@ -185,7 +194,7 @@ int Multiplexer::spin()
     // * Normal mode select *
     // Perform a blocking select, returning only when an event occurs, or the specified timeout is
     // reached, unless we are interrupted by a signal sent from another thread.
-    time.tv_usec = 0; time.tv_sec = 1;
+    time.tv_usec = 1000; time.tv_sec = 0;
   }
 
   // Make the select call
@@ -232,9 +241,29 @@ int Multiplexer::spin()
       it++;
     }
   }
+
+  // Calculate stats
+  ++m_loops;
+  timeval tv;
+  gettimeofday(&tv,0);
+  long t = (tv.tv_sec*1000000) + tv.tv_usec;
+  if (m_start == 0) {
+    m_start = t;
+  } else if (m_loops == 1000) {
+    m_loop_time = (t - m_start) / 1000.0;
+    m_jobs_run = m_jobs_run_acc / (m_loop_time/1000.0);
+    m_job_waits = m_job_waits_acc / (m_loop_time/1000.0);
+
+    // Reset counters
+    m_loops = 0;
+    m_start = t;
+    m_jobs_run_acc = 0;
+    m_job_waits_acc = 0;
+  }
+
   m_end_condition.signal();
   m_job_mutex.unlock();
-
+    
   return 0;
 }
 
@@ -275,11 +304,21 @@ std::string Multiplexer::describe() const
 
   std::ostringstream oss;
 
-  oss << " " << m_jobs.size() << " jobs /" 
-      << " " << (m_threads_busy.size() + m_threads_pool.size()) << " threads /"
-      << " " << m_threads_busy.size() << " running"
-      << "\n\n";
+  oss << " " << m_jobs.size() << " jobs,";
+  if (m_num_threads == 0) {
+    oss << " multiplexing";
+  } else {
+    oss << " " << (m_threads_busy.size()+m_threads_pool.size()) << " threads,"
+        << " " << m_threads_busy.size() << " running";
+  }
+  oss << "\n";
+  
+  oss << " l-time: " << m_loop_time << "us,"
+      << " r-rate: " << m_jobs_run << "/s,"
+      << " d-rate: " << m_job_waits << "/s";
 
+  oss << "\n\n";
+  
   for (JobList::const_iterator it = m_jobs.begin(); it != m_jobs.end(); ++it) {
     Job* job = *it;
 
@@ -340,6 +379,7 @@ bool Multiplexer::allocate_job(Job* job)
     // Multithreaded mode - wait for a thread to become available and 
     // allocate the job to it
     while (m_threads_pool.empty()) {
+      ++m_job_waits_acc;
       m_job_condition.wait(m_job_mutex);
     }
     
@@ -351,6 +391,8 @@ bool Multiplexer::allocate_job(Job* job)
     thread->allocate_job(job);
   }
 
+  ++m_jobs_run_acc;
+  
   m_job_mutex.unlock();
   return true;
 }
@@ -391,6 +433,9 @@ void Multiplexer::check_thread_pool()
       for (unsigned int i=cur_threads; i<m_num_threads; ++i) {
 	m_threads_pool.push_back( new JobThread(*this) );
       }
+
+      sleep(1); //HACK: Wait for threads to reach ready state before proceeding
+
     } else {
       // Decrease size of thread pool if possible, by eliminating idle threads
       unsigned int del = cur_threads - m_num_threads;

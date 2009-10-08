@@ -1,4 +1,21 @@
 
+2009-10-08 Andrew Wedgbury <wedge@sconemad.com>
+
+	* sconex/Multiplexer: Add delay when starting threads
+	to give them time to reach the wakeup condition wait.
+	* sconex/VersionTag: Allow Arg assignment.
+	* sconex/MimeType: Allow Arg assignment.
+	* sconex/Uri: Allow Arg assignment.
+	* sconex/FilePath: Add move and copy file utils.
+	* sconex/FileDir: Prohibit assignment!
+	* sconex/Multiplexer: Collect and display stats.
+	* sconex/StreamTransfer: Make thread-safe (hopefully)
+	by introducing a transfer manager.
+	* http/Request: Detect param type by name prefix.
+	* sconesite/RenderMarkup: Add list and map helpers
+	* sconesite/Profile: Don't assign FileDir in refresh.
+	* dirindex: Fix use of param arg for default_page.
+	
 2009-10-06 Andrew Wedgbury <wedge@sconemad.com>
 	
 	* sconex/ArgProc: Handle escape sequences in literals.

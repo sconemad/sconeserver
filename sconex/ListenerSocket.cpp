@@ -90,6 +90,7 @@ int ListenerSocket::accept(StreamSocket* s)
   SOCKET socket = ::accept(m_socket,sa_remote,&sa_size);
 
   if (socket < 0) {
+    DEBUG_LOG("*** accept failed, errno=" << errno);
     delete [] sa_remote_buffer;
     return 1;
   }

@@ -39,6 +39,10 @@ public:
 
   FileDir(const FilePath& root);
   // Construct diretory enumerator for specified directory
+
+  FileDir(const FileDir& c);
+  // Copy constructor, note that only the root directory info is copied,
+  // not the current position in the enumeration.
   
   ~FileDir();
   // Destructor
@@ -60,9 +64,12 @@ public:
   
   const FileStat& stat() const;
   // Get stats for current file
-   
+
 private:
 
+  FileDir& operator=(const FileDir& c);
+  // Don't allow assignment
+  
   FilePath m_root;
   // Root directory being enumerated
   

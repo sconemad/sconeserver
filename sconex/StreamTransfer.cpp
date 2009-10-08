@@ -29,8 +29,7 @@ namespace scx {
 #  define TRANSFER_DEBUG_LOG(m)
 #endif
 
-int StreamTransfer::s_tra_count = 0;
-  
+
 //=============================================================================
 StreamTransfer::StreamTransfer(
   Descriptor* source_des,
@@ -38,14 +37,16 @@ StreamTransfer::StreamTransfer(
 ) : Stream("transfer"),
     m_status(StreamTransfer::Transfer),
     m_buffer(buffer_size),
-    m_close_when_finished(false),
-    m_uid(++s_tra_count)
+    m_close_when_finished(false)
 {
   DEBUG_COUNT_CONSTRUCTOR(StreamTransfer);
 
-  m_source = new StreamTransferSource(this);
+  m_manager = new StreamTransferManager(this);
+  
+  StreamTransferSource* source = new StreamTransferSource(m_manager);
+  m_manager->set_source(source);
   if (source_des) {
-    source_des->add_stream(m_source);
+    source_des->add_stream(source);
   }
 
   enable_event(Stream::Opening,true);
@@ -54,11 +55,10 @@ StreamTransfer::StreamTransfer(
 //=============================================================================
 StreamTransfer::~StreamTransfer()
 {
-  if (m_source) {
-    STREAM_DEBUG_LOG("Source stream still exists - sending close");
-    m_source->dest_event(Stream::Closing); 
+  if (m_manager->dest_finished()) {
+    delete m_manager;
   }
-
+  
   DEBUG_COUNT_DESTRUCTOR(StreamTransfer);
 }
 
@@ -91,11 +91,7 @@ Condition StreamTransfer::event(Event e)
         case Finished:
           enable_event(Stream::Writeable,false);
           // Close source stream
-          if (m_source) {
-            m_source->dest_event(Stream::Closing); 
-            // Assume source is gone
-            m_source = 0;
-          }
+          m_manager->dest_event(Stream::Closing); 
           if (m_close_when_finished) {
             return scx::Close;
           }
@@ -118,7 +114,7 @@ Condition StreamTransfer::event(Event e)
 std::string StreamTransfer::stream_status() const
 {
   std::ostringstream oss;
-  oss << "<-[" << m_uid << "] buf:" << m_buffer.status_string();
+  oss << "<-[" << m_manager->get_uid() << "] buf:" << m_buffer.status_string();
   if (m_close_when_finished) oss << " AUTOCLOSE";
   return oss.str();
 }
@@ -132,8 +128,10 @@ StreamTransfer::Status StreamTransfer::transfer()
 
   int bytes_buffered = m_buffer.used();
 
-  if (bytes_buffered==0 && m_source) {
-    Condition c_in = m_source->read(
+  StreamTransferSource* source = m_manager->get_source();
+  
+  if (bytes_buffered==0 && source) {
+    Condition c_in = source->read(
       m_buffer.tail(),m_buffer.free(),bytes_buffered);
     m_buffer.push(bytes_buffered);
     if (c_in==scx::End && bytes_buffered==0) {
@@ -152,12 +150,12 @@ StreamTransfer::Status StreamTransfer::transfer()
 
   if (bytes_buffered==0) {
     enable_event(Stream::Writeable,false);
-    if (!m_source) {
+    if (!source) {
       m_status = StreamTransfer::Finished;
       TRANSFER_DEBUG_LOG("read END (source gone)");
       return m_status;      
     }
-    m_source->dest_event(Stream::Writeable);
+    m_manager->dest_event(Stream::Writeable);
     TRANSFER_DEBUG_LOG("wait (buffer empty)");
     return m_status;
   }
@@ -194,7 +192,6 @@ void StreamTransfer::source_event(Event e)
     
     case Stream::Closing: {
       // Source has closed
-      m_source = 0;
     } break;
 
     default:
@@ -204,30 +201,23 @@ void StreamTransfer::source_event(Event e)
 
 //=============================================================================
 StreamTransferSource::StreamTransferSource(
-  StreamTransfer* dest					   
+  StreamTransferManager* manager
 ) : Stream("transfer-src"),
-    m_dest(dest),
-    m_close(false),
-    m_dest_uid(0)
+    m_manager(manager),
+    m_close(false)
 {
   DEBUG_COUNT_CONSTRUCTOR(StreamTransferSource);
 
-  if (m_dest) {
-    m_dest_uid = m_dest->m_uid;
-  }
-  
   enable_event(Stream::Readable,true);
-  enable_event(Stream::Opening,true);
 }
 
 //=============================================================================
 StreamTransferSource::~StreamTransferSource()
 {
-  if (m_dest) {
-    STREAM_DEBUG_LOG("Dest stream still exists - sending close");
-    m_dest->source_event(Stream::Closing); 
+  if (m_manager->source_finished()) {
+    delete m_manager;
   }
-
+  
   DEBUG_COUNT_DESTRUCTOR(StreamTransferSource);
 }
 
@@ -244,11 +234,7 @@ Condition StreamTransferSource::event(Stream::Event e)
       enable_event(Stream::Readable,false);
       
     case Stream::Closing: {
-      if (m_dest) {
-        m_dest->source_event(e);
-      } else {
-        DEBUG_LOG("StreamTransferSource::event() Dest stream has closed");
-      }
+      m_manager->source_event(e);
     } break;
 
     default:
@@ -262,7 +248,7 @@ Condition StreamTransferSource::event(Stream::Event e)
 std::string StreamTransferSource::stream_status() const
 {
   std::ostringstream oss;
-  oss << "->[" << m_dest_uid << "]";
+  oss << "->[" << m_manager->get_uid() << "]";
   return oss.str();
 }
 
@@ -279,7 +265,6 @@ void StreamTransferSource::dest_event(Event e)
     case Stream::Closing: {
       // Dest has finished reading
       m_close = true;
-      m_dest = 0;
       enable_event(Stream::Readable,true);
     } break;
 
@@ -287,5 +272,98 @@ void StreamTransferSource::dest_event(Event e)
       break;
   }
 }
+
+
+int StreamTransferManager::s_tra_count = 0;
+  
+//=============================================================================
+StreamTransferManager::StreamTransferManager(StreamTransfer* dest)
+  : m_dest(dest),
+    m_source(0),
+    m_uid(++s_tra_count)
+{
+  DEBUG_COUNT_CONSTRUCTOR(StreamTransferManager);
+}
+
+//=============================================================================
+StreamTransferManager::~StreamTransferManager()
+{
+  DEBUG_COUNT_DESTRUCTOR(StreamTransferManager);
+}
+
+//=============================================================================
+void StreamTransferManager::set_source(StreamTransferSource* source)
+{
+  m_source = source;
+}
+
+//=============================================================================
+StreamTransferSource* StreamTransferManager::get_source()
+{
+  return m_source;
+}
+
+//=============================================================================
+void StreamTransferManager::dest_event(Stream::Event e)
+{
+  m_mutex.lock();
+  if (m_source) {
+    m_source->dest_event(e);
+  }
+  m_mutex.unlock();
+}
+
+//=============================================================================
+void StreamTransferManager::source_event(Stream::Event e)
+{
+  m_mutex.lock();
+  if (m_dest) {
+    m_dest->source_event(e);
+  }
+  m_mutex.unlock();
+}
+
+//=============================================================================
+bool StreamTransferManager::dest_finished()
+{
+  m_mutex.lock();
+
+  m_dest = 0;
+  
+  if (m_source) {
+    DEBUG_LOG("Source stream still exists - sending close");
+    m_source->dest_event(Stream::Closing);
+  }
+  
+  bool killme = (m_source == 0);
+
+  m_mutex.unlock();
+  return killme;
+}
+
+//=============================================================================
+bool StreamTransferManager::source_finished()
+{
+  m_mutex.lock();
+  
+  m_source = 0;
+
+  if (m_dest) {
+    DEBUG_LOG("Dest stream still exists - sending close");
+    m_dest->source_event(Stream::Closing); 
+  }
+
+  bool killme = (m_dest == 0);
+
+  m_mutex.unlock();
+  return killme;
+}
+
+//=============================================================================
+int StreamTransferManager::get_uid() const
+{
+  return m_uid;
+}
+
 
 };

@@ -22,6 +22,7 @@ Free Software Foundation, Inc.,
 #include "sconex/FilePath.h"
 #include "sconex/FileDir.h"
 #include "sconex/FileStat.h"
+#include "sconex/File.h"
 #include "sconex/User.h"
 namespace scx {
 
@@ -178,5 +179,57 @@ bool FilePath::chown(const FilePath& path, const User& user)
                        user.get_user_id(),
                        user.get_group_id()));
 }
+
+//=============================================================================
+bool FilePath::copy(const FilePath& source, const FilePath& dest)
+{
+  File fsource;
+  if (scx::Ok != fsource.open(source,scx::File::Read)) {
+    return false;
+  }
+  
+  File fdest;
+  if (scx::Ok != fdest.open(dest,scx::File::Write|File::Create|File::Truncate)) {
+    return false;
+  }
+
+  const unsigned int buffer_size = 1024;
+  char buffer[buffer_size];
+  int na = 0;
+  Condition c;
+
+  while (true) {
+    if (scx::Ok != (c = fsource.read(buffer,buffer_size,na))) {
+      break;
+    }
+    if (scx::Ok != (c = fdest.write(buffer,na,na))) {
+      break;
+    }
+  }
+
+  return (c == scx::End);
+}
+
+//=============================================================================
+bool FilePath::move(const FilePath& source, const FilePath& dest)
+{
+  // Try a rename first, this will only work if the source and dest are on the
+  // same device
+  if (0 == ::rename(source.path().c_str(),dest.path().c_str())) {
+    return true;
+  }
+
+  if (EXDEV == errno) {
+    // Cross device, copy then delete source
+    if (copy(source,dest)) {
+      if (rmfile(source)) {
+        return true;
+      }
+    }
+  }
+
+  return false;
+}
+
 
 };

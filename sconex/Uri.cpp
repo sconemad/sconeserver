@@ -234,6 +234,15 @@ Arg* Uri::op(const Auth& auth, OpType optype, const std::string& opname, Arg* ri
 	Uri* rv = dynamic_cast<Uri*>(right);
 	if (rv) return new ArgInt(*this != *rv);
 
+      } else if ("="==opname) { // Assignment
+	Uri* rv = dynamic_cast<Uri*>(right);
+        if (!is_const()) {
+          if (rv) {
+            *this = *rv;
+          }
+        }
+        return ref_copy(Ref);
+        
       } else if ("." == opname) { // Scope resolution
 	std::string name = right->get_string();
 	if (name == "scheme") return new scx::ArgString(*m_scheme);

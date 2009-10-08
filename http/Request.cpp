@@ -246,7 +246,15 @@ void Request::set_param(const std::string& name, scx::Arg* value)
 //=============================================================================
 void Request::set_param(const std::string& name, const std::string& value)
 {
-  set_param(name,new scx::ArgString(value));
+  const std::string int_pattern = "int_";
+  std::string::size_type ip = name.find(int_pattern);
+  if (ip == 0) {
+    int i_value = atoi(value.c_str());
+    set_param(name,new scx::ArgInt(i_value));
+              
+  } else {
+    set_param(name,new scx::ArgString(value));
+  }
 }
 
 //=============================================================================

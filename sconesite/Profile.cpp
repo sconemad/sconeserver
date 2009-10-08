@@ -60,60 +60,66 @@ Profile::~Profile()
 //=========================================================================
 void Profile::refresh()
 {
-  // Add new articles
-  scx::FileDir dir(m_path + ARTDIR);
-  while (dir.next()) {
-    std::string name = dir.name();
-    if (name != "." && name != "..") {
-      if (!lookup_article(name)) {
-        scx::FilePath path = dir.path();
-        Article* article = new Article(*this,name,path);
-        m_articles.push_back(article);
-        m_module.log("Adding article '" + name + "'");
+  // Scan articles
+  {
+    // Add new articles
+    scx::FileDir dir(m_path + ARTDIR);
+    while (dir.next()) {
+      std::string name = dir.name();
+      if (name != "." && name != "..") {
+        if (!lookup_article(name)) {
+          scx::FilePath path = dir.path();
+          Article* article = new Article(*this,name,path);
+          m_articles.push_back(article);
+          m_module.log("Adding article '" + name + "'");
+        }
+      }
+    }
+    
+    // Remove deleted articles
+    for (std::list<Article*>::iterator it_a = m_articles.begin();
+         it_a != m_articles.end();
+         ++it_a) {
+      Article* article = (*it_a);
+      if (!scx::FileStat(article->get_path()).is_file()) {
+        m_module.log("Removing article '" + article->get_name() + "'");
+        it_a = m_articles.erase(it_a);
+        delete article;
       }
     }
   }
 
-  // Remove deleted articles
-  for (std::list<Article*>::iterator it_a = m_articles.begin();
-       it_a != m_articles.end();
-       ++it_a) {
-    Article* article = (*it_a);
-    if (!scx::FileStat(article->get_path()).is_file()) {
-      m_module.log("Removing article '" + article->get_name() + "'");
-      it_a = m_articles.erase(it_a);
-      delete article;
-    }
-  }
-
-  // Add new templates
-  dir = scx::FileDir(m_path + TPLDIR);
-  while (dir.next()) {
-    std::string file = dir.name();
-    if (file != "." && file != "..") {
-      std::string::size_type idot = file.find_first_of(".");
-      if (idot != std::string::npos) {
-	std::string name = file.substr(0,idot);
-	std::string extn = file.substr(idot+1,std::string::npos);
-	if (extn == "xml" && !lookup_template(name)) {
-	  scx::FilePath path = dir.path();
-	  Template* tpl = new Template(*this,name,path);
-	  m_templates.push_back(tpl);
-	  m_module.log("Adding template '" + name + "'");
-	}
+  // Scan templates
+  {
+    // Add new templates
+    scx::FileDir dir(m_path + TPLDIR);
+    while (dir.next()) {
+      std::string file = dir.name();
+      if (file != "." && file != "..") {
+        std::string::size_type idot = file.find_first_of(".");
+        if (idot != std::string::npos) {
+          std::string name = file.substr(0,idot);
+          std::string extn = file.substr(idot+1,std::string::npos);
+          if (extn == "xml" && !lookup_template(name)) {
+            scx::FilePath path = dir.path();
+            Template* tpl = new Template(*this,name,path);
+            m_templates.push_back(tpl);
+            m_module.log("Adding template '" + name + "'");
+          }
+        }
       }
     }
-  }
-
-  // Remove deleted templates
-  for (std::list<Template*>::iterator it_t = m_templates.begin();
-       it_t != m_templates.end();
-       ++it_t) {
-    Template* tpl = (*it_t);
-    if (!scx::FileStat(tpl->get_path()).is_file()) {
-      m_module.log("Removing template '" + tpl->get_name() + "'");
-      it_t = m_templates.erase(it_t);
-      delete tpl;
+    
+    // Remove deleted templates
+    for (std::list<Template*>::iterator it_t = m_templates.begin();
+         it_t != m_templates.end();
+         ++it_t) {
+      Template* tpl = (*it_t);
+      if (!scx::FileStat(tpl->get_path()).is_file()) {
+        m_module.log("Removing template '" + tpl->get_name() + "'");
+        it_t = m_templates.erase(it_t);
+        delete tpl;
+      }
     }
   }
 }

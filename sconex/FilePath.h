@@ -54,6 +54,9 @@ public:
   static bool rmdir(const FilePath& path, bool recursive=false);
   static bool rmfile(const FilePath& path);
   static bool chown(const FilePath& path, const User& user);
+
+  static bool move(const FilePath& source, const FilePath& dest);
+  static bool copy(const FilePath& source, const FilePath& dest);
   
 protected:
 

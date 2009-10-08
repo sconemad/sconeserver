@@ -197,6 +197,12 @@ Arg* VersionTag::op(const Auth& auth, OpType optype, const std::string& opname, 
 
         } else if ("<="==opname) { // Less than or equal to
           return new ArgInt(*this <= *rv);
+          
+        } else if ("="==opname) { // Assignment
+          if (!is_const()) {
+            *this = *rv;
+          }
+          return ref_copy(Ref);
 	}
       }
 

@@ -25,10 +25,20 @@ namespace scx {
 //=============================================================================
 FileDir::FileDir(const FilePath& root)
   : m_root(root),
-    m_state(0)
+    m_state(0),
+    m_dir(0)
 {
   DEBUG_COUNT_CONSTRUCTOR(FileDir);
-  m_dir = 0;
+}
+
+//=============================================================================
+FileDir::FileDir(const FileDir& c)
+  : m_root(c.m_root),
+    m_state(0),
+    m_dir(0)
+    
+{
+  DEBUG_COUNT_CONSTRUCTOR(FileDir);
 }
 
 //=============================================================================

@@ -93,9 +93,9 @@ protected:
     scx::FileStat stat(path);
   
     if (stat.is_dir()) {
-      const scx::Arg* a_default_page = 0; docroot->get_param("default_page");
+      const scx::Arg* a_default_page = docroot->get_param("default_page");
       std::string s_default_page =
-        (a_default_page ? a_default_page->get_string() : "index.html");
+        (BAD_ARG(a_default_page) ? "index.html" : a_default_page->get_string());
       delete a_default_page;
       
       std::string url = uri.get_string();
