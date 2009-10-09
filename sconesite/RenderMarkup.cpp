@@ -246,8 +246,6 @@ scx::Arg* RenderMarkupContext::arg_lookup(const std::string& name)
       "print_esc" == name ||
       "print_json" == name ||
       "escape" == name ||
-      "push" == name ||
-      "splice" == name ||
       "get_articles" == name ||
       "process_article" == name ||
       "edit_article" == name ||
@@ -255,7 +253,7 @@ scx::Arg* RenderMarkupContext::arg_lookup(const std::string& name)
       "template" == name ||
       "get_files" == name ||
       "abort" == name) {
-    return new scx::ArgObjectFunction(new scx::ArgObject(this),name);
+    return new_method(name);
   }
 
   // Sub-objects
@@ -319,33 +317,6 @@ scx::Arg* RenderMarkupContext::arg_function(const scx::Auth& auth,const std::str
     return new scx::ArgString(scx::escape_html(a_str->get_string()));
   }
 
-  if (name == "push") {
-    scx::Arg* a_list = l->get(0);
-    if (!a_list) return new scx::ArgError("push() No list specified");
-    scx::ArgList* list = dynamic_cast<scx::ArgList*>(a_list);
-    if (!list) return new scx::ArgError("push() Not a list type");
-    scx::Arg* a_value = l->take(1);
-    if (!a_value) return new scx::ArgError("push() No value specified");
-    list->give(a_value);
-    return 0;
-  }
-
-  if (name == "splice") {
-    scx::Arg* a_list = l->get(0);
-    if (!a_list) return new scx::ArgError("splice() No list specified");
-    scx::ArgList* list = dynamic_cast<scx::ArgList*>(a_list);
-    if (!list) return new scx::ArgError("splice() Not a list type");
-
-    scx::Arg* a_offs = l->take(1);
-    if (!a_offs) return new scx::ArgError("splice() No offset specified");
-    scx::ArgInt* offs = dynamic_cast<scx::ArgInt*>(a_offs);
-    if (!offs) return new scx::ArgError("splice() Offset not an integer");
-
-    scx::Arg* entry = list->take(offs->get_int());
-    delete entry;
-    return 0;
-  }
-
   if (name == "process_article") {
     if (!auth.trusted()) return new scx::ArgError("Not permitted");
 
@@ -392,7 +363,6 @@ scx::Arg* RenderMarkupContext::arg_function(const scx::Auth& auth,const std::str
       scx::FilePath dstpath = m_article->get_path();
       DEBUG_LOG("Update article moving '" << srcpath.path() << "' to '" << dstpath.path() << "'");
       if (!scx::FilePath::move(srcpath,dstpath)) {
-        DEBUG_LOG("Error replacing article " << errno);
 	return new scx::ArgError("Could not replace article");
       }
     }

@@ -47,6 +47,15 @@ class Mutex;
   }                                                            
 // Log debug message
 
+#define DEBUG_LOG_ERRNO(message) \
+  { \
+    std::ostringstream oss; \
+    char buf[128]; \
+    oss << message << " (errno=" << errno << " " << strerror_r(errno,buf,128) << ")"; \
+    scx::Debug::get()->log(oss.str().c_str(),__FILE__,__LINE__); \
+  }                                                            
+// Log debug message with errno
+
 #define DEBUG_COUNT_CONSTRUCTOR(class_name) \
   scx::Debug::get()->count_constuctor(#class_name,this);
 // Increment nstance count for this class

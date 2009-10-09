@@ -252,64 +252,33 @@ ModuleMap* DocRoot::lookup_extn_mod(const std::string& name) const
 //=========================================================================
 ModuleMap* DocRoot::lookup_path_mod(const std::string& name, std::string& pathinfo) const
 {
-  int bailout=100;
-  std::string::size_type idot;
-  std::string key=name;
+  std::string key="/"+name;
   pathinfo = "";
-  while (--bailout > 0) {
 
-    PatternMap::const_iterator it = m_path_mods.find(key);
-    if (it != m_path_mods.end()) {
-      if (pathinfo.length() > 0) pathinfo = pathinfo.substr(1);
+  for (PatternMap::const_iterator it = m_path_mods.begin();
+       it != m_path_mods.end();
+       ++it) {
+    if (key.find(it->first) == 0) {
+      pathinfo = key.substr(it->first.length());
       return it->second;
     }
-    
-    if (key.size()<=0 || key=="/") {
-      return 0;
-    }
-
-    idot = key.find_last_of("/");
-    
-    if (idot==key.npos) {
-      key="/";
-    } else {
-      pathinfo = key.substr(idot) + pathinfo;
-      key = key.substr(0,idot);
-    }
-    
   }
-  DEBUG_LOG("lookup_path_mod() Pattern match bailout");
-  return 0; // Bailed out
+  return 0;
 }
 
 //=========================================================================
 std::string DocRoot::lookup_realm_map(const std::string& name) const
 {
-  int bailout=100;
-  std::string::size_type idot;
-  std::string key=name;
-  while (--bailout > 0) {
+  std::string key="/"+name;
 
-    RealmMap::const_iterator it = m_realm_maps.find(key);
-    if (it != m_realm_maps.end()) {
+  for (RealmMap::const_iterator it = m_realm_maps.begin();
+       it != m_realm_maps.end();
+       ++it) {
+    if (key.find(it->first) == 0) {
       return it->second;
     }
-    
-    if (key.size()<=0 || key=="/") {
-      return "";
-    }
-
-    idot = key.find_last_of("/");
-    
-    if (idot==key.npos) {
-      key="/";
-    } else {
-      key = key.substr(0,idot);
-    }
-    
   }
-  DEBUG_LOG("lookup_realm_map() Pattern match bailout");
-  return ""; // Bailed out
+  return "";
 }
 
 //=========================================================================
@@ -359,7 +328,7 @@ scx::Arg* DocRoot::arg_lookup(const std::string& name)
       "map_path" == name ||
       "add_realm" == name ||
       "map_realm" == name) {
-    return new scx::ArgObjectFunction(new scx::ArgObject(this),name);
+    return new_method(name);
   }
 
   // Sub-objects

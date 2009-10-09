@@ -34,7 +34,8 @@ Arg::Arg()
 
 //===========================================================================
 Arg::Arg(const Arg& c)
-  : m_refs(new int(1)),
+  : m_method(c.m_method),
+    m_refs(new int(1)),
     m_const(false)
 {
   DEBUG_COUNT_CONSTRUCTOR(Arg);
@@ -42,7 +43,8 @@ Arg::Arg(const Arg& c)
 
 //===========================================================================
 Arg::Arg(RefType ref, Arg& c)
-  : m_refs(c.m_refs),
+  : m_method(c.m_method),
+    m_refs(c.m_refs),
     m_const(c.m_const || ref == ConstRef)
 {
   DEBUG_COUNT_CONSTRUCTOR(Arg);
@@ -68,8 +70,21 @@ Arg* Arg::ref_copy(RefType ref)
 }
 
 //===========================================================================
+Arg* Arg::new_method(const std::string& method)
+{
+  // Create a ref copy of this and set the method name
+  Arg* a = ref_copy(Ref);
+  a->m_method = method;
+  return a;
+}
+
+//===========================================================================
 Arg* Arg::op(const Auth& auth, OpType optype, const std::string& opname, Arg* right)
 {
+  if (is_method_call(optype,opname)) {
+    return new ArgError("Unsupported");
+  }
+  
   int value = get_int();
   int rvalue = right ? right->get_int() : 0;
   switch (optype) {
@@ -130,6 +145,12 @@ bool Arg::last_ref() const
 bool Arg::is_const() const
 {
   return m_const;
+}
+
+//===========================================================================
+bool Arg::is_method_call(OpType optype, const std::string& opname)
+{
+  return (!m_method.empty() && optype == Binary && opname == "(");
 }
 
 
@@ -199,7 +220,15 @@ int ArgString::get_int() const
 //===========================================================================
 Arg* ArgString::op(const Auth& auth, OpType optype, const std::string& opname, Arg* right)
 {
-  if (optype == Arg::Binary) {
+  if (is_method_call(optype,opname)) {
+
+    if ("clear" == m_method) {
+      if (is_const()) return new ArgError("Not permitted");
+      *m_string = "";
+      return 0;
+    }
+    
+  } else if (optype == Arg::Binary) {
 
     if ("+"==opname) { // Concatenate
       return new ArgString(*m_string + right->get_string());
@@ -218,8 +247,10 @@ Arg* ArgString::op(const Auth& auth, OpType optype, const std::string& opname, A
 
     } else if (opname == ".") {
       std::string name = right->get_string();
-      if (name == "length") return new ArgInt(m_string->size());
-      if (name == "empty") return new ArgInt(m_string->empty());
+      if ("length" == name) return new ArgInt(m_string->size());
+      if ("empty" == name) return new ArgInt(m_string->empty());
+
+      if ("clear" == name) return new_method(name);
     }
   }
 
@@ -596,7 +627,33 @@ int ArgList::get_int() const
 //===========================================================================
 Arg* ArgList::op(const Auth& auth, OpType optype, const std::string& opname, Arg* right)
 {
-  if (optype == Arg::Binary) {
+  if (is_method_call(optype,opname)) {
+
+    ArgList* l = dynamic_cast<ArgList*>(right);
+    
+    if ("push" == m_method) {
+      if (is_const()) return new ArgError("Not permitted");
+
+      Arg* a_value = l->take(0);
+      if (!a_value) return new ArgError("ArgList::push() No value specified");
+      give(a_value);
+      return 0;
+    }
+
+    if ("splice" == m_method) {
+      if (is_const()) return new ArgError("Not permitted");
+
+      Arg* a_offs = l->get(0);
+      if (!a_offs) return new ArgError("ArgList::splice() No offset specified");
+      ArgInt* offs = dynamic_cast<ArgInt*>(a_offs);
+      if (!offs) return new ArgError("ArgList::splice() Offset not an integer");
+      
+      Arg* entry = take(offs->get_int());
+      delete entry;
+      return 0;
+    }
+    
+  } else if (optype == Arg::Binary) {
     if (opname == "[") {
       ArgInt* aidx = dynamic_cast<ArgInt*> (right);
       if (aidx) {
@@ -612,7 +669,12 @@ Arg* ArgList::op(const Auth& auth, OpType optype, const std::string& opname, Arg
       }
     } else if (opname == ".") {
       std::string name = right->get_string();
-      if (name == "size") return new ArgInt(size());
+      if ("size" == name) return new ArgInt(size());
+
+      if ("push" == name ||
+          "splice" == name) {
+        return new_method(name);
+      }
     }
   }
 

@@ -67,6 +67,9 @@ public:
 
 protected:
 
+  Arg* new_method(const std::string& method);
+  // Create a new Arg representing the specified method call on this object.
+  
 private:
 
   friend class ArgObject;
@@ -88,7 +91,10 @@ class SCONEX_API ArgObject : public Arg {
 
 public:
   
-  ArgObject(ArgObjectInterface* obj);
+  ArgObject(
+    ArgObjectInterface* obj,
+    const std::string& method = ""
+  );
   ArgObject(const ArgObject& c);
   virtual ~ArgObject();
 
@@ -112,33 +118,5 @@ protected:
   
 };
 
-//=============================================================================
-class SCONEX_API ArgObjectFunction : public Arg {
-
-public:
-  
-  ArgObjectFunction(
-    ArgObject* obj,
-    const std::string& name
-  );
-  ArgObjectFunction(const ArgObjectFunction& c);
-  virtual ~ArgObjectFunction();
-
-  virtual Arg* new_copy() const;
-
-  virtual std::string get_string() const;
-  virtual int get_int() const;
-  
-  virtual Arg* op(const Auth& auth, OpType optype, const std::string& opname, Arg* right);
-
-  Arg* call(const Auth& auth, Arg* args);
-  
-protected:
-
-  ArgObject* m_obj;
-  std::string m_name;
-  
-};
-  
 };
 #endif

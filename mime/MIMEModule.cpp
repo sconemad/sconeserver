@@ -56,7 +56,7 @@ scx::Arg* MIMEModule::arg_lookup(const std::string& name)
   if ("lookup" == name ||
       "add" == name ||
       "remove" == name) {
-    return new scx::ArgObjectFunction(new scx::ArgModule(ref()),name);
+    return new_method(name);
   }      
 
   if ("list" == name) {

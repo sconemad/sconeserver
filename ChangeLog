@@ -1,4 +1,15 @@
 
+2009-10-09 Andrew Wedgbury <wedge@sconemad.com>
+
+	* sconex/Arg: Add method call ability to base Arg.
+	* sconex/ArgObject: Remove ArgObjectFunction.
+	* all: Remove use of ArgObjectFunction, replace with
+	ArgObject using ArgObjectInterface::new_method().
+	* sconex/Debug: Add DEBUG_LOG_ERRNO macro.
+	* sconex/FilePath: Log errno for move failures.
+	* http/DocRoot: Fix and simplify lookup methods.
+	* sconesite/RenderMarkup: Remove list and map helpers.
+
 2009-10-08 Andrew Wedgbury <wedge@sconemad.com>
 
 	* sconex/Multiplexer: Add delay when starting threads

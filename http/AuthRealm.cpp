@@ -75,7 +75,7 @@ scx::Arg* HTTPUser::arg_function(
   scx::Arg* args
 )
 {
-  scx::ArgList* l = dynamic_cast<scx::ArgList*>(args);
+  //  scx::ArgList* l = dynamic_cast<scx::ArgList*>(args);
 
   if ("reset" == name) {
 
@@ -144,7 +144,7 @@ scx::Arg* AuthRealm::arg_lookup(const std::string& name)
 {
   // Methods
   if ("auth" == name) {
-    return new scx::ArgObjectFunction(new scx::ArgObject(this),name);
+    return new_method(name);
   }
 
   return SCXBASE ArgObjectInterface::arg_lookup(name);
@@ -263,7 +263,7 @@ scx::Arg* AuthRealmManager::arg_lookup(const std::string& name)
   // Methods
   if ("add" == name ||
       "remove" == name) {
-    return new scx::ArgObjectFunction(new scx::ArgObject(this),name);
+    return new_method(name);
   }
 
   // Sub-objects

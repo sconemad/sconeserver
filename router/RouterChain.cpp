@@ -93,7 +93,7 @@ scx::Arg* RouterChain::arg_lookup(
       "remove" == name ||
       "listen" == name ||
       "listen_all" == name) {
-    return new scx::ArgObjectFunction(new scx::ArgObject(this),name);
+    return new_method(name);
   }
 
   // Properties

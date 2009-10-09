@@ -127,7 +127,7 @@ scx::Arg* Article::arg_lookup(const std::string& name)
 {
   // Methods
   if ("test" == name) {
-    return new scx::ArgObjectFunction(new scx::ArgObject(this),name);
+    return new_method(name);
   }
 
   // Sub-objects

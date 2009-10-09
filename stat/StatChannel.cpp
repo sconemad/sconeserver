@@ -71,7 +71,7 @@ scx::Arg* StatChannel::arg_lookup(
   // Methods
 
   if ("reset" == name) {
-    return new scx::ArgObjectFunction(new scx::ArgObject(this),name);
+    return new_method(name);
   }
 
   // Properties

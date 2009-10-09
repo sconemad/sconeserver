@@ -134,8 +134,7 @@ scx::Arg* StatModule::arg_lookup(const std::string& name)
 
   if ("add" == name ||
       "remove" == name) {
-    return new scx::ArgObjectFunction(
-      new scx::ArgModule(ref()),name);
+    return new_method(name);
   }      
 
   // Properties

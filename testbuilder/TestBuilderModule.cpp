@@ -161,8 +161,7 @@ scx::Arg* TestBuilderModule::arg_lookup(const std::string& name)
       "save_profiles" == name ||
       "start" == name ||
       "stop" == name) {
-    return new scx::ArgObjectFunction(
-      new scx::ArgModule(ref()),name);
+    return new_method(name);
   }      
 
   // Properties

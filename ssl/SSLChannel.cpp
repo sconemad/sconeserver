@@ -62,7 +62,7 @@ scx::Arg* SSLChannel::arg_lookup(
 {
   // Methods
   if ("load_key" == name) {
-    return new scx::ArgObjectFunction(new scx::ArgObject(this),name);
+    return new_method(name);
   }
 
   return SCXBASE ArgObjectInterface::arg_lookup(name);

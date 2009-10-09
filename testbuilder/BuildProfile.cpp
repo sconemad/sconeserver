@@ -57,7 +57,7 @@ scx::Arg* BuildProfile::arg_lookup(
       "set_source_uri" == name ||
       "set_configure_command" == name ||
       "set_make_targets" == name) {
-    return new scx::ArgObjectFunction(new scx::ArgObject(this),name);
+    return new_method(name);
   }
 
   // Properties

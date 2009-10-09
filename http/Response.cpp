@@ -99,7 +99,7 @@ scx::Arg* Response::arg_lookup(const std::string& name)
   // Methods
   if ("set_header" == name ||
       "set_status" == name) {
-    return new scx::ArgObjectFunction(new scx::ArgObject(this),name);
+    return new_method(name);
   }
   
   if (name == "version") return m_version.new_copy();

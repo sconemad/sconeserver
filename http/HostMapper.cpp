@@ -106,7 +106,7 @@ scx::Arg* HostMapper::arg_lookup(
       "remove" == name ||
       "alias" == name ||
       "redirect" == name) {
-    return new scx::ArgObjectFunction(new scx::ArgObject(this),name);
+    return new_method(name);
   }
 
   // Properties

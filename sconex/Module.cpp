@@ -199,7 +199,7 @@ Arg* Module::arg_lookup(const std::string& name)
       "set_mod_path" == name ||
       "set_conf_path" == name ||
       "set_var_path" == name) {
-    return new ArgObjectFunction(new ArgModule(ref()),name);
+    return new_method(name);
   }
 
   // See if its a property

@@ -80,6 +80,9 @@ public:
   virtual Arg* ref_copy(RefType ref);
   // Make a new Arg which is a (modifiable or const) reference to this Arg's data
 
+  virtual Arg* new_method(const std::string& method);
+  // Make a new Arg which represents the specified method call on this Arg
+
   virtual std::string get_string() const =0;
   virtual int get_int() const =0;
   // Get representations of this Arg in various standard forms
@@ -94,6 +97,11 @@ public:
   bool is_const() const;
   // Is this Arg a const reference
 
+protected:
+
+  bool is_method_call(OpType optype, const std::string& opname);
+  std::string m_method;
+  
 private:
 
   int* m_refs;

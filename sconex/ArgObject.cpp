@@ -71,14 +71,14 @@ void ArgObjectInterface::log(
   Arg* a_logger = arg_resolve("log");
   if (a_logger) {
 
-    ArgObjectFunction* logger = dynamic_cast<ArgObjectFunction*>(a_logger);
+    ArgObject* logger = dynamic_cast<ArgObject*>(a_logger);
     if (logger) {
       ArgList args;
       args.give( new ArgString(message) );
       args.give( new ArgInt((int)level) );
       
       Auth auth(Auth::Untrusted);
-      Arg* ret = logger->call(auth,&args);
+      Arg* ret = logger->op(auth,Arg::Binary,"(",&args);
       delete ret;
     }
     delete a_logger;
@@ -129,6 +129,12 @@ void ArgObjectInterface::add_ref()
 }
 
 //=============================================================================
+Arg* ArgObjectInterface::new_method(const std::string& method)
+{
+  return new ArgObject(this,method);
+}
+
+//=============================================================================
 void ArgObjectInterface::remove_ref()
 {
   MutexLocker locker(*m_ref_mutex);
@@ -138,13 +144,14 @@ void ArgObjectInterface::remove_ref()
 
 //=============================================================================
 ArgObject::ArgObject(
-  ArgObjectInterface* obj
-)
-  : m_obj(obj)
+  ArgObjectInterface* obj,
+  const std::string& method
+) : m_obj(obj)
 {
   DEBUG_COUNT_CONSTRUCTOR(ArgObject);
   DEBUG_ASSERT(m_obj,"Constructing NULL ArgObject");
   if (m_obj) m_obj->add_ref();
+  m_method = method;
 }
 
 //=============================================================================
@@ -176,12 +183,16 @@ std::string ArgObject::get_string() const
   std::ostringstream oss;
 
   if (m_obj) {
-    oss << "&(" << type_name(typeid(*m_obj)) << ")" << m_obj->name();
+    oss << "(" << type_name(typeid(*m_obj)) << ")" << m_obj->name();
 
   } else {
-    oss << "&NULL";
+    oss << "(NULL)";
   }
 
+  if (!m_method.empty()) {
+    oss << "::" << m_method;
+  }
+  
   return oss.str();
 }
 
@@ -195,7 +206,10 @@ int ArgObject::get_int() const
 Arg* ArgObject::op(const Auth& auth, OpType optype, const std::string& opname, Arg* right)
 {
   if (m_obj) {
-    if (Arg::Binary == optype) {
+    if (is_method_call(optype,opname)) {
+      return m_obj->arg_function(auth,m_method,right);
+    
+    } else if (Arg::Binary == optype) {
       // Lookup
       if ("." == opname || "[" == opname) {
         return m_obj->arg_lookup(right->get_string());
@@ -222,79 +236,6 @@ void ArgObject::log(const std::string& message,Logger::Level level)
 ArgObjectInterface* ArgObject::get_object()
 {
   return m_obj;
-}
-
-//=============================================================================
-ArgObjectFunction::ArgObjectFunction(
-  ArgObject* obj,
-  const std::string& name
-)
-  : m_obj(obj),
-    m_name(name)
-{
-  DEBUG_COUNT_CONSTRUCTOR(ArgObjectFunction);
-}
-
-//=============================================================================
-ArgObjectFunction::ArgObjectFunction(const ArgObjectFunction& c)
-  : Arg(c),
-    m_obj(c.m_obj),
-    m_name(c.m_name)
-{
-  DEBUG_COUNT_CONSTRUCTOR(ArgObjectFunction);
-}
-
-//=============================================================================
-ArgObjectFunction::~ArgObjectFunction()
-{
-  delete m_obj;
-  DEBUG_COUNT_DESTRUCTOR(ArgObjectFunction);
-}
-
-//=============================================================================
-Arg* ArgObjectFunction::new_copy() const
-{
-  return new ArgObjectFunction(*this);
-}
-
-//=============================================================================
-std::string ArgObjectFunction::get_string() const
-{
-  std::ostringstream oss;
-  oss << "(" << (m_obj ? m_obj->get_string() : "NULL") << ")::" << m_name;
-  return oss.str();
-}
-
-//===========================================================================
-int ArgObjectFunction::get_int() const
-{
-  return (m_obj != 0) && m_obj->get_int() && !m_name.empty();
-}
-
-//=============================================================================
-Arg* ArgObjectFunction::op(
-  const Auth& auth, 
-  OpType optype,
-  const std::string& opname,
-  Arg* right
-)
-{
-  // Only allow binary ( operator - object method call
-  if (Arg::Binary == optype && "(" == opname) {
-    return call(auth,right);
-  }
-  
-  return Arg::op(auth,optype,opname,right);
-}
-
-//=============================================================================
-Arg* ArgObjectFunction::call(const Auth& auth, Arg* args)
-{
-  ArgObjectInterface* obj = m_obj->get_object();
-  if (obj) {
-    return obj->arg_function(auth,m_name,args);
-  }
-  return 0;
 }
 
 };

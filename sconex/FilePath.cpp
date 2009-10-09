@@ -228,6 +228,7 @@ bool FilePath::move(const FilePath& source, const FilePath& dest)
     }
   }
 
+  DEBUG_LOG_ERRNO("FilePath::move failed");
   return false;
 }
 

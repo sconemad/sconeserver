@@ -119,12 +119,12 @@ Arg* ArgStore::arg_lookup(const std::string& name)
       "set" == name ||
       "remove" == name ||
       "reset" == name) {
-    return new scx::ArgObjectFunction(new scx::ArgObject(this),name);
+    return new_method(name);
   }
 
   // Sub-objects
   Arg* a = m_data->lookup(name);
-  if (a) return a->ref_copy(Arg::ConstRef);
+  if (a) return a->ref_copy(Arg::Ref);
 
   return ArgObjectInterface::arg_lookup(name);
 }

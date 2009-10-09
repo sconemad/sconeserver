@@ -55,7 +55,7 @@ scx::Arg* TestModule::arg_lookup(const std::string& name)
 {
   // Methods
   if ("filedir" == name) {
-    return new scx::ArgObjectFunction(new scx::ArgModule(ref()),name);
+    return new_method(name);
   }      
 
   if ("counts" == name) {

@@ -86,8 +86,7 @@ scx::Arg* ExecModule::arg_lookup(const std::string& name)
   // Methods
 
   if ("set_exec_user" == name) {
-    return new scx::ArgObjectFunction(
-      new scx::ArgModule(ref()),name);
+    return new_method(name);
   }      
 
   return SCXBASE Module::arg_lookup(name);

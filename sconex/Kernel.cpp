@@ -155,7 +155,7 @@ Arg* Kernel::arg_lookup(const std::string& name)
       "shutdown" == name ||
       "set_user" == name ||
       "set_thread_pool" == name) {
-    return new ArgObjectFunction(new ArgModule(ref()),name);
+    return new_method(name);
   }      
 
   // Constructors for sconex Arg classes
@@ -165,7 +165,7 @@ Arg* Kernel::arg_lookup(const std::string& name)
       "Time" == name ||
       "Uri" == name ||
       "MimeType" == name) {
-    return new ArgObjectFunction(new ArgModule(ref()),name);
+    return new_method(name);
   }
 
   // Properties

@@ -125,7 +125,7 @@ scx::Arg* SessionManager::arg_lookup(
   // Methods
   
   if ("check" == name) {
-    return new scx::ArgObjectFunction(new scx::ArgObject(this),name);
+    return new_method(name);
   }
 
   // Properties

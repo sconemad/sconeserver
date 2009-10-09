@@ -127,7 +127,7 @@ scx::Arg* Host::arg_lookup(
   
   if ("add" == name ||
       "remove" == name) {
-    return new scx::ArgObjectFunction(new scx::ArgObject(this),name);
+    return new_method(name);
   }
 
   // Properties

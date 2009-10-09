@@ -77,7 +77,7 @@ scx::Arg* IP6Module::arg_lookup(const std::string& name)
 {
   // Methods
   if ("addr" == name) {
-    return new scx::ArgObjectFunction(new scx::ArgModule(ref()),name);
+    return new_method(name);
   }      
 
   return SCXBASE Module::arg_lookup(name);

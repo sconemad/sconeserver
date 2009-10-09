@@ -331,7 +331,6 @@ bool StreamTransferManager::dest_finished()
   m_dest = 0;
   
   if (m_source) {
-    DEBUG_LOG("Source stream still exists - sending close");
     m_source->dest_event(Stream::Closing);
   }
   
@@ -349,7 +348,6 @@ bool StreamTransferManager::source_finished()
   m_source = 0;
 
   if (m_dest) {
-    DEBUG_LOG("Dest stream still exists - sending close");
     m_dest->source_event(Stream::Closing); 
   }
 

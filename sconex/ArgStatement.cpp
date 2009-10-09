@@ -220,7 +220,7 @@ Arg* ArgStatementGroup::run(ArgProc& proc, FlowMode& flow)
 Arg* ArgStatementGroup::arg_lookup(const std::string& name)
 {
   if ("var" == name) {
-    return new ArgObjectFunction(new ArgObject(this),name);
+    return new_method(name);
   }
 
   Arg* var = m_vars.lookup(name);

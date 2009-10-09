@@ -100,7 +100,7 @@ scx::Arg* RouterModule::arg_lookup(
 
   if ("add" == name ||
       "remove" == name) {
-    return new scx::ArgObjectFunction(new scx::ArgModule(ref()),name);
+    return new_method(name);
   }
 
   // Properties
