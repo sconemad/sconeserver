@@ -208,7 +208,9 @@ Arg* ArgStatementGroup::run(ArgProc& proc, FlowMode& flow)
        ++it) {
     delete ret;
     ret = (*it)->run(proc,flow);
-    if (flow != Normal) {
+    if (ret && (typeid(*ret) == typeid(scx::ArgError))) {
+      return ret;
+    } else if (flow != Normal) {
       return ret;
     }
   }
@@ -473,7 +475,9 @@ Arg* ArgStatementWhile::run(ArgProc& proc, FlowMode& flow)
     if (m_body) {
       delete ret;
       ret = m_body->run(proc,flow);
-      if (flow == Return) {
+      if (ret && (typeid(*ret) == typeid(scx::ArgError))) {
+	return ret;
+      } else if (flow == Return) {
 	return ret;
       } else if (flow == Last) {
 	flow = Normal;
@@ -589,7 +593,9 @@ Arg* ArgStatementFor::run(ArgProc& proc, FlowMode& flow)
     if (m_body) {
       delete ret;
       ret = m_body->run(proc,flow);
-      if (flow == Return) {
+      if (ret && (typeid(*ret) == typeid(scx::ArgError))) {
+	return ret;
+      } else if (flow == Return) {
 	return ret;
       } else if (flow == Last) {
 	flow = Normal;

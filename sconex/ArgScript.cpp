@@ -116,7 +116,7 @@ Condition ArgScript::event(Stream::Event e)
       if (m_stack.top() == m_root || c==End) {
         ArgScript_DEBUG_LOG("event: Run");
         Arg* ret = m_root->execute(m_proc);
-        if (ret && m_error_des) {
+        if (m_error_des && ret && BAD_ARG(ret)) {
 	  m_error_des->write(ret->get_string() + "\n");
         }
         delete ret;

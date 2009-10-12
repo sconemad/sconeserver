@@ -1,4 +1,10 @@
 
+2009-10-12 Andrew Wedgbury <wedge@sconemad.com>
+
+	* sconex/ArgStatement: Break out of loops on error.
+	* sconex/ArgScript: Output only errors to error_des.
+	* test/ArgTest: Set error descriptor.
+
 2009-10-09 Andrew Wedgbury <wedge@sconemad.com>
 
 	* sconex/Arg: Add method call ability to base Arg.

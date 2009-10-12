@@ -73,7 +73,7 @@ Arg* ArgTest::arg_lookup(const std::string& name)
       "print" == name ||
       "input" == name ||
       "test" == name) {
-    return new ArgObjectFunction(new ArgObject(this),name);
+    return new_method(name);
   }
 
   if ("endl" == name) {
@@ -155,7 +155,7 @@ int main(int argc,char* argv[])
   ArgTest argtest;
   ArgObject* ctx = new ArgObject(&argtest);
   ArgScript* script = new ArgScript(Auth::Admin,ctx);
-  //  script->set_error_des(con);
+  script->set_error_des(con);
   in->add_stream(script);
 
   Multiplexer spinner;
