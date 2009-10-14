@@ -44,9 +44,11 @@ void ErrorHandler(void* vcx,const char* str,...)
 //=========================================================================
 XMLDoc::XMLDoc(
   const std::string& name,
-  const scx::FilePath& path
+  const scx::FilePath& root,
+  const std::string& file
 ) : m_name(name),
-    m_path(path),
+    m_root(root),
+    m_file(file),
     m_xmldoc(0)
 {
 
@@ -65,9 +67,21 @@ const std::string& XMLDoc::get_name() const
 }
 
 //=========================================================================
-const scx::FilePath& XMLDoc::get_path() const
+const scx::FilePath& XMLDoc::get_root() const
 {
-  return m_path;
+  return m_root;
+}
+
+//=========================================================================
+const std::string& XMLDoc::get_file() const
+{
+  return m_file;
+}
+
+//=========================================================================
+scx::FilePath XMLDoc::get_filepath() const
+{
+  return m_root + m_file;
 }
 
 //=========================================================================
@@ -133,9 +147,9 @@ scx::Arg* XMLDoc::arg_lookup(const std::string& name)
 }
 
 //=========================================================================
-scx::Arg* XMLDoc::arg_function(const scx::Auth& auth,const std::string& name,scx::Arg* args)
+scx::Arg* XMLDoc::arg_method(const scx::Auth& auth,const std::string& name,scx::Arg* args)
 {
-  return SCXBASE ArgObjectInterface::arg_function(auth,name,args);
+  return SCXBASE ArgObjectInterface::arg_method(auth,name,args);
 }
 
 //=========================================================================
@@ -190,7 +204,8 @@ void XMLDoc::process_node(Context& context, xmlNode* start)
 //=========================================================================
 bool XMLDoc::open()
 {
-  scx::FileStat stat(m_path);
+  scx::FilePath path = get_filepath();
+  scx::FileStat stat(path);
   if (stat.is_file()) {
     if (m_xmldoc == 0 || m_modtime != stat.time()) {
       close();
@@ -202,7 +217,7 @@ bool XMLDoc::open()
       cx->sax->error = ErrorHandler;
       cx->vctxt.error = ErrorHandler;
 
-      m_xmldoc = xmlCtxtReadFile(cx,m_path.path().c_str(),NULL,0);
+      m_xmldoc = xmlCtxtReadFile(cx,path.path().c_str(),NULL,0);
       m_modtime = stat.time();
 
       xmlFreeParserCtxt(cx);

@@ -37,7 +37,7 @@ Template::Template(
   Profile& profile,
   const std::string& name,
   const scx::FilePath& path
-) : XMLDoc(name,path), 
+) : XMLDoc(name,path,name + ".xml"),
     m_profile(profile)
 {
 

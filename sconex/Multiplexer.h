@@ -99,15 +99,10 @@ private:
   pthread_t m_main_thread;
 
   // Statistics:
-  long m_loop_time;
+  long m_loops;
   long m_jobs_run;
   long m_job_waits;
-
-  long m_start;
-  long m_loops;
-  long m_jobs_run_acc;
   long m_job_waits_acc;
-
 };
 
 };

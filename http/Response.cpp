@@ -110,7 +110,7 @@ scx::Arg* Response::arg_lookup(const std::string& name)
 }
 
 //=========================================================================
-scx::Arg* Response::arg_function(const scx::Auth& auth,const std::string& name,scx::Arg* args)
+scx::Arg* Response::arg_method(const scx::Auth& auth,const std::string& name,scx::Arg* args)
 {
   scx::ArgList* l = dynamic_cast<scx::ArgList*>(args);
 
@@ -136,7 +136,7 @@ scx::Arg* Response::arg_function(const scx::Auth& auth,const std::string& name,s
     return 0;
   }
 
-  return SCXBASE ArgObjectInterface::arg_function(auth,name,args);
+  return SCXBASE ArgObjectInterface::arg_method(auth,name,args);
 }
 
 };

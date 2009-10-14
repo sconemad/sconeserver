@@ -36,7 +36,10 @@ class HTTP_API Request : public scx::ArgObjectInterface {
 
 public:
 
-  Request(const std::string& profile);  
+  Request(
+    const std::string& profile,
+    const std::string& id
+  );
   virtual ~Request();
 
   const std::string& get_method() const;
@@ -53,6 +56,7 @@ public:
   const Host* get_host() const;
 
   const std::string& get_profile() const;
+  const std::string& get_id() const;
 
   void set_docroot(DocRoot* docroot);
   const DocRoot* get_docroot() const;
@@ -77,7 +81,7 @@ public:
 
   // ArgObject interface
   virtual scx::Arg* arg_lookup(const std::string& name);
-  virtual scx::Arg* arg_function(const scx::Auth& auth,const std::string& name,scx::Arg* args);
+  virtual scx::Arg* arg_method(const scx::Auth& auth,const std::string& name,scx::Arg* args);
   
 private:
 
@@ -112,6 +116,9 @@ private:
   std::string m_profile;
   // The profile
 
+  std::string m_id;
+  // Unique identifier for this request
+  
   DocRoot* m_docroot;
   // The document root corresponding to the above profile
 

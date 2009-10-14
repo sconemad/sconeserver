@@ -59,7 +59,7 @@ public:
   virtual Arg* arg_resolve(const std::string& name);
   // Resolve name by recursing down the tree
   
-  virtual Arg* arg_function(const Auth& auth, const std::string& name, Arg* args);
+  virtual Arg* arg_method(const Auth& auth, const std::string& name, Arg* args);
   // Call named arg function on this object
 
   int get_num_refs() const;

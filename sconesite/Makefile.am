@@ -3,7 +3,9 @@
 
 AM_CPPFLAGS = -I$(top_srcdir)
 
-pkglib_LTLIBRARIES = sconesite.la
+if BUILD_SCONESITE
+  pkglib_LTLIBRARIES = sconesite.la
+endif
 
 sconesite_la_SOURCES = \
 SconesiteModule.cpp \

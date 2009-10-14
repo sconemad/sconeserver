@@ -44,10 +44,8 @@ public:
   SconesiteModule& get_module();
   scx::FilePath& get_path();
 
-  Article* lookup_article(const std::string& name);
-  const std::list<Article*>& articles() const;
-  Article* create_article(const std::string& name);
-
+  Article* get_index();
+  
   Template* lookup_template(const std::string& name);
   
 private:
@@ -55,8 +53,9 @@ private:
   SconesiteModule& m_module;
 
   scx::FilePath m_path;
+
+  Article* m_index;
   
-  std::list<Article*> m_articles;
   std::list<Template*> m_templates;
   
 };

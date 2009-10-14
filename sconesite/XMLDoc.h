@@ -39,12 +39,15 @@ class XMLDoc : public scx::ArgObjectInterface {
 public:
 
   XMLDoc(const std::string& name,
-         const scx::FilePath& path);
+         const scx::FilePath& root,
+         const std::string& file);
   
   virtual ~XMLDoc();
   
   const std::string& get_name() const;
-  const scx::FilePath& get_path() const;
+  const scx::FilePath& get_root() const;
+  const std::string& get_file() const;
+  scx::FilePath get_filepath() const;
 
   bool process(Context& context);
 
@@ -56,7 +59,7 @@ public:
   virtual std::string name() const;
   virtual scx::Arg* arg_resolve(const std::string& name);
   virtual scx::Arg* arg_lookup(const std::string& name);
-  virtual scx::Arg* arg_function(const scx::Auth& auth,const std::string& name,scx::Arg* args);
+  virtual scx::Arg* arg_method(const scx::Auth& auth,const std::string& name,scx::Arg* args);
 
 protected:
 
@@ -66,7 +69,8 @@ protected:
   virtual void close();  
 
   std::string m_name;
-  scx::FilePath m_path;
+  scx::FilePath m_root;
+  std::string m_file;
   scx::Date m_modtime;
 
   xmlDoc* m_xmldoc;

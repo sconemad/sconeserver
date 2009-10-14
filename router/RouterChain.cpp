@@ -120,7 +120,7 @@ scx::Arg* RouterChain::arg_lookup(
 }
 
 //=============================================================================
-scx::Arg* RouterChain::arg_function(
+scx::Arg* RouterChain::arg_method(
   const scx::Auth& auth,
   const std::string& name,
   scx::Arg* args
@@ -270,7 +270,7 @@ scx::Arg* RouterChain::arg_function(
     }
   }
   
-  return SCXBASE ArgObjectInterface::arg_function(auth,name,args);
+  return SCXBASE ArgObjectInterface::arg_method(auth,name,args);
 }
 
 //###---

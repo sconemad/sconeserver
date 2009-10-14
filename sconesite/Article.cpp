@@ -88,11 +88,12 @@ bool ArticleMetaSorter::operator()(const Article* a, const Article* b)
 Article::Article(
   Profile& profile,
   const std::string& name,
-  const scx::FilePath& root
-) : XMLDoc(name,root + "article.xml"),
+  const scx::FilePath& path,
+  Article* parent
+) : XMLDoc(name,path,"article.xml"),
     m_profile(profile),
-    m_root(root),
-    m_metastore(root + "meta.txt")
+    m_metastore(path + "meta.txt"),
+    m_parent(parent)
 {
   m_metastore.load();
 }
@@ -100,13 +101,10 @@ Article::Article(
 //=========================================================================
 Article::~Article()
 {
-  
-}
-
-//=========================================================================
-const scx::FilePath& Article::get_root() const
-{
-  return m_root;
+  for (std::list<Article*>::iterator it_a = m_articles.begin();
+       it_a != m_articles.end(); ++it_a) {
+    delete (*it_a);
+  }
 }
 
 //=========================================================================
@@ -114,6 +112,175 @@ const scx::Arg* Article::get_meta(const std::string& name) const
 {
   Article* uc = const_cast<Article*>(this);
   return uc->m_metastore.arg_lookup(name);
+}
+
+//=========================================================================
+std::string Article::get_href_path() const
+{
+  if (m_parent) {
+    return m_parent->get_href_path() + m_name + "/";
+  }
+  return m_name;
+}
+
+//=========================================================================
+void Article::refresh()
+{
+  // Add new articles
+  scx::FileDir dir(m_root);
+  while (dir.next()) {
+    std::string name = dir.name();
+    if (name != "." && name != "..") {
+      if (!lookup_article(name)) {
+        scx::FilePath path = dir.path();
+        scx::FileStat stat(path + "article.xml");
+        if (stat.is_file()) {
+          Article* article = new Article(m_profile,name,path,this);
+          m_articles.push_back(article);
+          //          m_module.log("Adding article '" + name + "'");
+          DEBUG_LOG("Adding article '" << name << "'");
+        }
+      }
+    }
+  }
+
+  // Loop over existing articles
+  for (std::list<Article*>::iterator it_a = m_articles.begin();
+       it_a != m_articles.end();
+       ++it_a) {
+    Article* article = (*it_a);
+    if (!scx::FileStat(article->get_filepath()).is_file()) {
+      // Remove deleted article
+      //        m_module.log("Removing article '" + article->get_name() + "'");
+      DEBUG_LOG("Removing article '" << article->get_name() << "'");
+
+      it_a = m_articles.erase(it_a);
+      delete article;
+    } else {
+      // Refresh article
+      article->refresh();
+    }
+  }
+}
+
+//=========================================================================
+Article* Article::lookup_article(const std::string& name)
+{
+  if (name.empty()) return this;
+  
+  std::string::size_type is = name.find_first_of("/");
+  std::string first = name;
+  std::string second;
+  if (is != std::string::npos) {
+    first = name.substr(0,is);
+    second = name.substr(is+1);
+  }
+
+  //  DEBUG_LOG("LOOKUP: " << name << "(" << first << "," << second << ")");
+  
+  for (std::list<Article*>::iterator it = m_articles.begin();
+       it != m_articles.end(); ++it) {
+    Article* article = (*it);
+    if (article->get_name() == first) {
+      if (second.empty()) {
+        return article;
+      } else {
+        return article->lookup_article(second);
+      }
+    }
+  }
+
+  return 0;
+}
+
+//=========================================================================
+Article* Article::find_article(const std::string& name,std::string& extra_path)
+{
+  if (name.empty()) return this;
+  
+  std::string::size_type is = name.find_first_of("/");
+  std::string first = name;
+  std::string second;
+  if (is != std::string::npos) {
+    first = name.substr(0,is);
+    second = name.substr(is+1);
+  }
+
+  //  DEBUG_LOG("LOOKUP: " << name << "(" << first << "," << second << ")");
+  
+  for (std::list<Article*>::iterator it = m_articles.begin();
+       it != m_articles.end(); ++it) {
+    Article* article = (*it);
+    if (article->get_name() == first) {
+      if (second.empty()) {
+        extra_path = "";
+        return article;
+      } else {
+        return article->find_article(second,extra_path);
+      }
+    }
+  }
+
+  extra_path = first;
+  if (!second.empty()) {
+    extra_path += "/" + second;
+  }
+  return this;
+}
+
+//=========================================================================
+//const std::list<Article*>& Article::articles() const
+//{
+//  return m_articles;
+//}
+
+//=========================================================================
+Article* Article::create_article(const std::string& name)
+{
+  if (lookup_article(name)) {
+    // Aricle already exists
+    return 0;
+  }
+
+  scx::FilePath path = m_root + name;
+  scx::FilePath::mkdir(path,false,0777);
+  scx::FilePath::mkdir(path + "files",false,0777);
+
+  Article* article = new Article(m_profile,name,path,this);
+  scx::FilePath apath = article->get_filepath();
+
+  scx::File file;
+  if (scx::Ok != file.open(apath,scx::File::Write|scx::File::Create)) {
+    delete article;
+    return 0;
+  }
+
+  file.write("<article>\n");
+  file.write("<p>write something here...</p>\n");
+  file.write("</article>\n");
+  file.close();
+  
+  m_articles.push_back(article);
+  return article;
+}
+
+//=========================================================================
+bool Article::remove_article(const std::string& name)
+{
+  for (std::list<Article*>::iterator it_a = m_articles.begin();
+       it_a != m_articles.end();
+       ++it_a) {
+    Article* article = (*it_a);
+    if (article->get_name() == name) {
+      DEBUG_LOG("Removing article '" << article->get_root().path() << "'");
+      m_articles.erase(it_a);
+      scx::FilePath::rmdir(article->get_root(),true);
+      delete article;
+      return true;
+
+    }
+  }
+  return false;
 }
 
 //=========================================================================
@@ -126,20 +293,108 @@ scx::Arg* Article::arg_resolve(const std::string& name)
 scx::Arg* Article::arg_lookup(const std::string& name)
 {
   // Methods
-  if ("test" == name) {
+  if ("create" == name ||
+      "remove" == name ||
+      "get_articles" == name ||
+      "get_files" == name) {
     return new_method(name);
   }
 
-  // Sub-objects
+  // Properties
+  if ("link" == name) return new scx::ArgString(get_href_path());
   if ("meta" == name) return new scx::ArgObject(&m_metastore);
+  if ("title" == name) {
+    scx::Arg* a_title = m_metastore.arg_lookup("title");
+    if (a_title) {
+      std::string title = a_title->get_string();
+      if (!title.empty()) {
+        return new scx::ArgString(title);
+      }
+      delete a_title;
+    }
+    if (!m_name.empty()) {
+      return new scx::ArgString(m_name);
+    }
+    return new scx::ArgString("");
+  }
 
   return XMLDoc::arg_lookup(name);
 }
 
 //=========================================================================
-scx::Arg* Article::arg_function(const scx::Auth& auth,const std::string& name,scx::Arg* args)
+scx::Arg* Article::arg_method(const scx::Auth& auth,const std::string& name,scx::Arg* args)
 {
   scx::ArgList* l = dynamic_cast<scx::ArgList*>(args);
 
-  return XMLDoc::arg_function(auth,name,args);
+  if (name == "create") {
+    if (!auth.trusted()) return new scx::ArgError("Not permitted");
+
+    const scx::Arg* a_name = l->get(0);
+    if (!a_name) return new scx::ArgError("No article name specified");
+    const std::string article_name = a_name->get_string();
+    if (article_name.empty()) return new scx::ArgError("Empty article name");
+    Article* article = create_article(article_name);
+    if (!article) return new scx::ArgError("Could not create article");
+    return new scx::ArgObject(article);
+  }
+
+  if (name == "remove") {
+    if (!auth.trusted()) return new scx::ArgError("Not permitted");
+
+    const scx::Arg* a_name = l->get(0);
+    if (!a_name) return new scx::ArgError("No article name specified");
+    const std::string article_name = a_name->get_string();
+    if (article_name.empty()) return new scx::ArgError("Empty article name");
+    if (!remove_article(article_name)) {
+      return new scx::ArgError("Failed to remove article");
+    }
+    return 0;
+  }
+
+  if (name == "get_articles") {
+    if (!auth.trusted()) return new scx::ArgError("Not permitted");
+
+    //    std::list<Article*> articles = m_profile.get_index()->articles();
+    std::list<Article*> articles(m_articles);
+
+    const scx::Arg* a_sort = l->get(0);
+    const scx::Arg* a_rev = l->get(1);
+    if (a_sort) {
+      std::string sort = a_sort->get_string();
+      bool reverse = (a_rev ? a_rev->get_int() : false);
+      articles.sort(ArticleMetaSorter(sort,reverse));
+    }
+    int count = 9999;
+    const scx::ArgInt* a_max = dynamic_cast<const scx::ArgInt*>(l->get(2));
+    if (a_max) {
+      count = a_max->get_int();
+    }
+      
+    scx::ArgList* artlist = new scx::ArgList();
+    for (std::list<Article*>::const_iterator it = articles.begin();
+	 it != articles.end();
+	 ++it) {
+      artlist->give(new scx::ArgObject(*it));
+      if (--count == 0) {
+	break;
+      }
+    }
+    return artlist;
+  }
+
+  if (name == "get_files") {
+    if (!auth.trusted()) return new scx::ArgError("Not permitted");
+
+    scx::ArgList* filelist = new scx::ArgList();
+    scx::FileDir files(m_root + "files");
+    while (files.next()) {
+      std::string file = files.name();
+      if (file != "." && file != "..") {
+        filelist->give(new scx::ArgString(file));
+      }
+    }
+    return filelist;
+  }
+  
+  return XMLDoc::arg_method(auth,name,args);
 }

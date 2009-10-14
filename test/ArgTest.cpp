@@ -42,7 +42,7 @@ public:
 
   virtual Arg* arg_lookup(const std::string& name);
   virtual Arg* arg_resolve(const std::string& name);
-  virtual Arg* arg_function(const Auth& auth,const std::string& name, Arg* args);
+  virtual Arg* arg_method(const Auth& auth,const std::string& name, Arg* args);
 
 };
 
@@ -90,7 +90,7 @@ Arg* ArgTest::arg_resolve(const std::string& name)
 }
 
 //=============================================================================
-Arg* ArgTest::arg_function(
+Arg* ArgTest::arg_method(
   const Auth& auth,
   const std::string& name,
   Arg* args
@@ -132,7 +132,7 @@ Arg* ArgTest::arg_function(
     return 0;
   }
 
-  return ArgObjectInterface::arg_function(auth,name,args);
+  return ArgObjectInterface::arg_method(auth,name,args);
 }
 
 //=============================================================================

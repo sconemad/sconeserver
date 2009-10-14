@@ -58,6 +58,13 @@ JobID Job::get_id() const
 }
 
 //=============================================================================
+Job::JobState Job::get_state() const
+{
+  return m_job_state;
+}
+
+
+//=============================================================================
 PeriodicJob::PeriodicJob(const std::string& type, const Time& period)
   : scx::Job(type),
     m_timeout(0),

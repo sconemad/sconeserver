@@ -97,7 +97,7 @@ scx::Arg* ForwardModule::arg_lookup(const std::string& name)
 }
 
 //=============================================================================
-scx::Arg* ForwardModule::arg_function(
+scx::Arg* ForwardModule::arg_method(
   const scx::Auth& auth,
   const std::string& name,
   scx::Arg* args
@@ -105,6 +105,6 @@ scx::Arg* ForwardModule::arg_function(
 {
   scx::ArgList* l = dynamic_cast<scx::ArgList*>(args);
 
-  return SCXBASE Module::arg_function(auth,name,args);
+  return SCXBASE Module::arg_method(auth,name,args);
 }
 

@@ -167,52 +167,47 @@ scx::Condition SconesiteStream::send_response()
   Profile* profile = m_module.lookup_profile(m_profile);
   
   std::string pathinfo = req.get_path_info();
-  std::string::size_type is = pathinfo.find_first_of("/");
-  std::string art_name = pathinfo;
-  std::string art_file = "";
-  if (is != std::string::npos) {
-    art_name = pathinfo.substr(0,is);
-    art_file = pathinfo.substr(is+1);
-  }
-  m_article = profile->lookup_article(art_name);
 
   if (pathinfo.find("//") != std::string::npos ||
       pathinfo.find("..") != std::string::npos) {
-    m_module.log("Dodgy pathinfo '" + pathinfo + "' - rejecting");
+    msg->log("[sconesite] Dodgy pathinfo '" + pathinfo + "' - rejecting");
     resp.set_status(http::Status::Forbidden);
     return scx::Close;
   }
-  
-  if (pathinfo == "") {
-    m_module.log("Sending index"); 
-    
-  } else if (is == std::string::npos) {
-    scx::Uri new_uri = uri;
-    new_uri.set_path(new_uri.get_path() + "/");
-    m_module.log("Redirect '" + uri.get_string() + "' to '" + new_uri.get_string() + "'"); 
-    resp.set_status(http::Status::Found);
-    resp.set_header("Location",new_uri.get_string());
-    return scx::Close;
-    
-  } else if (!art_file.empty()) {
+
+  std::string art_file = "";
+  m_article = profile->get_index()->find_article(pathinfo,art_file);
+
+  if (!art_file.empty()) {
     // Update the path in the request (cast away const for this!)
     http::Request& reqmod = const_cast<http::Request&>(req);
-    reqmod.set_path(profile->get_path() + "art" + art_name + art_file);
+    reqmod.set_path(m_article->get_root() + art_file);
 
     // Connect the getfile module and relinquish
     scx::ModuleRef getfile = msg->get_module().get_module("getfile");
     if (getfile.valid()) {
-      m_module.log("Sending '" + art_name + "/" + art_file + "' with getfile"); 
+      msg->log("[sconesite] article '" + m_article->name() + "'");
+      msg->log("[sconesite] Sending '" + pathinfo + "' with getfile"); 
       scx::ArgList args;
       getfile.module()->connect(&endpoint(),0);
       return scx::End;
     }
 
-  } else if (!art_name.empty()) {
-    m_module.log("Sending article '" + art_name + "'");
+  } else if (m_article) {
+    std::string href = m_article->get_href_path();
+    if (pathinfo != href) {
+      scx::Uri new_uri = uri;
+      new_uri.set_path(href);
+      msg->log("[sconesite] Redirect '" + uri.get_string() + "' to '" + new_uri.get_string() + "'"); 
+      resp.set_status(http::Status::Found);
+      resp.set_header("Location",new_uri.get_string());
+      return scx::Close;
+    } else {
+      msg->log("[sconesite] Sending article '" + m_article->name() + "'");
+    }
     
   } else {
-    m_module.log("Sending NotFound, pathinfo is '" + pathinfo + "'");
+    msg->log("[sconesite] Sending NotFound, pathinfo is '" + pathinfo + "'");
     resp.set_status(http::Status::NotFound);
     return scx::Close;
   }
@@ -244,13 +239,14 @@ scx::Condition SconesiteStream::send_response()
 scx::Condition SconesiteStream::start_section(const scx::MimeHeaderTable& headers)
 {
   ++m_section;
-  STREAM_DEBUG_LOG("Start section " << m_section);
 
   http::MessageStream* msg = GET_HTTP_MESSAGE();
   const http::Request& req = msg->get_request();
   http::Request& ucreq = const_cast<http::Request&>(req);
   const http::Session* s = req.get_session();
 
+  //msg->log("[sconesite] Start section " + m_section);
+  
   bool auth = (s && s->allow_upload());
   if (auth) {
 
@@ -259,15 +255,13 @@ scx::Condition SconesiteStream::start_section(const scx::MimeHeaderTable& header
     std::string::size_type is = pathinfo.find_first_of("/");
     std::string art_name = pathinfo;
     std::string art_file = "";
+    /*
     if (is != std::string::npos) {
       art_name = pathinfo.substr(0,is);
       art_file = pathinfo.substr(is+1);
     }
-    m_article = profile->lookup_article(art_name);
-    
-    if (0 == m_article && auth) {
-      m_article = profile->create_article(art_name);
-    }
+    */
+    m_article = profile->get_index()->find_article(art_name,art_file);
     
     std::string name;
     scx::MimeHeader disp = headers.get_parsed("Content-Disposition");
@@ -277,7 +271,7 @@ scx::Condition SconesiteStream::start_section(const scx::MimeHeaderTable& header
     }
     
     fdata->get_parameter("name",name);
-    STREAM_DEBUG_LOG("Section name is '" << name << "'");
+    //    STREAM_DEBUG_LOG("Section name is '" << name << "'");
     
     const std::string file_pattern = "file_";
     std::string::size_type ip = name.find(file_pattern);
@@ -303,7 +297,7 @@ scx::Condition SconesiteStream::start_section(const scx::MimeHeaderTable& header
 	}
       }
       */
-      STREAM_DEBUG_LOG("Streaming section to file '" << path.path() << "'");
+      //      STREAM_DEBUG_LOG("Streaming section to file '" << path.path() << "'");
       ucreq.set_param(name,new ArgFile(path));
       
       scx::File* file = new scx::File();
@@ -317,11 +311,11 @@ scx::Condition SconesiteStream::start_section(const scx::MimeHeaderTable& header
 	return scx::Ok;
       }
       
-      STREAM_DEBUG_LOG("Error opening file '" << path.path() << "'");
+      msg->log("[sconesite] Error opening file '" + path.path() + "'");
       delete file;
       
     } else {
-      STREAM_DEBUG_LOG("Writing section to parameter '" << name << "'");
+      //      STREAM_DEBUG_LOG("Writing section to parameter '" << name << "'");
       endpoint().add_stream(new ParamReaderStream(name,ucreq));
       return scx::Ok;
     }

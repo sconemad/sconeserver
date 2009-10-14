@@ -30,9 +30,10 @@ Free Software Foundation, Inc.,
 namespace http {
 
 //===========================================================================
-Request::Request(const std::string& profile)
+Request::Request(const std::string& profile, const std::string& id)
   : m_host(0),
     m_profile(profile),
+    m_id(id),
     m_docroot(0),
     m_session(0)
 {
@@ -172,6 +173,12 @@ const std::string& Request::get_profile() const
 }
 
 //=============================================================================
+const std::string& Request::get_id() const
+{
+  return m_id;
+}
+
+//=============================================================================
 void Request::set_docroot(DocRoot* docroot)
 {
   m_docroot = docroot;
@@ -287,6 +294,7 @@ scx::Arg* Request::arg_lookup(const std::string& name)
   if (name == "uri") return m_uri.new_copy();
   if (name == "version") return m_version.new_copy();
   if (name == "profile") return new scx::ArgString(m_profile);
+  if (name == "id") return new scx::ArgString(m_id);
   if (name == "params") return m_params.new_copy();
   if (name == "session" && m_session) return new scx::ArgObject(m_session);
 
@@ -294,15 +302,15 @@ scx::Arg* Request::arg_lookup(const std::string& name)
 }
 
 //=========================================================================
-scx::Arg* Request::arg_function(const scx::Auth& auth,const std::string& name,scx::Arg* args)
+scx::Arg* Request::arg_method(const scx::Auth& auth,const std::string& name,scx::Arg* args)
 {
-  scx::ArgList* l = dynamic_cast<scx::ArgList*>(args);
+  //  scx::ArgList* l = dynamic_cast<scx::ArgList*>(args);
 
   if (name == "test") {
     return 0;
   }
 
-  return SCXBASE ArgObjectInterface::arg_function(auth,name,args);
+  return SCXBASE ArgObjectInterface::arg_method(auth,name,args);
 }
 
 };

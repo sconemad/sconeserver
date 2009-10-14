@@ -61,7 +61,7 @@ public:
   // End a job
 
   virtual Arg* arg_lookup(const std::string& name);
-  virtual Arg* arg_function(const Auth& auth, const std::string& name,Arg* args);
+  virtual Arg* arg_method(const Auth& auth, const std::string& name,Arg* args);
   
   const std::string& get_system_nodename() const;
   const std::string& get_system_version() const;

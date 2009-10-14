@@ -50,7 +50,7 @@ public:
   // ArgObject interface
   virtual std::string name() const;
   virtual Arg* arg_lookup(const std::string& name);
-  virtual Arg* arg_function(const Auth& auth, const std::string& name,Arg* args);
+  virtual Arg* arg_method(const Auth& auth, const std::string& name,Arg* args);
 
   static void store_arg(Descriptor& out, const Arg* arg);
   

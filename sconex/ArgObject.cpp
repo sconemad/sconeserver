@@ -110,7 +110,7 @@ Arg* ArgObjectInterface::arg_resolve(const std::string& name)
 }
 
 //=============================================================================
-Arg* ArgObjectInterface::arg_function(const Auth& auth, const std::string& name, Arg* args)
+Arg* ArgObjectInterface::arg_method(const Auth& auth, const std::string& name, Arg* args)
 {
   return new ArgError("Unknown function '" + name + "'");  
 }
@@ -207,7 +207,7 @@ Arg* ArgObject::op(const Auth& auth, OpType optype, const std::string& opname, A
 {
   if (m_obj) {
     if (is_method_call(optype,opname)) {
-      return m_obj->arg_function(auth,m_method,right);
+      return m_obj->arg_method(auth,m_method,right);
     
     } else if (Arg::Binary == optype) {
       // Lookup

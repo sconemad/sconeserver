@@ -184,7 +184,7 @@ scx::Arg* StatModule::arg_lookup(const std::string& name)
 }
 
 //=============================================================================
-scx::Arg* StatModule::arg_function(
+scx::Arg* StatModule::arg_method(
   const scx::Auth& auth,
   const std::string& name,
   scx::Arg* args
@@ -232,5 +232,5 @@ scx::Arg* StatModule::arg_function(
     return 0;
   }
 
-  return SCXBASE Module::arg_function(auth,name,args);
+  return SCXBASE Module::arg_method(auth,name,args);
 }

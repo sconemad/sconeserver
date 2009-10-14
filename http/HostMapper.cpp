@@ -156,16 +156,16 @@ scx::Arg* HostMapper::arg_lookup(
 //=============================================================================
 scx::Arg* HostMapper::arg_resolve(const std::string& name)
 {
-  scx::Arg* a = SCXBASE ArgObjectInterface::arg_resolve(name);
-  if (a==0 || (dynamic_cast<scx::ArgError*>(a))!=0) {
+  scx::Arg* a = arg_lookup(name);
+  if (BAD_ARG(a)) {
     delete a;
-    return m_module.arg_resolve(name);
+    a = m_module.arg_resolve(name);
   }
   return a;
 }
 
 //=============================================================================
-scx::Arg* HostMapper::arg_function(
+scx::Arg* HostMapper::arg_method(
   const scx::Auth& auth,
   const std::string& name,
   scx::Arg* args
@@ -269,7 +269,7 @@ scx::Arg* HostMapper::arg_function(
     return 0;
   }
     
-  return ArgObjectInterface::arg_function(auth,name,args);
+  return ArgObjectInterface::arg_method(auth,name,args);
 }
 
 //=============================================================================

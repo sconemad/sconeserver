@@ -79,6 +79,9 @@ public:
 
   static short default_port(const std::string& scheme);
 
+  static std::string encode(const std::string& str);
+  static std::string decode(const std::string& str);
+  
 protected:
   
   void from_string(const std::string& str);

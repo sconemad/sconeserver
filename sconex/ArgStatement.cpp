@@ -85,10 +85,10 @@ Arg* ArgStatement::arg_resolve(const std::string& name)
 }
 
 //=============================================================================
-Arg* ArgStatement::arg_function(const Auth& auth, const std::string& name, Arg* args)
+Arg* ArgStatement::arg_method(const Auth& auth, const std::string& name, Arg* args)
 {
   // Cascade to parent
-  return m_parent->arg_function(auth,name,args);
+  return m_parent->arg_method(auth,name,args);
 }
 
 //=============================================================================
@@ -234,7 +234,7 @@ Arg* ArgStatementGroup::arg_lookup(const std::string& name)
 }
 
 //=============================================================================
-Arg* ArgStatementGroup::arg_function(const Auth& auth, const std::string& name, Arg* args)
+Arg* ArgStatementGroup::arg_method(const Auth& auth, const std::string& name, Arg* args)
 {
   ArgList* l = dynamic_cast<ArgList*> (args);
   
@@ -252,7 +252,7 @@ Arg* ArgStatementGroup::arg_function(const Auth& auth, const std::string& name, 
     return 0;
   }
   
-  return ArgObjectInterface::arg_function(auth,name,args);
+  return ArgObjectInterface::arg_method(auth,name,args);
 }
 
 //=============================================================================
@@ -779,7 +779,7 @@ Arg* ArgStatementDecl::run(ArgProc& proc, FlowMode& flow)
     delete initialiser;
   }
   
-  return m_parent->arg_function(proc.get_auth(),"var",&args);
+  return m_parent->arg_method(proc.get_auth(),"var",&args);
 }
 
 
@@ -861,7 +861,7 @@ Arg* ArgStatementSub::run(ArgProc& proc, FlowMode& flow)
   args.give(new ArgSub(m_name,m_body,proc));
   m_body = 0;
 
-  return m_parent->arg_function(proc.get_auth(),"var",&args);
+  return m_parent->arg_method(proc.get_auth(),"var",&args);
 }
 
 

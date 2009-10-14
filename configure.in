@@ -75,7 +75,7 @@ AC_ARG_WITH([bluetooth],
 # Include if OpenSSL headers are found
 AC_ARG_WITH([openssl_path],
   [AC_HELP_STRING([--with-openssl-path=PATH],[Set path to OpenSSL])],
-  [CPPFLAGS="$CPPFLAGS -I$withval/include"; LDFLAGS="$LDFLAGS -L$withval/lib"],
+  [CPPFLAGS="$CPPFLAGS -I$withval/include";],
 )
 AC_ARG_WITH([ssl],
   [AC_HELP_STRING([--with-ssl],[Enable secure sockets module])],

@@ -172,14 +172,14 @@ protected:
         }
         */
         if (m_file_mode == false) {
-          m_module.log("Sending '" + status.string() +
-                       "' response using basic mode"); 
+          msg->log("[errorpage] Sending '" + status.string() +
+                   "' response using basic mode"); 
           enable_event(scx::Stream::Writeable,true);
         }
         
       } else {
-        m_module.log("Sending '" + status.string() +
-                     "' header-only response");
+        msg->log("Sending '" + status.string() +
+                 "' header-only response");
         return scx::Close;
       }
     }

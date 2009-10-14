@@ -106,7 +106,7 @@ int SessionManager::check_sessions()
        it != m_sessions.end(); ) {
     Session* session = it->second;
     if (!session->valid() && session->get_num_refs() == 0) {
-      DEBUG_LOG("Removing session " << session->get_id() << " due to timeout");
+      log("Removing session " + session->get_id() + " due to timeout");
       delete session;
       m_sessions.erase(it++);
       ++n;
@@ -145,7 +145,18 @@ scx::Arg* SessionManager::arg_lookup(
 }
 
 //=============================================================================
-scx::Arg* SessionManager::arg_function(
+scx::Arg* SessionManager::arg_resolve(const std::string& name)
+{
+  scx::Arg* a = arg_lookup(name);
+  if (BAD_ARG(a)) {
+    delete a;
+    a = m_module.arg_resolve(name);
+  }
+  return a;
+}
+
+//=============================================================================
+scx::Arg* SessionManager::arg_method(
   const scx::Auth& auth,
   const std::string& name,
   scx::Arg* args
@@ -158,7 +169,7 @@ scx::Arg* SessionManager::arg_function(
     return 0;
   }
 
-  return ArgObjectInterface::arg_function(auth,name,args);
+  return ArgObjectInterface::arg_method(auth,name,args);
 }
 
 
@@ -235,7 +246,18 @@ scx::Arg* Session::arg_lookup(
 }
 
 //=============================================================================
-scx::Arg* Session::arg_function(
+scx::Arg* Session::arg_resolve(const std::string& name)
+{
+  scx::Arg* a = arg_lookup(name);
+  if (BAD_ARG(a)) {
+    delete a;
+    a = m_module.arg_resolve(name);
+  }
+  return a;
+}
+
+//=============================================================================
+scx::Arg* Session::arg_method(
   const scx::Auth& auth,
   const std::string& name,
   scx::Arg* args
@@ -246,10 +268,10 @@ scx::Arg* Session::arg_function(
   if ("reset" == name) {
     m_timeout = scx::Date(0);
     // Let ArgStore do its reset stuff too
-    return SCXBASE ArgStore::arg_function(auth,name,args);
+    return SCXBASE ArgStore::arg_method(auth,name,args);
   }
 
-  return SCXBASE ArgStore::arg_function(auth,name,args);
+  return SCXBASE ArgStore::arg_method(auth,name,args);
 }
 
 };

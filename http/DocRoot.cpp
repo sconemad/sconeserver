@@ -110,14 +110,14 @@ bool DocRoot::connect_request(scx::Descriptor* endpoint, Request& request, Respo
     
   } else {
     const scx::Uri& uri = request.get_uri();
-    const std::string& uripath = uri.get_path();
+    const std::string& uripath = scx::Uri::decode(uri.get_path());
     if (uripath.length() > 1 && uripath[0] == '/') {
-      m_module.log("Request uri starts with /",scx::Logger::Error);
+      log("Request uri starts with /",scx::Logger::Error);
       response.set_status(http::Status::Forbidden);
       return false;
 
     } else if (uripath.find("..") != std::string::npos) {
-      m_module.log("Request uri contains ..",scx::Logger::Error);
+      log("Request uri contains ..",scx::Logger::Error);
       response.set_status(http::Status::Forbidden);
       return false;
     }
@@ -135,7 +135,7 @@ bool DocRoot::connect_request(scx::Descriptor* endpoint, Request& request, Respo
     modmap = lookup_path_mod(uripath,pathinfo);
     if (modmap) {
       // Path mapped module
-      m_module.log("Using path mapping, pathinfo='" + pathinfo + "'",scx::Logger::Info);
+      log("Using path mapping, pathinfo='" + pathinfo + "'",scx::Logger::Info);
       request.set_path_info(pathinfo);
     } else {
       // Normal file mapping
@@ -175,7 +175,7 @@ bool DocRoot::connect_request(scx::Descriptor* endpoint, Request& request, Respo
     Session* s = m_module.get_sessions().lookup_session(scxid);
     if (s!=0) {
       // Existing session
-      DEBUG_LOG("Existing session: " << s->get_id());
+      log("Existing session: " + s->get_id());
 
     } else {
       if (!scxid.empty()) {
@@ -187,7 +187,7 @@ bool DocRoot::connect_request(scx::Descriptor* endpoint, Request& request, Respo
       if (b_auto_session) {
 	s = m_module.get_sessions().new_session();
 	response.set_header("Set-Cookie","scxid="+s->get_id()+"; path=/");
-	DEBUG_LOG("New session: " << s->get_id());
+	log("New session: " + s->get_id());
       }
     }
 
@@ -199,14 +199,14 @@ bool DocRoot::connect_request(scx::Descriptor* endpoint, Request& request, Respo
 
   // Check we have a module map
   if (modmap == 0) {
-    m_module.log("No module map found to handle request",scx::Logger::Error);
+    log("No module map found to handle request",scx::Logger::Error);
     response.set_status(http::Status::ServiceUnavailable);
     return false;
   }
 
   // Connect the module
   if (!modmap->connect_module(endpoint)) {
-    m_module.log("Failed to connect module to handle request",scx::Logger::Error);
+    log("Failed to connect module to handle request",scx::Logger::Error);
     response.set_status(http::Status::ServiceUnavailable);
     return false;
   }
@@ -300,7 +300,7 @@ void DocRoot::set_param(const std::string& name, scx::Arg* value)
   scx::ArgList l;
   l.give(new scx::ArgString(name));
   l.give(value);
-  m_params.arg_function(scx::Auth::Trusted,"set",&l);
+  m_params.arg_method(scx::Auth::Trusted,"set",&l);
 }
 
 //=========================================================================
@@ -312,10 +312,10 @@ std::string DocRoot::name() const
 //=============================================================================
 scx::Arg* DocRoot::arg_resolve(const std::string& name)
 {
-  scx::Arg* a = SCXBASE ArgObjectInterface::arg_resolve(name);
+  scx::Arg* a = arg_lookup(name);
   if (BAD_ARG(a)) {
     delete a;
-    return m_host.arg_resolve(name);
+    a = m_host.arg_resolve(name);
   }
   return a;
 }
@@ -340,7 +340,7 @@ scx::Arg* DocRoot::arg_lookup(const std::string& name)
 }
 
 //=============================================================================
-scx::Arg* DocRoot::arg_function(
+scx::Arg* DocRoot::arg_method(
   const scx::Auth& auth,
   const std::string& name,
   scx::Arg* args
@@ -441,7 +441,7 @@ scx::Arg* DocRoot::arg_function(
     return 0;
   }
 
-  return SCXBASE ArgObjectInterface::arg_function(auth,name,args);
+  return SCXBASE ArgObjectInterface::arg_method(auth,name,args);
 }
 
 //=============================================================================
@@ -480,10 +480,10 @@ bool DocRoot::check_auth(Request& request, Response& response)
       }
     }
     if (realm->authorised(user,pass)) {
-      m_module.log("Auth passed for realm '" + realm_name + "' (" + user + ":" + pass + ")",scx::Logger::Info);
+      log("Auth passed for realm '" + realm_name + "' user='" + user + "'",scx::Logger::Info);
       request.set_auth_user(user);
     } else {
-      m_module.log("Auth failed for realm '" + realm_name + "' (" + user + ":" + pass + ")",scx::Logger::Info);
+      log("Auth failed for realm '" + realm_name + "' user='" + user + "'",scx::Logger::Info);
       response.set_header("WWW-AUTHENTICATE","Basic realm=\"" + realm_name + "\"");
       return false;
     }

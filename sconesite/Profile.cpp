@@ -39,7 +39,8 @@ Profile::Profile(
   SconesiteModule& module,
   const scx::FilePath& path
 ) : m_module(module),
-    m_path(path)
+    m_path(path),
+    m_index(0)
 {
   refresh();
 }
@@ -47,10 +48,7 @@ Profile::Profile(
 //=========================================================================
 Profile::~Profile()
 {
-  for (std::list<Article*>::iterator it_a = m_articles.begin();
-       it_a != m_articles.end(); ++it_a) {
-    delete (*it_a);
-  }
+  delete m_index;
   for (std::list<Template*>::iterator it_t = m_templates.begin();
        it_t != m_templates.end(); ++it_t) {
     delete (*it_t);
@@ -60,68 +58,43 @@ Profile::~Profile()
 //=========================================================================
 void Profile::refresh()
 {
-  // Scan articles
-  {
-    // Add new articles
-    scx::FileDir dir(m_path + ARTDIR);
-    while (dir.next()) {
-      std::string name = dir.name();
-      if (name != "." && name != "..") {
-        if (!lookup_article(name)) {
-          scx::FilePath path = dir.path();
-          Article* article = new Article(*this,name,path);
-          m_articles.push_back(article);
-          m_module.log("Adding article '" + name + "'");
+  // Add new templates
+  scx::FileDir dir(m_path + TPLDIR);
+  while (dir.next()) {
+    std::string file = dir.name();
+    if (file != "." && file != "..") {
+      std::string::size_type idot = file.find_first_of(".");
+      if (idot != std::string::npos) {
+        std::string name = file.substr(0,idot);
+        std::string extn = file.substr(idot+1,std::string::npos);
+        if (extn == "xml" && !lookup_template(name)) {
+          Template* tpl = new Template(*this,name,dir.root());
+          m_templates.push_back(tpl);
+          m_module.log("Adding template '" + name + "'");
         }
       }
     }
-    
-    // Remove deleted articles
-    for (std::list<Article*>::iterator it_a = m_articles.begin();
-         it_a != m_articles.end();
-         ++it_a) {
-      Article* article = (*it_a);
-      if (!scx::FileStat(article->get_path()).is_file()) {
-        m_module.log("Removing article '" + article->get_name() + "'");
-        it_a = m_articles.erase(it_a);
-        delete article;
-      }
+  }
+  
+  // Remove deleted templates
+  for (std::list<Template*>::iterator it_t = m_templates.begin();
+       it_t != m_templates.end();
+       ++it_t) {
+    Template* tpl = (*it_t);
+    if (!scx::FileStat(tpl->get_filepath()).is_file()) {
+      m_module.log("Removing template '" + tpl->get_name() + "'");
+      it_t = m_templates.erase(it_t);
+      delete tpl;
     }
   }
 
-  // Scan templates
-  {
-    // Add new templates
-    scx::FileDir dir(m_path + TPLDIR);
-    while (dir.next()) {
-      std::string file = dir.name();
-      if (file != "." && file != "..") {
-        std::string::size_type idot = file.find_first_of(".");
-        if (idot != std::string::npos) {
-          std::string name = file.substr(0,idot);
-          std::string extn = file.substr(idot+1,std::string::npos);
-          if (extn == "xml" && !lookup_template(name)) {
-            scx::FilePath path = dir.path();
-            Template* tpl = new Template(*this,name,path);
-            m_templates.push_back(tpl);
-            m_module.log("Adding template '" + name + "'");
-          }
-        }
-      }
-    }
-    
-    // Remove deleted templates
-    for (std::list<Template*>::iterator it_t = m_templates.begin();
-         it_t != m_templates.end();
-         ++it_t) {
-      Template* tpl = (*it_t);
-      if (!scx::FileStat(tpl->get_path()).is_file()) {
-        m_module.log("Removing template '" + tpl->get_name() + "'");
-        it_t = m_templates.erase(it_t);
-        delete tpl;
-      }
-    }
+  // Create index article if it doesn't exist
+  if (m_index == 0) {
+    m_index = new Article(*this,"",m_path + ARTDIR,0);
   }
+  
+  // Scan articles
+  m_index->refresh();  
 }
 
 //=========================================================================
@@ -137,41 +110,9 @@ scx::FilePath& Profile::get_path()
 }
 
 //=========================================================================
-Article* Profile::lookup_article(const std::string& name)
+Article* Profile::get_index()
 {
-  for (std::list<Article*>::iterator it = m_articles.begin();
-       it != m_articles.end(); ++it) {
-    Article* article = (*it);
-    if (article->get_name() == name) {
-      return article;
-    }
-  }
-  
-  return 0;
-}
-
-//=========================================================================
-const std::list<Article*>& Profile::articles() const
-{
-  return m_articles;
-}
-
-//=========================================================================
-Article* Profile::create_article(const std::string& name)
-{
-  if (lookup_article(name)) {
-    // Aricle already exists
-    return 0;
-  }
-
-  scx::FilePath path = m_path + ARTDIR + name;
-  scx::FilePath::mkdir(path,false,0777);
-  scx::FilePath::mkdir(path + "files",false,0777);
-
-  Article* article = new Article(*this,name,path);
-  m_articles.push_back(article);
-
-  return article;
+  return m_index;
 }
 
 //=========================================================================

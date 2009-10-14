@@ -104,8 +104,8 @@ protected:
       if (scx::FileStat(path + s_default_page).exists()) {
         // Redirect to default page
         if (url[url.size()-1] != '/') url += "/";
-        m_module.log("Redirect '" + url + "' to '" +
-                     url + s_default_page + "'"); 
+        msg->log("[dirindex] Redirect '" + url + "' to '" +
+                 url + s_default_page + "'"); 
         url += s_default_page;
         
         msg->get_response().set_status(http::Status::Found);
@@ -118,7 +118,8 @@ protected:
         // Redirect to directory URL ending in '/'
         scx::Uri new_uri = uri;
         new_uri.set_path(uripath + "/");
-        m_module.log("Redirect '" + uri.get_string() + "' to '" + new_uri.get_string() + "'"); 
+        msg->log("[dirindex] Redirect '" + uri.get_string() + "' to '" +
+                 new_uri.get_string() + "'"); 
         
         msg->get_response().set_status(http::Status::Found);
         msg->get_response().set_header("Content-Type","text/html");
@@ -133,7 +134,7 @@ protected:
       
       if (allow_list) {
         // Send directory listing if allowed
-        m_module.log("Listing directory '" + url + "'"); 
+        msg->log("[dirindex] Listing directory '" + url + "'"); 
         
         msg->get_response().set_status(http::Status::Ok);
         msg->get_response().set_header("Content-Type","text/html");

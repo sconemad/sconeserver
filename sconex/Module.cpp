@@ -249,14 +249,14 @@ Arg* Module::arg_lookup(const std::string& name)
 }
 
 //=============================================================================
-Arg* Module::arg_function(
+Arg* Module::arg_method(
   const Auth& auth, 
   const std::string& name,
   Arg* args
 )
 {
   ArgList* l = dynamic_cast<ArgList*>(args);
-  DEBUG_ASSERT(l,"arg_function() Invalid arg list");
+  DEBUG_ASSERT(l,"arg_method() Invalid arg list");
 
   if ("set_log" == name) {
     const ArgString* a_file = dynamic_cast<const ArgString*>(l->get(0));
@@ -403,7 +403,7 @@ Arg* Module::arg_function(
     return 0;
   }
 
-  return ArgObjectInterface::arg_function(auth,name,args);
+  return ArgObjectInterface::arg_method(auth,name,args);
 }
 
 //=============================================================================

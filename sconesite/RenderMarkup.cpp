@@ -279,12 +279,13 @@ scx::Arg* RenderMarkupContext::arg_lookup(const std::string& name)
       return new scx::ArgError("No article");
     }
   }
+  if ("root" == name) return new scx::ArgObject(m_profile.get_index());
 
   return Context::arg_lookup(name);
 }
 
 //=========================================================================
-scx::Arg* RenderMarkupContext::arg_function(const scx::Auth& auth,const std::string& name,scx::Arg* args)
+scx::Arg* RenderMarkupContext::arg_method(const scx::Auth& auth,const std::string& name,scx::Arg* args)
 {
   scx::ArgList* l = dynamic_cast<scx::ArgList*>(args);
 
@@ -337,7 +338,7 @@ scx::Arg* RenderMarkupContext::arg_function(const scx::Auth& auth,const std::str
 
     if (m_article) {
       scx::File* file = new scx::File();
-      if (scx::Ok == file->open(m_article->get_path(),scx::File::Read)) {
+      if (scx::Ok == file->open(m_article->get_filepath(),scx::File::Read)) {
         char buffer[1024];
 	int na = 0;
         while (scx::Ok == file->read(buffer,1024,na)) {
@@ -360,8 +361,8 @@ scx::Arg* RenderMarkupContext::arg_function(const scx::Auth& auth,const std::str
     scx::FilePath srcpath = f_file->get_string();
 
     if (m_article) {
-      scx::FilePath dstpath = m_article->get_path();
-      DEBUG_LOG("Update article moving '" << srcpath.path() << "' to '" << dstpath.path() << "'");
+      scx::FilePath dstpath = m_article->get_filepath();
+      log("Update article moving '" + srcpath.path() + "' to '" + dstpath.path() + "'");
       if (!scx::FilePath::move(srcpath,dstpath)) {
 	return new scx::ArgError("Could not replace article");
       }
@@ -384,52 +385,6 @@ scx::Arg* RenderMarkupContext::arg_function(const scx::Auth& auth,const std::str
     return 0;
   }
 
-  if (name == "get_articles") {
-    if (!auth.trusted()) return new scx::ArgError("Not permitted");
-
-    std::list<Article*> articles = m_profile.articles();
-
-    const scx::Arg* a_sort = l->get(0);
-    const scx::Arg* a_rev = l->get(1);
-    if (a_sort) {
-      std::string sort = a_sort->get_string();
-      bool reverse = (a_rev ? a_rev->get_int() : false);
-      articles.sort(ArticleMetaSorter(sort,reverse));
-    }
-    int count = 9999;
-    const scx::ArgInt* a_max = dynamic_cast<const scx::ArgInt*>(l->get(2));
-    if (a_max) {
-      count = a_max->get_int();
-    }
-      
-    scx::ArgList* artlist = new scx::ArgList();
-    for (std::list<Article*>::const_iterator it = articles.begin();
-	 it != articles.end();
-	 ++it) {
-      artlist->give(new scx::ArgObject(*it));
-      if (--count == 0) {
-	break;
-      }
-    }
-    return artlist;
-  }
-
-  if (name == "get_files") {
-    if (!auth.trusted()) return new scx::ArgError("Not permitted");
-
-    scx::ArgList* filelist = new scx::ArgList();
-    if (m_article) {
-      scx::FileDir files(m_article->get_root() + "files");
-      while (files.next()) {
-	std::string file = files.name();
-	if (file != "." && file != "..") {
-	  filelist->give(new scx::ArgString(file));
-	}
-      }
-    }
-    return filelist;
-  }
-
   if (name == "abort") {
     if (!auth.trusted()) return new scx::ArgError("Not permitted");
 
@@ -437,7 +392,7 @@ scx::Arg* RenderMarkupContext::arg_function(const scx::Auth& auth,const std::str
     return 0;
   }
 
-  return Context::arg_function(auth,name,args);
+  return Context::arg_method(auth,name,args);
 }
 
 
@@ -465,7 +420,7 @@ bool RenderMarkupJob::should_run()
 //=========================================================================
 bool RenderMarkupJob::run()
 {
-  DEBUG_LOG("Running " << type() << " " << describe());
+  //  DEBUG_LOG("Running " << type() << " " << describe());
 
   std::string tplname = m_context->get_request().get_param("tpl");
   if (tplname.empty()) {

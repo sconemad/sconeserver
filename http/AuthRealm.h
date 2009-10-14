@@ -36,6 +36,7 @@ class HTTP_API HTTPUser : public scx::ArgStore {
 public:
 
   HTTPUser(
+    HTTPModule& module,
     const std::string& username,
     const std::string& password,
     const scx::FilePath& path
@@ -47,9 +48,12 @@ public:
 
   virtual std::string name() const;
   virtual scx::Arg* arg_lookup(const std::string& name);
-  virtual scx::Arg* arg_function(const scx::Auth& auth,const std::string& name,scx::Arg* args);
+  virtual scx::Arg* arg_resolve(const std::string& name);
+  virtual scx::Arg* arg_method(const scx::Auth& auth,const std::string& name,scx::Arg* args);
 
 private:
+
+  HTTPModule& m_module;
 
   std::string m_username;
   std::string m_password;
@@ -75,7 +79,8 @@ public:
 
   virtual std::string name() const;
   virtual scx::Arg* arg_lookup(const std::string& name);
-  virtual scx::Arg* arg_function(const scx::Auth& auth,const std::string& name,scx::Arg* args);
+  virtual scx::Arg* arg_resolve(const std::string& name);
+  virtual scx::Arg* arg_method(const scx::Auth& auth,const std::string& name,scx::Arg* args);
   
 protected:
 
@@ -105,7 +110,8 @@ public:
   AuthRealm* lookup_realm(const std::string& name);
 
   virtual scx::Arg* arg_lookup(const std::string& name);
-  virtual scx::Arg* arg_function(const scx::Auth& auth,const std::string& name,scx::Arg* args);
+  virtual scx::Arg* arg_resolve(const std::string& name);
+  virtual scx::Arg* arg_method(const scx::Auth& auth,const std::string& name,scx::Arg* args);
   
 protected:
 

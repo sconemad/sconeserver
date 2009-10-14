@@ -47,7 +47,7 @@ $scd->close();
 
 sub test_req
 {
-  for ($i=0; $i<100; ++$i) {
+  for ($i=0; $i<1000; ++$i) {
     print (('-' x 78)."\n");
     foreach my $line (@_) {
 	print "<= $line\n";

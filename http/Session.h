@@ -45,7 +45,8 @@ public:
   int check_sessions();
 
   virtual scx::Arg* arg_lookup(const std::string& name);
-  virtual scx::Arg* arg_function(const scx::Auth& auth,const std::string& name,scx::Arg* args);
+  virtual scx::Arg* arg_resolve(const std::string& name);
+  virtual scx::Arg* arg_method(const scx::Auth& auth,const std::string& name,scx::Arg* args);
 
  private:
   
@@ -58,7 +59,7 @@ public:
 
 };
  
-const scx::Time DEFAULT_SESSION_TIMEOUT = scx::Time(10 * 60);
+const scx::Time DEFAULT_SESSION_TIMEOUT = scx::Time(60 * 60);
 
 //=============================================================================
 class HTTP_API Session : public scx::ArgStore {
@@ -80,7 +81,8 @@ public:
   
   virtual std::string name() const;
   virtual scx::Arg* arg_lookup(const std::string& name);
-  virtual scx::Arg* arg_function(const scx::Auth& auth,const std::string& name,scx::Arg* args);
+  virtual scx::Arg* arg_resolve(const std::string& name);
+  virtual scx::Arg* arg_method(const scx::Auth& auth,const std::string& name,scx::Arg* args);
   
 protected:
 

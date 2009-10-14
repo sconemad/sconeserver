@@ -175,7 +175,7 @@ scx::Arg* SSLModule::arg_lookup(const std::string& name)
 }
 
 //=============================================================================
-scx::Arg* SSLModule::arg_function(
+scx::Arg* SSLModule::arg_method(
   const scx::Auth& auth,
   const std::string& name,
   scx::Arg* args
@@ -227,5 +227,5 @@ scx::Arg* SSLModule::arg_function(
     return 0;
   }
 
-  return SCXBASE Module::arg_function(auth,name,args);
+  return SCXBASE Module::arg_method(auth,name,args);
 }

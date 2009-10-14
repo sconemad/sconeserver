@@ -30,10 +30,12 @@ namespace http {
 
 //=========================================================================
 HTTPUser::HTTPUser(
+  HTTPModule& module,
   const std::string& username,
   const std::string& password,
   const scx::FilePath& path
 ) : scx::ArgStore(path),
+    m_module(module),
     m_username(username),
     m_password(password)
 {
@@ -69,7 +71,18 @@ scx::Arg* HTTPUser::arg_lookup(
 }
 
 //=============================================================================
-scx::Arg* HTTPUser::arg_function(
+scx::Arg* HTTPUser::arg_resolve(const std::string& name)
+{
+  scx::Arg* a = arg_lookup(name);
+  if (BAD_ARG(a)) {
+    delete a;
+    a = m_module.arg_resolve(name);
+  }
+  return a;
+}
+
+//=============================================================================
+scx::Arg* HTTPUser::arg_method(
   const scx::Auth& auth,
   const std::string& name,
   scx::Arg* args
@@ -80,10 +93,10 @@ scx::Arg* HTTPUser::arg_function(
   if ("reset" == name) {
 
     // Let ArgStore do its reset stuff too
-    return SCXBASE ArgStore::arg_function(auth,name,args);
+    return SCXBASE ArgStore::arg_method(auth,name,args);
   }
 
-  return SCXBASE ArgStore::arg_function(auth,name,args);
+  return SCXBASE ArgStore::arg_method(auth,name,args);
 }
 
 
@@ -151,7 +164,18 @@ scx::Arg* AuthRealm::arg_lookup(const std::string& name)
 }
 
 //=============================================================================
-scx::Arg* AuthRealm::arg_function(
+scx::Arg* AuthRealm::arg_resolve(const std::string& name)
+{
+  scx::Arg* a = arg_lookup(name);
+  if (BAD_ARG(a)) {
+    delete a;
+    a = m_module.arg_resolve(name);
+  }
+  return a;
+}
+
+//=============================================================================
+scx::Arg* AuthRealm::arg_method(
   const scx::Auth& auth,
   const std::string& name,
   scx::Arg* args
@@ -191,7 +215,7 @@ scx::Arg* AuthRealm::arg_function(
     return new scx::ArgObject(user);
   }
 
-  return SCXBASE ArgObjectInterface::arg_function(auth,name,args);
+  return SCXBASE ArgObjectInterface::arg_method(auth,name,args);
 }
 
 //=========================================================================
@@ -218,7 +242,7 @@ void AuthRealm::refresh()
 	  password = line.substr(i);
 	  if (!username.empty() && !password.empty()) {
 	    scx::FilePath path(m_path + username);
-	    m_users[username] = new HTTPUser(username,password,path);
+	    m_users[username] = new HTTPUser(m_module,username,password,path);
 	  }
 	}
 	file.close();
@@ -288,7 +312,18 @@ scx::Arg* AuthRealmManager::arg_lookup(const std::string& name)
 }
 
 //=============================================================================
-scx::Arg* AuthRealmManager::arg_function(
+scx::Arg* AuthRealmManager::arg_resolve(const std::string& name)
+{
+  scx::Arg* a = arg_lookup(name);
+  if (BAD_ARG(a)) {
+    delete a;
+    a = m_module.arg_resolve(name);
+  }
+  return a;
+}
+
+//=============================================================================
+scx::Arg* AuthRealmManager::arg_method(
   const scx::Auth& auth,
   const std::string& name,
   scx::Arg* args
@@ -344,7 +379,7 @@ scx::Arg* AuthRealmManager::arg_function(
     return 0;
   }
 
-  return SCXBASE ArgObjectInterface::arg_function(auth,name,args);
+  return SCXBASE ArgObjectInterface::arg_method(auth,name,args);
 }
 
 };

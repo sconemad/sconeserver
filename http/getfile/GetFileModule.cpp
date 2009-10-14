@@ -72,7 +72,7 @@ protected:
       scx::FilePath path = req.get_path();
       scx::File* file = new scx::File();
       if (file->open(path,scx::File::Read) != scx::Ok) {
-        m_module.log("Cannot open file '" + path.path() + "'"); 
+        msg->log("[getfile] Cannot open file '" + path.path() + "'"); 
         resp.set_status(http::Status::Forbidden);
         delete file;
 	return scx::Close;
@@ -86,7 +86,7 @@ protected:
       if (!mod.empty()) {
 	scx::Date dmod = scx::Date(mod);
 	if (lastmod <= dmod) {
-	  m_module.log("File is not modified"); 
+	  msg->log("[getfile] File is not modified"); 
 	  resp.set_status(http::Status::NotModified);
 	  delete file;
 	  return scx::Close;
@@ -106,7 +106,7 @@ protected:
       if (mime.valid()) {
         scx::ArgList args;
         args.give( new scx::ArgString(path.path()) );
-        scx::Arg* ret = mime.module()->arg_function(scx::Auth::Untrusted,"lookup",&args);
+        scx::Arg* ret = mime.module()->arg_method(scx::Auth::Untrusted,"lookup",&args);
         scx::MimeType* mimetype = 0;
         if (ret && (mimetype = dynamic_cast<scx::MimeType*>(ret))) {
           resp.set_header("Content-Type",mimetype->get_string());
@@ -116,12 +116,12 @@ protected:
 
       if (req.get_method() == "HEAD") {
 	// Don't actually send the file, just the headers
-        m_module.log("Sending headers for '" + path.path() + "'"); 
+        msg->log("[getfile] Sending headers for '" + path.path() + "'"); 
 	delete file;
 	return scx::Close;
       }
 
-      m_module.log("Sending '" + path.path() + "'"); 
+      msg->log("[getfile] Sending '" + path.path() + "'"); 
 
       const int MAX_BUFFER_SIZE = 65536;
             

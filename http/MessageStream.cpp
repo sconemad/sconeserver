@@ -160,15 +160,15 @@ scx::Condition MessageStream::read(void* buffer,int n,int& na)
   }
 
   if ((n + m_bytes_read) > m_bytes_readable) {
-    STREAM_DEBUG_LOG("Trying to read more than Content-Length, truncating");
-    DEBUG_LOG("n=" << n <<
-              ", read=" << m_bytes_read <<
-              ", readable=" << m_bytes_readable);
+    //    STREAM_DEBUG_LOG("Trying to read more than Content-Length, truncating");
+    //    STREAM_DEBUG_LOG("n=" << n <<
+    //                     ", read=" << m_bytes_read <<
+    //                     ", readable=" << m_bytes_readable);
     n = m_bytes_readable - m_bytes_read;
   }
 
   scx::Condition c = Stream::read(buffer,n,na);
-  STREAM_DEBUG_LOG("MessageStream::read(" << n << ") returned " << c << " na=" << na);
+  //  STREAM_DEBUG_LOG("MessageStream::read(" << n << ") returned " << c << " na=" << na);
 
   // Update counter
   m_bytes_read += na;
@@ -244,6 +244,12 @@ HTTPModule& MessageStream::get_module()
 }
 
 //=============================================================================
+void MessageStream::log(const std::string& message,scx::Logger::Level level)
+{
+  m_module.log(m_request->get_id() + " " + message,level);
+}
+
+//=============================================================================
 const Request& MessageStream::get_request() const
 {
   return *m_request;
@@ -260,28 +266,22 @@ bool MessageStream::connect_request_module(bool error)
 {
   const scx::Uri& uri = m_request->get_uri();
   
-  // Log request
-  std::ostringstream oss;
-  oss << m_httpstream.get_num_connection() << "-"
-      << m_httpstream.get_num_request();
-  const std::string& id = oss.str();
-  
+  // Log request  
   const scx::StreamSocket* sock =
     dynamic_cast<const scx::StreamSocket*>(&endpoint());
   const scx::SocketAddress* addr = sock->get_remote_addr();
 
   if (!error) {
-    m_module.log(id + " " + addr->get_string() + " " +
-                 m_request->get_method() + " " + uri.get_string());
-    
+    log(addr->get_string() + " " + m_request->get_method() + " " + uri.get_string());
+
     const std::string& referer = m_request->get_header("Referer");
     if (!referer.empty()) {
-      m_module.log(id + " Referer: " + referer);
+      log("Referer: " + referer);
     }
     
     const std::string& useragent = m_request->get_header("User-Agent");
     if (!useragent.empty()) {
-      m_module.log(id + " User-Agent: " + useragent);
+      log("User-Agent: " + useragent);
     }
   }
 

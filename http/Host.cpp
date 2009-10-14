@@ -72,9 +72,9 @@ bool Host::connect_request(scx::Descriptor* endpoint, Request& request, Response
   DocRoot* docroot = get_docroot(profile);
   if (docroot == 0) {
     // Unknown profile
-    m_module.log("Unknown profile '" + profile +
-                 "' for host '" + m_hostname + "'",
-                 scx::Logger::Error);
+    log("Unknown profile '" + profile +
+        "' for host '" + m_hostname + "'",
+        scx::Logger::Error);
     response.set_status(http::Status::NotFound);
     return false;
   }
@@ -161,16 +161,16 @@ scx::Arg* Host::arg_lookup(
 //=============================================================================
 scx::Arg* Host::arg_resolve(const std::string& name)
 {
-  scx::Arg* a = SCXBASE ArgObjectInterface::arg_resolve(name);
+  scx::Arg* a = arg_lookup(name);
   if (BAD_ARG(a)) {
     delete a;
-    return m_mapper.arg_resolve(name);
+    a = m_mapper.arg_resolve(name);
   }
   return a;
 }
 
 //=============================================================================
-scx::Arg* Host::arg_function(
+scx::Arg* Host::arg_method(
   const scx::Auth& auth,
   const std::string& name,
   scx::Arg* args
@@ -225,7 +225,7 @@ scx::Arg* Host::arg_function(
     return 0;
   }
     
-  return ArgObjectInterface::arg_function(auth,name,args);
+  return ArgObjectInterface::arg_method(auth,name,args);
 }
 
 };

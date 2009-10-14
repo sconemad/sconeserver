@@ -604,9 +604,21 @@ Descriptor* DescriptorJob::get_descriptor()
 }
 
 //=============================================================================
+int DescriptorJob::get_event_mask()
+{
+  int mask = 0;
+  if (get_state() == Wait) {
+    mask = m_descriptor->get_event_mask();
+  }
+  return mask;
+}
+
+//=============================================================================
 void DescriptorJob::set_events(int events)
 {
-  m_events = events;
+  if (get_state() == Wait) {
+    m_events = events;
+  }
 }
 
 };

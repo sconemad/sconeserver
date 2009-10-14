@@ -90,7 +90,7 @@ scx::Arg* StatChannel::arg_lookup(
 }
 
 //=============================================================================
-scx::Arg* StatChannel::arg_function(
+scx::Arg* StatChannel::arg_method(
   const scx::Auth& auth,
   const std::string& name,
   scx::Arg* args
@@ -102,5 +102,5 @@ scx::Arg* StatChannel::arg_function(
     reset();
   }
   
-  return SCXBASE ArgObjectInterface::arg_function(auth,name,args);
+  return SCXBASE ArgObjectInterface::arg_method(auth,name,args);
 }

@@ -135,7 +135,7 @@ scx::Arg* SconesiteModule::arg_lookup(const std::string& name)
 }
 
 //=============================================================================
-scx::Arg* SconesiteModule::arg_function(
+scx::Arg* SconesiteModule::arg_method(
   const scx::Auth& auth,
   const std::string& name,
   scx::Arg* args
@@ -170,5 +170,5 @@ scx::Arg* SconesiteModule::arg_function(
     return 0;
   }
   
-  return SCXBASE Module::arg_function(auth,name,args);
+  return SCXBASE Module::arg_method(auth,name,args);
 }

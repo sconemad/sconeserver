@@ -56,25 +56,37 @@ public:
 
   Article(Profile& profile,
           const std::string& name,
-          const scx::FilePath& root);
+          const scx::FilePath& path,
+          Article* parent);
   
   ~Article();
 
-  const scx::FilePath& get_root() const;
   const scx::Arg* get_meta(const std::string& name) const;
+
+  std::string get_href_path() const;
+  
+  // Sub-articles
+  void refresh();
+  Article* lookup_article(const std::string& name);
+  Article* find_article(const std::string& name,std::string& extra_path);
+  //  const std::list<Article*>& articles() const;
+  Article* create_article(const std::string& name);
+  bool remove_article(const std::string& name);
   
   // ArgObject interface
   virtual scx::Arg* arg_resolve(const std::string& name);
   virtual scx::Arg* arg_lookup(const std::string& name);
-  virtual scx::Arg* arg_function(const scx::Auth& auth,const std::string& name,scx::Arg* args);
+  virtual scx::Arg* arg_method(const scx::Auth& auth,const std::string& name,scx::Arg* args);
 
 protected:
 
   Profile& m_profile;
-  scx::FilePath m_root;
 
   scx::ArgStore m_metastore;
 
+  Article* m_parent;
+  std::list<Article*> m_articles;
+  
 };
 
 #endif

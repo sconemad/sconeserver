@@ -312,6 +312,62 @@ short Uri::default_port(const std::string& scheme)
 }
 
 //=============================================================================
+std::string Uri::encode(const std::string& str)
+{
+  std::string ret = str;
+  //TODO: Write this
+  return ret;
+}
+
+//=============================================================================
+std::string Uri::decode(const std::string& str)
+{
+  std::string ret;
+  std::string::size_type start = 0;
+  std::string::size_type end;
+
+  while (true) {
+    end = str.find_first_of("%+",start);
+    if (end == std::string::npos) {
+      ret += str.substr(start);
+      break;
+
+    } else {
+      ret += str.substr(start,end-start);
+    }
+
+    if (str[end] == '+') {
+      ret += " ";
+      start = end + 1;
+
+    } else if (str[end] == '%') {
+      if (end+2 >= str.length()) {
+	break;
+      }
+      start = end + 3;
+      char c = 0;
+      
+      char a = str[end+1];
+      if (a >= '0' && a <= '9') c += (a - '0');
+      else if (a >= 'A' && a <= 'F') c += (10 + a - 'A');
+      else if (a >= 'a' && a <= 'f') c += (10 + a - 'a');
+      else continue;
+      c = (c << 4);
+      
+      a = str[end+2];
+      if (a >= '0' && a <= '9') c += (a - '0');
+      else if (a >= 'A' && a <= 'F') c += (10 + a - 'A');
+      else if (a >= 'a' && a <= 'f') c += (10 + a - 'a');
+      else continue;
+      
+      char cs[2] = {c,'\0'};
+      ret += cs;
+    }
+  }
+  return ret;
+}
+
+//=============================================================================
 void Uri::from_string(const std::string& str)
 {
   std::string::size_type start = 0;

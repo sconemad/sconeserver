@@ -192,6 +192,7 @@ public:
   virtual std::string describe() const;
 
   Descriptor* get_descriptor();
+  int get_event_mask();
   void set_events(int events);
   
 private:

@@ -31,12 +31,9 @@ namespace scx {
 Multiplexer::Multiplexer()
   : m_num_threads(0),
     m_main_thread(pthread_self()),
-    m_loop_time(0),
+    m_loops(0),
     m_jobs_run(0),
     m_job_waits(0),
-    m_start(0),
-    m_loops(0),
-    m_jobs_run_acc(0),
     m_job_waits_acc(0)
 {
 
@@ -149,7 +146,7 @@ int Multiplexer::spin()
       DescriptorJob* djob = dynamic_cast<DescriptorJob*>(job);
       if (djob) {
 	Descriptor* d = djob->get_descriptor();
-	int mask = d->get_event_mask();
+	int mask = djob->get_event_mask();
 	int fd = d->fd();
 	if (fd >= 0) {
           ++num_added;
@@ -205,6 +202,11 @@ int Multiplexer::spin()
     }
 
   } else {
+
+    timeval tv;
+    gettimeofday(&tv,0);
+    long ts = (tv.tv_sec*1000000) + tv.tv_usec;
+    
     // Select succeeded, decode events and allocate jobs
     for (it = m_jobs.begin(); it != m_jobs.end(); ++it) {
       Job* job = *it;
@@ -225,9 +227,29 @@ int Multiplexer::spin()
 	if (job->should_run()) {
 	  // Run the job
 	  allocate_job(job);
+          ++m_jobs_run;
 	}
       }
     }
+
+    gettimeofday(&tv,0);
+    long te = (tv.tv_sec*1000000) + tv.tv_usec;
+
+    m_job_waits_acc += (te-ts);
+    
+    if (++m_loops == 1000) {
+      m_job_waits = m_job_waits_acc / m_jobs_run;
+      m_job_waits_acc = 0;
+      m_jobs_run = 0;
+      m_loops = 0;
+      /*
+      std::cerr << "\n";
+      for (int i=0; i<m_job_waits; ++i) {
+        std::cerr << "#";
+      }
+      */
+    }
+    
   }
 
   // Purge jobs
@@ -240,25 +262,6 @@ int Multiplexer::spin()
     } else {
       it++;
     }
-  }
-
-  // Calculate stats
-  ++m_loops;
-  timeval tv;
-  gettimeofday(&tv,0);
-  long t = (tv.tv_sec*1000000) + tv.tv_usec;
-  if (m_start == 0) {
-    m_start = t;
-  } else if (m_loops == 1000) {
-    m_loop_time = (t - m_start) / 1000.0;
-    m_jobs_run = m_jobs_run_acc / (m_loop_time/1000.0);
-    m_job_waits = m_job_waits_acc / (m_loop_time/1000.0);
-
-    // Reset counters
-    m_loops = 0;
-    m_start = t;
-    m_jobs_run_acc = 0;
-    m_job_waits_acc = 0;
   }
 
   m_end_condition.signal();
@@ -313,9 +316,7 @@ std::string Multiplexer::describe() const
   }
   oss << "\n";
   
-  oss << " l-time: " << m_loop_time << "us,"
-      << " r-rate: " << m_jobs_run << "/s,"
-      << " d-rate: " << m_job_waits << "/s";
+  oss << " mean wait time: " << m_job_waits << "us";
 
   oss << "\n\n";
   
@@ -379,7 +380,6 @@ bool Multiplexer::allocate_job(Job* job)
     // Multithreaded mode - wait for a thread to become available and 
     // allocate the job to it
     while (m_threads_pool.empty()) {
-      ++m_job_waits_acc;
       m_job_condition.wait(m_job_mutex);
     }
     
@@ -391,8 +391,6 @@ bool Multiplexer::allocate_job(Job* job)
     thread->allocate_job(job);
   }
 
-  ++m_jobs_run_acc;
-  
   m_job_mutex.unlock();
   return true;
 }

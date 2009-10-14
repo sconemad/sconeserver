@@ -1,4 +1,17 @@
 
+2009-10-14 Andrew Wedgbury <wedge@sconemad.com>
+
+	* all: Global update: s/arg_function/arg_method/.
+	* all: Improve ArgObject logging.
+	* sconex/Descriptor: Don't build event mask for 
+	running descriptors (fixes an intermittent segfault).
+	* sconex/Multiplexer: Calculate mean job wait time.
+	* sconex/Uri: Move url decode routine to here.
+	* http/DocRoot: Decode url paths.
+	* http/ResponseStream: Move url decode from here.
+	* sconesite: Move article list to Article, enabling
+	articles to be linked in trees.
+
 2009-10-12 Andrew Wedgbury <wedge@sconemad.com>
 
 	* sconex/ArgStatement: Break out of loops on error.

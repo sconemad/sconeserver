@@ -991,7 +991,7 @@ Arg* ArgSub::call(const Auth& auth, Arg* args)
     ArgList vargs;
     vargs.give(new ArgString("ARGV"));
     vargs.give(args->new_copy());
-    m_body->arg_function(auth,"var",&vargs);
+    m_body->arg_method(auth,"var",&vargs);
     
     return m_body->execute(*m_proc);
   }

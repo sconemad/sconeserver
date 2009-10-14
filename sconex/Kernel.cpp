@@ -181,7 +181,7 @@ Arg* Kernel::arg_lookup(const std::string& name)
 }
 
 //=============================================================================
-Arg* Kernel::arg_function(
+Arg* Kernel::arg_method(
   const Auth& auth, 
   const std::string& name,
   Arg* args
@@ -273,7 +273,7 @@ Arg* Kernel::arg_function(
     return new MimeType(args);
   }
 
-  return Module::arg_function(auth,name,args);
+  return Module::arg_method(auth,name,args);
 }
 
 //=============================================================================

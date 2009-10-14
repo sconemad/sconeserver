@@ -53,14 +53,16 @@ public:
   // Return the type of job specified on construction
 
   JobID get_id() const;
- 
+
+  enum JobState { Wait, Run, Cycle, Purge };
+  JobState get_state() const;
+  
 private:
   std::string m_type;
 
   friend class Multiplexer;
   friend class JobThread;
 
-  enum JobState { Wait, Run, Cycle, Purge };
   JobState m_job_state;
 
   JobID m_jobid;

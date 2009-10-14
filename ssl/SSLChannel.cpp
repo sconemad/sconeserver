@@ -69,7 +69,7 @@ scx::Arg* SSLChannel::arg_lookup(
 }
 
 //=============================================================================
-scx::Arg* SSLChannel::arg_function(
+scx::Arg* SSLChannel::arg_method(
   const scx::Auth& auth,
   const std::string& name,
   scx::Arg* args
@@ -118,5 +118,5 @@ scx::Arg* SSLChannel::arg_function(
     return 0;
   }
   
-  return SCXBASE ArgObjectInterface::arg_function(auth,name,args);
+  return SCXBASE ArgObjectInterface::arg_method(auth,name,args);
 }

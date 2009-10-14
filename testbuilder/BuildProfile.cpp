@@ -79,7 +79,7 @@ scx::Arg* BuildProfile::arg_lookup(
 }
 
 //=============================================================================
-scx::Arg* BuildProfile::arg_function(
+scx::Arg* BuildProfile::arg_method(
   const scx::Auth& auth,
   const std::string& name,
   scx::Arg* args
@@ -109,7 +109,7 @@ scx::Arg* BuildProfile::arg_function(
     }
   }
   
-  return SCXBASE ArgObjectInterface::arg_function(auth,name,args);
+  return SCXBASE ArgObjectInterface::arg_method(auth,name,args);
 }
 
 //=============================================================================
