@@ -230,10 +230,10 @@ void RenderMarkupContext::handle_error(const std::string& msg)
 //=========================================================================
 scx::Arg* RenderMarkupContext::arg_resolve(const std::string& name)
 {
-  scx::Arg* a = Context::arg_resolve(name);
+  scx::Arg* a = arg_lookup(name);
   if (BAD_ARG(a)) {
     delete a;
-    return m_profile.get_module().arg_resolve(name);
+    a = m_profile.get_module().arg_resolve(name);
   }
   return a;
 }
@@ -249,7 +249,6 @@ scx::Arg* RenderMarkupContext::arg_lookup(const std::string& name)
       "get_articles" == name ||
       "process_article" == name ||
       "edit_article" == name ||
-      "update_article" == name ||
       "template" == name ||
       "get_files" == name ||
       "abort" == name) {
@@ -346,26 +345,6 @@ scx::Arg* RenderMarkupContext::arg_method(const scx::Auth& auth,const std::strin
         }
       }
       delete file;
-    }
-    return 0;
-  }
-
-  if (name == "update_article") {
-    if (!auth.trusted()) return new scx::ArgError("Not permitted");
-
-    scx::Arg* a_file = l->get(0);
-    ArgFile* f_file = dynamic_cast<ArgFile*>(a_file);
-    if (!f_file) {
-      return new scx::ArgError("No file specified");
-    }
-    scx::FilePath srcpath = f_file->get_string();
-
-    if (m_article) {
-      scx::FilePath dstpath = m_article->get_filepath();
-      log("Update article moving '" + srcpath.path() + "' to '" + dstpath.path() + "'");
-      if (!scx::FilePath::move(srcpath,dstpath)) {
-	return new scx::ArgError("Could not replace article");
-      }
     }
     return 0;
   }

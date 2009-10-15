@@ -34,7 +34,7 @@ class ArgFile : public scx::Arg {
 
 public:
 
-  ArgFile(const scx::FilePath& path);
+  ArgFile(const scx::FilePath& path, const std::string& filename);
   ArgFile(const ArgFile& c);
   virtual ~ArgFile();
   virtual scx::Arg* new_copy() const;
@@ -44,9 +44,13 @@ public:
 
   virtual scx::Arg* op(const scx::Auth& auth,scx::Arg::OpType optype, const std::string& opname, scx::Arg* right);
 
+  const scx::FilePath& get_path() const;
+  const std::string& get_filename() const;
+  
 protected:
 
   scx::FilePath m_path;
+  std::string m_filename;
 
 };
 

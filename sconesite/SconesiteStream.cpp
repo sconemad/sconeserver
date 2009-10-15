@@ -43,15 +43,17 @@ Free Software Foundation, Inc.,
 
 
 //=========================================================================
-ArgFile::ArgFile(const scx::FilePath& path)
-  : m_path(path)
+ArgFile::ArgFile(const scx::FilePath& path, const std::string& filename)
+  : m_path(path),
+    m_filename(filename)
 {
 
 }
 
 //=========================================================================
 ArgFile::ArgFile(const ArgFile& c)
-  : m_path(c.m_path)
+  : m_path(c.m_path),
+    m_filename(c.m_filename)
 {
 
 }
@@ -71,13 +73,13 @@ scx::Arg* ArgFile::new_copy() const
 //=========================================================================
 std::string ArgFile::get_string() const
 {
-  return m_path.path();
+  return m_filename;
 }
 
 //=========================================================================
 int ArgFile::get_int() const
 {
-  return !m_path.path().empty();
+  return !m_filename.empty();
 }
 
 //=========================================================================
@@ -86,8 +88,21 @@ scx::Arg* ArgFile::op(const scx::Auth& auth,scx::Arg::OpType optype, const std::
   if (scx::Arg::Binary == optype && "." == opname) {
     std::string name = right->get_string();
     if (name == "exists") return new scx::ArgInt(77);
+    if (name == "filename") return new scx::ArgString(m_filename);
   }
   return SCXBASE Arg::op(auth,optype,opname,right);
+}
+
+//=========================================================================
+const scx::FilePath& ArgFile::get_path() const
+{
+  return m_path;
+}
+
+//=========================================================================
+const std::string& ArgFile::get_filename() const
+{
+  return m_filename;
 }
 
 
@@ -269,9 +284,12 @@ scx::Condition SconesiteStream::start_section(const scx::MimeHeaderTable& header
     if (!fdata) {
       return scx::Close;
     }
-    
+        
     fdata->get_parameter("name",name);
     //    STREAM_DEBUG_LOG("Section name is '" << name << "'");
+
+    std::string fname;
+    fdata->get_parameter("filename",fname);
     
     const std::string file_pattern = "file_";
     std::string::size_type ip = name.find(file_pattern);
@@ -280,25 +298,8 @@ scx::Condition SconesiteStream::start_section(const scx::MimeHeaderTable& header
       scx::FilePath path = "/tmp";
       std::string filename = "sconesite-" + s->get_id() + "-" + name;
       path += filename;
-
-      /*
-      scx::FilePath path = m_article->get_root();
-      std::string fpname = name.substr(file_pattern.length());
-      if (fpname == "article") {
-	path += "article.xml";
-	
-      } else {
-	// File upload
-	std::string filename;
-	fdata->get_parameter("filename",filename);
-	if (filename != "") {
-	  path += "files";
-	  path += filename;
-	}
-      }
-      */
       //      STREAM_DEBUG_LOG("Streaming section to file '" << path.path() << "'");
-      ucreq.set_param(name,new ArgFile(path));
+      ucreq.set_param(name,new ArgFile(path,fname));
       
       scx::File* file = new scx::File();
       if (file->open(path.path(),scx::File::Write | scx::File::Create | scx::File::Truncate) == scx::Ok) {

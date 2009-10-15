@@ -1,4 +1,13 @@
 
+2009-10-15 Andrew Wedgbury <wedge@sconemad.com>
+
+	* sconssite/Artice: Move update and file upload
+	processing to here.
+	* sconesite/SconesiteStream: Add filename property
+	to uploaded file object.
+	* sconesite/RenderMarkup: Resolve via sconesite
+	module to allow sub-modules to be picked up.
+
 2009-10-14 Andrew Wedgbury <wedge@sconemad.com>
 
 	* all: Global update: s/arg_function/arg_method/.
