@@ -86,12 +86,15 @@ if test "x$SSL" == "xyes"; then
   AC_CHECK_HEADER([openssl/ssl.h],,
     [AC_MSG_ERROR([header file <openssl/ssl.h> is required for OpenSSL, use --with-openssl-path=PATH])]
   )
-  AC_CHECK_LIB([crypto],[CRYPTO_new_ex_data],,
+  AC_CHECK_LIB([crypto],[CRYPTO_new_ex_data],
+    [SSL_LIBADD="$SSL_LIBADD -lcrypto"],
     [AC_MSG_ERROR([library 'crypto' is required for OpenSSL])]
   )
-  AC_CHECK_LIB([ssl],[SSL_library_init],,
+  AC_CHECK_LIB([ssl],[SSL_library_init],
+    [SSL_LIBADD="$SSL_LIBADD -lssl"],
     [AC_MSG_ERROR([library 'ssl' is required for OpenSSL])]
   )
+  AC_SUBST(SSL_LIBADD)
 fi
 
 # Example modules
@@ -129,6 +132,23 @@ if test "x$SCONESITE" == "xyes"; then
     [AC_MSG_ERROR([library 'xml2' is required for Sconesite])]
   )
 fi
+
+# Sconesite:image module
+AC_ARG_WITH([sconesite-image],
+  [AC_HELP_STRING([--with-sconesite-image],[Enable Sconesite:image module])],
+  [SCONESITE_IMAGE="$withval"],
+  [SCONESITE_IMAGE="yes"]
+)
+# Need ImageMagick for Sconesite:image
+if test "x$SCONESITE_IMAGE" == "xyes"; then
+  AC_CHECK_LIB([Magick++],[InitializeMagick],
+    [CPPFLAGS="$CPPFLAGS `Magick++-config --cppflags`"
+     SCONESITE_IMAGE_LIBADD=`Magick++-config --libs`
+     AC_SUBST(SCONESITE_IMAGE_LIBADD)],
+    [AC_MSG_ERROR([library 'Magick++' is required for Sconesite:image])]
+  )
+fi
+
 
 # Checks for header files.
 AC_LANG_CPLUSPLUS
@@ -204,6 +224,7 @@ AM_CONDITIONAL(BUILD_EXAMPLES, test x$EXAMPLES = xyes)
 AM_CONDITIONAL(BUILD_TESTBUILDER, test x$TESTBUILDER = xyes)
 AM_CONDITIONAL(BUILD_LETTUCE, test x$LETTUCE = xyes)
 AM_CONDITIONAL(BUILD_SCONESITE, test x$SCONESITE = xyes)
+AM_CONDITIONAL(BUILD_SCONESITE_IMAGE, test x$SCONESITE_IMAGE = xyes)
 
 CPPFLAGS="$CPPFLAGS -Wall"
 
@@ -234,6 +255,7 @@ AC_CONFIG_FILES([test/Makefile])
 AC_CONFIG_FILES([testbuilder/Makefile])
 AC_CONFIG_FILES([lettuce/Makefile])
 AC_CONFIG_FILES([sconesite/Makefile])
+AC_CONFIG_FILES([sconesite/image/Makefile])
 
 AC_OUTPUT
 
@@ -258,6 +280,8 @@ The following modules will be built:
     + getfile      yes
     + dirindex     yes
     + errorpage    yes
+    + sconesite    $SCONESITE
+      + image      $SCONESITE_IMAGE
   + ssl            $SSL
   + exec           yes   
   + forward        yes   
@@ -266,5 +290,4 @@ The following modules will be built:
   + examples       $EXAMPLES
   + testbuilder    $TESTBUILDER
   + lettuce        $LETTUCE
-  + sconesite      $SCONESITE
 ])

@@ -15,8 +15,7 @@
 @SET_MAKE@
 
 # SconeServer (http://www.sconemad.com)
-# automake file for router ip module
-
+# automake file for sconesite image module
 
 VPATH = @srcdir@
 pkgdatadir = $(datadir)/@PACKAGE@
@@ -37,9 +36,8 @@ POST_UNINSTALL = :
 build_triplet = @build@
 host_triplet = @host@
 target_triplet = @target@
-subdir = router/ip
-DIST_COMMON = $(noinst_HEADERS) $(srcdir)/Makefile.am \
-	$(srcdir)/Makefile.in
+subdir = sconesite/image
+DIST_COMMON = $(srcdir)/Makefile.am $(srcdir)/Makefile.in
 ACLOCAL_M4 = $(top_srcdir)/aclocal.m4
 am__aclocal_m4_deps = $(top_srcdir)/configure.in
 am__configure_deps = $(am__aclocal_m4_deps) $(CONFIGURE_DEPENDENCIES) \
@@ -56,13 +54,14 @@ am__strip_dir = `echo $$p | sed -e 's|^.*/||'`;
 am__installdirs = "$(DESTDIR)$(pkglibdir)"
 pkglibLTLIBRARIES_INSTALL = $(INSTALL)
 LTLIBRARIES = $(pkglib_LTLIBRARIES)
-ip_la_LIBADD =
-am_ip_la_OBJECTS = IPModule.lo IPSocketAddress.lo
-ip_la_OBJECTS = $(am_ip_la_OBJECTS)
-ip_la_LINK = $(LIBTOOL) --tag=CXX $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) \
-	--mode=link $(CXXLD) $(AM_CXXFLAGS) $(CXXFLAGS) \
-	$(ip_la_LDFLAGS) $(LDFLAGS) -o $@
-@BUILD_ROUTER_IP_TRUE@am_ip_la_rpath = -rpath $(pkglibdir)
+am__DEPENDENCIES_1 =
+image_la_DEPENDENCIES = $(am__DEPENDENCIES_1)
+am_image_la_OBJECTS = ImageModule.lo
+image_la_OBJECTS = $(am_image_la_OBJECTS)
+image_la_LINK = $(LIBTOOL) --tag=CXX $(AM_LIBTOOLFLAGS) \
+	$(LIBTOOLFLAGS) --mode=link $(CXXLD) $(AM_CXXFLAGS) \
+	$(CXXFLAGS) $(image_la_LDFLAGS) $(LDFLAGS) -o $@
+@BUILD_SCONESITE_IMAGE_TRUE@am_image_la_rpath = -rpath $(pkglibdir)
 DEFAULT_INCLUDES = -I.@am__isrc@ -I$(top_builddir)
 depcomp = $(SHELL) $(top_srcdir)/depcomp
 am__depfiles_maybe = depfiles
@@ -75,9 +74,8 @@ CXXLD = $(CXX)
 CXXLINK = $(LIBTOOL) --tag=CXX $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) \
 	--mode=link $(CXXLD) $(AM_CXXFLAGS) $(CXXFLAGS) $(AM_LDFLAGS) \
 	$(LDFLAGS) -o $@
-SOURCES = $(ip_la_SOURCES)
-DIST_SOURCES = $(ip_la_SOURCES)
-HEADERS = $(noinst_HEADERS)
+SOURCES = $(image_la_SOURCES)
+DIST_SOURCES = $(image_la_SOURCES)
 ETAGS = etags
 CTAGS = ctags
 DISTFILES = $(DIST_COMMON) $(DIST_SOURCES) $(TEXINFOS) $(EXTRA_DIST)
@@ -197,15 +195,12 @@ target_vendor = @target_vendor@
 top_builddir = @top_builddir@
 top_srcdir = @top_srcdir@
 AM_CPPFLAGS = -I$(top_srcdir)
-@BUILD_ROUTER_IP_TRUE@pkglib_LTLIBRARIES = ip.la
-ip_la_SOURCES = \
-IPModule.cpp \
-IPSocketAddress.cpp
+@BUILD_SCONESITE_IMAGE_TRUE@pkglib_LTLIBRARIES = image.la
+image_la_SOURCES = \
+ImageModule.cpp 
 
-noinst_HEADERS = \
-IPSocketAddress.h
-
-ip_la_LDFLAGS = -module -avoid-version
+image_la_LDFLAGS = -module -avoid-version
+image_la_LIBADD = $(SCONESITE_IMAGE_LIBADD)
 all: all-am
 
 .SUFFIXES:
@@ -219,9 +214,9 @@ $(srcdir)/Makefile.in: @MAINTAINER_MODE_TRUE@ $(srcdir)/Makefile.am  $(am__confi
 	      exit 1;; \
 	  esac; \
 	done; \
-	echo ' cd $(top_srcdir) && $(AUTOMAKE) --gnits  router/ip/Makefile'; \
+	echo ' cd $(top_srcdir) && $(AUTOMAKE) --gnits  sconesite/image/Makefile'; \
 	cd $(top_srcdir) && \
-	  $(AUTOMAKE) --gnits  router/ip/Makefile
+	  $(AUTOMAKE) --gnits  sconesite/image/Makefile
 .PRECIOUS: Makefile
 Makefile: $(srcdir)/Makefile.in $(top_builddir)/config.status
 	@case '$?' in \
@@ -266,8 +261,8 @@ clean-pkglibLTLIBRARIES:
 	  echo "rm -f \"$${dir}/so_locations\""; \
 	  rm -f "$${dir}/so_locations"; \
 	done
-ip.la: $(ip_la_OBJECTS) $(ip_la_DEPENDENCIES) 
-	$(ip_la_LINK) $(am_ip_la_rpath) $(ip_la_OBJECTS) $(ip_la_LIBADD) $(LIBS)
+image.la: $(image_la_OBJECTS) $(image_la_DEPENDENCIES) 
+	$(image_la_LINK) $(am_image_la_rpath) $(image_la_OBJECTS) $(image_la_LIBADD) $(LIBS)
 
 mostlyclean-compile:
 	-rm -f *.$(OBJEXT)
@@ -275,8 +270,7 @@ mostlyclean-compile:
 distclean-compile:
 	-rm -f *.tab.c
 
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/IPModule.Plo@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/IPSocketAddress.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/ImageModule.Plo@am__quote@
 
 .cpp.o:
 @am__fastdepCXX_TRUE@	$(CXXCOMPILE) -MT $@ -MD -MP -MF $(DEPDIR)/$*.Tpo -c -o $@ $<
@@ -380,7 +374,7 @@ distdir: $(DISTFILES)
 	done
 check-am: all-am
 check: check-am
-all-am: Makefile $(LTLIBRARIES) $(HEADERS)
+all-am: Makefile $(LTLIBRARIES)
 installdirs:
 	for dir in "$(DESTDIR)$(pkglibdir)"; do \
 	  test -z "$$dir" || $(MKDIR_P) "$$dir"; \

@@ -4,12 +4,14 @@
 AM_CPPFLAGS = -I$(top_srcdir)
 
 if BUILD_SCONESITE
+  SUBDIRS = image
   pkglib_LTLIBRARIES = sconesite.la
 endif
 
 sconesite_la_SOURCES = \
 SconesiteModule.cpp \
 SconesiteStream.cpp \
+ArgFile.cpp \
 Article.cpp \
 Context.cpp \
 Profile.cpp \
@@ -17,9 +19,12 @@ RenderMarkup.cpp \
 Template.cpp \
 XMLDoc.cpp
 
-noinst_HEADERS = \
+sconesiteincludedir = $(includedir)/sconesite
+
+sconesiteinclude_HEADERS = \
 SconesiteModule.h \
 SconesiteStream.h \
+ArgFile.h \
 Article.h \
 Context.h \
 Profile.h \

@@ -1,6 +1,6 @@
 /* SconeServer (http://www.sconemad.com)
 
-Sconesite Stream
+Sconesite file
 
 Copyright (c) 2000-2009 Andrew Wedgbury <wedge@sconemad.com>
 
@@ -19,45 +19,35 @@ along with this program (see the file COPYING); if not, write to the
 Free Software Foundation, Inc.,
 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA */
 
-#ifndef sconesiteStream_h
-#define sconesiteStream_h
+#ifndef sconesiteArgFile_h
+#define sconesiteArgFile_h
 
-#include "sconex/Stream.h"
-#include "http/ResponseStream.h"
+#include "sconex/Arg.h"
+#include "sconex/FilePath.h"
 
-class TestBuilderModule;
-class Article;
-class Template;
-
-//=========================================================================
-class SconesiteStream : public http::ResponseStream {
+//=============================================================================
+class ArgFile : public scx::Arg {
 
 public:
 
-  SconesiteStream(
-    SconesiteModule& module,
-    const std::string& profile
-  );
-  
-  ~SconesiteStream();
+  ArgFile(const scx::FilePath& path, const std::string& filename);
+  ArgFile(const ArgFile& c);
+  virtual ~ArgFile();
+  virtual scx::Arg* new_copy() const;
+
+  virtual std::string get_string() const;
+  virtual int get_int() const;
+
+  virtual scx::Arg* op(const scx::Auth& auth,scx::Arg::OpType optype, const std::string& opname, scx::Arg* right);
+
+  const scx::FilePath& get_path() const;
+  const std::string& get_filename() const;
   
 protected:
 
-  virtual scx::Condition start_section(const scx::MimeHeaderTable& headers);
-  virtual scx::Condition send_response();
+  scx::FilePath m_path;
+  std::string m_filename;
 
-private:
-  
-  SconesiteModule& m_module;
-
-  std::string m_profile;
-
-  Article* m_article;
-  scx::Condition m_prev_cond;
-
-  int m_section;
-  
-  Template* m_template;
 };
 
 #endif

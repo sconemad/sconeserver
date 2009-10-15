@@ -23,7 +23,7 @@ Free Software Foundation, Inc.,
 #include "Article.h"
 #include "Profile.h"
 #include "Context.h"
-#include "SconesiteStream.h" // for ArgFile?
+#include "ArgFile.h"
 
 #include "sconex/Stream.h"
 #include "sconex/StreamTransfer.h"
@@ -297,8 +297,9 @@ scx::Arg* Article::arg_lookup(const std::string& name)
   if ("create" == name ||
       "remove" == name ||
       "update" == name ||
-      "add_file" == name ||
       "get_articles" == name ||
+      "add_file" == name ||
+      "remove_file" == name ||
       "get_files" == name) {
     return new_method(name);
   }
@@ -372,24 +373,6 @@ scx::Arg* Article::arg_method(const scx::Auth& auth,const std::string& name,scx:
     return 0;
   }
 
-  if (name == "add_file") {
-    if (!auth.trusted()) return new scx::ArgError("Not permitted");
-
-    scx::Arg* a_file = l->get(0);
-    ArgFile* f_file = dynamic_cast<ArgFile*>(a_file);
-    if (!f_file) {
-      return new scx::ArgError("No file specified");
-    }
-    const scx::FilePath& srcpath = f_file->get_path();
-
-    scx::FilePath dstpath = get_root() + f_file->get_filename();
-    log("Add file moving '" + srcpath.path() + "' to '" + dstpath.path() + "'");
-    if (!scx::FilePath::move(srcpath,dstpath)) {
-      return new scx::ArgError("Could not move file");
-    }
-    return 0;
-  }
-
   if (name == "get_articles") {
     if (!auth.trusted()) return new scx::ArgError("Not permitted");
 
@@ -420,6 +403,43 @@ scx::Arg* Article::arg_method(const scx::Auth& auth,const std::string& name,scx:
     return artlist;
   }
 
+  if (name == "add_file") {
+    if (!auth.trusted()) return new scx::ArgError("Not permitted");
+
+    scx::Arg* a_file = l->get(0);
+    ArgFile* f_file = dynamic_cast<ArgFile*>(a_file);
+    if (!f_file) {
+      return new scx::ArgError("No file specified");
+    }
+    const scx::FilePath& srcpath = f_file->get_path();
+
+    scx::FilePath dstpath = get_root() + f_file->get_filename();
+    log("Add file moving '" + srcpath.path() + "' to '" + dstpath.path() + "'");
+    if (!scx::FilePath::move(srcpath,dstpath)) {
+      return new scx::ArgError("Could not move file");
+    }
+    return 0;
+  }
+
+  if (name == "remove_file") {
+    if (!auth.trusted()) return new scx::ArgError("Not permitted");
+
+    scx::Arg* a_file = l->get(0);
+    if (!a_file) return new scx::ArgError("No file specified");
+    std::string file = a_file->get_string();
+    if (file.empty()) return new scx::ArgError("No file specified");
+    if (file.find("/") != std::string::npos ||
+	file.find("..") != std::string::npos) {
+      return new scx::ArgError("Could not remove file");
+    }
+    scx::FilePath path = get_root() + file;
+    if (!scx::FilePath::rmfile(path)) {
+      DEBUG_LOG_ERRNO("Cannot remove file '"+path.path()+"'");
+      return new scx::ArgError("Could not remove file");
+    }
+    return 0;
+  }
+
   if (name == "get_files") {
     if (!auth.trusted()) return new scx::ArgError("Not permitted");
 
@@ -433,7 +453,8 @@ scx::Arg* Article::arg_method(const scx::Auth& auth,const std::string& name,scx:
           file != "meta.txt" && file != "meta.txt~") {
         if (!lookup_article(file)) {
           if (files.stat().is_dir()) {
-            filelist->give(new scx::ArgString(file+"/"));
+	    // Ignore directories for now?
+	    // filelist->give(new scx::ArgString(file+"/"));
           } else {
             filelist->give(new scx::ArgString(file));
           }

@@ -26,6 +26,7 @@ Free Software Foundation, Inc.,
 #include "Profile.h"
 #include "Template.h"
 #include "RenderMarkup.h"
+#include "ArgFile.h"
 
 #include "http/HTTPModule.h"
 #include "http/Request.h"
@@ -40,71 +41,6 @@ Free Software Foundation, Inc.,
 #include "sconex/StreamSocket.h"
 #include "sconex/Kernel.h"
 #include "sconex/StreamDebugger.h"
-
-
-//=========================================================================
-ArgFile::ArgFile(const scx::FilePath& path, const std::string& filename)
-  : m_path(path),
-    m_filename(filename)
-{
-
-}
-
-//=========================================================================
-ArgFile::ArgFile(const ArgFile& c)
-  : m_path(c.m_path),
-    m_filename(c.m_filename)
-{
-
-}
-
-//=========================================================================
-ArgFile::~ArgFile()
-{
-
-}
-
-//=========================================================================
-scx::Arg* ArgFile::new_copy() const
-{
-  return new ArgFile(*this);
-}
-
-//=========================================================================
-std::string ArgFile::get_string() const
-{
-  return m_filename;
-}
-
-//=========================================================================
-int ArgFile::get_int() const
-{
-  return !m_filename.empty();
-}
-
-//=========================================================================
-scx::Arg* ArgFile::op(const scx::Auth& auth,scx::Arg::OpType optype, const std::string& opname, scx::Arg* right)
-{
-  if (scx::Arg::Binary == optype && "." == opname) {
-    std::string name = right->get_string();
-    if (name == "exists") return new scx::ArgInt(77);
-    if (name == "filename") return new scx::ArgString(m_filename);
-  }
-  return SCXBASE Arg::op(auth,optype,opname,right);
-}
-
-//=========================================================================
-const scx::FilePath& ArgFile::get_path() const
-{
-  return m_path;
-}
-
-//=========================================================================
-const std::string& ArgFile::get_filename() const
-{
-  return m_filename;
-}
-
 
 //=========================================================================
 class ParamReaderStream : public scx::Stream {

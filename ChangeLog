@@ -1,6 +1,14 @@
 
 2009-10-15 Andrew Wedgbury <wedge@sconemad.com>
 
+	* sconesite/image: New image manipulation module
+	using Image/GraphicsMagick (libMagick++).
+	* sconesite/Article: Add remove_file arg method.
+	* sconesite/ArgFile: Move ArgFile class to own file.
+	* all: Reduce some unneccecary linkage.
+	
+2009-10-15 Andrew Wedgbury <wedge@sconemad.com>
+
 	* sconssite/Artice: Move update and file upload
 	processing to here.
 	* sconesite/SconesiteStream: Add filename property
