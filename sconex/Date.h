@@ -105,7 +105,9 @@ public:
 
   std::string dcode() const;
   // "YYYYMMDDhhmmss"
-    
+
+  std::string format(const std::string& fmt) const;
+  
   const bool is_local() const;
   void set_local(bool yesno);
 

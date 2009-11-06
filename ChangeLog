@@ -1,4 +1,23 @@
 
+2009-11-06 Andrew Wedgbury <wedge@sconemad.com>
+
+	* configure: Use LDFLAGS for libMagick++.
+	* sconex/Arg: Empty strings are now false.
+	* sconex/Kernel: Add Arg base type constructors.
+	Allow multiplexer loop latency to be configured.
+	* sconex/Date: Add format method using strftime.
+	* sconex/ArgObject: Allow assignment.
+	* sconex/Multiplexer: Allow loop latency to be set.
+	* sconesite/RenderMarkup: Add html escapes when 
+	writing article source.
+	Allow processing of other articles.
+	* sconesite/Article: Add lookup_article, lookup_meta.
+	Add recursive get_articles method.
+	Improve article sort specifier (use ! to reverse).
+	* sconesite/ArgFile: Add size arg method.
+	* http/HTTPModule: Allow idle timeout to be set.
+	* http/ConnectionStream: Use idle timeout on sockets.
+
 2009-10-15 Andrew Wedgbury <wedge@sconemad.com>
 
 	* sconesite/image: New image manipulation module

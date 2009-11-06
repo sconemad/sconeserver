@@ -66,6 +66,9 @@ public:
   void set_num_threads(unsigned int n);
   unsigned int get_num_threads() const;
   // Set/get the number of threads used in the thread pool
+
+  void set_latency(long latency);
+  long get_latency() const;
   
 protected:
 
@@ -98,6 +101,8 @@ private:
 
   pthread_t m_main_thread;
 
+  long m_latency;
+  
   // Statistics:
   long m_loops;
   long m_jobs_run;

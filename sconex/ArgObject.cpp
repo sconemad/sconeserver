@@ -220,10 +220,30 @@ Arg* ArgObject::op(const Auth& auth, OpType optype, const std::string& opname, A
       }
     }
   }
-  
+
+  // Assignment
+  if (Arg::Binary == optype && "=" == opname) {
+    ArgObject* rv = dynamic_cast<ArgObject*>(right);
+    if (!is_const()) {
+      if (rv) {
+        *this = *rv;
+      }
+    }
+    return ref_copy(Ref);
+  }
+   
   return Arg::op(auth,optype,opname,right);
 }
 
+//=============================================================================
+ArgObject& ArgObject::operator=(const ArgObject& v)
+{
+  if (m_obj) m_obj->remove_ref();
+  m_obj = v.m_obj;
+  if (m_obj) m_obj->add_ref();
+  return *this;
+}
+  
 //=============================================================================
 void ArgObject::log(const std::string& message,Logger::Level level)
 {

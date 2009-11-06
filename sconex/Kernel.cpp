@@ -154,13 +154,19 @@ Arg* Kernel::arg_lookup(const std::string& name)
   if ("restart" == name ||
       "shutdown" == name ||
       "set_user" == name ||
-      "set_thread_pool" == name) {
+      "set_thread_pool" == name ||
+      "set_latency" == name) {
     return new_method(name);
   }      
 
   // Constructors for sconex Arg classes
 
-  if ("Version" == name ||
+  if ("defined" == name ||
+      "String" == name ||
+      "Int" == name ||
+      "Real" == name ||
+      "Error" == name ||
+      "Version" == name ||
       "Date" == name ||
       "Time" == name ||
       "Uri" == name ||
@@ -173,6 +179,7 @@ Arg* Kernel::arg_lookup(const std::string& name)
   if ("jobs" == name) return new scx::ArgString(m_spinner.describe());
   if ("root" == name) return new scx::ArgInt(geteuid() == 0);
   if ("thread_pool" == name) return new scx::ArgInt(m_spinner.get_num_threads());
+  if ("latency" == name) return new scx::ArgInt(m_spinner.get_latency());
   if ("system_nodename" == name) return new scx::ArgString(get_system_nodename());
   if ("system_version" == name) return new scx::ArgString(get_system_version());
   if ("system_hardware" == name) return new scx::ArgString(get_system_hardware());
@@ -257,6 +264,43 @@ Arg* Kernel::arg_method(
     return 0;
   }
 
+  if ("set_latency" == name) {
+    if (!auth.admin()) return new ArgError("Not permitted");
+    const scx::ArgInt* a_latency = dynamic_cast<const scx::ArgInt*>(l->get(0));
+    if (!a_latency) {
+      return new ArgError("set_latency() Must specify latency time");
+    }
+    int n_latency = a_latency->get_int();
+    if (n_latency < 0) {
+      return new ArgError("set_latency() Latency must be >= 0");
+    }
+
+    std::ostringstream oss;
+    oss << "Setting latency to " << n_latency;
+    log(oss.str());
+
+    m_spinner.set_latency((long)n_latency);
+    return 0;
+  }
+
+  Arg* a = l->get(0);
+
+  if ("defined" == name) {
+    return new ArgInt(!BAD_ARG(a));
+  }
+  
+  if ("String" == name) {
+    return new ArgString(a ? a->get_string() : "");
+  }
+  if ("Int" == name) {
+    return new ArgInt(a ? a->get_int() : 0);
+  }
+  if ("Real" == name) {
+    return new ArgReal(a ? (double)a->get_int() : 0.0);
+  }
+  if ("Error" == name) {
+    return new ArgError(a ? a->get_string() : "unknown");
+  }
   if ("Version" == name) {
     return new VersionTag(args);
   }

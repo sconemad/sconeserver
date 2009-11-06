@@ -61,15 +61,17 @@ public:
   
   ~Article();
 
-  const scx::Arg* get_meta(const std::string& name) const;
+  scx::Arg* get_meta(const std::string& name,bool recurse=false) const;
 
   std::string get_href_path() const;
   
   // Sub-articles
   void refresh();
+
   Article* lookup_article(const std::string& name);
   Article* find_article(const std::string& name,std::string& extra_path);
-  //  const std::list<Article*>& articles() const;
+  void get_articles(std::list<Article*>& articles, bool recurse=false);
+
   Article* create_article(const std::string& name);
   bool remove_article(const std::string& name);
   

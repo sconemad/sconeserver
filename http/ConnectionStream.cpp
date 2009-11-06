@@ -60,7 +60,7 @@ scx::Condition ConnectionStream::event(scx::Stream::Event e)
   switch (e) {
     
     case scx::Stream::Opening: { // OPENING
-      endpoint().set_timeout(scx::Time(15));
+      endpoint().set_timeout(scx::Time(m_module.get_idle_timeout()));
       m_num_connection = (++connection_count);
     } break;
 

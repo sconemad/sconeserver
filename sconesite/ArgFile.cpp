@@ -21,6 +21,7 @@ Free Software Foundation, Inc.,
 
 
 #include "ArgFile.h"
+#include "sconex/FileStat.h"
 
 //=========================================================================
 ArgFile::ArgFile(const scx::FilePath& path, const std::string& filename)
@@ -69,6 +70,7 @@ scx::Arg* ArgFile::op(const scx::Auth& auth,scx::Arg::OpType optype, const std::
     std::string name = right->get_string();
     if (name == "exists") return new scx::ArgInt(77);
     if (name == "filename") return new scx::ArgString(m_filename);
+    if (name == "size") return new scx::ArgInt(scx::FileStat(m_path).size());
   }
   return SCXBASE Arg::op(auth,optype,opname,right);
 }

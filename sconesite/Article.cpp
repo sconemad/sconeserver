@@ -109,10 +109,15 @@ Article::~Article()
 }
 
 //=========================================================================
-const scx::Arg* Article::get_meta(const std::string& name) const
+scx::Arg* Article::get_meta(const std::string& name,bool recurse) const
 {
   Article* uc = const_cast<Article*>(this);
-  return uc->m_metastore.arg_lookup(name);
+  scx::Arg* a = uc->m_metastore.arg_lookup(name);
+  if (recurse && BAD_ARG(a) && m_parent) {
+    delete a;
+    a = uc->m_parent->get_meta(name,recurse);
+  }
+  return a;
 }
 
 //=========================================================================
@@ -230,10 +235,18 @@ Article* Article::find_article(const std::string& name,std::string& extra_path)
 }
 
 //=========================================================================
-//const std::list<Article*>& Article::articles() const
-//{
-//  return m_articles;
-//}
+void Article::get_articles(std::list<Article*>& articles, bool recurse)
+{
+  for (std::list<Article*>::iterator it_a = m_articles.begin();
+       it_a != m_articles.end();
+       ++it_a) {
+    Article* article = (*it_a);
+    articles.push_back(article);
+    if (recurse) {
+      article->get_articles(articles,recurse);
+    }
+  }
+}
 
 //=========================================================================
 Article* Article::create_article(const std::string& name)
@@ -257,7 +270,7 @@ Article* Article::create_article(const std::string& name)
   }
 
   file.write("<article>\n");
-  file.write("<p>write something here...</p>\n");
+  file.write("\n<p>\nwrite something here...\n</p>\n\n");
   file.write("</article>\n");
   file.close();
   
@@ -298,9 +311,12 @@ scx::Arg* Article::arg_lookup(const std::string& name)
       "remove" == name ||
       "update" == name ||
       "get_articles" == name ||
+      "get_all_articles" == name ||
+      "lookup_article" == name ||
       "add_file" == name ||
       "remove_file" == name ||
-      "get_files" == name) {
+      "get_files" == name ||
+      "lookup_meta" == name) {
     return new_method(name);
   }
 
@@ -320,6 +336,12 @@ scx::Arg* Article::arg_lookup(const std::string& name)
       return new scx::ArgString(m_name);
     }
     return new scx::ArgString("");
+  }
+  if ("parent" == name) {
+    if (m_parent) {
+      return new scx::ArgObject(m_parent);
+    }
+    return 0;
   }
 
   return XMLDoc::arg_lookup(name);
@@ -373,20 +395,25 @@ scx::Arg* Article::arg_method(const scx::Auth& auth,const std::string& name,scx:
     return 0;
   }
 
-  if (name == "get_articles") {
+  if (name == "get_articles" ||
+      name == "get_all_articles") {
     if (!auth.trusted()) return new scx::ArgError("Not permitted");
 
-    std::list<Article*> articles(m_articles);
+    std::list<Article*> articles;
+    get_articles(articles,(name == "get_all_articles"));
 
     const scx::Arg* a_sort = l->get(0);
-    const scx::Arg* a_rev = l->get(1);
     if (a_sort) {
       std::string sort = a_sort->get_string();
-      bool reverse = (a_rev ? a_rev->get_int() : false);
+      bool reverse = false;
+      if (sort[0] == '!') {
+        sort = sort.substr(1);
+        reverse = true;
+      }
       articles.sort(ArticleMetaSorter(sort,reverse));
     }
     int count = 9999;
-    const scx::ArgInt* a_max = dynamic_cast<const scx::ArgInt*>(l->get(2));
+    const scx::ArgInt* a_max = dynamic_cast<const scx::ArgInt*>(l->get(1));
     if (a_max) {
       count = a_max->get_int();
     }
@@ -403,6 +430,18 @@ scx::Arg* Article::arg_method(const scx::Auth& auth,const std::string& name,scx:
     return artlist;
   }
 
+  if (name == "lookup_article") {
+    scx::Arg* a_name = l->get(0);
+    if (!a_name) return new scx::ArgError("No article name specified");
+    std::string s_name = a_name->get_string();
+    Article* art = lookup_article(s_name);
+    if (art) {
+      return new scx::ArgObject(art);
+    }
+    return 0;
+  }
+
+  
   if (name == "add_file") {
     if (!auth.trusted()) return new scx::ArgError("Not permitted");
 
@@ -456,13 +495,22 @@ scx::Arg* Article::arg_method(const scx::Auth& auth,const std::string& name,scx:
 	    // Ignore directories for now?
 	    // filelist->give(new scx::ArgString(file+"/"));
           } else {
-            filelist->give(new scx::ArgString(file));
+            //            filelist->give(new scx::ArgString(file));
+            filelist->give(new ArgFile(files.path(),file));
           }
         }
       }
     }
     return filelist;
   }
+
+  if (name == "lookup_meta") {
+    scx::Arg* a_name = l->get(0);
+    if (!a_name) return new scx::ArgError("No name specified");
+    std::string s_name = a_name->get_string();
+    return get_meta(s_name,true);
+  }
+
   
   return XMLDoc::arg_method(auth,name,args);
 }

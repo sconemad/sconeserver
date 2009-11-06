@@ -144,7 +144,9 @@ if test "x$SCONESITE_IMAGE" == "xyes"; then
   AC_CHECK_LIB([Magick++],[InitializeMagick],
     [CPPFLAGS="$CPPFLAGS `Magick++-config --cppflags`"
      SCONESITE_IMAGE_LIBADD=`Magick++-config --libs`
-     AC_SUBST(SCONESITE_IMAGE_LIBADD)],
+     AC_SUBST(SCONESITE_IMAGE_LIBADD)
+     SCONESITE_IMAGE_LDFLAGS=`Magick++-config --ldflags`
+     AC_SUBST(SCONESITE_IMAGE_LDFLAGS)],
     [AC_MSG_ERROR([library 'Magick++' is required for Sconesite:image])]
   )
 fi

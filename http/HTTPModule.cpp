@@ -37,7 +37,8 @@ HTTPModule::HTTPModule()
   : SCXBASE Module("http",scx::version()),
     m_hosts(*this),
     m_realms(*this),
-    m_sessions(*this)
+    m_sessions(*this),
+    m_idle_timeout(30)
 {
 
 }
@@ -100,6 +101,16 @@ SessionManager& HTTPModule::get_sessions()
 //=============================================================================
 scx::Arg* HTTPModule::arg_lookup(const std::string& name)
 {
+  // Methods
+  
+  if ("set_idle_timeout" == name) {
+    return new_method(name);
+  }
+
+  // Properties
+  
+  if ("idle_timeout" == name) return new scx::ArgInt(m_idle_timeout);
+  
   // Sub-objects
   
   if ("hosts" == name) return new scx::ArgObject(&m_hosts);
@@ -116,7 +127,24 @@ scx::Arg* HTTPModule::arg_method(
   scx::Arg* args
 )
 {
+  scx::ArgList* l = dynamic_cast<scx::ArgList*>(args);
+
+  if ("set_idle_timeout" == name) {
+    const scx::ArgInt* a_timeout = dynamic_cast<const scx::ArgInt*>(l->get(0));
+    if (!a_timeout) return new scx::ArgError("set_timeout() Must specify timeout value");
+    int n_timeout = a_timeout->get_int();
+    if (n_timeout < 0) return new scx::ArgError("set_timeout() Timeout value must be >= 0");
+    m_idle_timeout = n_timeout;
+    return 0;
+  }
+  
   return SCXBASE Module::arg_method(auth,name,args);
 }
 
+//=============================================================================
+unsigned int HTTPModule::get_idle_timeout() const
+{
+  return m_idle_timeout;
+}
+  
 };

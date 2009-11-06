@@ -105,6 +105,8 @@ public:
   
   virtual Arg* op(const Auth& auth, OpType optype, const std::string& opname, Arg* right);
 
+  ArgObject& operator=(const ArgObject& v);
+
   void log(
     const std::string& message,
     Logger::Level level = Logger::Info

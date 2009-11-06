@@ -28,6 +28,7 @@ Free Software Foundation, Inc.,
 
 #include <libxml/parser.h>
 #include <libxml/tree.h>
+#include <libxml/HTMLtree.h>
 
 typedef std::map<std::string,std::string> XMLAttrs;
 

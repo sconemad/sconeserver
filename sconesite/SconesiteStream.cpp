@@ -132,16 +132,21 @@ scx::Condition SconesiteStream::send_response()
   if (!art_file.empty()) {
     // Update the path in the request (cast away const for this!)
     http::Request& reqmod = const_cast<http::Request&>(req);
-    reqmod.set_path(m_article->get_root() + art_file);
+    scx::FilePath path = m_article->get_root() + art_file;
+    reqmod.set_path(path);
 
-    // Connect the getfile module and relinquish
-    scx::ModuleRef getfile = msg->get_module().get_module("getfile");
-    if (getfile.valid()) {
-      msg->log("[sconesite] article '" + m_article->name() + "'");
-      msg->log("[sconesite] Sending '" + pathinfo + "' with getfile"); 
-      scx::ArgList args;
-      getfile.module()->connect(&endpoint(),0);
-      return scx::End;
+    if (scx::FileStat(path).is_file()) {
+      // Connect the getfile module and relinquish
+      scx::ModuleRef getfile = msg->get_module().get_module("getfile");
+      if (getfile.valid()) {
+        msg->log("[sconesite] article '" + m_article->name() + "'");
+        msg->log("[sconesite] Sending '" + pathinfo + "' with getfile"); 
+        scx::ArgList args;
+        getfile.module()->connect(&endpoint(),0);
+        return scx::End;
+      }
+    } else {
+      resp.set_status(http::Status::NotFound);
     }
 
   } else if (m_article) {
@@ -239,7 +244,7 @@ scx::Condition SconesiteStream::start_section(const scx::MimeHeaderTable& header
       
       scx::File* file = new scx::File();
       if (file->open(path.path(),scx::File::Write | scx::File::Create | scx::File::Truncate) == scx::Ok) {
-	endpoint().add_stream(new scx::StreamDebugger("https-file"));
+        //	endpoint().add_stream(new scx::StreamDebugger("https-file"));
 	scx::StreamTransfer* xfer = new scx::StreamTransfer(&endpoint());
 	file->add_stream(xfer);
 	// Add file to kernel

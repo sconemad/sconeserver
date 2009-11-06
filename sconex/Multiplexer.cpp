@@ -31,6 +31,7 @@ namespace scx {
 Multiplexer::Multiplexer()
   : m_num_threads(0),
     m_main_thread(pthread_self()),
+    m_latency(1000000),
     m_loops(0),
     m_jobs_run(0),
     m_job_waits(0),
@@ -191,7 +192,7 @@ int Multiplexer::spin()
     // * Normal mode select *
     // Perform a blocking select, returning only when an event occurs, or the specified timeout is
     // reached, unless we are interrupted by a signal sent from another thread.
-    time.tv_usec = 1000; time.tv_sec = 0;
+    time.tv_usec = m_latency; time.tv_sec = 0;
   }
 
   // Make the select call
@@ -358,6 +359,18 @@ unsigned int Multiplexer::get_num_threads() const
   unsigned int n = m_num_threads;
   m_job_mutex.unlock();
   return n;
+}
+
+//=============================================================================
+void Multiplexer::set_latency(long latency)
+{
+  m_latency = latency;
+}
+
+//=============================================================================
+long Multiplexer::get_latency() const
+{
+  return m_latency;
 }
 
 //=============================================================================

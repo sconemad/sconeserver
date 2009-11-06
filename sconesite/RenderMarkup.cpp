@@ -320,15 +320,23 @@ scx::Arg* RenderMarkupContext::arg_method(const scx::Auth& auth,const std::strin
   if (name == "process_article") {
     if (!auth.trusted()) return new scx::ArgError("Not permitted");
 
-    if (m_article) {
-      if (m_processing) {
-	m_output->write("<p class='scxerror'>ERROR: Already processing article</p>");
-      } else {
-	m_processing = true;
-	m_article->process(*this);
-	m_processing = false;
+    Article* art = m_article;
+    scx::Arg* a_art = l->get(0);
+    if (a_art) {
+      scx::ArgObject* a_obj = dynamic_cast<scx::ArgObject*>(a_art);
+      if (a_obj) {
+        art = dynamic_cast<Article*>(a_obj->get_object());
       }
     }
+    if (!art) return new scx::ArgError("No article to process");
+    
+    //      if (m_processing) {
+    //	m_output->write("<p class='scxerror'>ERROR: Already processing article</p>");
+    //      } else {
+    m_processing = true;
+    art->process(*this);
+    m_processing = false;
+    //      }
     return 0;
   }
 
@@ -340,8 +348,9 @@ scx::Arg* RenderMarkupContext::arg_method(const scx::Auth& auth,const std::strin
       if (scx::Ok == file->open(m_article->get_filepath(),scx::File::Read)) {
         char buffer[1024];
 	int na = 0;
-        while (scx::Ok == file->read(buffer,1024,na)) {
-          m_output->write(buffer,na,na);
+        while (scx::Ok == file->read(buffer,1000,na)) {
+          std::string str(buffer,na);
+          m_output->write(scx::escape_html(str));
         }
       }
       delete file;

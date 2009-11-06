@@ -188,6 +188,7 @@ Free Software Foundation, Inc.,
 #include <sys/utsname.h>
 #include <typeinfo>
 #include <cxxabi.h>
+#include <string.h>
 
 // sconex Debugging
 #include "sconex/Debug.h"

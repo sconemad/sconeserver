@@ -211,6 +211,19 @@ bool XMLDoc::open()
       close();
       m_errors = "";
 
+      /*
+      htmlSAXHandler handler;
+      xmlParserCtxt* cx;
+      cx = htmlCreatePushParserCtxt(&handler,this,NULL,0,NULL,XML_CHAR_ENCODING_NONE);
+      xmlInitParserCtxt(cx);
+      cx->_private = this;
+      cx->sax->error = ErrorHandler;
+      cx->vctxt.error = ErrorHandler;
+      m_xmldoc = htmlCtxtReadFile(cx,path.path().c_str(),NULL,0);
+      m_modtime = stat.time();
+      htmlFreeParserCtxt(cx);
+      */
+
       xmlParserCtxt* cx;
       cx = xmlNewParserCtxt();
       cx->_private = this;

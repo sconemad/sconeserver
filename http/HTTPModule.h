@@ -54,6 +54,8 @@ public:
   AuthRealmManager& get_realms();
   SessionManager& get_sessions();
 
+  unsigned int get_idle_timeout() const;
+
   virtual scx::Arg* arg_lookup(const std::string& name);
   virtual scx::Arg* arg_method(const scx::Auth& auth,const std::string& name,scx::Arg* args);
   
@@ -65,6 +67,8 @@ private:
   AuthRealmManager m_realms;
   SessionManager m_sessions;
 
+  unsigned int m_idle_timeout;
+  
 };
 
 };

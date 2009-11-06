@@ -534,6 +534,20 @@ std::string Date::dcode() const
 }
 
 //=============================================================================
+std::string Date::format(const std::string& fmt) const
+{
+  struct tm tms;
+  if (!get_tms(tms)) {
+    return std::string("ERROR");
+  }
+
+  const int strmax = 256;
+  char str[strmax];
+  int len = ::strftime(str,strmax,fmt.c_str(),&tms);
+  return std::string(str,len);
+}
+  
+//=============================================================================
 time_t Date::epoch_seconds() const
 {
   return *m_time;
@@ -574,7 +588,17 @@ int Date::get_int() const
 //=============================================================================
 Arg* Date::op(const Auth& auth, OpType optype, const std::string& opname, Arg* right)
 {
-  if (optype == Arg::Binary) {
+  if (is_method_call(optype,opname)) {
+
+    ArgList* l = dynamic_cast<ArgList*>(right);
+    
+    if ("format" == m_method) {
+      Arg* a_fmt = l->get(0);
+      if (!a_fmt) return new ArgError("No format specified");
+      return new ArgString(format(a_fmt->get_string()));
+    }
+    
+  } else if (optype == Arg::Binary) {
     
     Date* rd = dynamic_cast<Date*>(right);
     if (rd) { // Date x Date ops
@@ -619,6 +643,8 @@ Arg* Date::op(const Auth& auth, OpType optype, const std::string& opname, Arg* r
       if (name == "string") return new ArgString(string());
       if (name == "ansi") return new ArgString(ansi_string());
       if (name == "epoch_seconds") return new ArgInt(*m_time);
+
+      if (name == "format") return new_method(name);
     }
   }
   return Arg::op(auth,optype,opname,right);
