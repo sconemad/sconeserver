@@ -432,11 +432,6 @@ int Descriptor::dispatch(int events)
 	m_state = Closing;
       }
       
-      if (open_wait &&
-	  !stream->event_enabled(Stream::Opening)) {
-	break;
-      }
-
       if (error) {
 	// Close socket due to error
 	EVENT_DEBUG_LOG("Dispatch Closing descriptor");
@@ -463,6 +458,12 @@ int Descriptor::dispatch(int events)
 	}
 	++it;    
       }
+
+      if (open_wait &&
+	  !stream->event_enabled(Stream::Opening)) {
+	break;
+      }
+
     }
 
     // CLOSE SEQUENCE    

@@ -1,4 +1,10 @@
 
+2009-11-16 Andrew Wedgbury <wedge@sconemad.com>
+
+	* sconex/Descriptor: Check for errors and whatnot
+	before allowing open waiting in dispatch().
+	Fixes runaway "accept aborted" bug when using ssl.
+
 2009-11-06 Andrew Wedgbury <wedge@sconemad.com>
 
 	* configure: Use LDFLAGS for libMagick++.
