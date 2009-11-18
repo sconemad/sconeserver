@@ -73,7 +73,10 @@ bool HTTPModule::connect(
 
   ConnectionStream* s = new ConnectionStream(*this,profile);
   s->add_module_ref(ref());
-  
+
+  // Set idle timeout for connections
+  endpoint->set_timeout(scx::Time(m_idle_timeout));
+
   endpoint->add_stream(s);
 
   //  endpoint->add_stream(new scx::StreamDebugger("https-con"));

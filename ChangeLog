@@ -1,4 +1,9 @@
 
+2009-11-18 Andrew Wedgbury <wedge@sconemad.com>
+
+	* http/HTTPModule: Set timeout on connect to
+	kill sockets getting stuck at ssl open stage.
+
 2009-11-16 Andrew Wedgbury <wedge@sconemad.com>
 
 	* sconex/Descriptor: Check for errors and whatnot
