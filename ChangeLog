@@ -1,13 +1,17 @@
 
+2009-12-21 Andrew Wedgbury <wedge@sconemad.com>
+
+	* sconex/Module: Check authorization for base module methods.
+
 2009-11-18 Andrew Wedgbury <wedge@sconemad.com>
 
-	* http/HTTPModule: Set timeout on connect to
-	kill sockets getting stuck at ssl open stage.
+	* http/HTTPModule: Set timeout on connect to kill sockets getting 
+	stuck at ssl open stage.
 
 2009-11-16 Andrew Wedgbury <wedge@sconemad.com>
 
-	* sconex/Descriptor: Check for errors and whatnot
-	before allowing open waiting in dispatch().
+	* sconex/Descriptor: Check for errors and whatnot before allowing 
+	open waiting in dispatch().
 	Fixes runaway "accept aborted" bug when using ssl.
 
 2009-11-06 Andrew Wedgbury <wedge@sconemad.com>
@@ -19,8 +23,7 @@
 	* sconex/Date: Add format method using strftime.
 	* sconex/ArgObject: Allow assignment.
 	* sconex/Multiplexer: Allow loop latency to be set.
-	* sconesite/RenderMarkup: Add html escapes when 
-	writing article source.
+	* sconesite/RenderMarkup: Add html escapes when writing article source.
 	Allow processing of other articles.
 	* sconesite/Article: Add lookup_article, lookup_meta.
 	Add recursive get_articles method.
@@ -39,12 +42,11 @@
 	
 2009-10-15 Andrew Wedgbury <wedge@sconemad.com>
 
-	* sconssite/Artice: Move update and file upload
-	processing to here.
-	* sconesite/SconesiteStream: Add filename property
-	to uploaded file object.
-	* sconesite/RenderMarkup: Resolve via sconesite
-	module to allow sub-modules to be picked up.
+	* sconssite/Artice: Move update and file upload	processing to here.
+	* sconesite/SconesiteStream: Add filename property to uploaded 
+	file object.
+	* sconesite/RenderMarkup: Resolve via sconesite module to allow 
+	sub-modules to be picked up.
 
 2009-10-14 Andrew Wedgbury <wedge@sconemad.com>
 

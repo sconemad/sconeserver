@@ -259,6 +259,8 @@ Arg* Module::arg_method(
   DEBUG_ASSERT(l,"arg_method() Invalid arg list");
 
   if ("set_log" == name) {
+    if (!auth.admin()) return new ArgError("Not permitted");
+
     const ArgString* a_file = dynamic_cast<const ArgString*>(l->get(0));
     if (a_file) {
       FilePath path = get_var_path() + a_file->get_string();
@@ -283,6 +285,8 @@ Arg* Module::arg_method(
   }
 
   if ("insmod" == name) {
+    if (!auth.admin()) return new ArgError("Not permitted");
+
     const ArgString* a_name = dynamic_cast<const ArgString*>(l->get(0));
     if (!a_name) {
       return new ArgError("insmod() No module specified");
@@ -340,6 +344,8 @@ Arg* Module::arg_method(
   }
   
   if ("rmmod" == name) {
+    if (!auth.admin()) return new ArgError("Not permitted");
+
     const ArgString* a_name = dynamic_cast<const ArgString*>(l->get(0));
     if (!a_name) {
       return new ArgError("rmmod() No module specified");
@@ -365,6 +371,8 @@ Arg* Module::arg_method(
   }
 
   if ("load_config" == name) {
+    if (!auth.admin()) return new ArgError("Not permitted");
+
     const ArgString* a_path = dynamic_cast<const ArgString*>(l->get(0));
     FilePath path;
     if (a_path) {
@@ -377,6 +385,8 @@ Arg* Module::arg_method(
   }
 
   if ("set_mod_path" == name) {
+    if (!auth.admin()) return new ArgError("Not permitted");
+
     const ArgString* a_path = dynamic_cast<const ArgString*>(l->get(0));
     if (!a_path) {
       return new ArgString(get_mod_path().path());
@@ -386,6 +396,8 @@ Arg* Module::arg_method(
   }
 
   if ("set_conf_path" == name) {
+    if (!auth.admin()) return new ArgError("Not permitted");
+
     const ArgString* a_path = dynamic_cast<const ArgString*>(l->get(0));
     if (!a_path) {
       return new ArgString(get_conf_path().path());
@@ -395,6 +407,8 @@ Arg* Module::arg_method(
   }
 
   if ("set_var_path" == name) {
+    if (!auth.admin()) return new ArgError("Not permitted");
+
     const ArgString* a_path = dynamic_cast<const ArgString*>(l->get(0));
     if (!a_path) {
       return new ArgString(get_var_path().path());
