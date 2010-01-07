@@ -328,6 +328,7 @@ scx::Arg* Article::arg_lookup(const std::string& name)
     if (!BAD_ARG(a_title)) {
       std::string title = a_title->get_string();
       if (!title.empty()) {
+	delete a_title;
         return new scx::ArgString(title);
       }
     }
