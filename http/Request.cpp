@@ -284,7 +284,7 @@ bool Request::is_param(const std::string& name) const
 scx::Arg* Request::arg_lookup(const std::string& name)
 {
   // Methods
-  if ("test" == name) {
+  if ("get_header" == name) {
     return new_method(name);
   }
   
@@ -304,10 +304,18 @@ scx::Arg* Request::arg_lookup(const std::string& name)
 //=========================================================================
 scx::Arg* Request::arg_method(const scx::Auth& auth,const std::string& name,scx::Arg* args)
 {
-  //  scx::ArgList* l = dynamic_cast<scx::ArgList*>(args);
+  scx::ArgList* l = dynamic_cast<scx::ArgList*>(args);
 
-  if (name == "test") {
-    return 0;
+  if (name == "get_header") {
+    const scx::ArgString* a_header =  dynamic_cast<const scx::ArgString*>(l->get(0));
+    if (!a_header) return new scx::ArgError("set_header() No name specified");
+
+    std::string value = m_headers.get(a_header->get_string());
+    if (value.empty()) {
+      return 0;
+    }
+
+    return new scx::ArgString(value);
   }
 
   return SCXBASE ArgObjectInterface::arg_method(auth,name,args);

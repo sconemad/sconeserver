@@ -1,4 +1,11 @@
 
+2010-01-xx Andrew Wedgbury <wedge@sconemad.com>
+
+	* http/Request: Add get_header arg method to allow header access.
+	* router/RouterChain: Allow TermBuffers to be added to chains.
+	* sconesite/Article: Fix leaked Arg in arg_lookup (title).
+	* sconex/sconex: Update copyright year.
+
 2009-12-21 Andrew Wedgbury <wedge@sconemad.com>
 
 	* sconex/Module: Check authorization for base module methods.

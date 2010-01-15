@@ -24,6 +24,7 @@ Free Software Foundation, Inc.,
 
 #include "sconex/Kernel.h" 
 #include "sconex/ConfigStream.h"
+#include "sconex/TermBuffer.h"
 #include "sconex/ListenerSocket.h"
 #include "sconex/DatagramSocket.h"
 #include "sconex/DatagramMultiplexer.h"
@@ -330,6 +331,11 @@ bool RouterNode::connect(
 
   if ("config" == m_name) {
     d->add_stream( new scx::ConfigStream(scx::Kernel::get()->ref()) );
+    return true;
+  }
+
+  if ("term" == m_name) {
+    d->add_stream( new scx::TermBuffer("term") );
     return true;
   }
 

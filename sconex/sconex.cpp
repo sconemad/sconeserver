@@ -35,7 +35,7 @@ VersionTag& version()
 const std::string& sconeserver_copyright()
 {
   static std::string s_copyright = 
-    "Copyright (c) 2000-2009 Andrew Wedgbury <wedge@sconemad.com>";
+    "Copyright (c) 2000-2010 Andrew Wedgbury <wedge@sconemad.com>";
   return s_copyright;
 }
 
