@@ -114,12 +114,12 @@ bool RenderMarkupContext::handle_start(const std::string& name, XMLAttrs& attrs,
 
     if (name == "img") {
       std::string link = attrs["src"];
-      if (link[0] != '/' && link.find(":") != std::string::npos) {
+      if (link[0] != '/' && link.find(":") == std::string::npos) {
 	attrs["src"] = "/" + m_article->get_href_path() + link;
       }
     } else if (name == "a" || name == "area") {
       std::string link = attrs["href"];
-      if (link[0] != '/' && link.find(":") != std::string::npos) {
+      if (link[0] != '/' && link.find(":") == std::string::npos) {
 	attrs["href"] = "/" + m_article->get_href_path() + link;
       }
     }
