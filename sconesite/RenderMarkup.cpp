@@ -111,6 +111,19 @@ bool RenderMarkupContext::handle_start(const std::string& name, XMLAttrs& attrs,
     return result;
 
   } else {
+
+    if (name == "img") {
+      std::string link = attrs["src"];
+      if (link[0] != '/' && link.find(":") != std::string::npos) {
+	attrs["src"] = "/" + m_article->get_href_path() + link;
+      }
+    } else if (name == "a" || name == "area") {
+      std::string link = attrs["href"];
+      if (link[0] != '/' && link.find(":") != std::string::npos) {
+	attrs["href"] = "/" + m_article->get_href_path() + link;
+      }
+    }
+
     std::ostringstream oss;
     oss << "<" << name;
     for (XMLAttrs::const_iterator it = attrs.begin();
@@ -334,7 +347,9 @@ scx::Arg* RenderMarkupContext::arg_method(const scx::Auth& auth,const std::strin
     //	m_output->write("<p class='scxerror'>ERROR: Already processing article</p>");
     //      } else {
     m_processing = true;
+    Article* orig_art = m_article; m_article = art;
     art->process(*this);
+    m_article = orig_art;
     m_processing = false;
     //      }
     return 0;
