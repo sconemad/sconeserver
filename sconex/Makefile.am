@@ -45,6 +45,7 @@ Multiplexer.cpp \
 Mutex.cpp \
 NullFile.cpp \
 Process.cpp \
+RegExp.cpp \
 Response.cpp \
 Socket.cpp \
 SocketAddress.cpp \
@@ -105,6 +106,7 @@ Multiplexer.h \
 Mutex.h \
 NullFile.h \
 Process.h \
+RegExp.h \
 Response.h \
 Socket.h \
 SocketAddress.h \

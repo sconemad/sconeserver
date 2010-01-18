@@ -29,6 +29,7 @@ Free Software Foundation, Inc.,
 #include "sconex/VersionTag.h"
 #include "sconex/Uri.h"
 #include "sconex/MimeType.h"
+#include "sconex/RegExp.h"
 
 namespace scx {
 
@@ -170,7 +171,8 @@ Arg* Kernel::arg_lookup(const std::string& name)
       "Date" == name ||
       "Time" == name ||
       "Uri" == name ||
-      "MimeType" == name) {
+      "MimeType" == name ||
+      "RegExp" == name) {
     return new_method(name);
   }
 
@@ -315,6 +317,9 @@ Arg* Kernel::arg_method(
   }
   if ("MimeType" == name) {
     return new MimeType(args);
+  }
+  if ("RegExp" == name) {
+    return new RegExp(args);
   }
 
   return Module::arg_method(auth,name,args);
