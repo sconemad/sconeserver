@@ -114,6 +114,10 @@ Free Software Foundation, Inc.,
 #  include <unistd.h>
 #endif
 
+#ifdef HAVE_STRING_H
+#  include <string.h>
+#endif
+
 // iostream
 
 #ifdef HAVE_STRING
@@ -184,11 +188,27 @@ Free Software Foundation, Inc.,
 #  endif
 #endif
 
-// Misc stuff
-#include <sys/utsname.h>
-#include <typeinfo>
-#include <cxxabi.h>
-#include <string.h>
+// PCRE
+
+#ifdef HAVE_PCRE_H
+#  include <pcre.h>
+#endif
+
+// RTTI
+
+#ifdef HAVE_TYPEINFO
+#  include <typeinfo>
+#endif
+
+#ifdef HAVE_CXXABI_H
+#  include <cxxabi.h>
+#endif
+
+// OS
+
+#ifdef HAVE_SYS_UTSNAME_H
+#  include <sys/utsname.h>
+#endif
 
 // sconex Debugging
 #include "sconex/Debug.h"

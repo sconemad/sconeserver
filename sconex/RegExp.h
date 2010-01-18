@@ -22,8 +22,6 @@ Free Software Foundation, Inc.,
 #ifndef scxRegExp_h
 #define scxRegExp_h
 
-#include <pcre.h>
-
 #include "sconex/sconex.h"
 #include "sconex/Arg.h"
 namespace scx {
@@ -50,8 +48,6 @@ public:
   
   virtual Arg* op(const Auth& auth, OpType optype, const std::string& opname, Arg* right);
   
-  RegExp& operator=(const RegExp& v);
-
   bool operator==(const RegExp& v) const;
   bool operator!=(const RegExp& v) const;
 
@@ -59,6 +55,7 @@ protected:
 
   void from_string(const std::string& str);
   
+  std::string* m_pattern;
   pcre* m_pcre;
 };
 

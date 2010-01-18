@@ -1,4 +1,9 @@
 
+2010-01-18 Andrew Wedgbury <wedge@sconemad.com>
+
+	* sconex/RegExp: New regular expression support using pcre.
+	* configure: Add pcre as dependency, plus general tidy up.
+
 2010-01-15 Andrew Wedgbury <wedge@sconemad.com>
 
 	* sconesite/RenderMarkup: Add article base to internal href links.
