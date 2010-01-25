@@ -77,7 +77,6 @@ protected:
   scx::ArgObject* m_response_obj;
 
   Article* m_article;
-  bool m_processing;
 };
 
 //=========================================================================

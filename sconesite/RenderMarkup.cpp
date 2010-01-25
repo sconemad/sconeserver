@@ -48,8 +48,7 @@ RenderMarkupContext::RenderMarkupContext(
     m_output(output),
     m_request(request),
     m_response_obj(new scx::ArgObject(&response)),
-    m_article(0),
-    m_processing(false)
+    m_article(0)
 {
 
 }
@@ -342,16 +341,14 @@ scx::Arg* RenderMarkupContext::arg_method(const scx::Auth& auth,const std::strin
       }
     }
     if (!art) return new scx::ArgError("No article to process");
-    
-    //      if (m_processing) {
-    //	m_output->write("<p class='scxerror'>ERROR: Already processing article</p>");
-    //      } else {
-    m_processing = true;
+
+    // Save current state and setup to process new article
     Article* orig_art = m_article; m_article = art;
+    
     art->process(*this);
+
+    // Restore previous state
     m_article = orig_art;
-    m_processing = false;
-    //      }
     return 0;
   }
 
