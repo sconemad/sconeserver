@@ -341,7 +341,7 @@ bool RouterNode::connect(
 
   if ("sconescript" == m_name) {
     scx::ArgModule* ctx = new scx::ArgModule(scx::Kernel::get()->ref());
-    d->add_stream( new scx::ArgScript(scx::Auth::Admin,ctx) );
+    d->add_stream( new scx::ArgScriptExec(scx::Auth::Admin,ctx) );
     return true;
   }
 

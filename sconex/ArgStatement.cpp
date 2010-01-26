@@ -143,17 +143,31 @@ Arg* ArgStatementExpr::run(ArgProc& proc, FlowMode& flow)
 
 
 //=============================================================================
-ArgStatementGroup::ArgStatementGroup()
+ArgStatementGroup::ArgStatementGroup(ArgMap* env)
+  : m_env(env),
+    m_own_env(false)
 {
   DEBUG_COUNT_CONSTRUCTOR(ArgStatementGroup);
+
+  if (m_env == 0) {
+    // If no environment was given, create our own
+    m_env = new ArgMap();
+    m_own_env = true;
+  }
 }
 
 //=============================================================================
 ArgStatementGroup::ArgStatementGroup(const ArgStatementGroup& c)
   : ArgStatement(c),
-    m_vars(c.m_vars)
+    m_env(c.m_env),
+    m_own_env(c.m_own_env)
 {
   DEBUG_COUNT_CONSTRUCTOR(ArgStatementGroup);
+
+  if (m_own_env) {
+    // If original has its own environment, make our own copy
+    m_env = new ArgMap(*c.m_env);
+  }
 
   for (std::list<ArgStatement*>::const_iterator it = c.m_statements.begin();
        it != c.m_statements.end();
@@ -168,6 +182,10 @@ ArgStatementGroup::ArgStatementGroup(const ArgStatementGroup& c)
 ArgStatementGroup::~ArgStatementGroup()
 {
   clear();
+
+  if (m_own_env) {
+    delete m_env;
+  }
 
   DEBUG_COUNT_DESTRUCTOR(ArgStatementGroup);
 }
@@ -202,7 +220,6 @@ ArgStatement::ParseResult ArgStatementGroup::parse(
 Arg* ArgStatementGroup::run(ArgProc& proc, FlowMode& flow)
 {
   Arg* ret=0;
-  
   for (std::list<ArgStatement*>::iterator it = m_statements.begin();
        it != m_statements.end();
        ++it) {
@@ -225,7 +242,7 @@ Arg* ArgStatementGroup::arg_lookup(const std::string& name)
     return new_method(name);
   }
 
-  Arg* var = m_vars.lookup(name);
+  Arg* var = m_env->lookup(name);
   if (var) {
     return var->ref_copy(Arg::Ref);
   }
@@ -247,7 +264,7 @@ Arg* ArgStatementGroup::arg_method(const Auth& auth, const std::string& name, Ar
       if (a_val == 0) {
         a_val = new ArgInt(0);
       }
-      m_vars.give(var_name, a_val);
+      m_env->give(var_name, a_val);
     }
     return 0;
   }

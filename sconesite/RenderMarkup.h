@@ -32,6 +32,7 @@ Free Software Foundation, Inc.,
 #include "sconex/FilePath.h"
 #include "sconex/FileDir.h"
 #include "sconex/Job.h"
+#include "sconex/ArgStatement.h"
 
 class Profile;
 class Article;
@@ -75,6 +76,8 @@ protected:
   scx::Descriptor* m_output;
   http::Request m_request;
   scx::ArgObject* m_response_obj;
+
+  scx::ArgMap m_scx_env;
 
   Article* m_article;
 };

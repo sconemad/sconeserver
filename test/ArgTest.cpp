@@ -154,7 +154,7 @@ int main(int argc,char* argv[])
   
   ArgTest argtest;
   ArgObject* ctx = new ArgObject(&argtest);
-  ArgScript* script = new ArgScript(Auth::Admin,ctx);
+  ArgScriptExec* script = new ArgScriptExec(Auth::Admin,ctx);
   script->set_error_des(con);
   in->add_stream(script);
 

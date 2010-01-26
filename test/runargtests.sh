@@ -1,6 +1,8 @@
 #! /bin/bash
 
-for file in arg/*.test; do
+echo `dirname $0`
+
+for file in `dirname $0`/arg/*.test; do
 
     echo ""
     echo "### RUNNING $file"

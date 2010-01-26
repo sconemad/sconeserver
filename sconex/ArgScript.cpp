@@ -32,7 +32,7 @@ namespace scx {
 #  define ArgScript_DEBUG_LOG(m)
 #endif
 
-  ArgScript::TokenMap* ArgScript::s_tokens = 0;
+ArgScript::TokenMap* ArgScript::s_tokens = 0;
 
 enum ArgScriptToken {
   ArgScriptToken_IF,
@@ -52,20 +52,15 @@ enum ArgScriptToken {
  
 //=============================================================================
 ArgScript::ArgScript(
-  const Auth& auth, 
-  ArgObject* ctx
-)
-  : StreamTokenizer("ArgScript",4096),
-    m_proc(auth,ctx),
-    m_ctx(ctx),
-    m_error_des(0)
+  ArgStatementGroup* root
+) : StreamTokenizer("ArgScript",4096),
+    m_root(root)
 {
   DEBUG_COUNT_CONSTRUCTOR(ArgScript);
+  DEBUG_ASSERT(root,"No root group specified");
   init();
 
-  // Make an enclosing group and push onto parse stack
-  m_root = new ArgStatementGroup();
-  m_root->set_parent(m_ctx->get_object());
+  // Push root onto parse stack
   m_stack.push(m_root);
   
   enable_event(Stream::Readable,true);
@@ -74,9 +69,6 @@ ArgScript::ArgScript(
 //=============================================================================
 ArgScript::~ArgScript()
 {
-  delete m_ctx;
-  delete m_root;
-
   DEBUG_COUNT_DESTRUCTOR(ArgScript);
 }
 
@@ -115,12 +107,10 @@ Condition ArgScript::event(Stream::Event e)
 
       if (m_stack.top() == m_root || c==End) {
         ArgScript_DEBUG_LOG("event: Run");
-        Arg* ret = m_root->execute(m_proc);
-        if (m_error_des && ret && BAD_ARG(ret)) {
-	  m_error_des->write(ret->get_string() + "\n");
-        }
-        delete ret;
-        m_root->clear();
+	if (!event_runnable()) {
+	  // Abort request
+	  break;
+	}
       }
     }
 
@@ -207,6 +197,12 @@ ArgStatement* ArgScript::parse_token(const std::string& token)
 
   m_stack.push(s);
   return s;
+}
+
+//=============================================================================
+bool ArgScript::event_runnable()
+{
+  return true; // Keep parsing
 }
 
 //=============================================================================
@@ -351,12 +347,6 @@ bool ArgScript::next_token(
 }
 
 //=============================================================================
-void ArgScript::set_error_des(Descriptor* error_des)
-{
-  m_error_des = error_des;
-}
-
-//=============================================================================
 void ArgScript::init()
 {
   if (s_tokens) return;
@@ -376,6 +366,45 @@ void ArgScript::init()
   (*s_tokens)["sub"] = ArgScriptToken_SUB;
   (*s_tokens)["{"] = ArgScriptToken_OPEN_BRACE;
   (*s_tokens)["}"] = ArgScriptToken_CLOSE_BRACE;
+}
+
+// ArgScriptExec:
+
+//=============================================================================
+ArgScriptExec::ArgScriptExec(
+  const Auth& auth, 
+  ArgObject* ctx
+) : ArgScript(new ArgStatementGroup()),
+    m_proc(auth,ctx),
+    m_ctx(ctx),
+    m_error_des(0)
+{
+  m_root->set_parent(m_ctx->get_object());
+}
+
+//=============================================================================
+ArgScriptExec::~ArgScriptExec()
+{
+  delete m_ctx;
+  delete m_root;
+}
+
+//=============================================================================
+void ArgScriptExec::set_error_des(Descriptor* error_des)
+{
+  m_error_des = error_des;
+}
+
+//=============================================================================
+bool ArgScriptExec::event_runnable()
+{
+  Arg* ret = m_root->execute(m_proc);
+  if (m_error_des && ret && BAD_ARG(ret)) {
+    m_error_des->write(ret->get_string() + "\n");
+  }
+  delete ret;
+  m_root->clear();
+  return true;
 }
 
 };

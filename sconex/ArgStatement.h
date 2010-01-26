@@ -119,7 +119,7 @@ class SCONEX_API ArgStatementGroup : public ArgStatement {
 
 public:
   
-  ArgStatementGroup();
+  ArgStatementGroup(ArgMap* env=0);
   ArgStatementGroup(const ArgStatementGroup& c);
   virtual ~ArgStatementGroup();
   virtual ArgStatement* new_copy() const;
@@ -137,8 +137,11 @@ protected:
   std::list<ArgStatement*> m_statements;
   // List of statements in this group
 
-  ArgMap m_vars;
-  // Local variables defined within this group's scope
+  ArgMap* m_env;
+  // Local environment defined within this group's scope
+
+  bool m_own_env;
+  // Do we own the environment, or was one supplied
   
 };
 

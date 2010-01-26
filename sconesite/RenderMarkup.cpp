@@ -175,7 +175,10 @@ void RenderMarkupContext::handle_process(const std::string& name, const char* da
   }
 
   if (name == "scxp") { // Sconescript evaluate and print
-    scx::ArgObject ctx(this);
+    // Create root statement using our environment
+    scx::ArgStatementGroup root(&m_scx_env);
+    root.set_parent(this);
+    scx::ArgObject ctx(&root);
     scx::ArgProc proc(auth,&ctx);
     scx::Arg* arg = 0;
     try {
@@ -194,18 +197,31 @@ void RenderMarkupContext::handle_process(const std::string& name, const char* da
     delete arg;
 
   } else if (name == "scx") { // Sconescript
+    scx::Arg* ret = 0;
     try {
       int len = strlen(data);
       scx::MemFileBuffer fbuf(len);
       fbuf.get_buffer()->push_from(data,len);
       scx::MemFile mfile(&fbuf);
+
+      // Create root statement using our environment
+      scx::ArgStatementGroup root(&m_scx_env);
+      root.set_parent(this);
       
-      scx::ArgObject* ctx = new scx::ArgObject(this);
-      scx::ArgScript* script = new scx::ArgScript(auth,ctx);
+      // Create a script parser
+      scx::ArgScript* script = new scx::ArgScript(&root);
       mfile.add_stream(script);
-      
+
+      // Parse statements
       while (script->event(scx::Stream::Readable) == scx::Ok);
+
+      // Run statements
+      scx::ArgProc proc(auth);
+      ret = root.execute(proc);
+      delete ret;
+
     } catch (...) { 
+      delete ret;
       DEBUG_LOG("EXCEPTION in RenderMarkup::handle_process(scx)"); 
       throw; 
     }

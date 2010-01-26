@@ -43,10 +43,9 @@ class SCONEX_API ArgScript : public StreamTokenizer {
 public:
 
   ArgScript(
-    const Auth& auth,
-    ArgObject* ctx
+    ArgStatementGroup* root
   );
-  // Create an ArgScript parser to run in the specified context
+  // Create an ArgScript parser to parse statements into the specified group
 
   virtual ~ArgScript();
   // Destructor
@@ -57,9 +56,12 @@ public:
   ArgStatement* parse_token(const std::string& token);
   // Make a new ArgStatement based on the current token
 
-  void set_error_des(Descriptor* error_des);
-  
 protected:
+
+  virtual bool event_runnable();
+  // Called when there are statements to run
+  // Default implementation does nothing.
+  // Return true to keep parsing, false to abort
 
   virtual bool next_token(
     const Buffer& buffer,
@@ -73,11 +75,6 @@ protected:
   // brackets, whereas normally we look for either reserved words or
   // semicolon-terminated expressions.
 
-private:
-
-  ArgProc m_proc;
-  ArgObject* m_ctx;
-
   ArgStatementGroup* m_root;
   // Root statement group
   
@@ -86,15 +83,43 @@ private:
   // The root group is always the bottom statement, the top is the current
   // statement being parsed.
 
-  Descriptor* m_error_des;
-  // Descriptor to write error output to
-
   static void init();
 
   typedef std::map<std::string,int> TokenMap;
   static TokenMap* s_tokens;
   
 };
+
+
+//=============================================================================
+class SCONEX_API ArgScriptExec : public ArgScript {
+
+public:
+
+  ArgScriptExec(
+    const Auth& auth,
+    ArgObject* ctx
+  );
+  // Create an ArgScript parser to run in the specified context
+
+  virtual ~ArgScriptExec();
+  // Destructor
+
+  void set_error_des(Descriptor* error_des);
+  // Set descriptor for writing errors to
+
+protected:
+
+  virtual bool event_runnable();
+
+  ArgProc m_proc;
+  ArgObject* m_ctx;
+
+  Descriptor* m_error_des;
+  // Descriptor to write error output to
+
+};
+
 
 };
 #endif

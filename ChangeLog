@@ -1,4 +1,15 @@
 
+2010-01-26 Andrew Wedgbury <wedge@sconemad.com>
+
+	* sconex/ArgScript: Split parsing into base class, and make a
+	new derived class ArgScriptExec, which executes while parsing.
+	* sconex/ArgStatement: Allow scope environment to be specified 
+	for statement groups.
+	* sconesite/RenderMarkup: Use common environment across scx process
+	instructions, allowing global vars and subroutines to be shared.
+	* test/runargtests.sh: Find test scripts using relative path.
+	* sconex/Arg_ut: Fix empty string test (should be int 0).
+
 2010-01-18 Andrew Wedgbury <wedge@sconemad.com>
 
 	* sconex/RegExp: New regular expression support using pcre.
