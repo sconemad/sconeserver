@@ -45,7 +45,8 @@ public:
   
   Condition open(
     const FilePath& filepath,
-    int mode
+    int flags,
+    mode_t create_perms = 00600
   );
   // Open a file
 

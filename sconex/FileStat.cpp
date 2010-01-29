@@ -23,26 +23,21 @@ Free Software Foundation, Inc.,
 #include "sconex/FilePath.h"
 namespace scx {
 
-static int StatTypeInvalid=0;
-static int StatTypeFile=1;
-static int StatTypeDir=2;
-static int StatTypeSpecial=3;
-  
 //=============================================================================
 FileStat::FileStat()
-  : m_type(StatTypeInvalid)
+  : m_mode(0)
 {
   DEBUG_COUNT_CONSTRUCTOR(FileStat);
 }
   
 //=============================================================================
 FileStat::FileStat(const FilePath& filepath)
-  : m_type(StatTypeInvalid)
+  : m_mode(0)
 {
   DEBUG_COUNT_CONSTRUCTOR(FileStat);
 
   struct stat s;
-  if (0==stat(filepath.path().c_str(),&s)) {
+  if (0 == ::stat(filepath.path().c_str(),&s)) {
     become(&s);
   }
 }
@@ -56,19 +51,25 @@ FileStat::~FileStat()
 //=============================================================================
 bool FileStat::exists() const
 {
-  return m_type != StatTypeInvalid;
+  return m_mode != 0;  
 }
 
 //=============================================================================
 bool FileStat::is_file() const
 {
-  return m_type == StatTypeFile;
+  return S_ISREG(m_mode);
 }
 
 //=============================================================================
 bool FileStat::is_dir() const
 {
-  return m_type == StatTypeDir;
+  return S_ISDIR(m_mode);
+}
+
+//=============================================================================
+mode_t FileStat::mode() const
+{
+  return m_mode;
 }
 
 //=============================================================================
@@ -89,7 +90,7 @@ FileStat::FileStat(int filedes)
   DEBUG_COUNT_CONSTRUCTOR(FileStat);
 
   struct stat s;
-  if (0==fstat(filedes,&s)) {
+  if (0 == ::fstat(filedes,&s)) {
     become(&s);
   }
 }
@@ -98,20 +99,11 @@ FileStat::FileStat(int filedes)
 void FileStat::become(struct stat* a)
 {
   if (a==0) {
-    m_type = StatTypeInvalid;
+    m_mode = 0;
     return;
   }
 
-  if (S_ISREG(a->st_mode)) {
-    m_type = StatTypeFile;
-    
-  } else if (S_ISDIR(a->st_mode)) {
-    m_type = StatTypeDir;
-    
-  } else {
-    m_type = StatTypeSpecial;
-  }
-      
+  m_mode = a->st_mode;      
   m_size = (long)a->st_size;
   m_time = Date(a->st_mtime);
 }

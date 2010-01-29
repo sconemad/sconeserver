@@ -47,7 +47,8 @@ File::~File()
 //
 Condition File::open(
   const FilePath& filepath,
-  int flags
+  int flags,
+  mode_t create_perms
 )
 {
   // Check file is not already open
@@ -57,7 +58,6 @@ Condition File::open(
 
   // Translate flags
   int f_flags = 0;
-  int f_mode = 0;
   
   if ((flags & Read) && (flags & Write)) {
     f_flags = O_RDWR;
@@ -71,7 +71,6 @@ Condition File::open(
   
   if (flags & Create) {
     f_flags |= O_CREAT;
-    f_mode = S_IRUSR | S_IWUSR | S_IRGRP | S_IROTH;
   }
 
   if (flags & Truncate) {
@@ -83,7 +82,7 @@ Condition File::open(
   }
 
   // Try to open the file
-  if ((m_file = ::open(filepath.path().c_str(),f_flags,f_mode)) < 0) {
+  if ((m_file = ::open(filepath.path().c_str(),f_flags,create_perms)) < 0) {
     return scx::Error;
   }
   

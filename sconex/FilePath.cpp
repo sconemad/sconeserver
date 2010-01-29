@@ -181,15 +181,20 @@ bool FilePath::chown(const FilePath& path, const User& user)
 }
 
 //=============================================================================
-bool FilePath::copy(const FilePath& source, const FilePath& dest)
+bool FilePath::copy(const FilePath& source, const FilePath& dest, mode_t mode)
 {
   File fsource;
   if (scx::Ok != fsource.open(source,scx::File::Read)) {
     return false;
   }
+
+  if (mode == 0) {
+    // Copy source file's mode
+    mode = fsource.stat().mode();
+  }
   
   File fdest;
-  if (scx::Ok != fdest.open(dest,scx::File::Write|File::Create|File::Truncate)) {
+  if (scx::Ok != fdest.open(dest,scx::File::Write|File::Create|File::Truncate,mode)) {
     return false;
   }
 

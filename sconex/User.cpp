@@ -65,6 +65,7 @@ bool User::set_real()
   if (0 != ::setuid(m_user_id)) {
     return false;
   }
+  ::umask(0);
   return true;
 }
 
@@ -77,6 +78,7 @@ bool User::set_effective()
   if (0 != ::seteuid(m_user_id)) {
     return false;
   }
+  ::umask(0);
   return true;
 }
 

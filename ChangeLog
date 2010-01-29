@@ -1,4 +1,15 @@
 
+2010-01-29 Andrew Wedgbury <wedge@sconemad.com>
+
+	* sconex/File: Allow permissions to be specified when creating.
+	* sconex/FilePath: Allow permissions to be specified for copy.
+	* sconex/FileStat: Allow access to file permissions (mode_t).
+	* sconex/User: Reset umask when setting user/group ids.
+	* sconex/ArgStore: Use 0660 mode for store files.
+	* sconesite/SconesiteStream: Use 0660 mode for uploaded files.
+	* sconesite/Article: Use 0770 mode for new article directories,
+	and 0660 mode for files.
+
 2010-01-26 Andrew Wedgbury <wedge@sconemad.com>
 
 	* sconex/ArgScript: Split parsing into base class, and make a

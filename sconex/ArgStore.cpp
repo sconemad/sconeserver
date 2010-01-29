@@ -83,7 +83,7 @@ bool ArgStore::load()
 bool ArgStore::save()
 {
   scx::File file;
-  if (file.open(m_path,File::Write | File::Truncate | File::Create) == scx::Ok) {
+  if (file.open(m_path,File::Write | File::Truncate | File::Create,00660) == scx::Ok) {
     ArgStoreStream* s = new ArgStoreStream(ArgStoreStream::Write, m_data);
     file.add_stream(s);
     Condition c = Ok;

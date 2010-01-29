@@ -243,7 +243,9 @@ scx::Condition SconesiteStream::start_section(const scx::MimeHeaderTable& header
       ucreq.set_param(name,new ArgFile(path,fname));
       
       scx::File* file = new scx::File();
-      if (file->open(path.path(),scx::File::Write | scx::File::Create | scx::File::Truncate) == scx::Ok) {
+      if (file->open(path.path(),
+                     scx::File::Write | scx::File::Create | scx::File::Truncate,
+                     00660) == scx::Ok) {
         //	endpoint().add_stream(new scx::StreamDebugger("https-file"));
 	scx::StreamTransfer* xfer = new scx::StreamTransfer(&endpoint());
 	file->add_stream(xfer);

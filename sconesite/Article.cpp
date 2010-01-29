@@ -257,14 +257,13 @@ Article* Article::create_article(const std::string& name)
   }
 
   scx::FilePath path = m_root + name;
-  scx::FilePath::mkdir(path,false,0777);
-  scx::FilePath::mkdir(path + "files",false,0777);
+  scx::FilePath::mkdir(path,false,00770);
 
   Article* article = new Article(m_profile,name,path,this);
   scx::FilePath apath = article->get_filepath();
 
   scx::File file;
-  if (scx::Ok != file.open(apath,scx::File::Write|scx::File::Create)) {
+  if (scx::Ok != file.open(apath,scx::File::Write|scx::File::Create,00660)) {
     delete article;
     return 0;
   }

@@ -56,7 +56,7 @@ public:
   static bool chown(const FilePath& path, const User& user);
 
   static bool move(const FilePath& source, const FilePath& dest);
-  static bool copy(const FilePath& source, const FilePath& dest);
+  static bool copy(const FilePath& source, const FilePath& dest, mode_t mode=0);
   
 protected:
 

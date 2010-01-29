@@ -56,6 +56,9 @@ public:
   
   bool is_dir() const;
   // Is this a directory
+
+  mode_t mode() const;
+  // Get the file mode
   
   long size() const;
   // Get size of file in bytes
@@ -71,7 +74,7 @@ private:
 
   void become(struct stat* a);
   
-  int m_type;
+  mode_t m_mode;
   long m_size;
   Date m_time;
   
