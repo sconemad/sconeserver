@@ -72,9 +72,13 @@ Condition ConfigStream::event(Stream::Event e)
 	  return Close;
 	}
 	
-	Arg* result = m_proc.evaluate(buffer);
-	write_arg(result);
-	write("\n");
+	Arg* result = 0;
+	try {
+	  result = m_proc.evaluate(buffer);
+	  write_arg(result);
+	  write("\n");
+	} catch (...) {
+	}
 	delete result;
       }
     } break;

@@ -1,4 +1,11 @@
 
+2010-02-03 Andrew Wedgbury <wedge@sconemad.com>
+
+	* dbsql: New SQL Database interface module supporting MySQL.
+	* configure: Add dbsql and check for MySql++ lib.
+	* sconex/ConfigStream: Catch exceptions when evaluating.
+	* sconesite/SconesiteModule: Check authorization for profile setup.
+
 2010-01-29 Andrew Wedgbury <wedge@sconemad.com>
 
 	* sconex/File: Allow permissions to be specified when creating.

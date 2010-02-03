@@ -15,7 +15,9 @@
 @SET_MAKE@
 
 # SconeServer (http://www.sconemad.com)
-# automake file for http getfile module
+# automake file for DB SQL module
+
+
 
 VPATH = @srcdir@
 pkgdatadir = $(datadir)/@PACKAGE@
@@ -36,8 +38,9 @@ POST_UNINSTALL = :
 build_triplet = @build@
 host_triplet = @host@
 target_triplet = @target@
-subdir = http/getfile
-DIST_COMMON = $(srcdir)/Makefile.am $(srcdir)/Makefile.in
+subdir = dbsql
+DIST_COMMON = $(dbsqlinclude_HEADERS) $(srcdir)/Makefile.am \
+	$(srcdir)/Makefile.in
 ACLOCAL_M4 = $(top_srcdir)/aclocal.m4
 am__aclocal_m4_deps = $(top_srcdir)/configure.in
 am__configure_deps = $(am__aclocal_m4_deps) $(CONFIGURE_DEPENDENCIES) \
@@ -51,15 +54,18 @@ am__vpath_adj = case $$p in \
     *) f=$$p;; \
   esac;
 am__strip_dir = `echo $$p | sed -e 's|^.*/||'`;
-am__installdirs = "$(DESTDIR)$(pkglibdir)"
+am__installdirs = "$(DESTDIR)$(pkglibdir)" "$(DESTDIR)$(sysconfdir)" \
+	"$(DESTDIR)$(dbsqlincludedir)"
 pkglibLTLIBRARIES_INSTALL = $(INSTALL)
 LTLIBRARIES = $(pkglib_LTLIBRARIES)
-getfile_la_LIBADD =
-am_getfile_la_OBJECTS = GetFileModule.lo
-getfile_la_OBJECTS = $(am_getfile_la_OBJECTS)
-getfile_la_LINK = $(LIBTOOL) --tag=CXX $(AM_LIBTOOLFLAGS) \
+am__DEPENDENCIES_1 =
+dbsql_la_DEPENDENCIES = $(am__DEPENDENCIES_1)
+am_dbsql_la_OBJECTS = DbSqlModule.lo DbSqlProfile.lo DbSqlQuery.lo
+dbsql_la_OBJECTS = $(am_dbsql_la_OBJECTS)
+dbsql_la_LINK = $(LIBTOOL) --tag=CXX $(AM_LIBTOOLFLAGS) \
 	$(LIBTOOLFLAGS) --mode=link $(CXXLD) $(AM_CXXFLAGS) \
-	$(CXXFLAGS) $(getfile_la_LDFLAGS) $(LDFLAGS) -o $@
+	$(CXXFLAGS) $(dbsql_la_LDFLAGS) $(LDFLAGS) -o $@
+@BUILD_DBSQL_TRUE@am_dbsql_la_rpath = -rpath $(pkglibdir)
 DEFAULT_INCLUDES = -I.@am__isrc@ -I$(top_builddir)
 depcomp = $(SHELL) $(top_srcdir)/depcomp
 am__depfiles_maybe = depfiles
@@ -72,8 +78,12 @@ CXXLD = $(CXX)
 CXXLINK = $(LIBTOOL) --tag=CXX $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) \
 	--mode=link $(CXXLD) $(AM_CXXFLAGS) $(CXXFLAGS) $(AM_LDFLAGS) \
 	$(LDFLAGS) -o $@
-SOURCES = $(getfile_la_SOURCES)
-DIST_SOURCES = $(getfile_la_SOURCES)
+SOURCES = $(dbsql_la_SOURCES)
+DIST_SOURCES = $(dbsql_la_SOURCES)
+sysconfDATA_INSTALL = $(INSTALL_DATA)
+DATA = $(sysconf_DATA)
+dbsqlincludeHEADERS_INSTALL = $(INSTALL_HEADER)
+HEADERS = $(dbsqlinclude_HEADERS)
 ETAGS = etags
 CTAGS = ctags
 DISTFILES = $(DIST_COMMON) $(DIST_SOURCES) $(TEXINFOS) $(EXTRA_DIST)
@@ -195,11 +205,22 @@ target_vendor = @target_vendor@
 top_builddir = @top_builddir@
 top_srcdir = @top_srcdir@
 AM_CPPFLAGS = -I$(top_srcdir)
-pkglib_LTLIBRARIES = getfile.la
-getfile_la_SOURCES = \
-GetFileModule.cpp 
+@BUILD_DBSQL_TRUE@pkglib_LTLIBRARIES = dbsql.la
+dbsql_la_SOURCES = \
+DbSqlModule.cpp \
+DbSqlProfile.cpp \
+DbSqlQuery.cpp
 
-getfile_la_LDFLAGS = -module -avoid-version
+dbsqlincludedir = $(includedir)/dbsql
+dbsqlinclude_HEADERS = \
+DbSqlModule.h \
+DbSqlProfile.h \
+DbSqlQuery.h
+
+dbsql_la_LDFLAGS = -module -avoid-version
+dbsql_la_LIBADD = $(DBSQL_LIBADD)
+sysconf_DATA = dbsql.conf
+EXTRA_DIST = $(sysconf_DATA)
 all: all-am
 
 .SUFFIXES:
@@ -213,9 +234,9 @@ $(srcdir)/Makefile.in: @MAINTAINER_MODE_TRUE@ $(srcdir)/Makefile.am  $(am__confi
 	      exit 1;; \
 	  esac; \
 	done; \
-	echo ' cd $(top_srcdir) && $(AUTOMAKE) --gnits  http/getfile/Makefile'; \
+	echo ' cd $(top_srcdir) && $(AUTOMAKE) --gnits  dbsql/Makefile'; \
 	cd $(top_srcdir) && \
-	  $(AUTOMAKE) --gnits  http/getfile/Makefile
+	  $(AUTOMAKE) --gnits  dbsql/Makefile
 .PRECIOUS: Makefile
 Makefile: $(srcdir)/Makefile.in $(top_builddir)/config.status
 	@case '$?' in \
@@ -260,8 +281,8 @@ clean-pkglibLTLIBRARIES:
 	  echo "rm -f \"$${dir}/so_locations\""; \
 	  rm -f "$${dir}/so_locations"; \
 	done
-getfile.la: $(getfile_la_OBJECTS) $(getfile_la_DEPENDENCIES) 
-	$(getfile_la_LINK) -rpath $(pkglibdir) $(getfile_la_OBJECTS) $(getfile_la_LIBADD) $(LIBS)
+dbsql.la: $(dbsql_la_OBJECTS) $(dbsql_la_DEPENDENCIES) 
+	$(dbsql_la_LINK) $(am_dbsql_la_rpath) $(dbsql_la_OBJECTS) $(dbsql_la_LIBADD) $(LIBS)
 
 mostlyclean-compile:
 	-rm -f *.$(OBJEXT)
@@ -269,7 +290,9 @@ mostlyclean-compile:
 distclean-compile:
 	-rm -f *.tab.c
 
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/GetFileModule.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/DbSqlModule.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/DbSqlProfile.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/DbSqlQuery.Plo@am__quote@
 
 .cpp.o:
 @am__fastdepCXX_TRUE@	$(CXXCOMPILE) -MT $@ -MD -MP -MF $(DEPDIR)/$*.Tpo -c -o $@ $<
@@ -297,6 +320,40 @@ mostlyclean-libtool:
 
 clean-libtool:
 	-rm -rf .libs _libs
+install-sysconfDATA: $(sysconf_DATA)
+	@$(NORMAL_INSTALL)
+	test -z "$(sysconfdir)" || $(MKDIR_P) "$(DESTDIR)$(sysconfdir)"
+	@list='$(sysconf_DATA)'; for p in $$list; do \
+	  if test -f "$$p"; then d=; else d="$(srcdir)/"; fi; \
+	  f=$(am__strip_dir) \
+	  echo " $(sysconfDATA_INSTALL) '$$d$$p' '$(DESTDIR)$(sysconfdir)/$$f'"; \
+	  $(sysconfDATA_INSTALL) "$$d$$p" "$(DESTDIR)$(sysconfdir)/$$f"; \
+	done
+
+uninstall-sysconfDATA:
+	@$(NORMAL_UNINSTALL)
+	@list='$(sysconf_DATA)'; for p in $$list; do \
+	  f=$(am__strip_dir) \
+	  echo " rm -f '$(DESTDIR)$(sysconfdir)/$$f'"; \
+	  rm -f "$(DESTDIR)$(sysconfdir)/$$f"; \
+	done
+install-dbsqlincludeHEADERS: $(dbsqlinclude_HEADERS)
+	@$(NORMAL_INSTALL)
+	test -z "$(dbsqlincludedir)" || $(MKDIR_P) "$(DESTDIR)$(dbsqlincludedir)"
+	@list='$(dbsqlinclude_HEADERS)'; for p in $$list; do \
+	  if test -f "$$p"; then d=; else d="$(srcdir)/"; fi; \
+	  f=$(am__strip_dir) \
+	  echo " $(dbsqlincludeHEADERS_INSTALL) '$$d$$p' '$(DESTDIR)$(dbsqlincludedir)/$$f'"; \
+	  $(dbsqlincludeHEADERS_INSTALL) "$$d$$p" "$(DESTDIR)$(dbsqlincludedir)/$$f"; \
+	done
+
+uninstall-dbsqlincludeHEADERS:
+	@$(NORMAL_UNINSTALL)
+	@list='$(dbsqlinclude_HEADERS)'; for p in $$list; do \
+	  f=$(am__strip_dir) \
+	  echo " rm -f '$(DESTDIR)$(dbsqlincludedir)/$$f'"; \
+	  rm -f "$(DESTDIR)$(dbsqlincludedir)/$$f"; \
+	done
 
 ID: $(HEADERS) $(SOURCES) $(LISP) $(TAGS_FILES)
 	list='$(SOURCES) $(HEADERS) $(LISP) $(TAGS_FILES)'; \
@@ -373,9 +430,9 @@ distdir: $(DISTFILES)
 	done
 check-am: all-am
 check: check-am
-all-am: Makefile $(LTLIBRARIES)
+all-am: Makefile $(LTLIBRARIES) $(DATA) $(HEADERS)
 installdirs:
-	for dir in "$(DESTDIR)$(pkglibdir)"; do \
+	for dir in "$(DESTDIR)$(pkglibdir)" "$(DESTDIR)$(sysconfdir)" "$(DESTDIR)$(dbsqlincludedir)"; do \
 	  test -z "$$dir" || $(MKDIR_P) "$$dir"; \
 	done
 install: install-am
@@ -423,11 +480,11 @@ info: info-am
 
 info-am:
 
-install-data-am:
+install-data-am: install-dbsqlincludeHEADERS
 
 install-dvi: install-dvi-am
 
-install-exec-am: install-pkglibLTLIBRARIES
+install-exec-am: install-pkglibLTLIBRARIES install-sysconfDATA
 
 install-html: install-html-am
 
@@ -459,7 +516,8 @@ ps: ps-am
 
 ps-am:
 
-uninstall-am: uninstall-pkglibLTLIBRARIES
+uninstall-am: uninstall-dbsqlincludeHEADERS \
+	uninstall-pkglibLTLIBRARIES uninstall-sysconfDATA
 
 .MAKE: install-am install-strip
 
@@ -467,15 +525,17 @@ uninstall-am: uninstall-pkglibLTLIBRARIES
 	clean-libtool clean-pkglibLTLIBRARIES ctags distclean \
 	distclean-compile distclean-generic distclean-libtool \
 	distclean-tags distdir dvi dvi-am html html-am info info-am \
-	install install-am install-data install-data-am install-dvi \
-	install-dvi-am install-exec install-exec-am install-html \
-	install-html-am install-info install-info-am install-man \
-	install-pdf install-pdf-am install-pkglibLTLIBRARIES \
-	install-ps install-ps-am install-strip installcheck \
+	install install-am install-data install-data-am \
+	install-dbsqlincludeHEADERS install-dvi install-dvi-am \
+	install-exec install-exec-am install-html install-html-am \
+	install-info install-info-am install-man install-pdf \
+	install-pdf-am install-pkglibLTLIBRARIES install-ps \
+	install-ps-am install-strip install-sysconfDATA installcheck \
 	installcheck-am installdirs maintainer-clean \
 	maintainer-clean-generic mostlyclean mostlyclean-compile \
 	mostlyclean-generic mostlyclean-libtool pdf pdf-am ps ps-am \
-	tags uninstall uninstall-am uninstall-pkglibLTLIBRARIES
+	tags uninstall uninstall-am uninstall-dbsqlincludeHEADERS \
+	uninstall-pkglibLTLIBRARIES uninstall-sysconfDATA
 
 # Tell versions [3.59,3.63) of GNU make to not export all variables.
 # Otherwise a system limit (for SysV at least) may be exceeded.

@@ -141,7 +141,7 @@ AC_ARG_WITH([sconesite-image],
   [SCONESITE_IMAGE="$withval"],
   [SCONESITE_IMAGE="yes"]
 )
- Need ImageMagick for Sconesite:image
+# Need ImageMagick for Sconesite:image
 if test "x$SCONESITE_IMAGE" == "xyes"; then
   AC_CHECK_LIB([Magick++],[InitializeMagick],
     [CPPFLAGS="$CPPFLAGS `Magick++-config --cppflags`"
@@ -150,6 +150,22 @@ if test "x$SCONESITE_IMAGE" == "xyes"; then
      SCONESITE_IMAGE_LDFLAGS=`Magick++-config --ldflags`
      AC_SUBST(SCONESITE_IMAGE_LDFLAGS)],
     [AC_MSG_ERROR([library 'Magick++' is required for Sconesite:image])]
+  )
+fi
+
+# DbSql module
+AC_ARG_WITH([dbsql],
+  [AC_HELP_STRING([--with-dbsql],[Enable SQL Database module])],
+  [DBSQL="$withval"],
+  [DBSQL="yes"]
+)
+# Need MySql++ library for dbsql
+if test "x$DBSQL" == "xyes"; then
+  AC_CHECK_LIB([mysqlpp],[main],
+    [CPPFLAGS="$CPPFLAGS -I/usr/include/mysql++ -I/usr/include/mysql"
+     DBSQL_LIBADD="-lmysqlpp"
+     AC_SUBST(DBSQL_LIBADD)],
+    [AC_MSG_ERROR([library 'MySql++' is required for dbsql])]
   )
 fi
 
@@ -230,6 +246,7 @@ AM_CONDITIONAL(BUILD_TESTBUILDER, test x$TESTBUILDER = xyes)
 AM_CONDITIONAL(BUILD_LETTUCE, test x$LETTUCE = xyes)
 AM_CONDITIONAL(BUILD_SCONESITE, test x$SCONESITE = xyes)
 AM_CONDITIONAL(BUILD_SCONESITE_IMAGE, test x$SCONESITE_IMAGE = xyes)
+AM_CONDITIONAL(BUILD_DBSQL, test x$DBSQL = xyes)
 
 CPPFLAGS="$CPPFLAGS -Wall"
 
@@ -261,6 +278,7 @@ AC_CONFIG_FILES([testbuilder/Makefile])
 AC_CONFIG_FILES([lettuce/Makefile])
 AC_CONFIG_FILES([sconesite/Makefile])
 AC_CONFIG_FILES([sconesite/image/Makefile])
+AC_CONFIG_FILES([dbsql/Makefile])
 
 AC_OUTPUT
 
@@ -295,4 +313,5 @@ The following modules will be built:
   + examples       $EXAMPLES
   + testbuilder    $TESTBUILDER
   + lettuce        $LETTUCE
+  + dbsql          $DBSQL
 ])
