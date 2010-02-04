@@ -1,4 +1,9 @@
 
+2010-02-04 Andrew Wedgbury <wedge@sconemad.com>
+
+	* dbsql: Use mysqlclient c lib instead of MySql++.
+	* sconesite/SconesiteModule: Correct authorization check.
+
 2010-02-03 Andrew Wedgbury <wedge@sconemad.com>
 
 	* dbsql: New SQL Database interface module supporting MySQL.

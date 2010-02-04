@@ -41,17 +41,20 @@ DbSqlProfile::DbSqlProfile(
   std::string host = "";
   unsigned int port = 0;
 
-  m_connection = new mysqlpp::Connection(db.c_str(),
-					 host.c_str(),
-					 username.c_str(),
-					 password.c_str(),
-					 port);
+  m_connection = ::mysql_init(0);
+  ::mysql_real_connect(m_connection,
+		       host.c_str(),
+		       username.c_str(),
+		       password.c_str(),
+		       db.c_str(),
+		       port,
+		       0,0);
 }
 
 //=========================================================================
 DbSqlProfile::~DbSqlProfile()
 {
-  delete m_connection;
+  ::mysql_close(m_connection);
 }
 
 //=============================================================================

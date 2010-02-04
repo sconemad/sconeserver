@@ -143,9 +143,9 @@ scx::Arg* SconesiteModule::arg_method(
 {
   scx::ArgList* l = dynamic_cast<scx::ArgList*>(args);
 
-  if (!auth.admin()) return new scx::ArgError("Not permitted");
-
   if ("add" == name) {
+    if (!auth.admin()) return new scx::ArgError("Not permitted");
+
     const scx::ArgString* a_profile =
       dynamic_cast<const scx::ArgString*>(l->get(0));
     if (!a_profile) {

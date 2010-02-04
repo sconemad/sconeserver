@@ -84,9 +84,9 @@ scx::Arg* DbSqlModule::arg_method(
 {
   scx::ArgList* l = dynamic_cast<scx::ArgList*>(args);
 
-  if (!auth.admin()) return new scx::ArgError("Not permitted");
-
   if (name == "add") {
+    if (!auth.admin()) return new scx::ArgError("Not permitted");
+
     const scx::ArgString* a_profile = dynamic_cast<const scx::ArgString*>(l->get(0));
     if (!a_profile) return new scx::ArgError("add() No profile name specified");
     std::string s_profile = a_profile->get_string();

@@ -25,7 +25,7 @@ Free Software Foundation, Inc.,
 #include "DbSqlModule.h"
 #include "sconex/ArgObject.h"
 
-#include <mysql++.h>
+#include <mysql.h>
 
 namespace dbsql {
 
@@ -56,7 +56,7 @@ private:
 
   std::string m_name;
 
-  mysqlpp::Connection* m_connection;
+  MYSQL* m_connection;
 
 };
 

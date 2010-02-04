@@ -29,13 +29,9 @@ DbSqlQuery::DbSqlQuery(DbSqlProfile& profile,
 		       const std::string& query)
   : m_profile(profile),
     m_ref(m_profile.m_module.ref()),
-    m_query(new mysqlpp::Query(m_profile.m_connection))
+    m_query(new std::string(query))
 {
   DEBUG_COUNT_CONSTRUCTOR(DbSqlQuery);
-  if (!query.empty()) {
-    (*m_query) << query;
-    m_query->parse();
-  }
 }
 
 //=========================================================================
@@ -43,7 +39,7 @@ DbSqlQuery::DbSqlQuery(const DbSqlQuery& c)
   : Arg(c),
     m_profile(c.m_profile),
     m_ref(c.m_ref),
-    m_query(new mysqlpp::Query(*c.m_query))
+    m_query(new std::string(*c.m_query))
 {
   DEBUG_COUNT_CONSTRUCTOR(DbSqlQuery);
 }
@@ -82,13 +78,13 @@ scx::Arg* DbSqlQuery::ref_copy(RefType ref)
 //=========================================================================
 std::string DbSqlQuery::get_string() const
 {
-  return m_query->str();
+  return *m_query;
 }
 
 //=========================================================================
 int DbSqlQuery::get_int() const
 {
-  return m_query->success();
+  return !m_query->empty();
 }
 
 //=========================================================================
@@ -100,31 +96,29 @@ scx::Arg* DbSqlQuery::op(const scx::Auth& auth,scx::Arg::OpType optype, const st
     
     if ("exec" == m_method) {
       if (is_const()) return new scx::ArgError("Not permitted");
-
-      for (int i=0; i<l->size(); ++i) {
-	m_query->def += l->get(i)->get_string();
-      }
-      m_profile.m_module.log("{" + m_profile.m_name + "} exec: " + m_query->preview());
       
-      mysqlpp::Result res;
-      try {
-	res = m_query->store();
-      } catch (...) { 
-	return new scx::ArgError("Query failed: " + m_query->error());
-      }
+      MYSQL* conn = m_profile.m_connection;
 
+      m_profile.m_module.log("{"+m_profile.m_name+"} exec: "+*m_query);
+      if (::mysql_query(m_profile.m_connection,m_query->c_str())) {
+	// Error
+	return new scx::ArgError(::mysql_error(conn));
+      }
+      
+      MYSQL_RES* res = ::mysql_use_result(conn);
+      
       scx::ArgList* list = new scx::ArgList();
-      mysqlpp::Row row;
-      for (mysqlpp::Result::iterator it = res.begin();
-	   it != res.end();
-	   ++it) {
-	row = *it;
+      MYSQL_ROW row;
+      while ((row = ::mysql_fetch_row(res)) != 0) {
+	unsigned int n = ::mysql_num_fields(res);
 	scx::ArgList* row_list = new scx::ArgList();
-	for (unsigned int ir = 0; ir < row.size(); ++ir) {
-	  row_list->give( new scx::ArgString(row[ir]) );
+	for (unsigned int i=0; i<n; ++i) {
+	  row_list->give( new scx::ArgString(row[i]) );
 	}
 	list->give(row_list);
       }
+      
+      ::mysql_free_result(res);
       return list;
     }
     
@@ -132,7 +126,6 @@ scx::Arg* DbSqlQuery::op(const scx::Auth& auth,scx::Arg::OpType optype, const st
 
     if ("." == opname) {
       std::string name = right->get_string();
-      if (name == "preview") return new scx::ArgString(m_query->preview());
 
       if (name == "exec") return new_method(name);
     }
