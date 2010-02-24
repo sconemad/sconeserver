@@ -6,9 +6,7 @@ server framework for UNIX-like platforms.
 SconeServer is open source software, and is released under the terms of the 
 GNU General Public Licence, see the 'COPYING' file for more details.
 
-For further information see the SconeServer manual. This is in HTML format
-and can be found under the source tree in the 'doc/html' subdirectory (start 
-with 'index.html').
-
+For further information see the SconeServer manual, which can be found online
+at http://www.sconemad.com/sconeserver/.
 
 Andrew Wedgbury <wedge@sconemad.com>

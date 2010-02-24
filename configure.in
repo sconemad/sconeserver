@@ -253,7 +253,6 @@ CPPFLAGS="$CPPFLAGS -Wall"
 AC_CONFIG_FILES([Makefile])
 AC_CONFIG_FILES([sconex/Makefile])
 AC_CONFIG_FILES([doc/Makefile])
-AC_CONFIG_FILES([doc/html/Makefile])
 AC_CONFIG_FILES([doc/examples/Makefile])
 AC_CONFIG_FILES([doc/examples/tuesdayonly/Makefile])
 AC_CONFIG_FILES([doc/examples/rot13/Makefile])

@@ -1,7 +1,0 @@
-# scone node file
-
-MOD fish httpstats
-MOD . httpstats
-
-LINK pics /home/wedge/documents/Pictures/2003
-LINK film /mnt/media/film

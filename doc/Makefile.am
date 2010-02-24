@@ -1,9 +1,9 @@
 # SconeServer (http://www.sconemad.com)
 # automake file for sconeserver documentation
 
-SUBDIRS = examples html
+SUBDIRS = examples
 
-EXTRA_DIST = sitedef src tpl
+EXTRA_DIST = 
 
 # Remove subversion dirs when we pull in whole subdirectories
 dist-hook:

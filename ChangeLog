@@ -1,4 +1,8 @@
 
+2010-02-24 Andrew Wedgbury <wedge@sconemad.com>
+
+	* doc: Remove wmg generated doc - now maintained online.
+
 2010-02-04 Andrew Wedgbury <wedge@sconemad.com>
 
 	* dbsql: Use mysqlclient c lib instead of MySql++.
