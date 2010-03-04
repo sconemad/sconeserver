@@ -63,8 +63,8 @@ bool ArticleMetaSorter::operator()(const Article* a, const Article* b)
 {
   bool ret = !m_reverse;
   
-  const scx::Arg* a_arg = a->get_meta(m_meta);
-  const scx::Arg* b_arg = b->get_meta(m_meta);
+  const scx::Arg* a_arg = a->get_meta(m_meta,true);
+  const scx::Arg* b_arg = b->get_meta(m_meta,true);
 
   if (a_arg) {
     ret = m_reverse;

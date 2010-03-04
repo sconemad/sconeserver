@@ -1,4 +1,10 @@
 
+2010-03-04 Andrew Wedgbury <wedge@sconemad.com>
+
+	* router/ip: Don't automatically lookup hostnames.
+	* router/ip6: Don't automatically lookup hostnames.
+	* sconesite/Article: Use recursive meta lookup in MetaSorter.
+
 2010-02-24 Andrew Wedgbury <wedge@sconemad.com>
 
 	* doc: Remove wmg generated doc - now maintained online.

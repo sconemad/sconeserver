@@ -127,9 +127,14 @@ std::string IP6SocketAddress::get_string() const
       break;
   }
   
-  std::string host = get_host();
-  oss << host;
-  if (host.empty()) oss << get_address();
+  if (!m_host.empty()) {
+    // This commented out line results in the host being resolved automatically,
+    // which isn't always the right thing to do.
+    //    std::string host = get_host();
+    oss << m_host;
+  } else {
+    oss << get_address();
+  }
   oss << ":";
 
   std::string service = get_service();
