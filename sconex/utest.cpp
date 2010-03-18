@@ -32,7 +32,8 @@ int main(int argc,char* argv[])
   UTRUN(MimeHeader);
   UTRUN(MimeType);
   UTRUN(TimeDate);
-  UTRUN(VersionTag);
   UTRUN(Uri);
+  UTRUN(utils);
+  UTRUN(VersionTag);
   UTEND;
 }

@@ -49,6 +49,7 @@ protected:
   DbSqlProfile& m_profile;
   scx::ModuleRef m_ref;
   std::string* m_query;
+  MYSQL* m_conn;
 
 };
 

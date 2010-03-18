@@ -48,6 +48,8 @@ public:
   virtual scx::Arg* arg_lookup(const std::string& name);
   virtual scx::Arg* arg_method(const scx::Auth& auth,const std::string& name,scx::Arg* args);
 
+  MYSQL* new_connection();
+
 private:
 
   friend class DbSqlQuery;
@@ -55,8 +57,9 @@ private:
   DbSqlModule& m_module;
 
   std::string m_name;
-
-  MYSQL* m_connection;
+  std::string m_database;
+  std::string m_username;
+  std::string m_password;
 
 };
 

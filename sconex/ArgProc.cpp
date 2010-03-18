@@ -20,10 +20,11 @@ Free Software Foundation, Inc.,
 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA */
 
 #include "sconex/ArgProc.h"
+#include "sconex/utils.h"
 namespace scx {
 
 // Uncomment to enable debug info
-//#define ArgProc_DEBUG_LOG(m) DEBUG_LOG(m)
+#define ArgProc_DEBUG_LOG(m) DEBUG_LOG(m)
 
 #ifndef ArgProc_DEBUG_LOG
 #  define ArgProc_DEBUG_LOG(m)
@@ -194,7 +195,8 @@ Arg* ArgProc::expression(int p, bool f, bool exec)
 
           // Call the function
 
-          ArgProc_DEBUG_LOG("call: " << left->get_string());
+	  const std::type_info& ti = typeid(*left);
+          ArgProc_DEBUG_LOG("call: " << left->get_string() << " ("<< type_name(ti) << ")");
           Arg* new_left = 0;
 	  try {
 	    if (exec) new_left = left->op(m_auth,Arg::Binary,op,args);

@@ -1,4 +1,10 @@
 
+2010-03-18 Andrew Wedgbury <wedge@sconemad.com>
+
+	* dbsql: Further refactoring.
+	* sconex/utils: Fix escape_quotes() to handle quotes properly.
+	* sconex/utils_ut: Add unit tests for all utils functions.
+
 2010-03-04 Andrew Wedgbury <wedge@sconemad.com>
 
 	* router/ip: Don't automatically lookup hostnames.

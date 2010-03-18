@@ -33,28 +33,18 @@ DbSqlProfile::DbSqlProfile(
   const std::string& username,
   const std::string& password
 ) : m_module(module),
-    m_name(name)
+    m_name(name),
+    m_database(database),
+    m_username(username),
+    m_password(password)
 {
 
-  // TODO: decode host:port:db string
-  std::string db = database;
-  std::string host = "";
-  unsigned int port = 0;
-
-  m_connection = ::mysql_init(0);
-  ::mysql_real_connect(m_connection,
-		       host.c_str(),
-		       username.c_str(),
-		       password.c_str(),
-		       db.c_str(),
-		       port,
-		       0,0);
 }
 
 //=========================================================================
 DbSqlProfile::~DbSqlProfile()
 {
-  ::mysql_close(m_connection);
+
 }
 
 //=============================================================================
@@ -97,5 +87,26 @@ scx::Arg* DbSqlProfile::arg_method(
   return SCXBASE ArgObjectInterface::arg_method(auth,name,args);
 }
 
+//=============================================================================
+MYSQL* DbSqlProfile::new_connection()
+{
+  // TODO: decode host:port:db string
+  std::string db = m_database;
+  std::string host = "";
+  unsigned int port = 0;
+
+  MYSQL* conn = ::mysql_init(0);
+  if (::mysql_real_connect(conn,
+			   host.c_str(),
+			   m_username.c_str(),
+			   m_password.c_str(),
+			   db.c_str(),
+			   port,
+			   0,
+			   0)) {
+    // error?
+  }
+  return conn;
+}
 
 };

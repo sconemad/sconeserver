@@ -25,11 +25,37 @@ Free Software Foundation, Inc.,
 namespace dbsql {
 
 //=========================================================================
+class DbSqlBind {
+public:
+
+  DbSqlBind(enum_field_types type)
+    : m_type(type)
+  {
+    
+  };
+
+  ~DbSqlBind()
+  {
+
+  };
+
+
+public:
+  enum_field_types m_type; // enum_field_type
+
+
+};
+
+typedef std::vector<DbSqlBind> DbSqlBindList;
+
+
+//=========================================================================
 DbSqlQuery::DbSqlQuery(DbSqlProfile& profile,
 		       const std::string& query)
   : m_profile(profile),
     m_ref(m_profile.m_module.ref()),
-    m_query(new std::string(query))
+    m_query(new std::string(query)),
+    m_conn(profile.new_connection())
 {
   DEBUG_COUNT_CONSTRUCTOR(DbSqlQuery);
 }
@@ -39,7 +65,8 @@ DbSqlQuery::DbSqlQuery(const DbSqlQuery& c)
   : Arg(c),
     m_profile(c.m_profile),
     m_ref(c.m_ref),
-    m_query(new std::string(*c.m_query))
+    m_query(new std::string(*c.m_query)),
+    m_conn(c.m_profile.new_connection())
 {
   DEBUG_COUNT_CONSTRUCTOR(DbSqlQuery);
 }
@@ -49,7 +76,8 @@ DbSqlQuery::DbSqlQuery(RefType ref, DbSqlQuery& c)
   : Arg(ref,c),
     m_profile(c.m_profile),
     m_ref(c.m_ref),
-    m_query(c.m_query)
+    m_query(c.m_query),
+    m_conn(c.m_conn)
 {
   DEBUG_COUNT_CONSTRUCTOR(DbSqlQuery);
 }
@@ -59,6 +87,7 @@ DbSqlQuery::~DbSqlQuery()
 {
   if (last_ref()) {
     delete m_query;
+    ::mysql_close(m_conn);
   }
   DEBUG_COUNT_DESTRUCTOR(DbSqlQuery);
 }
@@ -97,15 +126,13 @@ scx::Arg* DbSqlQuery::op(const scx::Auth& auth,scx::Arg::OpType optype, const st
     if ("exec" == m_method) {
       if (is_const()) return new scx::ArgError("Not permitted");
       
-      MYSQL* conn = m_profile.m_connection;
-
       m_profile.m_module.log("{"+m_profile.m_name+"} exec: "+*m_query);
-      if (::mysql_query(m_profile.m_connection,m_query->c_str())) {
+      if (::mysql_query(m_conn,m_query->c_str())) {
 	// Error
-	return new scx::ArgError(::mysql_error(conn));
+	return new scx::ArgError(::mysql_error(m_conn));
       }
       
-      MYSQL_RES* res = ::mysql_use_result(conn);
+      MYSQL_RES* res = ::mysql_use_result(m_conn);
       
       scx::ArgList* list = new scx::ArgList();
       MYSQL_ROW row;

@@ -140,6 +140,7 @@ MimeHeader_ut.cpp \
 MimeType_ut.cpp \
 TimeDate_ut.cpp \
 Uri_ut.cpp \
+utils_ut.cpp \
 VersionTag_ut.cpp
 
 utest_LDADD = libsconex.la

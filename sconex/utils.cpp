@@ -56,7 +56,7 @@ std::string escape_quotes(const std::string& s)
   int n = s.length();
   for (int i=0; i<n; ++i) {
     char c = s[i];
-    if (isgraph(c) || ' '==c) {
+    if ((isgraph(c) || ' '==c) && ('\"' != c && '\'' != c)) {
       r += c;
     } else {
       char e = 0;
