@@ -78,6 +78,8 @@ protected:
   scx::ArgObject* m_response_obj;
 
   scx::ArgMap m_scx_env;
+  typedef std::vector<scx::ArgStatementGroup*> ArgStatementGroupList;
+  ArgStatementGroupList m_old_groups;
 
   Article* m_article;
 };

@@ -1,4 +1,9 @@
 
+2010-03-22 Andrew Wedgbury <wedge@sconemad.com>
+
+	* sconesite/RenderMarkup: Stack up old statement groups to allow
+	subroutines defined in completed templates to access context.
+
 2010-03-18 Andrew Wedgbury <wedge@sconemad.com>
 
 	* dbsql: Further refactoring.

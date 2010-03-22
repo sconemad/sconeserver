@@ -56,6 +56,12 @@ RenderMarkupContext::RenderMarkupContext(
 //=========================================================================
 RenderMarkupContext::~RenderMarkupContext()
 {
+  for (ArgStatementGroupList::iterator it = m_old_groups.begin();
+       it != m_old_groups.end();
+       ++it) {
+    delete *it;
+  }
+
   http::Response* response = dynamic_cast<http::Response*>(m_response_obj->get_object());
   delete m_response_obj;
   if (response->get_num_refs() == 0) {
@@ -70,7 +76,7 @@ Profile& RenderMarkupContext::get_profile()
 {
   return m_profile;
 }
-
+  
 //=========================================================================
 const http::Request& RenderMarkupContext::get_request() const
 {
@@ -205,11 +211,12 @@ void RenderMarkupContext::handle_process(const std::string& name, const char* da
       scx::MemFile mfile(&fbuf);
 
       // Create root statement using our environment
-      scx::ArgStatementGroup root(&m_scx_env);
-      root.set_parent(this);
+      scx::ArgStatementGroup* root = new scx::ArgStatementGroup(&m_scx_env);
+      m_old_groups.push_back(root);
+      root->set_parent(this);
       
       // Create a script parser
-      scx::ArgScript* script = new scx::ArgScript(&root);
+      scx::ArgScript* script = new scx::ArgScript(root);
       mfile.add_stream(script);
 
       // Parse statements
@@ -217,7 +224,7 @@ void RenderMarkupContext::handle_process(const std::string& name, const char* da
 
       // Run statements
       scx::ArgProc proc(auth);
-      ret = root.execute(proc);
+      ret = root->execute(proc);
       delete ret;
 
     } catch (...) { 
