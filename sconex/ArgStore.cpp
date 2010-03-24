@@ -183,7 +183,7 @@ Arg* ArgStore::arg_method(const Auth& auth, const std::string& name,Arg* args)
 void ArgStore::store_arg(Descriptor& out, const Arg* arg)
 {
   if (arg == 0) {
-    out.write("0");
+    out.write("NULL");
     return;
   }
 
@@ -224,7 +224,7 @@ void ArgStore::store_arg(Descriptor& out, const Arg* arg)
     out.write("}");
 
   } else {
-    out.write("");
+    out.write("NULL");
     //    write("\"" + arg->get_string() + "\"");
   }
 }

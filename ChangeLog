@@ -1,4 +1,9 @@
 
+2010-03-24 Andrew Wedgbury <wedge@sconemad.com>
+
+	* sconex/ArgStore: Use NULL symbol when writing NULL or unknown args.
+	* sconex/ArgProc: Recognise NULL symbol when evaluating.
+
 2010-03-22 Andrew Wedgbury <wedge@sconemad.com>
 
 	* sconesite/RenderMarkup: Stack up old statement groups to allow

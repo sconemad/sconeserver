@@ -24,7 +24,7 @@ Free Software Foundation, Inc.,
 namespace scx {
 
 // Uncomment to enable debug info
-#define ArgProc_DEBUG_LOG(m) DEBUG_LOG(m)
+// #define ArgProc_DEBUG_LOG(m) DEBUG_LOG(m)
 
 #ifndef ArgProc_DEBUG_LOG
 #  define ArgProc_DEBUG_LOG(m)
@@ -410,7 +410,7 @@ Arg* ArgProc::primary(bool f, bool exec)
     } break;
 
     case ArgProc::Value: {
-      ArgProc_DEBUG_LOG("primary: (value) " << m_value->get_string());
+      ArgProc_DEBUG_LOG("primary: (value) " << (m_value ? m_value->get_string() : "NULL"));
       Arg* a = m_value;
       next();
       return a;
@@ -559,6 +559,14 @@ void ArgProc::next()
       return;
     }
 
+    // Special name
+    if ("NULL" == m_name) {
+      m_type = ArgProc::Value;
+      m_value = new ArgError("NULL");
+      ArgProc_DEBUG_LOG("next: (NULL) " << m_name);
+      return;
+    }
+    
     // Name
     m_type = ArgProc::Name;
     ArgProc_DEBUG_LOG("next: (name) " << m_name);
