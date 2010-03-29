@@ -120,7 +120,10 @@ public:
 
   virtual int fd() =0;
   // Get the file descriptor
- 
+
+  bool set_blocking(bool onoff);
+  // Set the descriptor blocking option
+  
 protected:
 
   virtual int event_create();
@@ -135,9 +138,6 @@ protected:
   virtual Condition endpoint_write(const void* buffer,int n,int& na) =0;
   // Implement in derived classes to provide I/O direct to the
   // underlying stream.
-
-  void set_blocking(bool onoff);
-  // Set the descriptor blocking option
 
   //----------------------------
   // Data  

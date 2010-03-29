@@ -102,6 +102,26 @@ ResponseStream::~ResponseStream()
 }
 
 //=========================================================================
+std::string ResponseStream::stream_status() const
+{
+  std::ostringstream oss;
+  oss << "seq:";
+  switch (m_resp_seq) {
+    case resp_Start: oss << "S"; break;
+    case resp_ReadSingle: oss << "RS"; break;
+    case resp_ReadMultiStart: oss << "RMS"; break;
+    case resp_ReadMultiBoundary: oss << "RMBnd"; break;
+    case resp_ReadMultiHeader: oss << "RMH"; break;
+    case resp_ReadMultiBody: oss << "RMB"; break;
+    case resp_ReadEnd: oss << "RE"; break;
+    case resp_Write: oss << "W"; break;
+    case resp_WriteWait: oss << "WW"; break;
+    case resp_End: oss << "E"; break;
+  }
+  return oss.str();
+}
+
+//=========================================================================
 std::string ResponseStream::html_esc(
   std::string str
 )

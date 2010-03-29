@@ -108,10 +108,20 @@ SconesiteStream::~SconesiteStream()
 }
 
 //=========================================================================
+std::string SconesiteStream::stream_status() const
+{
+  std::ostringstream oss;
+  oss << http::ResponseStream::stream_status()
+      << " prf:" << m_profile
+      << " art:" << (m_article ? m_article->get_href_path() : "NULL");
+  return oss.str();
+}
+
+//=========================================================================
 scx::Condition SconesiteStream::send_response()
 {
   http::MessageStream* msg = GET_HTTP_MESSAGE();
-  const http::Request& req = msg->get_request();
+  http::Request& req = const_cast<http::Request&>(msg->get_request());
   http::Response& resp = msg->get_response();
   const scx::Uri& uri = req.get_uri();
 
@@ -130,10 +140,9 @@ scx::Condition SconesiteStream::send_response()
   m_article = profile->get_index()->find_article(pathinfo,art_file);
 
   if (!art_file.empty()) {
-    // Update the path in the request (cast away const for this!)
-    http::Request& reqmod = const_cast<http::Request&>(req);
+    // Update the path in the request
     scx::FilePath path = m_article->get_root() + art_file;
-    reqmod.set_path(path);
+    req.set_path(path);
 
     if (scx::FileStat(path).is_file()) {
       // Connect the getfile module and relinquish
@@ -168,27 +177,35 @@ scx::Condition SconesiteStream::send_response()
     return scx::Close;
   }
   
-  // Create a socketpair to connect to the render job thread
-  scx::StreamSocket* source = 0;
-  scx::StreamSocket* bio = 0;
-  scx::StreamSocket::pair(source,bio,"sconesite","sconesite-bio");
+  // Set the endpoint blocking, saving previous state
+  bool prev_block = endpoint().set_blocking(true);
   
-  // Create a transfer to transfer from source into this stream
-  scx::StreamTransfer* xfer = new scx::StreamTransfer(source,1024);
-  xfer->set_close_when_finished(true);
-  endpoint().add_stream(xfer);
-  scx::Kernel::get()->connect(source,0);
-  
-  // Create context for rendering HTML to the bio socket
-  RenderMarkupContext* ctx = new RenderMarkupContext(*profile,bio,req,resp);
+  // Create context for rendering article
+  RenderMarkupContext* ctx = new RenderMarkupContext(*profile,endpoint(),req,resp);
   ctx->set_article(m_article);
-  
-  // Create and add a job to render this page
-  RenderMarkupJob* job = new RenderMarkupJob(ctx);
-  scx::Kernel::get()->add_job(job);
-  
-  // Don't need us any more!
-  return scx::End;
+
+  // Find the template to use, if one was specified, otherwise use the default
+  std::string tplname = req.get_param("tpl");
+  if (tplname.empty()) tplname = "default";
+  Template* tpl = profile->lookup_template(tplname);
+
+  // Render the page
+  try {
+    if (!tpl) {
+      ctx->handle_error("No template");
+    } else {
+      tpl->process(*ctx);
+    }
+  } catch (...) {
+    DEBUG_LOG("EXCEPTION caught in SconesiteStream")
+  }
+
+  // Restore endpoint blocking state and reset timeout
+  endpoint().set_blocking(prev_block);
+  endpoint().reset_timeout();
+
+  // Finished
+  return scx::Close;
 }
 
 //=========================================================================
@@ -208,7 +225,7 @@ scx::Condition SconesiteStream::start_section(const scx::MimeHeaderTable& header
 
     Profile* profile = m_module.lookup_profile(m_profile);
     std::string pathinfo = req.get_path_info();
-    std::string::size_type is = pathinfo.find_first_of("/");
+    //    std::string::size_type is = pathinfo.find_first_of("/");
     std::string art_name = pathinfo;
     std::string art_file = "";
     /*

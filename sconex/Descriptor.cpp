@@ -244,6 +244,26 @@ int Descriptor::uid() const
 }
 
 //=============================================================================
+bool Descriptor::set_blocking(bool onoff)
+{
+  // Get current flags and save previous blocking mode
+  // note: flag indicates NON blocking state
+  int flags = fcntl(fd(),F_GETFL);
+  bool prev = 0 == (flags & O_NONBLOCK);
+
+  // Update flag and set
+  if (onoff) {
+    flags &= ~O_NONBLOCK;
+  } else {
+    flags |= O_NONBLOCK;
+  }
+  if (fcntl(fd(),F_SETFL,flags) < 0) {
+    DESCRIPTOR_DEBUG_LOG("set_blocking() could not change mode");
+  }
+  return prev;
+}
+
+//=============================================================================
 int Descriptor::event_create()
 {
   return 0;
@@ -527,22 +547,6 @@ bool Descriptor::check_timeout() const
   }
   return (scx::Date::now() >= m_timeout);
 }
-
-//=============================================================================
-void Descriptor::set_blocking(bool onoff)
-{
-  // Set non-blocking mode
-  int flags = fcntl(fd(),F_GETFL);
-  if (onoff) {
-    flags &= ~O_NONBLOCK;
-  } else {
-    flags |= O_NONBLOCK;
-  }
-  if (fcntl(fd(),F_SETFL,flags) < 0) {
-    DESCRIPTOR_DEBUG_LOG("set_blocking() could not change mode");
-  }
-}
-
 
 //=============================================================================
 DescriptorJob::DescriptorJob(Descriptor* d)

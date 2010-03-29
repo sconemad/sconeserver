@@ -24,7 +24,7 @@ Free Software Foundation, Inc.,
 namespace scx {
 
 // Uncomment to enable debug info
-// #define ArgProc_DEBUG_LOG(m) DEBUG_LOG(m)
+//#define ArgProc_DEBUG_LOG(m) DEBUG_LOG(m)
 
 #ifndef ArgProc_DEBUG_LOG
 #  define ArgProc_DEBUG_LOG(m)

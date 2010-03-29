@@ -1,4 +1,17 @@
 
+2010-03-29 Andrew Wedgbury <wedge@sconemad.com>
+
+	* sconex/Descriptor: Make set_blocking() public, returning prev state.
+	* http/MessageStream: Make response a simple member variable.
+	* http/ResponseStream: Add stream_status() for debug info.
+	* sconesite/RenderMarkup: Remove RenderMarkupJob as no longer used.
+	No need to copy request/response objects as rendering now done in 
+	http message thread.
+	Article section rendering support.
+	* sconesite/SconesiteStream: Perform rendering in same thread, setting
+	socket to blocking while this is done. 
+	Add stream_status().
+
 2010-03-24 Andrew Wedgbury <wedge@sconemad.com>
 
 	* sconex/ArgStore: Use NULL symbol when writing NULL or unknown args.

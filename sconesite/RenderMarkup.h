@@ -31,7 +31,6 @@ Free Software Foundation, Inc.,
 #include "sconex/Descriptor.h"
 #include "sconex/FilePath.h"
 #include "sconex/FileDir.h"
-#include "sconex/Job.h"
 #include "sconex/ArgStatement.h"
 
 class Profile;
@@ -44,8 +43,8 @@ public:
 
   RenderMarkupContext(
     Profile& profile,
-    scx::Descriptor* output,
-    const http::Request& request,
+    scx::Descriptor& output,
+    http::Request& request,
     http::Response& response
   );
 
@@ -73,33 +72,18 @@ public:
 protected:
   
   Profile& m_profile;
-  scx::Descriptor* m_output;
-  http::Request m_request;
-  scx::ArgObject* m_response_obj;
+  scx::Descriptor& m_output;
+  http::Request& m_request;
+  http::Response& m_response;
 
   scx::ArgMap m_scx_env;
   typedef std::vector<scx::ArgStatementGroup*> ArgStatementGroupList;
   ArgStatementGroupList m_old_groups;
 
   Article* m_article;
-};
 
-//=========================================================================
-class RenderMarkupJob : public scx::Job {
-
-public:
-
-  RenderMarkupJob(RenderMarkupContext* ctx);
-  virtual ~RenderMarkupJob();
-
-  virtual bool should_run();
-  virtual bool run();
-  virtual std::string describe() const;
-
-protected:
-
-  RenderMarkupContext* m_context;
-
+  std::string m_section;
+  bool m_inhibit;
 };
 
 #endif

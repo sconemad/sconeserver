@@ -40,6 +40,8 @@ public:
   );
   
   ~SconesiteStream();
+
+  virtual std::string stream_status() const;
   
 protected:
 

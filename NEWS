@@ -1,5 +1,5 @@
 
-0.8.0 2009-09-xx Andrew Wedgbury <wedge@sconemad.com>
+0.8.0 2010-04-xx Andrew Wedgbury <wedge@sconemad.com>
 
         * Major SconeScript improvements:
          - Short circuit | and & operators.
@@ -7,6 +7,8 @@
 	 - Authority levels allowing arg call security.
          - Lots of bug fixes.
          - Scripted test system.
+	 - Literal initialiser synax compatible with JSON.
+	 - New object serialiser.
 	* Combined I/O multiplexer and job scheduling system:
          - Low CPU overhead
 	 - Flexible thread pool system.
@@ -18,9 +20,9 @@
          - Multipart POST processing.
         * New module: 'sconesite' web site management, includes:
           - XML template driven page generation.
-          - Multi-threaded job scheduler.
-          - Server side SconeScript.
-          - Upload/wiki support.
+          - Server side inline SconeScript.
+          - Supports multipart form upload.
+          - Image manipulation module using ImageMagick.
         * New module: 'lettuce' (http://www.sconemad.com/lettuce)
         * New module: 'forward' connection forwarding.
 

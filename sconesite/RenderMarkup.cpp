@@ -40,15 +40,16 @@ Free Software Foundation, Inc.,
 //=========================================================================
 RenderMarkupContext::RenderMarkupContext(
   Profile& profile,
-  scx::Descriptor* output,
-  const http::Request& request,
+  scx::Descriptor& output,
+  http::Request& request,
   http::Response& response
 
 ) : m_profile(profile),
     m_output(output),
     m_request(request),
-    m_response_obj(new scx::ArgObject(&response)),
-    m_article(0)
+    m_response(response),
+    m_article(0),
+    m_inhibit(false)
 {
 
 }
@@ -61,14 +62,6 @@ RenderMarkupContext::~RenderMarkupContext()
        ++it) {
     delete *it;
   }
-
-  http::Response* response = dynamic_cast<http::Response*>(m_response_obj->get_object());
-  delete m_response_obj;
-  if (response->get_num_refs() == 0) {
-    DEBUG_LOG("--- RMC deleting response")
-    delete response;
-  }
-  delete m_output;
 }
 
 //=========================================================================
@@ -115,6 +108,14 @@ bool RenderMarkupContext::handle_start(const std::string& name, XMLAttrs& attrs,
     delete arg;
     return result;
 
+  } else if (name == "section") {
+    if (!m_section.empty()) {
+      m_inhibit = (attrs["name"] != m_section);
+    } else {
+      m_inhibit = (attrs.count("default") == 0);
+    }
+    descend = !empty;
+    
   } else {
 
     if (name == "img") {
@@ -144,7 +145,7 @@ bool RenderMarkupContext::handle_start(const std::string& name, XMLAttrs& attrs,
       oss << "/>";
       descend = false;
     }
-    m_output->write(oss.str());
+    if (!m_inhibit) m_output.write(oss.str());
   }
   return descend;
 }
@@ -159,10 +160,21 @@ bool RenderMarkupContext::handle_end(const std::string& name, XMLAttrs& attrs)
       name == "template") {
     // Ignore
 
+  } else if (name == "section") {
+    if (!m_section.empty()) {
+      if (!m_inhibit) {
+        m_inhibit = (attrs["name"] == m_section);
+      }
+    } else {
+      if (m_inhibit) {
+        m_inhibit = (attrs.count("default") == 1);
+      }
+    }
+  
   } else {
     std::ostringstream oss;
     oss << "</" << name << ">";
-    m_output->write(oss.str());
+    if (!m_inhibit) m_output.write(oss.str());
   }
 
   return repeat;
@@ -171,6 +183,8 @@ bool RenderMarkupContext::handle_end(const std::string& name, XMLAttrs& attrs)
 //=========================================================================
 void RenderMarkupContext::handle_process(const std::string& name, const char* data)
 {
+  if (m_inhibit) return;
+    
   //  scx::Auth auth(scx::Auth::Untrusted);
   scx::Auth auth(scx::Auth::Trusted);
   XMLDoc* doc = get_current_doc();
@@ -192,7 +206,7 @@ void RenderMarkupContext::handle_process(const std::string& name, const char* da
       if (arg) {
 	std::string str = arg->get_string();
 	if (!str.empty()) {
-	  m_output->write(str);
+	  m_output.write(str);
 	}
       }
     } catch (...) {
@@ -238,10 +252,12 @@ void RenderMarkupContext::handle_process(const std::string& name, const char* da
 //=========================================================================
 void RenderMarkupContext::handle_text(const char* text)
 {
+  if (m_inhibit) return;
+
   const char* p = text;
   while (*p == '\n' || *p == '\r') ++p;
   if (*p != '\0') {
-    m_output->write(p);
+    m_output.write(p);
   }
 }
 
@@ -254,12 +270,12 @@ void RenderMarkupContext::handle_comment(const char* text)
 //=========================================================================
 void RenderMarkupContext::handle_error(const std::string& msg)
 {
-  m_output->write("<html><body>");
-  m_output->write("<p class='scxerror'>ERROR: Cannot process article</p>");
-  m_output->write("<pre>");
-  m_output->write(msg);
-  m_output->write("</pre>");
-  m_output->write("</body></html>");
+  m_output.write("<html><body>");
+  m_output.write("<p class='scxerror'>ERROR: Cannot process article</p>");
+  m_output.write("<pre>");
+  m_output.write(msg);
+  m_output.write("</pre>");
+  m_output.write("</body></html>");
 }
 
 //=========================================================================
@@ -292,7 +308,7 @@ scx::Arg* RenderMarkupContext::arg_lookup(const std::string& name)
 
   // Sub-objects
   if ("request" == name) return new scx::ArgObject(&m_request);
-  if ("response" == name) return m_response_obj->new_copy();
+  if ("response" == name) return new scx::ArgObject(&m_response);
   if ("session" == name) {
     if (m_request.get_session()) {
       return new scx::ArgObject(m_request.get_session());
@@ -326,7 +342,7 @@ scx::Arg* RenderMarkupContext::arg_method(const scx::Auth& auth,const std::strin
   if (name == "print") {
     int n = l->size();
     for (int i=0; i<n; ++i) { 
-      m_output->write(l->get(i)->get_string());
+      m_output.write(l->get(i)->get_string());
     }
     return 0;
   }
@@ -334,13 +350,13 @@ scx::Arg* RenderMarkupContext::arg_method(const scx::Auth& auth,const std::strin
   if (name == "print_esc") {
     int n = l->size();
     for (int i=0; i<n; ++i) { 
-      m_output->write(scx::escape_html(l->get(i)->get_string()));
+      m_output.write(scx::escape_html(l->get(i)->get_string()));
     }
     return 0;
   }
   
   if (name == "print_json") {
-    scx::ArgStore::store_arg(*m_output,l->get(0));
+    scx::ArgStore::store_arg(m_output,l->get(0));
     return 0;
   }
 
@@ -365,13 +381,21 @@ scx::Arg* RenderMarkupContext::arg_method(const scx::Auth& auth,const std::strin
     }
     if (!art) return new scx::ArgError("No article to process");
 
+    scx::Arg* a_section = l->get(1);
+    std::string section = "";
+    if (a_section) section = a_section->get_string();
+    
     // Save current state and setup to process new article
     Article* orig_art = m_article; m_article = art;
+    std::string orig_section = m_section; m_section = section;
+    bool orig_inhibit = m_inhibit; m_inhibit = (!m_section.empty());
     
     art->process(*this);
 
     // Restore previous state
     m_article = orig_art;
+    m_section = orig_section;
+    m_inhibit = orig_inhibit;
     return 0;
   }
 
@@ -385,7 +409,7 @@ scx::Arg* RenderMarkupContext::arg_method(const scx::Auth& auth,const std::strin
 	int na = 0;
         while (scx::Ok == file->read(buffer,1000,na)) {
           std::string str(buffer,na);
-          m_output->write(scx::escape_html(str));
+          m_output.write(scx::escape_html(str));
         }
       }
       delete file;
@@ -411,59 +435,10 @@ scx::Arg* RenderMarkupContext::arg_method(const scx::Auth& auth,const std::strin
   if (name == "abort") {
     if (!auth.trusted()) return new scx::ArgError("Not permitted");
 
-    m_output->close();
+    //    m_output.close();
+    throw std::exception();
     return 0;
   }
 
   return Context::arg_method(auth,name,args);
-}
-
-
-
-//=========================================================================
-RenderMarkupJob::RenderMarkupJob(RenderMarkupContext* ctx)
-  : Job("sconesite::RenderMarkup"),
-    m_context(ctx)
-{
-
-}
-
-//=========================================================================
-RenderMarkupJob::~RenderMarkupJob()
-{
-  delete m_context;
-}
-
-//=============================================================================
-bool RenderMarkupJob::should_run()
-{
-  return true;
-}
-
-//=========================================================================
-bool RenderMarkupJob::run()
-{
-  //  DEBUG_LOG("Running " << type() << " " << describe());
-
-  std::string tplname = m_context->get_request().get_param("tpl");
-  if (tplname.empty()) {
-    tplname = "default";
-  }
-
-  Template* tpl = m_context->get_profile().lookup_template(tplname);
-
-  if (!tpl) {
-    m_context->handle_error("No template");
-
-  } else {
-    tpl->process(*m_context);
-  }
-
-  return true;
-}
-
-//=========================================================================
-std::string RenderMarkupJob::describe() const
-{
-  return std::string(m_context->get_article() ? m_context->get_article()->get_name() : "(no article)");
 }

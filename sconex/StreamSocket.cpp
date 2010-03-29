@@ -182,8 +182,7 @@ Condition StreamSocket::endpoint_read(
 
   // Fatal error occured,
   na = 0;
-  STREAMSOCKET_DEBUG_LOG("read() error: " << error());
-  STREAMSOCKET_DEBUG_LOG("error code: " << errno);
+  STREAMSOCKET_DEBUG_LOG("read() error: " << error() << " errno: " << errno);
   m_state = Socket::Closed;
   return scx::Error;
 }
@@ -215,7 +214,7 @@ Condition StreamSocket::endpoint_write(
 
   // Fatal error occured
   na = 0;
-  STREAMSOCKET_DEBUG_LOG("write() error: " << error());
+  STREAMSOCKET_DEBUG_LOG("write() error: " << error() << " errno: " << errno);
   m_state = Socket::Closed;
   return scx::Error;
 }

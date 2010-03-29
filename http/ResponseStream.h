@@ -61,6 +61,8 @@ public:
   
   ~ResponseStream();
 
+  virtual std::string stream_status() const;
+
   static std::string html_esc(std::string str);
 
 protected:

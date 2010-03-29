@@ -88,8 +88,7 @@ private:
   HTTPModule& m_module;
   ConnectionStream& m_httpstream;
   Request* m_request;
-  Response* m_response;
-  scx::ArgObject* m_response_obj;
+  Response m_response;
 
   bool m_error_response;
 

@@ -156,14 +156,14 @@ Arg* Kernel::arg_lookup(const std::string& name)
       "shutdown" == name ||
       "set_user" == name ||
       "set_thread_pool" == name ||
-      "set_latency" == name) {
+      "set_latency" == name ||
+      "defined" == name) {
     return new_method(name);
   }      
 
   // Constructors for sconex Arg classes
 
-  if ("defined" == name ||
-      "String" == name ||
+  if ("String" == name ||
       "Int" == name ||
       "Real" == name ||
       "Error" == name ||
@@ -178,6 +178,7 @@ Arg* Kernel::arg_lookup(const std::string& name)
 
   // Properties
 
+  if ("sconeserver" == name) return new ArgModule(ref());
   if ("jobs" == name) return new scx::ArgString(m_spinner.describe());
   if ("root" == name) return new scx::ArgInt(geteuid() == 0);
   if ("thread_pool" == name) return new scx::ArgInt(m_spinner.get_num_threads());
