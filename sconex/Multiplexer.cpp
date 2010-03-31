@@ -23,8 +23,6 @@ Free Software Foundation, Inc.,
 #include "sconex/Descriptor.h"
 #include "sconex/Stream.h"
 
-#include <sys/time.h>
-
 namespace scx {
 
 //=============================================================================

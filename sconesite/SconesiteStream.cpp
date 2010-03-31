@@ -181,8 +181,8 @@ scx::Condition SconesiteStream::send_response()
   bool prev_block = endpoint().set_blocking(true);
   
   // Create context for rendering article
-  RenderMarkupContext* ctx = new RenderMarkupContext(*profile,endpoint(),req,resp);
-  ctx->set_article(m_article);
+  RenderMarkupContext ctx(*profile,endpoint(),req,resp);
+  ctx.set_article(m_article);
 
   // Find the template to use, if one was specified, otherwise use the default
   std::string tplname = req.get_param("tpl");
@@ -192,9 +192,9 @@ scx::Condition SconesiteStream::send_response()
   // Render the page
   try {
     if (!tpl) {
-      ctx->handle_error("No template");
+      ctx.handle_error("No template");
     } else {
-      tpl->process(*ctx);
+      tpl->process(ctx);
     }
   } catch (...) {
     DEBUG_LOG("EXCEPTION caught in SconesiteStream")

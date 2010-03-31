@@ -8,12 +8,6 @@ For 0.8.0 release
 * HTTP
  - AuthRealm passwords stored in sha1
 
-* Sconesite 
- - Article file/upload file manager object
- - Hierarchical article trees 
- - Image handler
-
-
 ------------------------
 NEW MODULES
 ------------------------

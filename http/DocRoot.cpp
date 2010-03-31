@@ -28,6 +28,7 @@ Free Software Foundation, Inc.,
 #include "sconex/Uri.h"
 #include "sconex/Base64.h"
 #include "sconex/utils.h"
+#include "sconex/Date.h"
 namespace http {
 
 
@@ -186,13 +187,17 @@ bool DocRoot::connect_request(scx::Descriptor* endpoint, Request& request, Respo
       // Create new session if auto_session enabled
       if (b_auto_session) {
 	s = m_module.get_sessions().new_session();
-	response.set_header("Set-Cookie","scxid="+s->get_id()+"; path=/");
 	log("New session: " + s->get_id());
       }
     }
 
     if (s) {
+      // Update cookie
       s->reset_timeout();
+      std::string cookie = "scxid="+s->get_id() +
+        "; expires=" + s->get_timeout().string() +
+        "; path=/";
+      response.set_header("Set-Cookie",cookie);
       request.set_session(s);
     }
   }

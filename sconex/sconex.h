@@ -210,6 +210,10 @@ Free Software Foundation, Inc.,
 #  include <sys/utsname.h>
 #endif
 
+#ifdef HAVE_SYS_TIME_H
+#  include <sys/time.h>
+#endif
+
 // sconex Debugging
 #include "sconex/Debug.h"
 

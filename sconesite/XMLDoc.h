@@ -25,6 +25,7 @@ Free Software Foundation, Inc.,
 #include "sconex/FilePath.h"
 #include "sconex/Date.h"
 #include "sconex/ArgObject.h"
+#include "sconex/Mutex.h"
 
 #include <libxml/parser.h>
 #include <libxml/tree.h>
@@ -56,6 +57,9 @@ public:
 
   void parse_error(const std::string& msg);
 
+  bool purge(const scx::Date& purge_time);
+  // Unload the article if it hasn't been accessed since purge_time
+  
   // ArgObject interface
   virtual std::string name() const;
   virtual scx::Arg* arg_resolve(const std::string& name);
@@ -77,6 +81,10 @@ protected:
   xmlDoc* m_xmldoc;
   std::string m_errors;
   
+  scx::Date m_last_access;
+  int m_clients;
+
+  static scx::Mutex* m_clients_mutex;
 };
 
 #endif

@@ -28,6 +28,8 @@ Free Software Foundation, Inc.,
 #include "sconex/Date.h"
 #include "sconex/FileStat.h"
 
+scx::Mutex* XMLDoc::m_clients_mutex = 0;
+
 //=========================================================================
 void ErrorHandler(void* vcx,const char* str,...)
 {
@@ -51,7 +53,9 @@ XMLDoc::XMLDoc(
     m_file(file),
     m_xmldoc(0)
 {
-
+  if (!m_clients_mutex) {
+    m_clients_mutex = new scx::Mutex();
+  }
 }
 
 //=========================================================================
@@ -87,6 +91,10 @@ scx::FilePath XMLDoc::get_filepath() const
 //=========================================================================
 bool XMLDoc::process(Context& context)
 {
+  m_clients_mutex->lock();
+  ++m_clients;
+  m_clients_mutex->unlock();
+  
   open();
 
   if (!m_xmldoc) {
@@ -100,6 +108,11 @@ bool XMLDoc::process(Context& context)
       process_node(context,xmlDocGetRootElement(m_xmldoc));
     } while (context.handle_doc_end(this));
   }
+
+  m_clients_mutex->lock();
+  --m_clients;
+  m_clients_mutex->unlock();
+  
   return true;
 }
 
@@ -113,6 +126,20 @@ const scx::Date& XMLDoc::get_modtime() const
 void XMLDoc::parse_error(const std::string& msg)
 {
   m_errors += msg;
+}
+
+//=========================================================================
+bool XMLDoc::purge(const scx::Date& purge_time)
+{
+  if (!m_xmldoc) return false;
+  if (m_last_access > purge_time) return false;
+
+  scx::MutexLocker locker(*m_clients_mutex);
+  if (m_clients > 0) return false;
+
+  DEBUG_LOG("Purging " + m_name);
+  close();
+  return true;
 }
 
 //=========================================================================
@@ -204,6 +231,8 @@ void XMLDoc::process_node(Context& context, xmlNode* start)
 //=========================================================================
 bool XMLDoc::open()
 {
+  m_last_access = scx::Date::now();
+  
   scx::FilePath path = get_filepath();
   scx::FileStat stat(path);
   if (stat.is_file()) {

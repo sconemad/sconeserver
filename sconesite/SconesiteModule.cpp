@@ -57,13 +57,17 @@ protected:
 SconesiteModule::SconesiteModule()
   : scx::Module("sconesite",scx::version())
 {
+#ifndef DISABLE_JOBS
   m_job = scx::Kernel::get()->add_job(new SconesiteJob(*this,scx::Time(7)));
+#endif
 }
 
 //=========================================================================
 SconesiteModule::~SconesiteModule()
 {
+#ifndef DISABLE_JOBS  
   scx::Kernel::get()->end_job(m_job);
+#endif
 
   for (ProfileMap::const_iterator it = m_profiles.begin();
        it != m_profiles.end();
@@ -130,6 +134,14 @@ scx::Arg* SconesiteModule::arg_lookup(const std::string& name)
   }      
 
   // Properties
+
+  // Sub-objects
+
+  ProfileMap::const_iterator it = m_profiles.find(name);
+  if (it != m_profiles.end()) {
+    Profile* p = it->second;
+    return new scx::ArgObject(p);
+  }
   
   return SCXBASE Module::arg_lookup(name);
 }
@@ -167,7 +179,7 @@ scx::Arg* SconesiteModule::arg_method(
     scx::FilePath path = a_path->get_string();
     log("Adding profile '" + s_profile + "' dir '" +
         path.path() + "'");
-    m_profiles[s_profile] = new Profile(*this,path);
+    m_profiles[s_profile] = new Profile(*this,s_profile,path);
 
     return 0;
   }

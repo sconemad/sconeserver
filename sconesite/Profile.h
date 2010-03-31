@@ -24,17 +24,19 @@ Free Software Foundation, Inc.,
 
 #include "sconex/Stream.h"
 #include "sconex/FilePath.h"
+#include "sconex/ArgObject.h"
 
 class SconesiteModule;
 class Article;
 class Template;
 
 //=========================================================================
-class Profile {
+class Profile : public scx::ArgObjectInterface {
 
 public:
 
   Profile(SconesiteModule& module,
+          const std::string& name,
           const scx::FilePath& path);
   
   ~Profile();
@@ -47,16 +49,25 @@ public:
   Article* get_index();
   
   Template* lookup_template(const std::string& name);
+
+  // ArgObject interface
+  virtual std::string name() const;
+  virtual scx::Arg* arg_resolve(const std::string& name);
+  virtual scx::Arg* arg_lookup(const std::string& name);
+  virtual scx::Arg* arg_method(const scx::Auth& auth,const std::string& name,scx::Arg* args);
   
 private:
 
   SconesiteModule& m_module;
 
+  std::string m_name;
   scx::FilePath m_path;
 
   Article* m_index;
   
   std::list<Template*> m_templates;
+
+  scx::Time m_purge_threshold;
   
 };
 

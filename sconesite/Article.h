@@ -66,7 +66,7 @@ public:
   std::string get_href_path() const;
   
   // Sub-articles
-  void refresh();
+  void refresh(const scx::Date& purge_time);
 
   Article* lookup_article(const std::string& name);
   Article* find_article(const std::string& name,std::string& extra_path);

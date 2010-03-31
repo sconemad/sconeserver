@@ -37,8 +37,10 @@ const char* TPLDIR = "tpl";
 //=========================================================================
 Profile::Profile(
   SconesiteModule& module,
+  const std::string& name,
   const scx::FilePath& path
 ) : m_module(module),
+    m_name(name),
     m_path(path),
     m_index(0)
 {
@@ -92,9 +94,15 @@ void Profile::refresh()
   if (m_index == 0) {
     m_index = new Article(*this,"",m_path + ARTDIR,0);
   }
+
+  // Calculate purge time for article data
+  scx::Date purge_time;
+  if (m_purge_threshold.seconds() != 0) {
+    purge_time = scx::Date::now() - scx::Time(m_purge_threshold);
+  }
   
   // Scan articles
-  m_index->refresh();  
+  m_index->refresh(purge_time);  
 }
 
 //=========================================================================
@@ -127,4 +135,47 @@ Template* Profile::lookup_template(const std::string& name)
   }
   
   return 0;
+}
+
+//=========================================================================
+std::string Profile::name() const
+{
+  return m_name;
+}
+
+//=========================================================================
+scx::Arg* Profile::arg_resolve(const std::string& name)
+{
+  return SCXBASE ArgObjectInterface::arg_resolve(name);
+}
+
+//=========================================================================
+scx::Arg* Profile::arg_lookup(const std::string& name)
+{
+  // Methods
+  if ("set_purge_threshold" == name) {
+    return new_method(name);
+  }
+
+  // Properties
+  if ("purge_threshold" == name) return m_purge_threshold.new_copy();
+
+  return SCXBASE ArgObjectInterface::arg_lookup(name);
+}
+
+//=========================================================================
+scx::Arg* Profile::arg_method(const scx::Auth& auth,const std::string& name,scx::Arg* args)
+{
+  scx::ArgList* l = dynamic_cast<scx::ArgList*>(args);
+
+  if ("set_purge_threshold" == name) {
+    const scx::ArgInt* a_thr = dynamic_cast<const scx::ArgInt*>(l->get(0));
+    if (!a_thr) return new scx::ArgError("set_purge_threshold() Must specify value");
+    int n_thr = a_thr->get_int();
+    if (n_thr < 0) return new scx::ArgError("set_purge_threshold() Value must be >= 0");
+    m_purge_threshold = scx::Time(n_thr);
+    return 0;
+  }
+
+  return SCXBASE ArgObjectInterface::arg_method(auth,name,args);
 }

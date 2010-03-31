@@ -213,6 +213,9 @@ Date::Date(Arg* args)
 
   Arg* local = l->get(1);
   *m_local = (local ? local->get_int() : 0);
+
+  // Adjust to UTC  
+  *m_time -= timezone().seconds();
 }
 
 //=============================================================================

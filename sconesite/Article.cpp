@@ -130,8 +130,11 @@ std::string Article::get_href_path() const
 }
 
 //=========================================================================
-void Article::refresh()
+void Article::refresh(const scx::Date& purge_time)
 {
+  // Purge any loaded article data if it hasn't been accessed recently
+  purge(purge_time);
+  
   // Add new articles
   scx::FileDir dir(m_root);
   while (dir.next()) {
@@ -164,7 +167,7 @@ void Article::refresh()
       delete article;
     } else {
       // Refresh article
-      article->refresh();
+      article->refresh(purge_time);
     }
   }
 }

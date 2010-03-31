@@ -168,6 +168,11 @@ int main(int argc,char* argv[])
 
   // Use this for interrupting system calls
   signal(SIGUSR1,empty_handler);
+
+  // Seed the basic random number generator
+  timeval tv;
+  gettimeofday(&tv,0);
+  srand(tv.tv_usec);
   
   return run();
 }

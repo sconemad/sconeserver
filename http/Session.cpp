@@ -55,13 +55,17 @@ protected:
 SessionManager::SessionManager(HTTPModule& module)
   : m_module(module)
 {
+#ifndef DISABLE_JOBS
   m_job = scx::Kernel::get()->add_job(new SessionCleanupJob(*this,scx::Time(30)));
+#endif
 }
 
 //=========================================================================
 SessionManager::~SessionManager()
 {
+#ifndef DISABLE_JOBS
   scx::Kernel::get()->end_job(m_job);
+#endif
 
   for (SessionMap::iterator it = m_sessions.begin();
        it != m_sessions.end();
@@ -173,7 +177,7 @@ scx::Arg* SessionManager::arg_method(
 }
 
 
-unsigned long long int Session::m_next_id = 0x1234567812345678ULL;
+unsigned long long int Session::m_next_id = 0;
 
 //=========================================================================
 Session::Session(
@@ -184,16 +188,24 @@ Session::Session(
     m_id(id)
 {
   DEBUG_COUNT_CONSTRUCTOR(Session);
+  if (m_next_id == 0) {
+    // Seed the id counter with a big random-ish value.
+    for (int i=0; i<100; ++i) {
+      m_next_id += rand();
+      m_next_id *= rand();
+    }
+  }
   if (id.empty()) {
     // Create a new session ID
     std::ostringstream oss;
     for (int i=0; i<16; ++i) {
       int c = rand() % 256;
-      oss << std::hex << c;
+      oss << std::setw(2) << std::setfill('0') << std::hex << c;
     }
     oss << std::setw(16) << std::setfill('0') << std::hex << (m_next_id++);
     m_id = oss.str();
   }
+  reset_timeout();
 }
 
 //=========================================================================
@@ -214,6 +226,12 @@ void Session::reset_timeout(const scx::Time& time)
   m_timeout = scx::Date::now() + time;
 }
 
+//=========================================================================
+const scx::Date& Session::get_timeout() const
+{
+  return m_timeout;
+}
+  
 //=========================================================================
 bool Session::valid() const
 {

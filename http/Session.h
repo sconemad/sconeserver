@@ -75,6 +75,7 @@ public:
   const std::string get_id() const;
 
   void reset_timeout(const scx::Time& time = DEFAULT_SESSION_TIMEOUT);
+  const scx::Date& get_timeout() const;
   bool valid() const;
 
   bool allow_upload() const;

@@ -1,4 +1,20 @@
 
+2010-03-31 Andrew Wedgbury <wedge@sconemad.com>
+
+	* sconex/Date: Add missing timezone adjustment to Arg constructor.
+	* http/Session: Allow session timeout to be accessed.
+	Reset session timeout on construction to avoid race condition.
+	Improve generation of session IDs (a bit, still needs work).
+	* http/DocRoot: Set expiry time for session cookies.
+	* sconesite/Profile: Make into Arg interface class.
+	Add purge_threshold parameter, use in call to article refresh.
+	* sconesite/SconesiteModule: Arg access to profile sub-objects.
+	* sconesite/XMLDoc: Implement purge method using threshold time.
+	* sconesite/Article: Call purge method when refreshing.
+	* sconesite/SconesiteStream: Fix leaked RenderMarkupContext from
+	previous checkin.
+	* sconed: Seed basic random number generator.
+	
 2010-03-29 Andrew Wedgbury <wedge@sconemad.com>
 
 	* sconex/Descriptor: Make set_blocking() public, returning prev state.
