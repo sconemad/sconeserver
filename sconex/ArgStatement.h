@@ -271,7 +271,7 @@ class SCONEX_API ArgStatementDecl : public ArgStatement {
 
 public:
 
-  enum DefType { Var, Ref, Const };
+  enum DefType { Var, Const, Ref, ConstRef };
   
   ArgStatementDecl(DefType deftype, const std::string& name = "");
   ArgStatementDecl(const ArgStatementDecl& c);

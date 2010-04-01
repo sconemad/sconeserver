@@ -22,6 +22,7 @@ Free Software Foundation, Inc.,
 #include "sconex/Arg.h"
 #include "sconex/ArgProc.h"
 #include "sconex/ArgStatement.h"
+#include "sconex/utils.h"
 namespace scx {
 
 //===========================================================================
@@ -222,12 +223,52 @@ Arg* ArgString::op(const Auth& auth, OpType optype, const std::string& opname, A
 {
   if (is_method_call(optype,opname)) {
 
+    ArgList* l = dynamic_cast<ArgList*>(right);
+
     if ("clear" == m_method) {
       if (is_const()) return new ArgError("Not permitted");
       *m_string = "";
       return 0;
     }
     
+    if ("split" == m_method) {
+      Arg* a_pat = l->get(0);
+      if (!a_pat) return new ArgError("ArgString::split() No pattern specified");
+      std::string pat = a_pat->get_string();
+
+      ArgList* list = new ArgList();
+      std::string::size_type start = 0;
+      while (true) {
+        std::string::size_type end = m_string->find(pat,start);
+        std::string sub;
+        if (end == std::string::npos) {
+          sub = m_string->substr(start);
+        } else {
+          sub = m_string->substr(start,end-start);
+        }
+        if (sub.length() > 0) {
+          list->give(new ArgString(sub));
+        }
+        start = end + pat.length();
+        if (end == std::string::npos) {
+          break;
+        }
+      }
+      return list;
+    }
+
+    if ("uc" == m_method) {
+      std::string uc = *m_string;
+      strup(uc);
+      return new ArgString(uc);
+    }
+
+    if ("lc" == m_method) {
+      std::string lc = *m_string;
+      strlow(lc);
+      return new ArgString(lc);
+    }
+
   } else if (optype == Arg::Binary) {
 
     if ("+"==opname) { // Concatenate
@@ -238,6 +279,12 @@ Arg* ArgString::op(const Auth& auth, OpType optype, const std::string& opname, A
       
     } else if ("!="==opname) { // Not equal to
       return new ArgInt(*m_string != right->get_string());
+
+    } else if (">"==opname) { // Greater than
+      return new ArgInt(*m_string > right->get_string());
+
+    } else if ("<"==opname) { // Less than
+      return new ArgInt(*m_string < right->get_string());
 
     } else if ("="==opname) { // Assignment
       if (!is_const()) {
@@ -250,7 +297,12 @@ Arg* ArgString::op(const Auth& auth, OpType optype, const std::string& opname, A
       if ("length" == name) return new ArgInt(m_string->size());
       if ("empty" == name) return new ArgInt(m_string->empty());
 
-      if ("clear" == name) return new_method(name);
+      if ("clear" == name ||
+          "split" == name ||
+          "uc" == name ||
+          "lc" == name) {
+        return new_method(name);
+      }
     }
   }
 
@@ -590,6 +642,26 @@ ArgList::~ArgList()
   DEBUG_COUNT_DESTRUCTOR(ArgList);
 }
 
+//=========================================================================
+class ArgSorter {
+public:
+  ArgSorter(const std::string& predicate) : m_predicate(predicate) { };
+  bool operator()(const Arg* a, const Arg* b)
+  {
+    ArgMap ctx;
+    ctx.give("a",const_cast<Arg*>(a)->ref_copy(Arg::ConstRef));
+    ctx.give("b",const_cast<Arg*>(b)->ref_copy(Arg::ConstRef));
+    ArgProc proc(Auth::Untrusted,&ctx);
+    Arg* result = proc.evaluate(m_predicate);
+    bool val = BAD_ARG(result) ? false : result->get_int();
+    delete result;
+    return val;
+  };
+
+private:
+  std::string m_predicate;
+};
+
 //===========================================================================
 Arg* ArgList::new_copy() const
 {
@@ -652,7 +724,40 @@ Arg* ArgList::op(const Auth& auth, OpType optype, const std::string& opname, Arg
       delete entry;
       return 0;
     }
+
+    if ("reverse" == m_method) {
+      if (is_const()) return new ArgError("Not permitted");
+
+      m_list->reverse();
+      return 0;
+    }
+
+    if ("sort" == m_method) {
+      if (is_const()) return new ArgError("Not permitted");
+
+      Arg* a_pred = l->get(0);
+      std::string pred = a_pred ? a_pred->get_string() : "a < b";
+
+      m_list->sort(ArgSorter(pred));
+      return ref_copy(Ref);
+      return 0;
+    }
     
+    if ("join" == m_method) {
+      Arg* a_glue = l->get(0);
+      if (!a_glue) return new ArgError("ArgList::join() No glue specified");
+      std::string glue = a_glue->get_string();
+
+      std::ostringstream oss;
+      for (ArgListData::const_iterator it = m_list->begin();
+           it != m_list->end();
+           ++it) {
+        const Arg* arg = *it;
+        oss << (it==m_list->begin() ? "" : glue) << arg->get_string();
+      }
+      return new ArgString(oss.str());
+    }
+
   } else if (optype == Arg::Binary) {
     if (opname == "[") {
       ArgInt* aidx = dynamic_cast<ArgInt*> (right);
@@ -672,7 +777,10 @@ Arg* ArgList::op(const Auth& auth, OpType optype, const std::string& opname, Arg
       if ("size" == name) return new ArgInt(size());
 
       if ("push" == name ||
-          "splice" == name) {
+          "splice" == name ||
+          "reverse" == name ||
+          "sort" == name ||
+          "join" == name) {
         return new_method(name);
       }
     }
@@ -839,7 +947,7 @@ Arg* ArgMap::op(const Auth& auth, OpType optype, const std::string& opname, Arg*
 	}
 	return new ArgError("Not defined");
       }
-    } else if (opname == ".") {
+    } else if (opname == "." || opname == ":") {
       std::string name = right->get_string();
       if (name == "size") return new ArgInt(size());
       if (name == "keys") {
@@ -990,7 +1098,7 @@ Arg* ArgSub::call(const Auth& auth, Arg* args)
     // Setup the argument vector
     ArgList vargs;
     vargs.give(new ArgString("ARGV"));
-    vargs.give(args->new_copy());
+    vargs.give(args->ref_copy(Arg::Ref));
     m_body->arg_method(auth,"var",&vargs);
     
     return m_body->execute(*m_proc);

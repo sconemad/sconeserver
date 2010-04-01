@@ -43,8 +43,9 @@ enum ArgScriptToken {
   ArgScriptToken_BREAK,
   ArgScriptToken_CONTINUE,
   ArgScriptToken_VAR,
-  ArgScriptToken_REF,
   ArgScriptToken_CONST,
+  ArgScriptToken_REF,
+  ArgScriptToken_CONST_REF,
   ArgScriptToken_SUB,
   ArgScriptToken_OPEN_BRACE,
   ArgScriptToken_CLOSE_BRACE
@@ -175,14 +176,19 @@ ArgStatement* ArgScript::parse_token(const std::string& token)
       s = new ArgStatementDecl(ArgStatementDecl::Var);
       break;
 
+    case ArgScriptToken_CONST:
+      ArgScript_DEBUG_LOG("parse_token: New constant declaration");
+      s = new ArgStatementDecl(ArgStatementDecl::Const);
+      break;
+
     case ArgScriptToken_REF:
       ArgScript_DEBUG_LOG("parse_token: New reference declaration");
       s = new ArgStatementDecl(ArgStatementDecl::Ref);
       break;
 
-    case ArgScriptToken_CONST:
-      ArgScript_DEBUG_LOG("parse_token: New constant declaration");
-      s = new ArgStatementDecl(ArgStatementDecl::Const);
+    case ArgScriptToken_CONST_REF:
+      ArgScript_DEBUG_LOG("parse_token: New constant reference declaration");
+      s = new ArgStatementDecl(ArgStatementDecl::ConstRef);
       break;
 
     case ArgScriptToken_SUB:
@@ -237,9 +243,9 @@ bool ArgScript::next_token(
 
       case ArgStatement::SemicolonTerminated: {
         // SEMICOLON TERMINATED parse mode
-        
+
         std::string str(start,length);
-	if (s_tokens->count(str)) {
+        if (s_tokens->count(str)) {
           return true;
         }
         
@@ -361,8 +367,9 @@ void ArgScript::init()
   (*s_tokens)["break"] = ArgScriptToken_BREAK;
   (*s_tokens)["continue"] = ArgScriptToken_CONTINUE;
   (*s_tokens)["var"] = ArgScriptToken_VAR;
-  (*s_tokens)["ref"] = ArgScriptToken_REF;
   (*s_tokens)["const"] = ArgScriptToken_CONST;
+  (*s_tokens)["ref"] = ArgScriptToken_REF;
+  (*s_tokens)["constref"] = ArgScriptToken_CONST_REF;
   (*s_tokens)["sub"] = ArgScriptToken_SUB;
   (*s_tokens)["{"] = ArgScriptToken_OPEN_BRACE;
   (*s_tokens)["}"] = ArgScriptToken_CLOSE_BRACE;

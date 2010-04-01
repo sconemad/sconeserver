@@ -786,10 +786,18 @@ Arg* ArgStatementDecl::run(ArgProc& proc, FlowMode& flow)
       case Var:
         args.give(initialiser->new_copy());
         break;
+      case Const:
+        {
+          //TODO: This is a bit of a hack, need a proper way to create const copies
+          Arg* c = initialiser->new_copy();
+          c->m_const = true;
+          args.give(c);
+        }
+        break;
       case Ref:
         args.give(initialiser->ref_copy(Arg::Ref));
         break;
-      case Const:
+      case ConstRef:
         args.give(initialiser->ref_copy(Arg::ConstRef));
         break;
     }

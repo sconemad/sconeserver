@@ -1,4 +1,12 @@
 
+2010-04-01 Andrew Wedgbury <wedge@sconemad.com>
+
+	* sconex/Arg: Expand SconeScript basic object methods: 
+	ArgString split, uc, lc; ArgList join, reverse, sort.
+	Plus tests for above. Handle resolve Arg op in ArgMap.
+	* sconex/ArgStatement: Add const declaration.
+	* sconex/ArgScipt: Support const and constref (not quite working).
+
 2010-03-31 Andrew Wedgbury <wedge@sconemad.com>
 
 	* sconex/Date: Add missing timezone adjustment to Arg constructor.

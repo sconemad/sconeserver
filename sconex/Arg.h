@@ -95,7 +95,7 @@ public:
   // Is this the last Arg refering to the underlying data
 
   bool is_const() const;
-  // Is this Arg a const reference
+  // Is this Arg non-modifiable
 
 protected:
 
@@ -104,6 +104,8 @@ protected:
   
 private:
 
+  friend class ArgStatementDecl;
+  
   int* m_refs;
   bool m_const;
 

@@ -1,0 +1,60 @@
+# ArgScript test script
+#
+#
+
+sub test_sort
+{
+  ref list = ARGV[0];
+  ref pred = ARGV[1];
+  ref exp = ARGV[2];
+
+  print("Sorting (" + pred + "): ");
+  list.sort(pred);
+  print(list);
+  print("\n");
+  test(String(list) == exp,"List should be: " + exp);
+}
+
+
+print("START\n");
+
+var list = ["one","two","three","Four","five","SIX","seven","EiGhT","nine","ten"];
+var pred;
+
+print("Constructed list: ");
+print(list);
+print("\n");
+
+
+# Test reverse
+
+list.reverse();
+print("reverse: ");
+print(list);
+print("\n");
+test(String(list) == "[ten,nine,EiGhT,seven,SIX,five,Four,three,two,one]");
+
+list.reverse();
+print("reverse again: ");
+print(list);
+print("\n");
+test(String(list) == "[one,two,three,Four,five,SIX,seven,EiGhT,nine,ten]");
+
+
+# Test sort
+
+test_sort(list,"a < b","[EiGhT,Four,SIX,five,nine,one,seven,ten,three,two]");
+test_sort(list,"a > b","[two,three,ten,seven,one,nine,five,SIX,Four,EiGhT]");
+test_sort(list,"a.uc() < b.uc()","[EiGhT,five,Four,nine,one,seven,SIX,ten,three,two]");
+test_sort(list,"a.lc() > b.lc()","[two,three,ten,SIX,seven,one,nine,Four,five,EiGhT]");
+
+
+# Test splice
+
+
+
+print("Final: ");
+print(list);
+print("\n");
+
+print("END\n");

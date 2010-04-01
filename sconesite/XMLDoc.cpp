@@ -137,7 +137,7 @@ bool XMLDoc::purge(const scx::Date& purge_time)
   scx::MutexLocker locker(*m_clients_mutex);
   if (m_clients > 0) return false;
 
-  DEBUG_LOG("Purging " + m_name);
+  DEBUG_LOG("Purging " + get_filepath().path());
   close();
   return true;
 }

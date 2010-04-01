@@ -30,7 +30,6 @@ r_one = 100;
 test(r_one == 100,"Test reference is updated");
 test(map.one == 100,"Test referenced value is updated");
 
-
 # Test making a const reference
 
 const c_two = map.two;
