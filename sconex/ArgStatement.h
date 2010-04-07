@@ -319,6 +319,9 @@ protected:
 
   std::string m_name;
   // Variable name
+
+  std::vector<std::string> m_arg_names;
+  // Subroutine argument names
   
   ArgStatement* m_body;
   // Subroutine body

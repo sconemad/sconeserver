@@ -675,6 +675,10 @@ void ArgProc::init()
   (*s_binary_ops)[":"]  = p;
 
   (*s_binary_ops)["="]  = ++p; // Assignment
+  (*s_binary_ops)["+="]  = p;
+  (*s_binary_ops)["-="]  = p;
+  (*s_binary_ops)["*="]  = p;
+  (*s_binary_ops)["/="]  = p;
 
   (*s_binary_ops)["|"]  = ++p; // Logical OR
 

@@ -269,7 +269,9 @@ class SCONEX_API ArgSub : public Arg {
 
 public:
 
-  ArgSub(const std::string& name, ArgStatement* body, ArgProc& proc);
+  typedef std::vector<std::string> ArgSubArgNames;
+
+  ArgSub(const std::string& name, const ArgSubArgNames& args, ArgStatement* body, ArgProc& proc);
 
   ArgSub(const ArgSub& c);
   virtual ~ArgSub();
@@ -286,6 +288,7 @@ public:
 protected:
 
   std::string m_name;
+  ArgSubArgNames m_arg_names;
   ArgStatement* m_body;
   ArgProc* m_proc;
 

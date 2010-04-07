@@ -2,12 +2,8 @@
 #
 #
 
-sub test_sort
+sub test_sort(list, pred, exp)
 {
-  ref list = ARGV[0];
-  ref pred = ARGV[1];
-  ref exp = ARGV[2];
-
   print("Sorting (" + pred + "): ");
   list.sort(pred);
   print(list);

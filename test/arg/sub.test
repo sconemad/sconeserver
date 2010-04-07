@@ -2,16 +2,14 @@
 #
 #
 
-sub func3
+sub func3(a)
 {
-  var a = ARGV[0];
   print("func3("+a+")... ");
   return func1(a/57);
 }
 
-sub func2
+sub func2( a)
 {
-  var a = ARGV[0];
   print("func2("+a+")... ");
   if (a < 100) {
     return (4*a*a) + (32*a) + 9;
@@ -19,9 +17,8 @@ sub func2
   return 9 - func3(12 + a * 9);
 }
 
-sub func1
+sub func1(a )
 {
-  var a = ARGV[0];
   print("func1("+a+")... ");
   if (a < 10) {
     return (2*a*a*a) + (5*a*a) + (4*a) + 7;
@@ -32,10 +29,14 @@ sub func1
 print("START\n");
 
 var i;
+var total = 0;
 for (i=0; i<=30; ++i) {
   print ("CALL... ");
   var r = func1(i);
   print(""+r+"\n");
+  total = total + r;
 }
+
+test(total == 3197716,"Test everything worked as expected");
 
 print("END\n");

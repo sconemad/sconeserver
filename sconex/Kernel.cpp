@@ -157,7 +157,9 @@ Arg* Kernel::arg_lookup(const std::string& name)
       "set_user" == name ||
       "set_thread_pool" == name ||
       "set_latency" == name ||
-      "defined" == name) {
+      "defined" == name ||
+      "ref" == name ||
+      "constref" == name) {
     return new_method(name);
   }      
 
@@ -290,6 +292,16 @@ Arg* Kernel::arg_method(
 
   if ("defined" == name) {
     return new ArgInt(!BAD_ARG(a));
+  }
+
+  if ("ref" == name) {
+    if (a) return a->ref_copy(Arg::Ref);
+    return 0;
+  }
+
+  if ("constref" == name) {
+    if (a) return a->ref_copy(Arg::ConstRef);
+    return 0;
   }
   
   if ("String" == name) {

@@ -3,30 +3,35 @@
 
         * Major SconeScript improvements:
          - Short circuit | and & operators.
+	 - Combination assignment operators e.g. +=.
          - map (associative array) type.
 	 - Authority levels allowing arg call security.
          - Lots of bug fixes.
          - Scripted test system.
-	 - Literal initialiser synax compatible with JSON.
+	 - JSON compatible literal initialiser synax.
 	 - New object serialiser.
          - Regular Expression support (RegExp) using PCRE.
+
 	* Combined I/O multiplexer and job scheduling system:
          - Low CPU overhead
 	 - Flexible thread pool system.
 	 - Job scheduling system for running background tasks.
+
         * HTTP module improvements:
          - Reliable multi-threading support.
          - HTTP Authentication support with realms.
          - Session management.
          - Multipart POST processing.
+
         * New module: 'sconesite' web site management, includes:
           - XML template driven page generation.
           - Server side inline SconeScript.
           - Supports multipart form upload.
           - Image manipulation module using ImageMagick.
+
         * New module: 'dbsql' MySQL datbase support.
-        * New module: 'lettuce' (http://www.sconemad.com/lettuce)
         * New module: 'forward' connection forwarding.
+        * New module: 'lettuce' (http://www.sconemad.com/lettuce)
 
 0.7.0 2006-06-24 Andrew Wedgbury <wedge@sconemad.com>
 

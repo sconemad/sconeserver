@@ -9,9 +9,6 @@ For 0.8.0 release
  - AuthRealm passwords stored in sha1
 
 * sconex
- - Sort out a proper const type modifier, 
-   at the moment const actually does a "const ref"
- - Named subroutine arguments
 
 * Stop installer overwriting previous conf files
 

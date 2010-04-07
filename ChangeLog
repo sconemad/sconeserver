@@ -1,11 +1,20 @@
 
+2010-04-07 Andrew Wedgbury <wedge@sconemad.com>
+
+	* sconex/ArgScript: Fix parser to handle const and constref decls,
+	and allow names that start with reserved words.
+	* sconex/ArgStatement: Parse and store named subroutine arguments.
+	* sconex/Arg: Use named arguments for ArgSub calls.
+	Implement combination assignment ops: +=, -=, *= and /= and test.
+	* sconex/Kernel: Add ref and constref as standard functions.
+
 2010-04-01 Andrew Wedgbury <wedge@sconemad.com>
 
 	* sconex/Arg: Expand SconeScript basic object methods: 
 	ArgString split, uc, lc; ArgList join, reverse, sort.
 	Plus tests for above. Handle resolve Arg op in ArgMap.
 	* sconex/ArgStatement: Add const declaration.
-	* sconex/ArgScipt: Support const and constref (not quite working).
+	* sconex/ArgScript: Support const and constref (not quite working).
 
 2010-03-31 Andrew Wedgbury <wedge@sconemad.com>
 

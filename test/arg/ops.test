@@ -1,0 +1,82 @@
+# ArgScript test script
+#
+#
+
+print("START\n");
+
+
+# Addition
+
+test(1+1 == 2,"Test addition");
+test(-1+1 == 0,"Test addition");
+
+
+# Subtraction
+
+test(1000-999 == 1,"Test subtraction");
+test(1-1 == 0,"Test subtraction");
+
+
+# Multiplication
+
+test(7*9 == 63,"Test multiplication");
+
+
+# Division
+
+test(64 / 4 == 16,"Test division");
+
+
+# Increment
+
+var a = 0;
+
+a++;
+test(a == 1,"Test increment");
+
+++a;
+test(a == 2,"Test increment");
+
+test(++a == 3,"Test preincrement");
+test(a++ == 3,"Test postincrement");
+test(a == 4,"Test value changes following postincrement");
+
+
+# Decrement
+
+a--;
+test(a == 3,"Test decrement");
+
+--a;
+test(a == 2,"Test decrement");
+
+test(--a == 1,"Test predecrement");
+test(a-- == 1,"Test predecrement");
+test(a == 0,"Test value changed following predecrement");
+
+
+# Increment assign
+
+a += 77;
+test(a == 77,"Test increment assign");
+
+
+# Decrement assign
+
+a -= 9;
+test (a == 68,"Test decrement assign");
+
+
+# Multiply assign
+
+a *= 3;
+test(a == 204,"Test multiply assignment");
+
+
+# Divide assign
+
+a /= 4;
+test(a == 51,"Test divide assignment");
+
+
+print("END\n");

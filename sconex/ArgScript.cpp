@@ -244,9 +244,11 @@ bool ArgScript::next_token(
       case ArgStatement::SemicolonTerminated: {
         // SEMICOLON TERMINATED parse mode
 
-        std::string str(start,length);
-        if (s_tokens->count(str)) {
-          return true;
+        if ((*cur == ';') || (*cur == '(') || isspace(*cur)) {
+          std::string str(start,length);
+          if (s_tokens->count(str)) {
+            return true;
+          }
         }
         
         if (in_quote) {

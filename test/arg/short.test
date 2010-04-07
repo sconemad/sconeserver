@@ -6,7 +6,7 @@ print("START" + endl);
 
 var a;
 var c = 0;
-sub f { ++c; }
+sub f() { ++c; }
 
 print("running 1 | f()\n");
 a = 1 | f();

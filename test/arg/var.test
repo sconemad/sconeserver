@@ -30,21 +30,43 @@ r_one = 100;
 test(r_one == 100,"Test reference is updated");
 test(map.one == 100,"Test referenced value is updated");
 
+
+# Test making a constant
+
+const co_two = map.two;
+test(co_two == 2,"Test const is initialised");
+test(map.two == 2,"Test value used to initialise const");
+
+map.two = 123;
+test(map.two == 123,"Test value used to initialise const is changed");
+test(co_two == 2,"Test const is unchanged when original changes");
+map.two = 2;
+
+
 # Test making a const reference
 
-const c_two = map.two;
+constref c_two = map.two;
 c_two = 200;
-test(c_two == 2,"Test const is unchanged");
+test(c_two == 2,"Test const ref is unchanged");
 test(map.two == 2,"Test const referenced value is unchanged");
+
+map.two = 400;
+test(map.two == 400,"Test original value is changed");
+test(c_two == 400,"Test const ref changes when original value changes");
+map.two = 2;
 
 
 # Test making a const reference to a reference
 
-const cr_one = r_one;
+constref cr_one = r_one;
 cr_one = 400;
 test(cr_one == 100,"Test const is unchanged");
 test(r_one == 100,"Test const is unchanged");
 test(map.one == 100,"Test const referenced value is unchanged");
+
+r_one = 500;
+test(r_one == 500,"Test ref value is changed");
+test(cr_one == 500,"Test const ref changes when ref value changes");
 
 
 # Test you can't make an unconst reference to a const reference

@@ -857,6 +857,30 @@ ArgStatement::ParseResult ArgStatementSub::parse(
     } break;
 
     case 2: {
+      std::string::size_type start = 0;
+      std::string::size_type end;
+      // Find function arguments as comma separated subtokens
+      do {
+        end = token.find(",",start);
+        std::string sub;
+        if (end == std::string::npos) {
+          sub = token.substr(start);
+        } else {
+          sub = token.substr(start,end-start);
+        }
+        // Remove any spaces surrounding argument
+        std::string::size_type sub_start = sub.find_first_not_of(" ");
+        std::string::size_type sub_end = sub.find_last_not_of(" ");
+        if (sub_start != std::string::npos &&
+            sub_end != std::string::npos) {
+          sub = sub.substr(sub_start,sub_end-sub_start+1);
+          m_arg_names.push_back(sub);
+        }
+        start = end + 1;
+      } while (end != std::string::npos);
+    } break;
+
+    case 3: {
       delete m_body;
       m_body = script.parse_token(token);
       m_body->set_parent(m_parent);
@@ -873,9 +897,11 @@ ArgStatement::ParseResult ArgStatementSub::parse(
 //=============================================================================
 ArgStatement::ParseMode ArgStatementSub::parse_mode() const
 {
-  return (m_seq==0 ?
-          ArgStatement::Name :
-          ArgStatement::SemicolonTerminated);
+  switch (m_seq) {
+    case 0: return ArgStatement::Name;
+    case 1: return ArgStatement::Bracketed;
+  }
+  return ArgStatement::SemicolonTerminated;
 }
 
 //=============================================================================
@@ -883,7 +909,7 @@ Arg* ArgStatementSub::run(ArgProc& proc, FlowMode& flow)
 {
   ArgList args;
   args.give(new ArgString(m_name));
-  args.give(new ArgSub(m_name,m_body,proc));
+  args.give(new ArgSub(m_name,m_arg_names,m_body,proc));
   m_body = 0;
 
   return m_parent->arg_method(proc.get_auth(),"var",&args);
