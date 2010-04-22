@@ -184,7 +184,8 @@ Date::Date(
 
   if (!local || got_zone) {
     // Adjust mktime results from local
-    *m_time += TimeZone::local(Date(*m_time)).seconds();
+    // edit: I don't think this is required?
+    //*m_time += TimeZone::local(Date(*m_time)).seconds();
   }
 
   // Adjust to UTC from given timezone

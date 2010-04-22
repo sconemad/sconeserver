@@ -190,6 +190,7 @@ void RegExp::from_string(const std::string& str)
     0
   );
   if (m_pcre) {
+    ::pcre_refcount(m_pcre,+1);
     m_pattern = new std::string(str);
   }
 }

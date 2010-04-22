@@ -1,0 +1,15 @@
+# ArgScript test script
+#
+#
+
+print("START\n");
+
+var re = RegExp("a|b|c");
+
+test(re.match("a"),"Test matches a");
+test(re.match("b"),"Test matches b");
+test(re.match("c"),"Test matches c");
+
+
+
+print("END\n");

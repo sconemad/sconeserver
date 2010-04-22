@@ -57,8 +57,8 @@ public:
   const Article* get_article() const;
 
   // XMLDoc interface
-  virtual bool handle_start(const std::string& name, XMLAttrs& attrs, bool empty);
-  virtual bool handle_end(const std::string& name, XMLAttrs& attrs);
+  virtual bool handle_start(const std::string& name, XMLAttrs& attrs, bool empty, void* data);
+  virtual bool handle_end(const std::string& name, XMLAttrs& attrs, void* data);
   virtual void handle_process(const std::string& name, const char* data);
   virtual void handle_text(const char* text);
   virtual void handle_comment(const char* text);

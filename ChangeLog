@@ -1,4 +1,18 @@
 
+2010-04-22 Andrew Wedgbury <wedge@sconemad.com>
+
+	* sconesite/XMLDoc: Try to make open operation more thread safe.
+	Add handle_open and handle_close virtuals. 
+	Pass node private data to context.
+	* sconesite/Article: Scan and store article headings.
+	* sconesite/Context: Recieve node data from XML.
+	* sconesite/RenderMarkup: Output section for article headings.
+	Add exteral class for external links.
+	* sconex/RegExp: Bug fix - increment refcount on construction.
+	* scones/ArgTest: Make test arg method fail for BAD_ARGs or (int)0.
+	* test/arg/regexp: New argtest script for RegExp.
+	* sconex/Date: Remove erroneous tz adjustment in Date string ctor.
+
 2010-04-07 Andrew Wedgbury <wedge@sconemad.com>
 
 	* sconex/ArgScript: Fix parser to handle const and constref decls,

@@ -66,12 +66,17 @@ public:
   virtual scx::Arg* arg_lookup(const std::string& name);
   virtual scx::Arg* arg_method(const scx::Auth& auth,const std::string& name,scx::Arg* args);
 
+  static void get_node_text(std::string& txt, xmlNode* node);
+
 protected:
 
   virtual void process_node(Context& context, xmlNode* node);
   
-  virtual bool open();
-  virtual void close();  
+  virtual void handle_open();
+  virtual void handle_close();
+  
+  bool open();
+  void close();  
 
   std::string m_name;
   scx::FilePath m_root;
@@ -83,6 +88,7 @@ protected:
   
   scx::Date m_last_access;
   int m_clients;
+  bool m_opening;
 
   static scx::Mutex* m_clients_mutex;
 };

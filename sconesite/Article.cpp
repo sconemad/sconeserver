@@ -85,6 +85,157 @@ bool ArticleMetaSorter::operator()(const Article* a, const Article* b)
   return ret;
 }
 
+
+//=========================================================================
+ArticleHeading::ArticleHeading(int level, const std::string& name, int index)
+  : m_level(level),
+    m_name(name),
+    m_index(index)
+{
+
+}
+
+//=========================================================================
+ArticleHeading::~ArticleHeading()
+{
+  clear();
+}
+
+//=========================================================================
+int ArticleHeading::level() const
+{
+  return m_level;
+}
+
+//=========================================================================
+const std::string& ArticleHeading::name() const
+{
+  return m_name;
+}
+
+//=========================================================================
+int ArticleHeading::index() const
+{
+  return m_index;
+}
+
+//=========================================================================
+void ArticleHeading::clear()
+{
+  for (ArticleHeadingList::iterator it = m_subs.begin();
+       it != m_subs.end();
+       ++it) {
+    ArticleHeading* h = *it;
+    delete h;
+  }
+  m_subs.clear();
+}
+
+//=========================================================================
+void ArticleHeading::add(int level, const std::string& name, int index)
+{
+  if (m_subs.size() == 0 || m_subs.back()->level() >= level) {
+    m_subs.push_back(new ArticleHeading(level,name,index));
+  } else {
+    m_subs.back()->add(level,name,index);
+  }
+}
+
+//=========================================================================
+const ArticleHeading* ArticleHeading::lookup_index(int index) const
+{
+  if (index == m_index) return this;
+  
+  for (ArticleHeadingList::const_iterator it = m_subs.begin();
+       it != m_subs.end();
+       ++it) {
+    const ArticleHeading* f = (*it)->lookup_index(index);
+    if (f) return f;
+  }
+  
+  return 0;
+}
+
+//=========================================================================
+std::string ArticleHeading::lookup_anchor(int index) const
+{
+  if (index == m_index) return m_name;
+
+  for (ArticleHeadingList::const_iterator it = m_subs.begin();
+       it != m_subs.end();
+       ++it) {
+    std::string p = (*it)->lookup_anchor(index);
+    if (!p.empty()) {
+      if (m_index == 0) return p;
+      return (m_name + "+" + p);
+    }
+  }
+  
+  return "";
+}
+
+//=========================================================================
+std::string ArticleHeading::lookup_section(int index) const
+{
+  int sec = 0;
+  for (ArticleHeadingList::const_iterator it = m_subs.begin();
+       it != m_subs.end();
+       ++it) {
+    const ArticleHeading* h = *it;
+    ++sec;
+    std::ostringstream oss;
+    if (h->index() == index) {
+      oss << sec;
+      return oss.str();
+      
+    } else {
+      std::string str = h->lookup_section(index);
+      if (!str.empty()) {
+        oss << sec << "." << str;
+        return oss.str();
+      }
+    }
+  }
+  
+  return "";
+}
+
+//=========================================================================
+scx::Arg* ArticleHeading::get_arg(
+  const std::string& anchor_prefix,
+  const std::string& section_prefix
+) const
+{
+  scx::ArgList* list = new scx::ArgList();
+  int s=0;
+  for (ArticleHeadingList::const_iterator it = m_subs.begin();
+       it != m_subs.end();
+       ++it) {
+    const ArticleHeading* h = *it;
+    std::string anchor = h->name();
+
+    std::ostringstream oss;
+    oss << (++s);
+    std::string section = oss.str();
+
+    if (m_index != 0) {
+      anchor = anchor_prefix + "+" + anchor;
+      section = section_prefix + "." + section;
+    }
+    
+    scx::ArgMap* map = new scx::ArgMap();
+    map->give("level", new scx::ArgInt(h->level()));
+    map->give("name",new scx::ArgString(h->name()));
+    map->give("anchor",new scx::ArgString(anchor));
+    map->give("section",new scx::ArgString(section));
+    map->give("subsection",new scx::ArgInt(s));
+    map->give("subs",h->get_arg(anchor,section));
+    list->give(map);
+  }
+  return list;  
+}
+
+
 //=========================================================================
 Article::Article(
   Profile& profile,
@@ -94,6 +245,7 @@ Article::Article(
 ) : XMLDoc(name,path,"article.xml"),
     m_profile(profile),
     m_metastore(path + "meta.txt"),
+    m_headings(1,name,0),
     m_parent(parent)
 {
   m_metastore.load();
@@ -118,6 +270,12 @@ scx::Arg* Article::get_meta(const std::string& name,bool recurse) const
     a = uc->m_parent->get_meta(name,recurse);
   }
   return a;
+}
+
+//=========================================================================
+const ArticleHeading& Article::get_headings() const
+{
+  return m_headings;
 }
 
 //=========================================================================
@@ -346,6 +504,10 @@ scx::Arg* Article::arg_lookup(const std::string& name)
     }
     return 0;
   }
+  if ("headings" == name) {
+    open();
+    return m_headings.get_arg();
+  }
 
   return XMLDoc::arg_lookup(name);
 }
@@ -516,4 +678,45 @@ scx::Arg* Article::arg_method(const scx::Auth& auth,const std::string& name,scx:
 
   
   return XMLDoc::arg_method(auth,name,args);
+}
+
+//=========================================================================
+void Article::handle_open()
+{
+  m_headings.clear();
+  int index = 0;
+  scan_headings(xmlDocGetRootElement(m_xmldoc),index);
+}
+
+//=========================================================================
+void Article::handle_close()
+{
+
+}
+
+//=========================================================================
+void Article::scan_headings(xmlNode* start,int& index)
+{
+  for (xmlNode* node = start;
+       node != 0;
+       node = node->next) {
+    
+    if (node->type == XML_ELEMENT_NODE) {
+      std::string name((char*)node->name);
+      if (name == "h1" || name == "h2" || name == "h3" ||
+          name == "h4" || name == "h5" || name == "h6") {
+        if (node->children) {
+          std::string text;
+          get_node_text(text,node->children);
+          int level = atoi(name.substr(1).c_str());
+          ++index;
+          m_headings.add(level,text,index);
+          const ArticleHeading* h = m_headings.lookup_index(index);
+          node->_private = (void*)h;
+        }
+      } else {
+        scan_headings(node->children,index);
+      }
+    }
+  }
 }

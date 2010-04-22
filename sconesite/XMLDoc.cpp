@@ -51,7 +51,9 @@ XMLDoc::XMLDoc(
 ) : m_name(name),
     m_root(root),
     m_file(file),
-    m_xmldoc(0)
+    m_xmldoc(0),
+    m_clients(0),
+    m_opening(false)
 {
   if (!m_clients_mutex) {
     m_clients_mutex = new scx::Mutex();
@@ -94,13 +96,12 @@ bool XMLDoc::process(Context& context)
   m_clients_mutex->lock();
   ++m_clients;
   m_clients_mutex->unlock();
-  
-  open();
 
+  open();
+  
   if (!m_xmldoc) {
     context.handle_error(m_errors);
     return false;
-
   }
 
   if (context.handle_doc_start(this)) {
@@ -180,6 +181,20 @@ scx::Arg* XMLDoc::arg_method(const scx::Auth& auth,const std::string& name,scx::
 }
 
 //=========================================================================
+void XMLDoc::get_node_text(std::string& txt, xmlNode* node)
+{
+  while (node) {
+    if (node->content) {
+      txt += (char*)node->content;
+    }
+    if (node->children) {
+      get_node_text(txt,node->children);
+    }
+    node = node->next;
+  }
+}
+
+//=========================================================================
 void XMLDoc::process_node(Context& context, xmlNode* start)
 {
   for (xmlNode* node = start;
@@ -206,10 +221,10 @@ void XMLDoc::process_node(Context& context, xmlNode* start)
           attrs[(char*)attr->name] = (char*)attr->children->content;
         }
         bool empty = (node->content == 0 && node->children == 0);
-        if (context.handle_start(name,attrs,empty)) {
+        if (context.handle_start(name,attrs,empty,node->_private)) {
           do {
             process_node(context,node->children);
-          } while (context.handle_end(name,attrs));
+          } while (context.handle_end(name,attrs,node->_private));
         }
       } break;
 	
@@ -229,9 +244,34 @@ void XMLDoc::process_node(Context& context, xmlNode* start)
 }
 
 //=========================================================================
+void XMLDoc::handle_open()
+{
+
+}
+
+//=========================================================================
+void XMLDoc::handle_close()
+{
+
+}
+
+//=========================================================================
 bool XMLDoc::open()
 {
   m_last_access = scx::Date::now();
+
+  m_clients_mutex->lock();
+  bool open_wait = m_opening;
+  if (!m_opening) m_opening = true;
+  m_clients_mutex->unlock();
+  
+  if (open_wait) {
+    // Doc is being opened in another thread, wait for it to complete
+    DEBUG_LOG("XMLDoc::Open() Waiting for another thread to complete");
+    while (m_opening) { };
+    DEBUG_LOG("XMLDoc::Open() Other thread finished open, continuing");
+    return (m_xmldoc != 0);
+  }
   
   scx::FilePath path = get_filepath();
   scx::FileStat stat(path);
@@ -239,19 +279,6 @@ bool XMLDoc::open()
     if (m_xmldoc == 0 || m_modtime != stat.time()) {
       close();
       m_errors = "";
-
-      /*
-      htmlSAXHandler handler;
-      xmlParserCtxt* cx;
-      cx = htmlCreatePushParserCtxt(&handler,this,NULL,0,NULL,XML_CHAR_ENCODING_NONE);
-      xmlInitParserCtxt(cx);
-      cx->_private = this;
-      cx->sax->error = ErrorHandler;
-      cx->vctxt.error = ErrorHandler;
-      m_xmldoc = htmlCtxtReadFile(cx,path.path().c_str(),NULL,0);
-      m_modtime = stat.time();
-      htmlFreeParserCtxt(cx);
-      */
 
       xmlParserCtxt* cx;
       cx = xmlNewParserCtxt();
@@ -263,10 +290,17 @@ bool XMLDoc::open()
       m_modtime = stat.time();
 
       xmlFreeParserCtxt(cx);
+
+      handle_open();
     }
   } else {
     close();
   }
+
+  m_clients_mutex->lock();
+  m_opening = false;
+  m_clients_mutex->unlock();
+
   return (m_xmldoc != 0);
 }
 
@@ -274,6 +308,7 @@ bool XMLDoc::open()
 void XMLDoc::close()
 {
   if (m_xmldoc) {
+    handle_close();
     xmlFreeDoc(m_xmldoc);
   }
   m_xmldoc = 0;

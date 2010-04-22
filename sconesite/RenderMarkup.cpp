@@ -89,9 +89,15 @@ const Article* RenderMarkupContext::get_article() const
 }
 
 //=========================================================================
-bool RenderMarkupContext::handle_start(const std::string& name, XMLAttrs& attrs, bool empty)
+bool RenderMarkupContext::handle_start(
+  const std::string& name,
+  XMLAttrs& attrs,
+  bool empty,
+  void* data
+)
 {
   bool descend = false;
+  std::string pre;
 
   if (name == "article") {
     descend = !empty;
@@ -117,20 +123,52 @@ bool RenderMarkupContext::handle_start(const std::string& name, XMLAttrs& attrs,
     descend = !empty;
     
   } else {
+    
+    std::ostringstream oss;
 
+    // Monkey about with some of the standard HTML tags!
+    
     if (name == "img") {
       std::string link = attrs["src"];
       if (link[0] != '/' && link.find(":") == std::string::npos) {
 	attrs["src"] = "/" + m_article->get_href_path() + link;
       }
+
     } else if (name == "a" || name == "area") {
       std::string link = attrs["href"];
-      if (link[0] != '/' && link.find(":") == std::string::npos) {
-	attrs["href"] = "/" + m_article->get_href_path() + link;
+      if (link.find(":") == std::string::npos) {
+        if (link[0] != '/') {
+          // Expand relative hrefs into full paths so they work anywhere
+          attrs["href"] = "/" + m_article->get_href_path() + link;
+        }
+      } else {
+        // Add class 'external' to offsite links
+        std::string& c = attrs["class"];
+        if (c.empty()) {
+          c = "external";
+        } else {
+          c += " external";
+        }
+      }
+
+    } else if (name == "h1" || name == "h2" || name == "h3" ||
+               name == "h4" || name == "h5" || name == "h6") {
+      // Automatically insert anchors before headings
+      if (data && m_article) { 
+        const ArticleHeading* h = (const ArticleHeading*)(data);
+        if (h) {
+          int index = h->index();
+          std::string anchor = m_article->get_headings().lookup_anchor(index);
+          pre += "<span class='section'><a href='#"+
+            anchor+"' title='Link directly to this heading'>"+
+            m_article->get_headings().lookup_section(index)+
+            ".</a></span> ";
+          
+          oss << "<a name='" << anchor << "'></a>";
+        }
       }
     }
 
-    std::ostringstream oss;
     oss << "<" << name;
     for (XMLAttrs::const_iterator it = attrs.begin();
          it != attrs.end();
@@ -139,7 +177,7 @@ bool RenderMarkupContext::handle_start(const std::string& name, XMLAttrs& attrs,
     }
     
     if (!empty) {
-      oss << ">";
+      oss << ">" << pre;
       descend = true;
     } else {
       oss << "/>";
@@ -151,7 +189,11 @@ bool RenderMarkupContext::handle_start(const std::string& name, XMLAttrs& attrs,
 }
 
 //=========================================================================
-bool RenderMarkupContext::handle_end(const std::string& name, XMLAttrs& attrs)
+bool RenderMarkupContext::handle_end(
+  const std::string& name,
+  XMLAttrs& attrs,
+  void* data
+)
 {
   bool repeat = false;
 

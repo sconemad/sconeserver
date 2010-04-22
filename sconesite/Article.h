@@ -50,6 +50,39 @@ private:
 
 
 //=========================================================================
+class ArticleHeading {
+
+public:
+  ArticleHeading(int level, const std::string& name, int index);
+  ~ArticleHeading();
+
+  int level() const;
+  const std::string& name() const;
+  int index() const;
+  
+  void clear();
+  void add(int level, const std::string& name, int index);
+
+  const ArticleHeading* lookup_index(int index) const;
+  std::string lookup_anchor(int index) const;
+  std::string lookup_section(int index) const;
+  scx::Arg* get_arg(
+    const std::string& anchor_prefix = "",
+    const std::string& section_prefix = ""
+  ) const;
+
+private:
+  
+  int m_level;
+  std::string m_name;
+  int m_index;
+  
+  typedef std::vector<ArticleHeading*> ArticleHeadingList;
+  ArticleHeadingList m_subs;
+};
+
+
+//=========================================================================
 class Article : public XMLDoc {
 
 public:
@@ -62,7 +95,7 @@ public:
   ~Article();
 
   scx::Arg* get_meta(const std::string& name,bool recurse=false) const;
-
+  const ArticleHeading& get_headings() const;
   std::string get_href_path() const;
   
   // Sub-articles
@@ -82,10 +115,17 @@ public:
 
 protected:
 
+  virtual void handle_open();
+  virtual void handle_close();
+
+  void scan_headings(xmlNode* start,int& index);
+
   Profile& m_profile;
 
   scx::ArgStore m_metastore;
 
+  ArticleHeading m_headings;
+  
   Article* m_parent;
   std::list<Article*> m_articles;
   

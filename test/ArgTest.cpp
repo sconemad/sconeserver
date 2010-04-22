@@ -121,10 +121,9 @@ Arg* ArgTest::arg_method(
   }
 
   if ("test" == name) {
-    const ArgInt* cond = dynamic_cast<const ArgInt*>(l->get(0));
-    if (cond==0 || cond->get_int() == 0) {
-      const ArgString* a_msg =
-        dynamic_cast<const ArgString*>(l->get(1));
+    Arg* result = l->get(0);
+    if (BAD_ARG(result) || result->get_int() == 0) {
+      const ArgString* a_msg = dynamic_cast<const ArgString*>(l->get(1));
       std::string msg = (a_msg ? a_msg->get_string() : "");
       std::cerr << "TEST FAILED: " << msg << "\n";
       exit(1);

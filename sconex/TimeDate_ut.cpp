@@ -302,9 +302,9 @@ void TimeDate_ut()
 
   for (int ids=0; ids<nds; ++ids) {
     std::cout << " ds[" << ids << "] = " << ds[ids].string() << "\n";
+    UTEST(ds[ids].epoch_seconds() == 1122982496);
     UTEST(ds[ids] == ds[0]);
   }
-
   
   UTSEC("date operators");
 
