@@ -50,40 +50,30 @@ private:
 
 
 //=========================================================================
-class ArticleHeading {
+class XMLArticleBody : public XMLDoc {
 
 public:
-  ArticleHeading(int level, const std::string& name, int index);
-  ~ArticleHeading();
+  XMLArticleBody(const std::string& name,
+                 const scx::FilePath& path);
 
-  int level() const;
-  const std::string& name() const;
-  int index() const;
-  
-  void clear();
-  void add(int level, const std::string& name, int index);
+  virtual ~XMLArticleBody();
 
-  const ArticleHeading* lookup_index(int index) const;
-  std::string lookup_anchor(int index) const;
-  std::string lookup_section(int index) const;
-  scx::Arg* get_arg(
-    const std::string& anchor_prefix = "",
-    const std::string& section_prefix = ""
-  ) const;
+  virtual const ArticleHeading& get_headings() const;
+  
+protected:
 
-private:
+  virtual void handle_open();
+  virtual void handle_close();
+
+  void scan_headings(xmlNode* start,int& index);
+
+  ArticleHeading m_headings;
   
-  int m_level;
-  std::string m_name;
-  int m_index;
-  
-  typedef std::vector<ArticleHeading*> ArticleHeadingList;
-  ArticleHeadingList m_subs;
 };
 
 
 //=========================================================================
-class Article : public XMLDoc {
+class Article : public scx::ArgObjectInterface {
 
 public:
 
@@ -92,8 +82,17 @@ public:
           const scx::FilePath& path,
           Article* parent);
   
-  ~Article();
+  virtual ~Article();
 
+  const std::string& get_name() const;
+  const scx::FilePath& get_root() const;
+  scx::FilePath get_filepath() const;
+
+  bool allow_access(Context& context);
+  bool allow_upload(Context& context);
+  
+  bool process(Context& context);
+  
   scx::Arg* get_meta(const std::string& name,bool recurse=false) const;
   const ArticleHeading& get_headings() const;
   std::string get_href_path() const;
@@ -115,19 +114,19 @@ public:
 
 protected:
 
-  virtual void handle_open();
-  virtual void handle_close();
+  bool evaluate_rule(Context& context, const std::string& meta);
 
-  void scan_headings(xmlNode* start,int& index);
+  std::string m_name;
+  scx::FilePath m_root;
 
   Profile& m_profile;
 
   scx::ArgStore m_metastore;
 
-  ArticleHeading m_headings;
-  
   Article* m_parent;
   std::list<Article*> m_articles;
+
+  ArticleBody* m_body;
   
 };
 

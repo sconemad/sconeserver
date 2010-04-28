@@ -26,6 +26,9 @@ Free Software Foundation, Inc.,
 #include "http/Request.h"
 #include "sconex/Uri.h"
 #include "sconex/LineBuffer.h"
+
+#include <crypt.h>
+
 namespace http {
 
 //=========================================================================
@@ -53,7 +56,14 @@ HTTPUser::~HTTPUser()
 //=========================================================================
 bool HTTPUser::authorised(const std::string& password)
 {
-  return (m_password == password);
+  struct crypt_data data;
+  memset(&data,0,sizeof(data));
+  data.initialized = 0;
+  std::string check = crypt_r(password.c_str(), m_password.c_str(), &data);
+
+  //  std::string check = crypt(password.c_str(), m_password.c_str());
+
+  return (check == m_password);
 }
 
 //=========================================================================
@@ -234,11 +244,11 @@ void AuthRealm::refresh()
 	file.add_stream(tok);
 	std::string line;
 	while (scx::Ok == tok->tokenize(line)) {
-	  std::string::size_type i = line.find_first_of(" ");
+	  std::string::size_type i = line.find_first_of(":");
 	  std::string username;
 	  std::string password;
 	  username = line.substr(0,i);
-	  i = line.find_first_not_of(" ",i);
+          ++i;
 	  password = line.substr(i);
 	  if (!username.empty() && !password.empty()) {
 	    scx::FilePath path(m_path + username);

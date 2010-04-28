@@ -1,4 +1,19 @@
 
+2010-04-28 Andrew Wedgbury <wedge@sconemad.com>
+
+	* sconesite/image: Call InitializeMagick() when loading module.
+	* sconesite/RenderMarkup: Use article href path in anchor links.
+	Allow access to local_addr and remote_addr of output descriptor.
+	* sconesite/XMLDoc: Add new base class for article bodies, and
+	derive XMLDoc from this.
+	* sconesite/Article: Separate out article body functionality.
+	Add allow_access and allow_upload access check methods.
+	* sconesite/Template: Allow derivation from ArticleBody.
+	* sconesite/SconesiteStream: Restructure, build context earlier.
+	Use new article access check methods.
+	* http/AuthRealm: Read standard htpassword file format.
+	Use crypt() to check passwords (DES format).
+
 2010-04-22 Andrew Wedgbury <wedge@sconemad.com>
 
 	* sconesite/XMLDoc: Try to make open operation more thread safe.

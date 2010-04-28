@@ -38,7 +38,8 @@ Template::Template(
   const std::string& name,
   const scx::FilePath& path
 ) : XMLDoc(name,path,name + ".xml"),
-    m_profile(profile)
+    m_profile(profile),
+    m_headings(1,name,0)
 {
 
 }
@@ -49,3 +50,8 @@ Template::~Template()
 
 }
 
+//=========================================================================
+const ArticleHeading& Template::get_headings() const
+{
+  return m_headings;
+}

@@ -89,14 +89,13 @@ protected:
 //=========================================================================
 SconesiteStream::SconesiteStream(
   SconesiteModule& module,
-  const std::string& profile
+  Profile* profile
 ) : http::ResponseStream("sconesite"),
     m_module(module),
     m_profile(profile),
     m_article(0),
-    m_prev_cond(scx::Ok),
-    m_section(0),
-    m_template(0)
+    m_accept(false),
+    m_context(0)
 {
 
 }
@@ -104,7 +103,7 @@ SconesiteStream::SconesiteStream(
 //=========================================================================
 SconesiteStream::~SconesiteStream()
 {
-  
+  delete m_context;
 }
 
 //=========================================================================
@@ -112,130 +111,93 @@ std::string SconesiteStream::stream_status() const
 {
   std::ostringstream oss;
   oss << http::ResponseStream::stream_status()
-      << " prf:" << m_profile
+      << " prf:" << m_profile->name()
       << " art:" << (m_article ? m_article->get_href_path() : "NULL");
   return oss.str();
 }
 
 //=========================================================================
-scx::Condition SconesiteStream::send_response()
+scx::Condition SconesiteStream::event(scx::Stream::Event e)
 {
-  http::MessageStream* msg = GET_HTTP_MESSAGE();
-  http::Request& req = const_cast<http::Request&>(msg->get_request());
-  http::Response& resp = msg->get_response();
-  const scx::Uri& uri = req.get_uri();
+  if (e == scx::Stream::Opening) {
+    http::MessageStream* msg = GET_HTTP_MESSAGE();
+    http::Request& req = const_cast<http::Request&>(msg->get_request());
+    http::Response& resp = msg->get_response();
+    const scx::Uri& uri = req.get_uri();
+    std::string pathinfo = req.get_path_info();
 
-  Profile* profile = m_module.lookup_profile(m_profile);
-  
-  std::string pathinfo = req.get_path_info();
-
-  if (pathinfo.find("//") != std::string::npos ||
-      pathinfo.find("..") != std::string::npos) {
-    msg->log("[sconesite] Dodgy pathinfo '" + pathinfo + "' - rejecting");
-    resp.set_status(http::Status::Forbidden);
-    return scx::Close;
-  }
-
-  std::string art_file = "";
-  m_article = profile->get_index()->find_article(pathinfo,art_file);
-
-  if (!art_file.empty()) {
-    // Update the path in the request
-    scx::FilePath path = m_article->get_root() + art_file;
-    req.set_path(path);
-
-    if (scx::FileStat(path).is_file()) {
-      // Connect the getfile module and relinquish
-      scx::ModuleRef getfile = msg->get_module().get_module("getfile");
-      if (getfile.valid()) {
-        msg->log("[sconesite] article '" + m_article->name() + "'");
-        msg->log("[sconesite] Sending '" + pathinfo + "' with getfile"); 
-        scx::ArgList args;
-        getfile.module()->connect(&endpoint(),0);
-        return scx::End;
-      }
-    } else {
-      resp.set_status(http::Status::NotFound);
+    if (pathinfo.find("//") != std::string::npos ||
+        pathinfo.find("..") != std::string::npos) {
+      msg->log("[sconesite] Dodgy pathinfo '" + pathinfo + "' - rejecting");
+      resp.set_status(http::Status::Forbidden);
+      return scx::Close;
     }
 
-  } else if (m_article) {
-    std::string href = m_article->get_href_path();
-    if (pathinfo != href) {
-      scx::Uri new_uri = uri;
-      new_uri.set_path(href);
-      msg->log("[sconesite] Redirect '" + uri.get_string() + "' to '" + new_uri.get_string() + "'"); 
-      resp.set_status(http::Status::Found);
-      resp.set_header("Location",new_uri.get_string());
+    // Lookup the article and get remaining file path
+    m_article = m_profile->get_index()->find_article(pathinfo,m_file);
+
+    // Check article exists
+    if (!m_article) {
+      msg->log("[sconesite] No article - sending NotFound, pathinfo is '" + pathinfo + "'");
+      resp.set_status(http::Status::NotFound);
       return scx::Close;
-    } else {
-      msg->log("[sconesite] Sending article '" + m_article->name() + "'");
+    }
+
+    // Create context for rendering article
+    m_context = new RenderMarkupContext(*m_profile,endpoint(),req,resp);
+    m_context->set_article(m_article);
+
+    // Check access is allowed
+    if (!m_article->allow_access(*m_context)) {
+      resp.set_status(http::Status::Unauthorized);
+      if (!m_file.empty()) {
+        return scx::Close;
+      }
     }
     
-  } else {
-    msg->log("[sconesite] Sending NotFound, pathinfo is '" + pathinfo + "'");
-    resp.set_status(http::Status::NotFound);
-    return scx::Close;
-  }
-  
-  // Set the endpoint blocking, saving previous state
-  bool prev_block = endpoint().set_blocking(true);
-  
-  // Create context for rendering article
-  RenderMarkupContext ctx(*profile,endpoint(),req,resp);
-  ctx.set_article(m_article);
-
-  // Find the template to use, if one was specified, otherwise use the default
-  std::string tplname = req.get_param("tpl");
-  if (tplname.empty()) tplname = "default";
-  Template* tpl = profile->lookup_template(tplname);
-
-  // Render the page
-  try {
-    if (!tpl) {
-      ctx.handle_error("No template");
+    if (m_file.empty()) {
+      // Article request, check if we need to redirect to correct the path
+      std::string href = m_article->get_href_path();
+      if (pathinfo != href) {
+        scx::Uri new_uri = uri;
+        new_uri.set_path(href);
+        msg->log("[sconesite] Redirect '"+uri.get_string()+"' to '"+new_uri.get_string()+"'"); 
+        resp.set_status(http::Status::Found);
+        resp.set_header("Location",new_uri.get_string());
+        return scx::Close;
+      }
+      
     } else {
-      tpl->process(ctx);
+      // File request, update the path in the request
+      scx::FilePath path = m_article->get_root() + m_file;
+      req.set_path(path);
+      
+      if (!scx::FileStat(path).is_file()) {
+        resp.set_status(http::Status::NotFound);
+        //        return scx::Close;
+      }
     }
-  } catch (...) {
-    DEBUG_LOG("EXCEPTION caught in SconesiteStream")
+    
+    m_accept = true;
   }
 
-  // Restore endpoint blocking state and reset timeout
-  endpoint().set_blocking(prev_block);
-  endpoint().reset_timeout();
-
-  // Finished
-  return scx::Close;
+  if (m_accept) {
+    return http::ResponseStream::event(e);
+  } else {
+    return scx::Ok;
+  }
 }
 
 //=========================================================================
 scx::Condition SconesiteStream::start_section(const scx::MimeHeaderTable& headers)
 {
-  ++m_section;
-
   http::MessageStream* msg = GET_HTTP_MESSAGE();
-  const http::Request& req = msg->get_request();
-  http::Request& ucreq = const_cast<http::Request&>(req);
-  const http::Session* s = req.get_session();
+  http::Request& req = const_cast<http::Request&>(msg->get_request());
+  http::Response& resp = msg->get_response();
+  const http::Session* session = req.get_session();
 
-  //msg->log("[sconesite] Start section " + m_section);
-  
-  bool auth = (s && s->allow_upload());
-  if (auth) {
+  if (m_article->allow_upload(*m_context)) {
 
-    Profile* profile = m_module.lookup_profile(m_profile);
-    std::string pathinfo = req.get_path_info();
-    //    std::string::size_type is = pathinfo.find_first_of("/");
-    std::string art_name = pathinfo;
-    std::string art_file = "";
-    /*
-    if (is != std::string::npos) {
-      art_name = pathinfo.substr(0,is);
-      art_file = pathinfo.substr(is+1);
-    }
-    */
-    m_article = profile->get_index()->find_article(art_name,art_file);
-    
     std::string name;
     scx::MimeHeader disp = headers.get_parsed("Content-Disposition");
     const scx::MimeHeaderValue* fdata = disp.get_value("form-data");
@@ -254,10 +216,10 @@ scx::Condition SconesiteStream::start_section(const scx::MimeHeaderTable& header
     if (ip == 0) {
       // Name starts with "file_" so stream it into a file
       scx::FilePath path = "/tmp";
-      std::string filename = "sconesite-" + s->get_id() + "-" + name;
+      std::string filename = "sconesite-" + session->get_id() + "-" + name;
       path += filename;
       //      STREAM_DEBUG_LOG("Streaming section to file '" << path.path() << "'");
-      ucreq.set_param(name,new ArgFile(path,fname));
+      req.set_param(name,new ArgFile(path,fname));
       
       scx::File* file = new scx::File();
       if (file->open(path.path(),
@@ -277,7 +239,7 @@ scx::Condition SconesiteStream::start_section(const scx::MimeHeaderTable& header
       
     } else {
       //      STREAM_DEBUG_LOG("Writing section to parameter '" << name << "'");
-      endpoint().add_stream(new ParamReaderStream(name,ucreq));
+      endpoint().add_stream(new ParamReaderStream(name,req));
       return scx::Ok;
     }
   }
@@ -287,5 +249,62 @@ scx::Condition SconesiteStream::start_section(const scx::MimeHeaderTable& header
   scx::StreamTransfer* xfer = new scx::StreamTransfer(&endpoint());
   file->add_stream(xfer);
   scx::Kernel::get()->connect(file,0);
+  resp.set_status(http::Status::Unauthorized);
   return scx::Ok;  
+}
+
+//=========================================================================
+scx::Condition SconesiteStream::send_response()
+{
+  http::MessageStream* msg = GET_HTTP_MESSAGE();
+  http::Request& req = const_cast<http::Request&>(msg->get_request());
+  http::Response& resp = msg->get_response();
+  std::string pathinfo = req.get_path_info();
+
+  if (resp.get_status().code() == http::Status::Ok && !m_file.empty()) {
+    // Request for a file
+    
+    // Connect the getfile module and relinquish
+    scx::ModuleRef getfile = msg->get_module().get_module("getfile");
+    if (getfile.valid()) {
+      msg->log("[sconesite] article '" + m_article->name() + "'");
+      msg->log("[sconesite] Sending '" + pathinfo + "' with getfile"); 
+      scx::ArgList args;
+      getfile.module()->connect(&endpoint(),0);
+      return scx::End;
+    }
+    // Something went wrong
+    resp.set_status(http::Status::InternalServerError);
+    return scx::Close;
+    
+  } else {
+    // Request for the article itself
+    msg->log("[sconesite] Sending article '" + m_article->name() + "'");
+  }
+  
+  // Set the endpoint blocking, saving previous state
+  bool prev_block = endpoint().set_blocking(true);
+  
+  // Find the template to use, if one was specified, otherwise use the default
+  std::string tplname = req.get_param("tpl");
+  if (tplname.empty()) tplname = "default";
+  Template* tpl = m_profile->lookup_template(tplname);
+
+  // Render the page
+  try {
+    if (!tpl) {
+      m_context->handle_error("No template");
+    } else {
+      tpl->process(*m_context);
+    }
+  } catch (...) {
+    DEBUG_LOG("EXCEPTION caught in SconesiteStream")
+  }
+
+  // Restore endpoint blocking state and reset timeout
+  endpoint().set_blocking(prev_block);
+  endpoint().reset_timeout();
+
+  // Finished
+  return scx::Close;
 }

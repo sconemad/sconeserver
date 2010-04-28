@@ -1,5 +1,5 @@
 
-0.8.0 2010-04-xx Andrew Wedgbury <wedge@sconemad.com>
+0.8.0 2010-05-xx Andrew Wedgbury <wedge@sconemad.com>
 
         * Major SconeScript improvements:
          - Short circuit | and & operators.
@@ -19,7 +19,7 @@
 
         * HTTP module improvements:
          - Reliable multi-threading support.
-         - HTTP Authentication support with realms.
+         - HTTP Authentication realm support using htpasswd files.
          - Session management.
          - Multipart POST processing.
 

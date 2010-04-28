@@ -25,9 +25,9 @@ Free Software Foundation, Inc.,
 #include "sconex/Stream.h"
 #include "http/ResponseStream.h"
 
-class TestBuilderModule;
+class Profile;
 class Article;
-class Template;
+class RenderMarkupContext;
 
 //=========================================================================
 class SconesiteStream : public http::ResponseStream {
@@ -36,7 +36,7 @@ public:
 
   SconesiteStream(
     SconesiteModule& module,
-    const std::string& profile
+    Profile* profile
   );
   
   ~SconesiteStream();
@@ -45,6 +45,7 @@ public:
   
 protected:
 
+  virtual scx::Condition event(scx::Stream::Event e);
   virtual scx::Condition start_section(const scx::MimeHeaderTable& headers);
   virtual scx::Condition send_response();
 
@@ -52,14 +53,13 @@ private:
   
   SconesiteModule& m_module;
 
-  std::string m_profile;
-
+  Profile* m_profile;
   Article* m_article;
-  scx::Condition m_prev_cond;
 
-  int m_section;
+  bool m_accept;
+  RenderMarkupContext* m_context;
+  std::string m_file;
   
-  Template* m_template;
 };
 
 #endif

@@ -31,6 +31,7 @@ Free Software Foundation, Inc.,
 #include "sconex/Kernel.h"
 #include "sconex/FileDir.h"
 #include "sconex/ArgProc.h"
+#include "sconex/ArgStatement.h"
 
 //=========================================================================
 bool ArticleSortDate(const Article* a, const Article* b)
@@ -41,6 +42,9 @@ bool ArticleSortDate(const Article* a, const Article* b)
   int a_int = a_time ? a_time->get_int() : 0;
   int b_int = b_time ? b_time->get_int() : 0;
 
+  delete a_time;
+  delete b_time;
+  
   return (a_int > b_int);
 }
 
@@ -86,153 +90,69 @@ bool ArticleMetaSorter::operator()(const Article* a, const Article* b)
 }
 
 
+
+
 //=========================================================================
-ArticleHeading::ArticleHeading(int level, const std::string& name, int index)
-  : m_level(level),
-    m_name(name),
-    m_index(index)
+XMLArticleBody::XMLArticleBody(const std::string& name,
+                               const scx::FilePath& path
+) : XMLDoc(name,path,"article.xml"),
+    m_headings(1,name,0)
+{
+
+
+}
+
+//=========================================================================
+XMLArticleBody::~XMLArticleBody()
 {
 
 }
 
 //=========================================================================
-ArticleHeading::~ArticleHeading()
+const ArticleHeading& XMLArticleBody::get_headings() const
 {
-  clear();
+  return m_headings;
 }
 
 //=========================================================================
-int ArticleHeading::level() const
+void XMLArticleBody::handle_open()
 {
-  return m_level;
+  m_headings.clear();
+  int index = 0;
+  scan_headings(xmlDocGetRootElement(m_xmldoc),index);
 }
 
 //=========================================================================
-const std::string& ArticleHeading::name() const
+void XMLArticleBody::handle_close()
 {
-  return m_name;
+
 }
 
 //=========================================================================
-int ArticleHeading::index() const
+void XMLArticleBody::scan_headings(xmlNode* start,int& index)
 {
-  return m_index;
-}
-
-//=========================================================================
-void ArticleHeading::clear()
-{
-  for (ArticleHeadingList::iterator it = m_subs.begin();
-       it != m_subs.end();
-       ++it) {
-    ArticleHeading* h = *it;
-    delete h;
-  }
-  m_subs.clear();
-}
-
-//=========================================================================
-void ArticleHeading::add(int level, const std::string& name, int index)
-{
-  if (m_subs.size() == 0 || m_subs.back()->level() >= level) {
-    m_subs.push_back(new ArticleHeading(level,name,index));
-  } else {
-    m_subs.back()->add(level,name,index);
-  }
-}
-
-//=========================================================================
-const ArticleHeading* ArticleHeading::lookup_index(int index) const
-{
-  if (index == m_index) return this;
-  
-  for (ArticleHeadingList::const_iterator it = m_subs.begin();
-       it != m_subs.end();
-       ++it) {
-    const ArticleHeading* f = (*it)->lookup_index(index);
-    if (f) return f;
-  }
-  
-  return 0;
-}
-
-//=========================================================================
-std::string ArticleHeading::lookup_anchor(int index) const
-{
-  if (index == m_index) return m_name;
-
-  for (ArticleHeadingList::const_iterator it = m_subs.begin();
-       it != m_subs.end();
-       ++it) {
-    std::string p = (*it)->lookup_anchor(index);
-    if (!p.empty()) {
-      if (m_index == 0) return p;
-      return (m_name + "+" + p);
-    }
-  }
-  
-  return "";
-}
-
-//=========================================================================
-std::string ArticleHeading::lookup_section(int index) const
-{
-  int sec = 0;
-  for (ArticleHeadingList::const_iterator it = m_subs.begin();
-       it != m_subs.end();
-       ++it) {
-    const ArticleHeading* h = *it;
-    ++sec;
-    std::ostringstream oss;
-    if (h->index() == index) {
-      oss << sec;
-      return oss.str();
-      
-    } else {
-      std::string str = h->lookup_section(index);
-      if (!str.empty()) {
-        oss << sec << "." << str;
-        return oss.str();
+  for (xmlNode* node = start;
+       node != 0;
+       node = node->next) {
+    
+    if (node->type == XML_ELEMENT_NODE) {
+      std::string name((char*)node->name);
+      if (name == "h1" || name == "h2" || name == "h3" ||
+          name == "h4" || name == "h5" || name == "h6") {
+        if (node->children) {
+          std::string text;
+          get_node_text(text,node->children);
+          int level = atoi(name.substr(1).c_str());
+          ++index;
+          m_headings.add(level,text,index);
+          const ArticleHeading* h = m_headings.lookup_index(index);
+          node->_private = (void*)h;
+        }
+      } else {
+        scan_headings(node->children,index);
       }
     }
   }
-  
-  return "";
-}
-
-//=========================================================================
-scx::Arg* ArticleHeading::get_arg(
-  const std::string& anchor_prefix,
-  const std::string& section_prefix
-) const
-{
-  scx::ArgList* list = new scx::ArgList();
-  int s=0;
-  for (ArticleHeadingList::const_iterator it = m_subs.begin();
-       it != m_subs.end();
-       ++it) {
-    const ArticleHeading* h = *it;
-    std::string anchor = h->name();
-
-    std::ostringstream oss;
-    oss << (++s);
-    std::string section = oss.str();
-
-    if (m_index != 0) {
-      anchor = anchor_prefix + "+" + anchor;
-      section = section_prefix + "." + section;
-    }
-    
-    scx::ArgMap* map = new scx::ArgMap();
-    map->give("level", new scx::ArgInt(h->level()));
-    map->give("name",new scx::ArgString(h->name()));
-    map->give("anchor",new scx::ArgString(anchor));
-    map->give("section",new scx::ArgString(section));
-    map->give("subsection",new scx::ArgInt(s));
-    map->give("subs",h->get_arg(anchor,section));
-    list->give(map);
-  }
-  return list;  
 }
 
 
@@ -242,13 +162,14 @@ Article::Article(
   const std::string& name,
   const scx::FilePath& path,
   Article* parent
-) : XMLDoc(name,path,"article.xml"),
+) : m_name(name),
+    m_root(path),
     m_profile(profile),
     m_metastore(path + "meta.txt"),
-    m_headings(1,name,0),
     m_parent(parent)
 {
   m_metastore.load();
+  m_body = new XMLArticleBody(name,path);
 }
 
 //=========================================================================
@@ -258,6 +179,45 @@ Article::~Article()
        it_a != m_articles.end(); ++it_a) {
     delete (*it_a);
   }
+  delete m_body;
+}
+
+//=========================================================================
+const std::string& Article::get_name() const
+{
+  return m_name;
+}
+
+//=========================================================================
+const scx::FilePath& Article::get_root() const
+{
+  return m_root;
+}
+
+//=========================================================================
+scx::FilePath Article::get_filepath() const
+{
+  if (m_body) return m_body->get_filepath();
+  return scx::FilePath();
+}
+
+//=========================================================================
+bool Article::allow_access(Context& context)
+{
+  return evaluate_rule(context,"allow_access");
+}
+
+//=========================================================================
+bool Article::allow_upload(Context& context)
+{
+  return evaluate_rule(context,"allow_upload");
+}
+
+//=========================================================================
+bool Article::process(Context& context)
+{
+  if (m_body) return m_body->process(context);
+  return false;
 }
 
 //=========================================================================
@@ -275,7 +235,7 @@ scx::Arg* Article::get_meta(const std::string& name,bool recurse) const
 //=========================================================================
 const ArticleHeading& Article::get_headings() const
 {
-  return m_headings;
+  return m_body->get_headings();
 }
 
 //=========================================================================
@@ -291,7 +251,9 @@ std::string Article::get_href_path() const
 void Article::refresh(const scx::Date& purge_time)
 {
   // Purge any loaded article data if it hasn't been accessed recently
-  purge(purge_time);
+  if (m_body) {
+    m_body->purge(purge_time);
+  }
   
   // Add new articles
   scx::FileDir dir(m_root);
@@ -460,7 +422,10 @@ bool Article::remove_article(const std::string& name)
 //=========================================================================
 scx::Arg* Article::arg_resolve(const std::string& name)
 {
-  return XMLDoc::arg_resolve(name);
+  if (m_body) {
+    return m_body->arg_resolve(name);
+  }
+  return SCXBASE ArgObjectInterface::arg_resolve(name);
 }
 
 //=========================================================================
@@ -505,11 +470,15 @@ scx::Arg* Article::arg_lookup(const std::string& name)
     return 0;
   }
   if ("headings" == name) {
-    open();
-    return m_headings.get_arg();
+    //open();
+    return get_headings().get_arg();
   }
 
-  return XMLDoc::arg_lookup(name);
+  if (m_body) {
+    return m_body->arg_lookup(name);
+  }
+  
+  return SCXBASE ArgObjectInterface::arg_lookup(name);
 }
 
 //=========================================================================
@@ -676,47 +645,34 @@ scx::Arg* Article::arg_method(const scx::Auth& auth,const std::string& name,scx:
     return get_meta(s_name,true);
   }
 
+  if (m_body) {
+    return m_body->arg_method(auth,name,args);
+  }
   
-  return XMLDoc::arg_method(auth,name,args);
+  return SCXBASE ArgObjectInterface::arg_method(auth,name,args);
 }
 
 //=========================================================================
-void Article::handle_open()
+bool Article::evaluate_rule(Context& context, const std::string& meta)
 {
-  m_headings.clear();
-  int index = 0;
-  scan_headings(xmlDocGetRootElement(m_xmldoc),index);
-}
-
-//=========================================================================
-void Article::handle_close()
-{
-
-}
-
-//=========================================================================
-void Article::scan_headings(xmlNode* start,int& index)
-{
-  for (xmlNode* node = start;
-       node != 0;
-       node = node->next) {
-    
-    if (node->type == XML_ELEMENT_NODE) {
-      std::string name((char*)node->name);
-      if (name == "h1" || name == "h2" || name == "h3" ||
-          name == "h4" || name == "h5" || name == "h6") {
-        if (node->children) {
-          std::string text;
-          get_node_text(text,node->children);
-          int level = atoi(name.substr(1).c_str());
-          ++index;
-          m_headings.add(level,text,index);
-          const ArticleHeading* h = m_headings.lookup_index(index);
-          node->_private = (void*)h;
-        }
-      } else {
-        scan_headings(node->children,index);
-      }
+  scx::ArgStatementGroup root;
+  root.set_parent(&context);
+  scx::ArgObject ctx(&root);
+  scx::ArgProc proc(scx::Auth(scx::Auth::Untrusted),&ctx);
+  scx::Arg* access = get_meta(meta,true);
+  scx::Arg* arg = 0;
+  if (access) {
+    try {
+      arg = proc.evaluate(access->get_string());
+    } catch (...) {
+      DEBUG_LOG("EXCEPTION in Article::evaluate_rule");
+      throw;
     }
   }
+  
+  bool allow = BAD_ARG(arg) ? false : (0 != arg->get_int());
+  delete arg;
+  delete access;
+
+  return allow;
 }

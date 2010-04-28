@@ -35,6 +35,8 @@ Free Software Foundation, Inc.,
 #include "sconex/ArgProc.h"
 #include "sconex/MemFile.h"
 #include "sconex/ArgScript.h"
+#include "sconex/Socket.h"
+#include "sconex/StreamSocket.h"
 #include "sconex/utils.h"
 
 //=========================================================================
@@ -159,9 +161,10 @@ bool RenderMarkupContext::handle_start(
         if (h) {
           int index = h->index();
           std::string anchor = m_article->get_headings().lookup_anchor(index);
-          pre += "<span class='section'><a href='#"+
-            anchor+"' title='Link directly to this heading'>"+
-            m_article->get_headings().lookup_section(index)+
+          std::string href = "/" + m_article->get_href_path() + "#" + anchor;
+          pre += "<span class='section'><a href='" +
+            href + "' title='Link to this section'>" +
+            m_article->get_headings().lookup_section(index) +
             ".</a></span> ";
           
           oss << "<a name='" << anchor << "'></a>";
@@ -357,6 +360,22 @@ scx::Arg* RenderMarkupContext::arg_lookup(const std::string& name)
     } else {
       return new scx::ArgError("No session");
     }
+  }
+  if ("local_addr" == name) {
+    scx::Socket* socket = dynamic_cast<scx::Socket*>(&m_output);
+    if (socket) {
+      return socket->get_local_addr()->new_copy();
+    }
+    return 0;
+  }
+  if ("remote_addr" == name) {
+    //NOTE: At the moment this is only ever likely to be a StreamSocket,
+    // but this may change in the future, who knows?
+    scx::StreamSocket* socket = dynamic_cast<scx::StreamSocket*>(&m_output);
+    if (socket) {
+      return socket->get_remote_addr()->new_copy();
+    }
+    return 0;
   }
   if ("realms" == name) {
     scx::ModuleRef http = scx::Kernel::get()->get_module("http");

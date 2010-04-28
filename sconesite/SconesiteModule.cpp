@@ -88,14 +88,20 @@ bool SconesiteModule::connect(
   scx::ArgList* args
 )
 {
-  const scx::ArgString* profile =
+  const scx::ArgString* profile_name =
     dynamic_cast<const scx::ArgString*>(args->get(0));
-  if (!profile) {
+  if (!profile_name) {
     log("No profile specified, aborting connection");
     return false;
   }
 
-  SconesiteStream* s = new SconesiteStream(*this,profile->get_string());
+  Profile* profile = lookup_profile(profile_name->get_string());
+  if (!profile) {
+    log("Unknown profile '"+profile_name->get_string()+"' specified, aborting connection");
+    return false;
+  }
+  
+  SconesiteStream* s = new SconesiteStream(*this,profile);
   s->add_module_ref(ref());
   
   endpoint->add_stream(s);

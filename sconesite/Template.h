@@ -38,13 +38,17 @@ public:
            const scx::FilePath& path);
 
   ~Template();
+
+  virtual const ArticleHeading& get_headings() const;
   
 protected:
 
 private:
   
   Profile& m_profile;
-  
+
+  ArticleHeading m_headings;
+
 };
 
 #endif
