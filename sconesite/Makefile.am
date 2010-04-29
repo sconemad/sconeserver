@@ -13,6 +13,7 @@ SconesiteModule.cpp \
 SconesiteStream.cpp \
 ArgFile.cpp \
 Article.cpp \
+ArticleBody.cpp \
 Context.cpp \
 Profile.cpp \
 RenderMarkup.cpp \
@@ -26,6 +27,7 @@ SconesiteModule.h \
 SconesiteStream.h \
 ArgFile.h \
 Article.h \
+ArticleBody.h \
 Context.h \
 Profile.h \
 RenderMarkup.h \
@@ -35,6 +37,6 @@ XMLDoc.h
 sconesite_la_LDFLAGS = -module -avoid-version
 sconesite_la_LIBADD = -lxml2
 
-sysconf_DATA = sconesite.conf
+sysconf_DATA = sconesite.conf.example
 
 EXTRA_DIST = $(sysconf_DATA)

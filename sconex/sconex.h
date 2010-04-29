@@ -214,6 +214,10 @@ Free Software Foundation, Inc.,
 #  include <sys/time.h>
 #endif
 
+#ifdef HAVE_CRYPT_H
+#  include <crypt.h>
+#endif
+
 // sconex Debugging
 #include "sconex/Debug.h"
 

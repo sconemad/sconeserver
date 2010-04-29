@@ -60,8 +60,8 @@ pkglibLTLIBRARIES_INSTALL = $(INSTALL)
 LTLIBRARIES = $(pkglib_LTLIBRARIES)
 sconesite_la_DEPENDENCIES =
 am_sconesite_la_OBJECTS = SconesiteModule.lo SconesiteStream.lo \
-	ArgFile.lo Article.lo Context.lo Profile.lo RenderMarkup.lo \
-	Template.lo XMLDoc.lo
+	ArgFile.lo Article.lo ArticleBody.lo Context.lo Profile.lo \
+	RenderMarkup.lo Template.lo XMLDoc.lo
 sconesite_la_OBJECTS = $(am_sconesite_la_OBJECTS)
 sconesite_la_LINK = $(LIBTOOL) --tag=CXX $(AM_LIBTOOLFLAGS) \
 	$(LIBTOOLFLAGS) --mode=link $(CXXLD) $(AM_CXXFLAGS) \
@@ -223,6 +223,7 @@ SconesiteModule.cpp \
 SconesiteStream.cpp \
 ArgFile.cpp \
 Article.cpp \
+ArticleBody.cpp \
 Context.cpp \
 Profile.cpp \
 RenderMarkup.cpp \
@@ -235,6 +236,7 @@ SconesiteModule.h \
 SconesiteStream.h \
 ArgFile.h \
 Article.h \
+ArticleBody.h \
 Context.h \
 Profile.h \
 RenderMarkup.h \
@@ -243,7 +245,7 @@ XMLDoc.h
 
 sconesite_la_LDFLAGS = -module -avoid-version
 sconesite_la_LIBADD = -lxml2
-sysconf_DATA = sconesite.conf
+sysconf_DATA = sconesite.conf.example
 EXTRA_DIST = $(sysconf_DATA)
 all: all-recursive
 
@@ -316,6 +318,7 @@ distclean-compile:
 
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/ArgFile.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/Article.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/ArticleBody.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/Context.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/Profile.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/RenderMarkup.Plo@am__quote@

@@ -22,6 +22,8 @@ Free Software Foundation, Inc.,
 #ifndef sconesiteXMLDoc_h
 #define sconesiteXMLDoc_h
 
+#include "ArticleBody.h"
+
 #include "sconex/FilePath.h"
 #include "sconex/Date.h"
 #include "sconex/ArgObject.h"
@@ -34,56 +36,6 @@ Free Software Foundation, Inc.,
 typedef std::map<std::string,std::string> XMLAttrs;
 
 class Context;
-
-//=========================================================================
-class ArticleHeading {
-public:
-  ArticleHeading(int level, const std::string& name, int index);
-  ~ArticleHeading();
-
-  int level() const;
-  const std::string& name() const;
-  int index() const;
-  
-  void clear();
-  void add(int level, const std::string& name, int index);
-
-  const ArticleHeading* lookup_index(int index) const;
-  std::string lookup_anchor(int index) const;
-  std::string lookup_section(int index) const;
-  scx::Arg* get_arg(
-    const std::string& anchor_prefix = "",
-    const std::string& section_prefix = ""
-  ) const;
-
-private:
-  
-  int m_level;
-  std::string m_name;
-  int m_index;
-  
-  typedef std::vector<ArticleHeading*> ArticleHeadingList;
-  ArticleHeadingList m_subs;
-};
-
-
-//=========================================================================
-class ArticleBody : public scx::ArgObjectInterface {
-
-public:
-  
-  virtual const std::string& get_name() const =0;
-  virtual const scx::FilePath& get_root() const =0;
-  virtual const std::string& get_file() const =0;
-  virtual scx::FilePath get_filepath() const =0;
-
-  virtual bool process(Context& context) =0;
-  virtual bool purge(const scx::Date& purge_time) =0;
-
-  virtual const ArticleHeading& get_headings() const =0;
-  
-};
-
 
 //=========================================================================
 class XMLDoc : public ArticleBody {

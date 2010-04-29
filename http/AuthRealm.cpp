@@ -27,8 +27,6 @@ Free Software Foundation, Inc.,
 #include "sconex/Uri.h"
 #include "sconex/LineBuffer.h"
 
-#include <crypt.h>
-
 namespace http {
 
 //=========================================================================

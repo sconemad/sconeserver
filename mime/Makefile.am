@@ -13,6 +13,6 @@ MIMEModule.h
 
 mime_la_LDFLAGS = -module -avoid-version
 
-sysconf_DATA = mime.conf
+sysconf_DATA = mime.conf.example
 
 EXTRA_DIST = $(sysconf_DATA)

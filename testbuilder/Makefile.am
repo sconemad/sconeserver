@@ -23,7 +23,7 @@ BuildStep.h
 
 testbuilder_la_LDFLAGS = -module -avoid-version
 
-sysconf_DATA = testbuilder.conf
+sysconf_DATA = testbuilder.conf.example
 
 EXTRA_DIST = $(sysconf_DATA) \
 scripts/cvs \

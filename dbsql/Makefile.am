@@ -22,5 +22,5 @@ DbSqlQuery.h
 dbsql_la_LDFLAGS = -module -avoid-version
 dbsql_la_LIBADD = $(DBSQL_LIBADD)
 
-sysconf_DATA = dbsql.conf
+sysconf_DATA = dbsql.conf.example
 EXTRA_DIST = $(sysconf_DATA)

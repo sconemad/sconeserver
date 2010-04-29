@@ -234,7 +234,7 @@ sconed_LDADD = $(top_builddir)/sconex/libsconex.la
 MODULES = router http mime simple ssl stat exec forward tftp test testbuilder lettuce sconesite dbsql
 SUBDIRS = sconex doc $(MODULES)
 doc_DATA = AUTHORS COPYING INSTALL NEWS README THANKS TODO
-sysconf_DATA = sconeserver.conf
+sysconf_DATA = sconeserver.conf.example
 EXTRA_DIST = \
 $(sysconf_DATA) \
 autogen.sh

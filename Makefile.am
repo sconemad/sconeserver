@@ -17,7 +17,7 @@ SUBDIRS = sconex doc $(MODULES)
 docdir=$(datadir)/doc/$(PACKAGE)-$(VERSION)
 doc_DATA = AUTHORS COPYING INSTALL NEWS README THANKS TODO
 
-sysconf_DATA = sconeserver.conf
+sysconf_DATA = sconeserver.conf.example
 
 EXTRA_DIST = \
 $(sysconf_DATA) \

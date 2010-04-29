@@ -213,7 +213,7 @@ TFTPStream.h \
 TFTPProfile.h
 
 tftp_la_LDFLAGS = -module -avoid-version
-sysconf_DATA = tftp.conf
+sysconf_DATA = tftp.conf.example
 EXTRA_DIST = $(sysconf_DATA)
 all: all-am
 

@@ -19,6 +19,6 @@ RouterListener.h
 
 router_la_LDFLAGS = -module -avoid-version
 
-sysconf_DATA = router.conf
+sysconf_DATA = router.conf.example
 
 EXTRA_DIST = $(sysconf_DATA)

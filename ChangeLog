@@ -1,4 +1,12 @@
 
+2010-04-29 Andrew Wedgbury <wedge@sconemad.com>
+
+	* sconesite/ArticleBody: Move ArticleBody class to new file.
+	* all: Rename all .conf files to .conf.example to prevent 
+	overwriting of existing conf files when reinstalling.
+	* configure: Check for crypt.h header.
+	* all: Update makefiles.
+	
 2010-04-28 Andrew Wedgbury <wedge@sconemad.com>
 
 	* sconesite/image: Call InitializeMagick() when loading module.
