@@ -108,6 +108,7 @@ public:
   bool remove_article(const std::string& name);
   
   // ArgObject interface
+  virtual std::string name() const;
   virtual scx::Arg* arg_resolve(const std::string& name);
   virtual scx::Arg* arg_lookup(const std::string& name);
   virtual scx::Arg* arg_method(const scx::Auth& auth,const std::string& name,scx::Arg* args);

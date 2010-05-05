@@ -82,6 +82,8 @@ protected:
 
   Article* m_article;
 
+  bool m_auto_number;
+
   std::string m_section;
   bool m_inhibit;
 };

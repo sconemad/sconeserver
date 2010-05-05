@@ -39,6 +39,10 @@ Free Software Foundation, Inc.,
 #include "sconex/StreamSocket.h"
 #include "sconex/utils.h"
 
+const char* XHTML_DOCTYPE = "<!DOCTYPE html PUBLIC '-//W3C//DTD XHTML 1.0 Transitional//EN' 'http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd'>";
+
+const char* XHTML_NAMESPACE = "http://www.w3.org/1999/xhtml";
+
 //=========================================================================
 RenderMarkupContext::RenderMarkupContext(
   Profile& profile,
@@ -51,6 +55,7 @@ RenderMarkupContext::RenderMarkupContext(
     m_request(request),
     m_response(response),
     m_article(0),
+    m_auto_number(false),
     m_inhibit(false)
 {
 
@@ -103,6 +108,8 @@ bool RenderMarkupContext::handle_start(
 
   if (name == "article") {
     descend = !empty;
+    // Load settings for this article
+    m_auto_number = XMLAttr_bool(attrs,"autonumber");
 
   } else if (name == "template") {
     descend = !empty;
@@ -120,7 +127,7 @@ bool RenderMarkupContext::handle_start(
     if (!m_section.empty()) {
       m_inhibit = (attrs["name"] != m_section);
     } else {
-      m_inhibit = (attrs.count("default") == 0);
+      m_inhibit = !XMLAttr_bool(attrs,"default");
     }
     descend = !empty;
     
@@ -161,15 +168,22 @@ bool RenderMarkupContext::handle_start(
         if (h) {
           int index = h->index();
           std::string anchor = m_article->get_headings().lookup_anchor(index);
-          std::string href = "/" + m_article->get_href_path() + "#" + anchor;
-          pre += "<span class='section'><a href='" +
-            href + "' title='Link to this section'>" +
-            m_article->get_headings().lookup_section(index) +
-            ".</a></span> ";
+          if (m_auto_number) {
+            std::string href = "/" + m_article->get_href_path() + "#" + anchor;
+            pre += "<span class='section'><a href='" +
+              href + "' title='Link to this section'>" +
+              m_article->get_headings().lookup_section(index) +
+              ".</a></span> ";
+          }
           
           oss << "<a name='" << anchor << "'></a>";
         }
       }
+      
+    } else if (name == "html") {
+      // Setup for valid XHTML output
+      oss << XHTML_DOCTYPE << "\n";
+      attrs["xmlns"] = XHTML_NAMESPACE;
     }
 
     oss << "<" << name;
@@ -212,7 +226,7 @@ bool RenderMarkupContext::handle_end(
       }
     } else {
       if (m_inhibit) {
-        m_inhibit = (attrs.count("default") == 1);
+        m_inhibit = XMLAttr_bool(attrs,"default");
       }
     }
   
@@ -230,8 +244,7 @@ void RenderMarkupContext::handle_process(const std::string& name, const char* da
 {
   if (m_inhibit) return;
     
-  //  scx::Auth auth(scx::Auth::Untrusted);
-  scx::Auth auth(scx::Auth::Trusted);
+  scx::Auth auth(scx::Auth::Untrusted);
   XMLDoc* doc = get_current_doc();
   const std::type_info& ti = typeid(*doc);
   if (ti == typeid(Template)) {
@@ -450,6 +463,7 @@ scx::Arg* RenderMarkupContext::arg_method(const scx::Auth& auth,const std::strin
     Article* orig_art = m_article; m_article = art;
     std::string orig_section = m_section; m_section = section;
     bool orig_inhibit = m_inhibit; m_inhibit = (!m_section.empty());
+    bool orig_auto_number = m_auto_number;
     
     art->process(*this);
 
@@ -457,6 +471,7 @@ scx::Arg* RenderMarkupContext::arg_method(const scx::Auth& auth,const std::strin
     m_article = orig_art;
     m_section = orig_section;
     m_inhibit = orig_inhibit;
+    m_auto_number = orig_auto_number;
     return 0;
   }
 

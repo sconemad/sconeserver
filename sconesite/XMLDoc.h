@@ -35,6 +35,8 @@ Free Software Foundation, Inc.,
 
 typedef std::map<std::string,std::string> XMLAttrs;
 
+bool XMLAttr_bool(XMLAttrs& attrs, const std::string& value, bool def=false);
+
 class Context;
 
 //=========================================================================

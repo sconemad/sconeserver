@@ -285,10 +285,8 @@ scx::Condition SconesiteStream::send_response()
   // Set the endpoint blocking, saving previous state
   bool prev_block = endpoint().set_blocking(true);
   
-  // Find the template to use, if one was specified, otherwise use the default
-  std::string tplname = req.get_param("tpl");
-  if (tplname.empty()) tplname = "default";
-  Template* tpl = m_profile->lookup_template(tplname);
+  // Find the template to use
+  Template* tpl = m_profile->lookup_template("default");
 
   // Render the page
   try {

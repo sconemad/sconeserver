@@ -27,8 +27,32 @@ Free Software Foundation, Inc.,
 #include "sconex/Stream.h"
 #include "sconex/Date.h"
 #include "sconex/FileStat.h"
+#include "sconex/utils.h"
 
 scx::Mutex* XMLDoc::m_clients_mutex = 0;
+
+//=========================================================================
+bool XMLAttr_bool(XMLAttrs& attrs, const std::string& value, bool def)
+{
+  XMLAttrs::const_iterator it = attrs.find(value);
+  if (it != attrs.end()) {
+    if (it->second == "1") {
+      return true;
+    }
+    if (it->second == "0") {
+      return false;
+    }
+    std::string ls = it->second;
+    scx::strlow(ls);
+    if (ls == "true" || ls == "yes" || ls == "on") {
+      return true;
+    }
+    if (ls == "false" || ls == "no" || ls == "off") {
+      return false;
+    }
+  }
+  return def;
+}
 
 //=========================================================================
 void ErrorHandler(void* vcx,const char* str,...)
@@ -202,7 +226,7 @@ void XMLDoc::process_node(Context& context, xmlNode* start)
        node = node->next) {
     
     switch (node->type) {
-      
+
       case XML_TEXT_NODE: {
 	context.handle_text((char*)node->content);
       } break;
@@ -228,6 +252,12 @@ void XMLDoc::process_node(Context& context, xmlNode* start)
         }
       } break;
 	
+      case XML_ENTITY_REF_NODE: {
+	std::string name((char*)node->name);
+        name = "&" + name + ";";
+        context.handle_text(name.c_str());
+      } break;
+
       case XML_COMMENT_NODE: {
 	context.handle_comment((char*)node->content);
       } break;
@@ -286,7 +316,11 @@ bool XMLDoc::open()
       cx->sax->error = ErrorHandler;
       cx->vctxt.error = ErrorHandler;
 
-      m_xmldoc = xmlCtxtReadFile(cx,path.path().c_str(),NULL,0);
+      int opts = 0;
+      opts |= XML_PARSE_NONET;
+      //opts |= XML_PARSE_RECOVER;
+      
+      m_xmldoc = xmlCtxtReadFile(cx,path.path().c_str(),NULL,opts);
       m_modtime = stat.time();
 
       xmlFreeParserCtxt(cx);

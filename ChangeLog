@@ -1,4 +1,16 @@
 
+2010-05-05 Andrew Wedgbury <wedge@sconemad.com>
+
+	* sconesite/Article: Implement name() method.
+	* sconesite/SconesiteStream: Always use default template for
+	security reasons, other template selection can be done from this.
+	* sconesite/RenderMarkup: Add configurable autonumber setting.
+	Auto add doctype and namespace for html elements.
+	Correct default auth setting for script in articles (Untrusted).
+	* sconesite/ArticleBody: Make heading anchors valid XML names.
+	* sconesite/XMLDoc: Add utility function to test bool attributes.
+	Handle entity reference nodes. Set "no net" parser option.
+	
 2010-04-29 Andrew Wedgbury <wedge@sconemad.com>
 
 	* sconesite/ArticleBody: Move ArticleBody class to new file.

@@ -314,8 +314,21 @@ short Uri::default_port(const std::string& scheme)
 //=============================================================================
 std::string Uri::encode(const std::string& str)
 {
-  std::string ret = str;
-  //TODO: Write this
+  std::string ret;
+  for (int i=0; i<str.size(); ++i) {
+    char c = str[i];
+    switch (c) {
+      //TODO: This needs improving somewhat!
+      case ' ':
+        ret += "%20";
+        break;
+      
+      default:
+        ret += c;
+        break;
+    }
+  }
+  
   return ret;
 }
 

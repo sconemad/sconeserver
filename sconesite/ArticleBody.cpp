@@ -23,6 +23,8 @@ Free Software Foundation, Inc.,
 #include "ArticleBody.h"
 #include "Context.h"
 
+#include "sconex/Uri.h"
+
 //=========================================================================
 ArticleHeading::ArticleHeading(int level, const std::string& name, int index)
   : m_level(level),
@@ -94,9 +96,28 @@ const ArticleHeading* ArticleHeading::lookup_index(int index) const
 }
 
 //=========================================================================
+std::string name_encode(const std::string& name)
+{
+  std::string ret;
+  bool first = true;
+  for (int i=0; i<name.size(); ++i) {
+    char c = name[i];
+    if (isalnum(c)) {
+      ret += first ? toupper(c) : c;
+      first = false;
+    } else {
+      first = true;
+    }
+  }
+  return ret;
+}
+
+//=========================================================================
 std::string ArticleHeading::lookup_anchor(int index) const
 {
-  if (index == m_index) return m_name;
+  if (index == m_index) {
+    return name_encode(m_name);
+  }
 
   for (ArticleHeadingList::const_iterator it = m_subs.begin();
        it != m_subs.end();
@@ -104,7 +125,7 @@ std::string ArticleHeading::lookup_anchor(int index) const
     std::string p = (*it)->lookup_anchor(index);
     if (!p.empty()) {
       if (m_index == 0) return p;
-      return (m_name + "+" + p);
+      return (m_name + "_" + p);
     }
   }
   
@@ -149,14 +170,14 @@ scx::Arg* ArticleHeading::get_arg(
        it != m_subs.end();
        ++it) {
     const ArticleHeading* h = *it;
-    std::string anchor = h->name();
+    std::string anchor = name_encode(h->name());
 
     std::ostringstream oss;
     oss << (++s);
     std::string section = oss.str();
 
     if (m_index != 0) {
-      anchor = anchor_prefix + "+" + anchor;
+      anchor = anchor_prefix + "_" + anchor;
       section = section_prefix + "." + section;
     }
     

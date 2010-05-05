@@ -420,6 +420,12 @@ bool Article::remove_article(const std::string& name)
 }
 
 //=========================================================================
+std::string Article::name() const
+{
+  return m_name;
+}
+
+//=========================================================================
 scx::Arg* Article::arg_resolve(const std::string& name)
 {
   if (m_body) {
