@@ -26,6 +26,7 @@ Free Software Foundation, Inc.,
 #include "http/Request.h"
 #include "sconex/Uri.h"
 #include "sconex/LineBuffer.h"
+#include "sconex/User.h"
 
 namespace http {
 
@@ -54,11 +55,16 @@ HTTPUser::~HTTPUser()
 //=========================================================================
 bool HTTPUser::authorised(const std::string& password)
 {
+  if (m_password == "!system") {
+    return scx::User(m_username).verify_password(password);
+  }  
+    
   struct crypt_data data;
   memset(&data,0,sizeof(data));
   data.initialized = 0;
   std::string check = crypt_r(password.c_str(), m_password.c_str(), &data);
 
+  // could use this if crypt_r not available:
   //  std::string check = crypt(password.c_str(), m_password.c_str());
 
   return (check == m_password);

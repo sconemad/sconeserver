@@ -20,6 +20,8 @@ Free Software Foundation, Inc.,
 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA */
 
 #include "sconex/User.h"
+#include "sconex/Process.h"
+
 namespace scx {
 
 //=============================================================================
@@ -115,6 +117,12 @@ const std::string& User::get_user_name() const
 }
   
 //=============================================================================
+bool User::verify_password(const std::string& password) const
+{
+  return Process::verify_system_password(m_user_name,password);
+}
+  
+//=============================================================================
 uid_t User::get_user_id() const
 {
   return m_user_id;
@@ -136,6 +144,7 @@ bool User::set_from_passwd(const struct passwd* pwent)
   m_user_id = pwent->pw_uid;
   m_group_id = pwent->pw_gid;
   m_user_name = pwent->pw_name;
+
   return true;
 }
 

@@ -1,4 +1,15 @@
 
+2010-05-07 Andrew Wedgbury <wedge@sconemad.com>
+
+	* sconex/Process: Add verify_system_password() - util to check 
+	shadow password in root Proxy process using getspnam + crypt.
+	* sconex/User: Add verify_password() method using above.
+	* http/AuthRealm: Use system password if !system in htaccess.
+	* sconesite/ArticleBody: Correct header anchor lookup bug.
+	* sconesite/Article: Allow get_articles, get_all_articles and 
+	get_file arg methods without trusted authority.
+	* configure: Check for shadow.h, check for libcrypt properly.
+		
 2010-05-05 Andrew Wedgbury <wedge@sconemad.com>
 
 	* sconesite/Article: Implement name() method.

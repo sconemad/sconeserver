@@ -54,6 +54,8 @@ public:
   bool set_user_id(uid_t user_id);
 
   const std::string& get_user_name() const;
+
+  bool verify_password(const std::string& password) const;
   
   uid_t get_user_id() const;
   gid_t get_group_id() const;

@@ -31,6 +31,10 @@ Free Software Foundation, Inc.,
 #  include <sys/uio.h>
 #endif
 
+#ifdef HAVE_SHADOW_H
+#  include <shadow.h>
+#endif
+
 namespace scx {
 
 #ifndef CMSG_SPACE
@@ -68,7 +72,8 @@ public:
     LaunchReady,
     LaunchedOk, LaunchedError,
     CheckPid, DetatchPid,
-    CheckedRunning, CheckedTerminated
+    CheckedRunning, CheckedTerminated,
+    VerifyUser, VerifyPassword, VerifyResult
   };
 
   ProxyPacket();
@@ -367,6 +372,9 @@ std::string ProxyPacket::get_type_str(Type t)
     case DetatchPid:        return "DETATCH"; 
     case CheckedRunning:    return "RUNNING"; 
     case CheckedTerminated: return "TERMINATED"; 
+    case VerifyUser:        return "VERIFY:USER"; 
+    case VerifyPassword:    return "VERIFY:PASSWORD"; 
+    case VerifyResult:      return "VERIFY:RESULT"; 
   }
   return "UNKNOWN";
 }
@@ -390,6 +398,8 @@ private:
   
   void reset();
 
+  bool verify_system_password(const char* user, const char* password);
+  
   ProxyPacket m_packet;
   // Current packet
   
@@ -529,7 +539,21 @@ int Proxy::run()
           }
         }
       } break;
-      
+
+      case ProxyPacket::VerifyUser: {
+        reset();
+        m_prog = m_packet.copy_str_value();
+      } break;
+        
+      case ProxyPacket::VerifyPassword: {
+        bool result = verify_system_password(m_prog,m_packet.get_str_value());
+        ProxyPacket packet;
+        packet.set_type(ProxyPacket::VerifyResult);
+        packet.set_num_value((int)result);
+        packet.send(0);
+        reset();
+      } break;
+        
       default:
         break;
     }
@@ -693,6 +717,25 @@ void Proxy::reset()
   delete[] m_dir;
   m_dir = 0;
 }
+
+//============================================================================
+bool Proxy::verify_system_password(const char* user, const char* password)
+{
+  struct spwd* spwent = getspnam(user);
+  if (spwent == 0) {
+    PROCESS_DEBUG_LOG("VERIFY: getspnam failed");
+    return false;
+  }
+
+  const char* check = crypt(password,spwent->sp_pwdp);
+  if (check == 0) {
+    PROCESS_DEBUG_LOG("VERIFY: crypt failed");
+    return false;
+  }
+
+  return (0 == strcmp(spwent->sp_pwdp,check));
+}
+
 
 pid_t Process::s_proxy_pid = -1;
 int Process::s_proxy_sock = -1;
@@ -958,6 +1001,32 @@ void Process::set_detatched(bool onoff)
       m_runstate == Running) {
     m_runstate = Detatched;
   }
+}
+
+//============================================================================
+bool Process::verify_system_password(const std::string& user, const std::string& password)
+{
+  bool ret = false;
+  s_proxy_mutex->lock();
+  
+  ProxyPacket packet;
+  packet.set_type(ProxyPacket::VerifyUser);
+  packet.set_str_value(user.c_str());
+  packet.send(s_proxy_sock);
+
+  packet.set_type(ProxyPacket::VerifyPassword);
+  packet.set_str_value(password.c_str());
+  packet.send(s_proxy_sock);
+
+  packet.recv(s_proxy_sock);
+  if (packet.get_type() == ProxyPacket::VerifyResult) {
+    ret = packet.get_num_value();
+  } else {
+    PROCESS_DEBUG_LOG("FAILED to verify password"); 
+  }
+
+  s_proxy_mutex->unlock();
+  return ret;
 }
 
 };

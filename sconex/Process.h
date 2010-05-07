@@ -72,6 +72,9 @@ public:
 
   enum RunState { Unstarted, Running, Detatched, Terminated };
 
+  static bool verify_system_password(const std::string& user, const std::string& password);
+  // Verify that a user's system password is correct
+  
 private:
 
   Process(const Process& c);

@@ -125,7 +125,7 @@ std::string ArticleHeading::lookup_anchor(int index) const
     std::string p = (*it)->lookup_anchor(index);
     if (!p.empty()) {
       if (m_index == 0) return p;
-      return (m_name + "_" + p);
+      return (name_encode(m_name) + "_" + p);
     }
   }
   

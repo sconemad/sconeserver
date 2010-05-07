@@ -39,7 +39,6 @@ Session.h \
 Status.h
 
 http_la_LDFLAGS = -module -avoid-version
-http_la_LIBADD = -lcrypt
 
 sysconf_DATA = http.conf.example
 

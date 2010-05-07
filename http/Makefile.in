@@ -58,7 +58,7 @@ am__installdirs = "$(DESTDIR)$(pkglibdir)" "$(DESTDIR)$(sysconfdir)" \
 	"$(DESTDIR)$(httpincludedir)"
 pkglibLTLIBRARIES_INSTALL = $(INSTALL)
 LTLIBRARIES = $(pkglib_LTLIBRARIES)
-http_la_DEPENDENCIES =
+http_la_LIBADD =
 am_http_la_OBJECTS = AuthRealm.lo ConnectionStream.lo DocRoot.lo \
 	Host.lo HostMapper.lo HTTPModule.lo MessageStream.lo \
 	Request.lo Response.lo ResponseStream.lo Session.lo Status.lo
@@ -248,7 +248,6 @@ Session.h \
 Status.h
 
 http_la_LDFLAGS = -module -avoid-version
-http_la_LIBADD = -lcrypt
 sysconf_DATA = http.conf.example
 EXTRA_DIST = $(sysconf_DATA)
 all: all-recursive

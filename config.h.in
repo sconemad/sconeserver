@@ -64,6 +64,9 @@
 /* Define to 1 if you have the <iostream> header file. */
 #undef HAVE_IOSTREAM
 
+/* Define to 1 if you have the `crypt' library (-lcrypt). */
+#undef HAVE_LIBCRYPT
+
 /* Define to 1 if you have the `dl' library (-ldl). */
 #undef HAVE_LIBDL
 
@@ -126,6 +129,9 @@
 
 /* Define to 1 if you have the `setsockopt' function. */
 #undef HAVE_SETSOCKOPT
+
+/* Define to 1 if you have the <shadow.h> header file. */
+#undef HAVE_SHADOW_H
 
 /* Define to 1 if you have the <signal.h> header file. */
 #undef HAVE_SIGNAL_H

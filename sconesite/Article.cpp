@@ -537,7 +537,7 @@ scx::Arg* Article::arg_method(const scx::Auth& auth,const std::string& name,scx:
 
   if (name == "get_articles" ||
       name == "get_all_articles") {
-    if (!auth.trusted()) return new scx::ArgError("Not permitted");
+    //    if (!auth.trusted()) return new scx::ArgError("Not permitted");
 
     std::list<Article*> articles;
     get_articles(articles,(name == "get_all_articles"));
@@ -620,7 +620,7 @@ scx::Arg* Article::arg_method(const scx::Auth& auth,const std::string& name,scx:
   }
 
   if (name == "get_files") {
-    if (!auth.trusted()) return new scx::ArgError("Not permitted");
+    //    if (!auth.trusted()) return new scx::ArgError("Not permitted");
 
     scx::ArgList* filelist = new scx::ArgList();
     scx::FileDir files(m_root);
