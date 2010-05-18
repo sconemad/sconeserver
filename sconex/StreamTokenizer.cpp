@@ -29,7 +29,8 @@ StreamTokenizer::StreamTokenizer(
 )
   : Stream(stream_name),
     m_buffer(buffer_size),
-    m_overflow(false)
+    m_overflow(false),
+    m_line(0)
 {
   DEBUG_COUNT_CONSTRUCTOR(StreamTokenizer);
 }
@@ -84,7 +85,22 @@ Condition StreamTokenizer::tokenize(std::string& token)
         // Buffer overflow
         m_overflow=true;
         token_len=m_buffer.used();
+	return scx::Error;
       }
+    }
+  }
+
+  if (m_line > 0) {
+    // Perform line number tracking
+    std::string whole((char*)m_buffer.head(),pre_skip + token_len + post_skip);
+    std::string::size_type s = 0;
+    while (true) {
+      s = whole.find("\n",s);
+      if (s == std::string::npos) {
+	break;
+      }
+      ++s;
+      ++m_line;
     }
   }
 

@@ -292,11 +292,23 @@ void RenderMarkupContext::handle_process(const std::string& name, const char* da
       mfile.add_stream(script);
 
       // Parse statements
-      while (script->event(scx::Stream::Readable) == scx::Ok);
+      if (script->parse() == scx::Error) {
+	std::string errtype = "unknown";
+	switch (script->get_error_type()) {
+  	  case scx::ArgScript::Tokenization: errtype = "tokenization"; break;
+	  case scx::ArgScript::Syntax: errtype = "syntax"; break;
+	  case scx::ArgScript::Underflow: errtype = "underflow"; break;
+	  default: break;
+	}
+        DEBUG_LOG("Script " << errtype << " error on line " << script->get_error_line() << ":\n" << data);
+      }
 
       // Run statements
       scx::ArgProc proc(auth);
       ret = root->execute(proc);
+      if (ret && BAD_ARG(ret)) {
+        DEBUG_LOG("Script execution returned " << ret->get_string() << "\n" << data);
+      }
       delete ret;
 
     } catch (...) { 

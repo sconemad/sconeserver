@@ -65,6 +65,7 @@ protected:
   
   Buffer m_buffer;
   bool m_overflow;
+  int m_line;
 
 };
 

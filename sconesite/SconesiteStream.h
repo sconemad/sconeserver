@@ -45,6 +45,8 @@ public:
   
 protected:
 
+  void log(const std::string message,scx::Logger::Level level = scx::Logger::Info);
+
   virtual scx::Condition event(scx::Stream::Event e);
   virtual scx::Condition start_section(const scx::MimeHeaderTable& headers);
   virtual scx::Condition send_response();

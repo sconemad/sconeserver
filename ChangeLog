@@ -1,4 +1,14 @@
 
+2010-05-18 Andrew Wedgbury <wedge@sconemad.com>
+
+	* sconex/StreamTokenizer: Return error on overflow to prevent
+	invalid state leading to segfault.
+	Implement optional input line number tracking.
+	* sconex/ArgScript: Allow handling of parser errors.
+	* sconex/ArgStatement: Detect and return parser errors.
+	* sconesite/RenderMarkup: Report script parser and exec errors.
+	* sconesite/SconesiteStream: Implement a better logging method.
+	
 2010-05-07 Andrew Wedgbury <wedge@sconemad.com>
 
 	* sconex/Process: Add verify_system_password() - util to check 

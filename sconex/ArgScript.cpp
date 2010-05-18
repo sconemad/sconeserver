@@ -55,7 +55,8 @@ enum ArgScriptToken {
 ArgScript::ArgScript(
   ArgStatementGroup* root
 ) : StreamTokenizer("ArgScript",4096),
-    m_root(root)
+    m_root(root),
+    m_error_type(None)
 {
   DEBUG_COUNT_CONSTRUCTOR(ArgScript);
   DEBUG_ASSERT(root,"No root group specified");
@@ -63,6 +64,9 @@ ArgScript::ArgScript(
 
   // Push root onto parse stack
   m_stack.push(m_root);
+
+  // Enable line number tracking
+  m_line = 1;
   
   enable_event(Stream::Readable,true);
 }
@@ -77,18 +81,38 @@ ArgScript::~ArgScript()
 Condition ArgScript::event(Stream::Event e)
 {
   if (e == Stream::Readable) {
-    std::string buffer;
-    Condition c = Ok;
+    return parse();
+  }
+
+  return Ok;
+}
+
+//=============================================================================
+Condition ArgScript::parse()
+{
+  std::string buffer;
+  Condition c = Ok;
+  m_error_type = None;
+
+  try {
 
     while (c == Ok) {
       c = tokenize(buffer);
       
+      if (c==Error) {
+	ArgScript_DEBUG_LOG("parse: Tokenization error");
+	m_error_type = Tokenization;
+	if (!event_error()) {
+	  throw "Tokenisation error";
+	}
+      }
+
       if (c==Ok) {
-        ArgScript_DEBUG_LOG("event: Token '" << buffer << "'");
+        ArgScript_DEBUG_LOG("parse: Token '" << buffer << "'");
         if (buffer.size() > 0 && buffer[0] == '#') {
           continue;
         }
-      
+        
         while (true) {
           ArgStatement* cur = m_stack.top();
           ArgStatement::ParseResult result = cur->parse(*this,buffer);
@@ -97,7 +121,18 @@ Condition ArgScript::event(Stream::Event e)
             if (m_stack.size() > 1) {
               m_stack.pop();
             } else {
-              ArgScript_DEBUG_LOG("event: Parse stack underflow");
+	      ArgScript_DEBUG_LOG("parse: Parse stack underflow");
+	      m_error_type = Underflow;
+              if (!event_error()) {
+                throw "Parse stack underflow";
+              }
+            }
+          }
+          if (result == ArgStatement::Error) {
+	    ArgScript_DEBUG_LOG("parse: syntax error");
+	      m_error_type = Syntax;
+            if (!event_error()) {
+              throw "Syntax error";
             }
           }
           if (result != ArgStatement::Pop) {
@@ -105,20 +140,20 @@ Condition ArgScript::event(Stream::Event e)
           }
         }
       }
-
+      
       if (m_stack.top() == m_root || c==End) {
-        ArgScript_DEBUG_LOG("event: Run");
-	if (!event_runnable()) {
-	  // Abort request
-	  break;
-	}
+        ArgScript_DEBUG_LOG("parse: Run");
+        if (!event_runnable()) {
+          // Abort request
+          break;
+        }
       }
     }
-
-    return c;
+  } catch (...) {
+    c = Error;
   }
-
-  return Ok;
+  
+  return c;
 }
 
 //=============================================================================
@@ -206,9 +241,27 @@ ArgStatement* ArgScript::parse_token(const std::string& token)
 }
 
 //=============================================================================
+ArgScript::ErrorType ArgScript::get_error_type() const
+{
+  return m_error_type;
+}
+
+//=============================================================================
+int ArgScript::get_error_line() const
+{
+  return m_line;
+}
+
+//=============================================================================
 bool ArgScript::event_runnable()
 {
   return true; // Keep parsing
+}
+
+//=============================================================================
+bool ArgScript::event_error()
+{
+  return false; // Abort parsing
 }
 
 //=============================================================================
@@ -221,7 +274,7 @@ bool ArgScript::next_token(
 {
   const char* cur = (char*)buffer.head();
   const char* end = cur + buffer.used();
-  
+
   for ( ; cur<end; ++cur) {
     if (!isspace(*cur)) {
       break;
@@ -269,6 +322,7 @@ bool ArgScript::next_token(
             in_comment = false;
             ++post_skip;
             ++cur;
+            if (cur == end) throw "Oh shit!";
           }
           if (!in_comment) {
             return true;
@@ -408,12 +462,35 @@ void ArgScriptExec::set_error_des(Descriptor* error_des)
 bool ArgScriptExec::event_runnable()
 {
   Arg* ret = m_root->execute(m_proc);
-  if (m_error_des && ret && BAD_ARG(ret)) {
-    m_error_des->write(ret->get_string() + "\n");
+  if (ret && BAD_ARG(ret)) {
+    ArgScript_DEBUG_LOG(ret->get_string() << "\n");
+    if (m_error_des) {
+      m_error_des->write(ret->get_string() + "\n");
+    }
   }
   delete ret;
   m_root->clear();
   return true;
+}
+
+//=============================================================================
+bool ArgScriptExec::event_error()
+{
+  std::ostringstream oss;
+  oss << "Script parser: ";
+  switch (get_error_type()) {
+    case Tokenization: oss << "tokenization"; break;
+    case Syntax: oss << "syntax"; break;
+    case Underflow: oss << "underflow"; break;
+  }
+  oss << " error on line " << get_error_line();
+  ArgScript_DEBUG_LOG(oss.str());
+
+  if (m_error_des) {
+    oss << "\n";
+    m_error_des->write(oss.str());
+  }
+  return false;
 }
 
 };

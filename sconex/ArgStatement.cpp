@@ -556,8 +556,10 @@ ArgStatement::ParseResult ArgStatementFor::parse(
   switch (++m_seq) {
     case 1: {
       int isc1 = token.find(";",0);
+      if (isc1 == std::string::npos) return ArgStatement::Error;
       m_initialiser = token.substr(0,isc1);
       int isc2 = token.find(";",isc1+1);
+      if (isc2 == std::string::npos) return ArgStatement::Error;
       m_condition = token.substr(isc1+1,isc2-isc1-1);
       m_increment = token.substr(isc2+1);
     } break;

@@ -53,16 +53,30 @@ public:
   virtual Condition event(Stream::Event e);
   // Handle event
 
+  Condition parse();
+  // Parse
+  
   ArgStatement* parse_token(const std::string& token);
   // Make a new ArgStatement based on the current token
+
+  enum ErrorType { None, Tokenization, Syntax, Underflow };
+
+  ErrorType get_error_type() const;
+  int get_error_line() const;
+  // Get current error information
 
 protected:
 
   virtual bool event_runnable();
   // Called when there are statements to run
-  // Default implementation does nothing.
-  // Return true to keep parsing, false to abort
+  // Return true to keep parsing, false to abort.
+  // Default implementation returns true.
 
+  virtual bool event_error();
+  // Called when an error occurs
+  // Return true to keep parsing, false to abort.
+  // Default implementation returns false.
+  
   virtual bool next_token(
     const Buffer& buffer,
     int& pre_skip,
@@ -82,6 +96,9 @@ protected:
   // Stack of statements being parsed
   // The root group is always the bottom statement, the top is the current
   // statement being parsed.
+
+  ErrorType m_error_type;
+  // Current error
 
   static void init();
 
@@ -111,6 +128,7 @@ public:
 protected:
 
   virtual bool event_runnable();
+  virtual bool event_error();
 
   ArgProc m_proc;
   ArgObject* m_ctx;
