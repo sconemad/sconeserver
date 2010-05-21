@@ -1,4 +1,15 @@
 
+2010-05-21 Andrew Wedgbury <wedge@sconemad.com>
+
+	* getfile, dirindex, errorpage, sconesite: Improve logging.
+	* http/ResponseStream: Remove unused html_esc method.
+	* testbuilder/ControlStream: Use escape_html from scx::utils.
+	* exec/ExecModule: Add exec and system arg methods.
+	* sconex/Process: Reinstall SIGCHLD handler in proxy process.
+	* sconex/RenderMarkup: Stop print from writing empty strings.
+	Allow access to sconesite profile.
+	* sconesite/Profile: Allow access to root path and index.
+
 2010-05-18 Andrew Wedgbury <wedge@sconemad.com>
 
 	* sconex/StreamTokenizer: Return error on overflow to prevent

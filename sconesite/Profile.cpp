@@ -159,7 +159,9 @@ scx::Arg* Profile::arg_lookup(const std::string& name)
 
   // Properties
   if ("purge_threshold" == name) return m_purge_threshold.new_copy();
-
+  if ("path" == name) return new scx::ArgString(m_path.path());
+  if ("index" == name) return new scx::ArgObject(m_index);
+  
   return SCXBASE ArgObjectInterface::arg_lookup(name);
 }
 
@@ -169,6 +171,8 @@ scx::Arg* Profile::arg_method(const scx::Auth& auth,const std::string& name,scx:
   scx::ArgList* l = dynamic_cast<scx::ArgList*>(args);
 
   if ("set_purge_threshold" == name) {
+    if (!auth.admin()) return new scx::ArgError("Not permitted");
+
     const scx::ArgInt* a_thr = dynamic_cast<const scx::ArgInt*>(l->get(0));
     if (!a_thr) return new scx::ArgError("set_purge_threshold() Must specify value");
     int n_thr = a_thr->get_int();

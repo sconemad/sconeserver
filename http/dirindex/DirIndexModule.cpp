@@ -51,29 +51,15 @@ public:
 
   
 protected:
-  /*
-  void do_dir(const http::FSDirectory* fsdir)
+
+  void log(const std::string message,scx::Logger::Level level = scx::Logger::Info)
   {
-    const std::list<http::FSNode*>& dir = fsdir->dir();
-    std::list<http::FSNode*>::const_iterator it = dir.begin();
-    while (it != dir.end()) {
-      const http::FSNode* cur = (*it);
-      std::string name = cur->name();
-      std::string link = cur->url();
-      std::string type = "file";
-      if (cur->type() == http::FSNode::Directory) {
-        name += "/";
-        link += "/";
-        type = "dir";
-      }
-      
-      write("<li class='" + type +
-            "'><a href='" + link +
-            "'>" + name + "</a></li>\n");
-      ++it;
+    http::MessageStream* msg = GET_HTTP_MESSAGE();
+    if (msg) {
+      http::Request& req = const_cast<http::Request&>(msg->get_request());
+      m_module.log(req.get_id() + " " + message,level);
     }
   };
-  */
 
   virtual scx::Condition send_response()
   {
@@ -104,8 +90,7 @@ protected:
       if (scx::FileStat(path + s_default_page).exists()) {
         // Redirect to default page
         if (url[url.size()-1] != '/') url += "/";
-        msg->log("[dirindex] Redirect '" + url + "' to '" +
-                 url + s_default_page + "'"); 
+        log("Redirect '" + url + "' to '" + url + s_default_page + "'"); 
         url += s_default_page;
         
         msg->get_response().set_status(http::Status::Found);
@@ -118,8 +103,7 @@ protected:
         // Redirect to directory URL ending in '/'
         scx::Uri new_uri = uri;
         new_uri.set_path(uripath + "/");
-        msg->log("[dirindex] Redirect '" + uri.get_string() + "' to '" +
-                 new_uri.get_string() + "'"); 
+        log("Redirect '" + uri.get_string() + "' to '" + new_uri.get_string() + "'"); 
         
         msg->get_response().set_status(http::Status::Found);
         msg->get_response().set_header("Content-Type","text/html");
@@ -134,7 +118,7 @@ protected:
       
       if (allow_list) {
         // Send directory listing if allowed
-        msg->log("[dirindex] Listing directory '" + url + "'"); 
+        log("Listing directory '" + url + "'"); 
         
         msg->get_response().set_status(http::Status::Ok);
         msg->get_response().set_header("Content-Type","text/html");

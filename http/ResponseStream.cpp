@@ -122,27 +122,6 @@ std::string ResponseStream::stream_status() const
 }
 
 //=========================================================================
-std::string ResponseStream::html_esc(
-  std::string str
-)
-{
-  std::string::size_type i = 0;
-  while ((i = str.find_first_of("&<>'\"",i)) != std::string::npos) {
-    char c = str[i];
-    str.erase(i,1);
-    switch (c) {
-      case '&': str.insert(i,"&amp;"); break;
-      case '>': str.insert(i,"&gt;"); break;
-      case '<': str.insert(i,"&lt;"); break;
-      case '\'': str.insert(i,"&#39;"); break;
-      case '"': str.insert(i,"&quot;"); break;
-    }
-    ++i;
-  }
-  return str;
-}
-
-//=========================================================================
 scx::Condition ResponseStream::event(scx::Stream::Event e) 
 {
   MessageStream* msg = GET_HTTP_MESSAGE();
@@ -173,7 +152,12 @@ scx::Condition ResponseStream::event(scx::Stream::Event e)
         m_resp_seq = resp_ReadSingle;
       }
       enable_event(scx::Stream::Readable,true);
-    
+
+    } else if (req.get_method() == "PUT") {
+      // Need to read message body (single entity)
+      m_resp_seq = resp_ReadSingle;
+      enable_event(scx::Stream::Readable,true);
+      
     } else {
       // Go straight to write response
       m_resp_seq = resp_Write;

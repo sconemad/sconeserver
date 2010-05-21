@@ -25,6 +25,7 @@ Free Software Foundation, Inc.,
 #include "sconex/ModuleInterface.h"
 #include "sconex/Module.h"
 #include "sconex/Arg.h"
+#include "sconex/Process.h"
 
 SCONESERVER_MODULE(ExecModule);
 
@@ -85,7 +86,9 @@ scx::Arg* ExecModule::arg_lookup(const std::string& name)
 {
   // Methods
 
-  if ("set_exec_user" == name) {
+  if ("set_exec_user" == name ||
+      "exec" == name ||
+      "system" == name) {
     return new_method(name);
   }      
 
@@ -101,9 +104,9 @@ scx::Arg* ExecModule::arg_method(
 {
   scx::ArgList* l = dynamic_cast<scx::ArgList*>(args);
 
-  if (!auth.admin()) return new scx::ArgError("Not permitted");
-
   if ("set_exec_user" == name) {
+    if (!auth.admin()) return new scx::ArgError("Not permitted");
+
     const scx::ArgString* a_user =
       dynamic_cast<const scx::ArgString*>(l->get(0));
     if (!a_user) {
@@ -111,6 +114,39 @@ scx::Arg* ExecModule::arg_method(
                                "Username must be specified");
     }
     m_exec_user = scx::User(a_user->get_string());
+
+    return 0;
+  }
+
+  if ("exec" == name ||
+      "system" == name) {
+    if (!auth.trusted()) return new scx::ArgError("Not permitted");
+
+    const scx::ArgString* a_prog = dynamic_cast<const scx::ArgString*>(l->get(0));
+    if (!a_prog) return new scx::ArgError("No program name specified");
+
+    scx::Process process(a_prog->get_string());
+
+    // Set arguments
+    for (int i=0; i<l->size(); ++i) {
+      process.add_arg( l->get(i)->get_string() );
+    }
+    
+    process.set_user(m_exec_user);
+    
+    // Launch the process
+    if (!process.launch()) {
+      return new scx::ArgError("Failed to launch process");
+    }
+
+    if ("system" == name) {
+      // For system, wait until the command exits
+      int code=0;
+      while (!process.get_exitcode(code)) {
+        usleep(1000); // SPIN
+      }
+      return new scx::ArgInt(code);
+    }
 
     return 0;
   }

@@ -54,6 +54,15 @@ public:
   
 protected:
 
+  void log(const std::string message,scx::Logger::Level level = scx::Logger::Info)
+  {
+    http::MessageStream* msg = GET_HTTP_MESSAGE();
+    if (msg) {
+      http::Request& req = const_cast<http::Request&>(msg->get_request());
+      m_module.log(req.get_id() + " " + message,level);
+    }
+  };
+  
   virtual scx::Condition event(scx::Stream::Event e) 
   {
     if (e == scx::Stream::Opening) {
@@ -72,7 +81,7 @@ protected:
       scx::FilePath path = req.get_path();
       scx::File* file = new scx::File();
       if (file->open(path,scx::File::Read) != scx::Ok) {
-        msg->log("[getfile] Cannot open file '" + path.path() + "'"); 
+        log("Cannot open file '" + path.path() + "'"); 
         resp.set_status(http::Status::Forbidden);
         delete file;
 	return scx::Close;
@@ -86,7 +95,7 @@ protected:
       if (!mod.empty()) {
 	scx::Date dmod = scx::Date(mod);
 	if (lastmod <= dmod) {
-	  msg->log("[getfile] File is not modified"); 
+	  log("File is not modified"); 
 	  resp.set_status(http::Status::NotModified);
 	  delete file;
 	  return scx::Close;
@@ -116,12 +125,12 @@ protected:
 
       if (req.get_method() == "HEAD") {
 	// Don't actually send the file, just the headers
-        msg->log("[getfile] Sending headers for '" + path.path() + "'"); 
+        log("Sending headers for '" + path.path() + "'"); 
 	delete file;
 	return scx::Close;
       }
 
-      msg->log("[getfile] Sending '" + path.path() + "'"); 
+      log("Sending '" + path.path() + "'"); 
 
       const int MAX_BUFFER_SIZE = 65536;
             

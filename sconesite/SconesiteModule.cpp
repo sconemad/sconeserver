@@ -55,7 +55,7 @@ protected:
 
 //=========================================================================
 SconesiteModule::SconesiteModule()
-  : scx::Module("sconesite",scx::version())
+  : scx::Module("http:sconesite",scx::version())
 {
 #ifndef DISABLE_JOBS
   m_job = scx::Kernel::get()->add_job(new SconesiteJob(*this,scx::Time(7)));

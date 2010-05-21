@@ -43,9 +43,9 @@ public:
 
   virtual std::string stream_status() const;
   
-protected:
-
   void log(const std::string message,scx::Logger::Level level = scx::Logger::Info);
+
+protected:
 
   virtual scx::Condition event(scx::Stream::Event e);
   virtual scx::Condition start_section(const scx::MimeHeaderTable& headers);

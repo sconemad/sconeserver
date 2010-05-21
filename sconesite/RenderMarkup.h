@@ -35,6 +35,7 @@ Free Software Foundation, Inc.,
 
 class Profile;
 class Article;
+class SconesiteStream;
 
 //=========================================================================
 class RenderMarkupContext : public Context {
@@ -43,6 +44,7 @@ public:
 
   RenderMarkupContext(
     Profile& profile,
+    SconesiteStream& stream,
     scx::Descriptor& output,
     http::Request& request,
     http::Response& response
@@ -70,8 +72,11 @@ public:
   virtual scx::Arg* arg_method(const scx::Auth& auth,const std::string& name,scx::Arg* args);
   
 protected:
+
+  void log(const std::string message,scx::Logger::Level level = scx::Logger::Info);
   
   Profile& m_profile;
+  SconesiteStream& m_stream;
   scx::Descriptor& m_output;
   http::Request& m_request;
   http::Response& m_response;

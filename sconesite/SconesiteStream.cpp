@@ -154,7 +154,7 @@ scx::Condition SconesiteStream::event(scx::Stream::Event e)
     }
 
     // Create context for rendering article
-    m_context = new RenderMarkupContext(*m_profile,endpoint(),req,resp);
+    m_context = new RenderMarkupContext(*m_profile,*this,endpoint(),req,resp);
     m_context->set_article(m_article);
 
     // Check access is allowed

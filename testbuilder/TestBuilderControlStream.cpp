@@ -32,6 +32,7 @@ Free Software Foundation, Inc.,
 #include "sconex/Stream.h"
 #include "sconex/Date.h"
 #include "sconex/Kernel.h"
+#include "sconex/utils.h"
 
 const char ALPHA[] =
 "abcdefghijklmnopqrstuvwxyz"
@@ -369,7 +370,7 @@ scx::Condition TestBuilderControlStream::send(http::MessageStream& msg)
               "<table>\n");
         
         std::string source_method =
-          html_esc(profile_obj->get_source_method());
+          scx::escape_html(profile_obj->get_source_method());
         write("<tr>\n"
               "<td>Source method:</td>"
               "<td>\n"
@@ -390,7 +391,7 @@ scx::Condition TestBuilderControlStream::send(http::MessageStream& msg)
               "</tr>\n");
         
         std::string source_uri =
-          html_esc(profile_obj->get_source_uri());
+          scx::escape_html(profile_obj->get_source_uri());
         write("<tr>\n"
               "<td>Source location:</td>\n"
               "<td><input type='text' value='" + source_uri +
@@ -398,7 +399,7 @@ scx::Condition TestBuilderControlStream::send(http::MessageStream& msg)
               "</tr>\n");
         
         std::string configure_command =
-          html_esc(profile_obj->get_configure_command());
+          scx::escape_html(profile_obj->get_configure_command());
         write("<tr>\n"
               "<td>Configure command:</td>\n"
               "<td><input type='text' value='" + configure_command +
@@ -406,7 +407,7 @@ scx::Condition TestBuilderControlStream::send(http::MessageStream& msg)
               "</tr>\n");
         
         std::string make_targets =
-          html_esc(profile_obj->get_make_targets());
+          scx::escape_html(profile_obj->get_make_targets());
         write("<tr>\n"
               "<td>Make targets:</td>\n"
               "<td><input type='text' value='" + make_targets +

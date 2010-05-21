@@ -46,11 +46,13 @@ const char* XHTML_NAMESPACE = "http://www.w3.org/1999/xhtml";
 //=========================================================================
 RenderMarkupContext::RenderMarkupContext(
   Profile& profile,
+  SconesiteStream& stream,
   scx::Descriptor& output,
   http::Request& request,
   http::Response& response
 
 ) : m_profile(profile),
+    m_stream(stream),
     m_output(output),
     m_request(request),
     m_response(response),
@@ -269,7 +271,7 @@ void RenderMarkupContext::handle_process(const std::string& name, const char* da
       }
     } catch (...) {
       delete arg;
-      DEBUG_LOG("EXCEPTION in RenderMarkup::handle_process(scxp)");
+      log("EXCEPTION in RenderMarkup::handle_process(scxp)",scx::Logger::Error);
       throw;
     }
     delete arg;
@@ -292,28 +294,32 @@ void RenderMarkupContext::handle_process(const std::string& name, const char* da
       mfile.add_stream(script);
 
       // Parse statements
-      if (script->parse() == scx::Error) {
-	std::string errtype = "unknown";
+      if (script->parse() != scx::End) {
+        std::ostringstream oss;
+        oss << "Script ";
 	switch (script->get_error_type()) {
-  	  case scx::ArgScript::Tokenization: errtype = "tokenization"; break;
-	  case scx::ArgScript::Syntax: errtype = "syntax"; break;
-	  case scx::ArgScript::Underflow: errtype = "underflow"; break;
-	  default: break;
+  	  case scx::ArgScript::Tokenization: oss << "tokenization"; break;
+	  case scx::ArgScript::Syntax: oss << "syntax"; break;
+	  case scx::ArgScript::Underflow: oss << "underflow"; break;
+	  default: oss << "unknown"; break;
 	}
-        DEBUG_LOG("Script " << errtype << " error on line " << script->get_error_line() << ":\n" << data);
+        oss << " error on line " << script->get_error_line() << ":\n" << data;
+        log(oss.str(),scx::Logger::Error);
       }
 
       // Run statements
       scx::ArgProc proc(auth);
       ret = root->execute(proc);
       if (ret && BAD_ARG(ret)) {
-        DEBUG_LOG("Script execution returned " << ret->get_string() << "\n" << data);
+        std::ostringstream oss;
+        oss << "Script execution returned " << ret->get_string() << "\n" << data;
+        log(oss.str(),scx::Logger::Error);
       }
       delete ret;
 
     } catch (...) { 
       delete ret;
-      DEBUG_LOG("EXCEPTION in RenderMarkup::handle_process(scx)"); 
+      log("EXCEPTION in RenderMarkup::handle_process(scx)",scx::Logger::Error); 
       throw; 
     }
   }
@@ -416,6 +422,7 @@ scx::Arg* RenderMarkupContext::arg_lookup(const std::string& name)
     }
   }
   if ("root" == name) return new scx::ArgObject(m_profile.get_index());
+  if ("profile" == name) return new scx::ArgObject(&m_profile);
 
   return Context::arg_lookup(name);
 }
@@ -427,16 +434,22 @@ scx::Arg* RenderMarkupContext::arg_method(const scx::Auth& auth,const std::strin
 
   if (name == "print") {
     int n = l->size();
-    for (int i=0; i<n; ++i) { 
-      m_output.write(l->get(i)->get_string());
+    for (int i=0; i<n; ++i) {
+      std::string str = l->get(i)->get_string();
+      if (str.size() > 0) {
+        m_output.write(str);
+      }
     }
     return 0;
   }
 
   if (name == "print_esc") {
     int n = l->size();
-    for (int i=0; i<n; ++i) { 
-      m_output.write(scx::escape_html(l->get(i)->get_string()));
+    for (int i=0; i<n; ++i) {
+      std::string str = l->get(i)->get_string();
+      if (str.size() > 0) {
+        m_output.write(scx::escape_html(str));
+      }
     }
     return 0;
   }
@@ -529,4 +542,10 @@ scx::Arg* RenderMarkupContext::arg_method(const scx::Auth& auth,const std::strin
   }
 
   return Context::arg_method(auth,name,args);
+}
+
+//=========================================================================
+void RenderMarkupContext::log(const std::string message,scx::Logger::Level level)
+{
+  m_stream.log(message,level);
 }
