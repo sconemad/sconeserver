@@ -91,6 +91,8 @@ protected:
 
   std::string m_section;
   bool m_inhibit;
+
+  std::string m_base_url;
 };
 
 #endif

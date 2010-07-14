@@ -2,7 +2,7 @@
 
 Uniform Resource Indentifier 
 
-In the form "scheme://host:port/path&query"
+In the form "scheme://host:port/path?query"
 As defined in RFC2396
 
 NOTE: The scheme and host parts are case-insensitive, and are always stored
@@ -67,6 +67,7 @@ public:
   const std::string& get_path() const;
   const std::string& get_query() const;
 
+  std::string get_base() const;
   virtual std::string get_string() const;
   virtual int get_int() const;
   

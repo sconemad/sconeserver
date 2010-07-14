@@ -32,18 +32,19 @@ Free Software Foundation, Inc.,
 
 SCONESERVER_MODULE(SconesiteModule);
 
+#define SCONESITE_JOB_PERIOD 7
+
 //=========================================================================
 class SconesiteJob : public scx::PeriodicJob {
 
 public:
 
   SconesiteJob(SconesiteModule& module, const scx::Time& period)
-    : scx::PeriodicJob("sconesite::SconesiteModule",period),
+    : scx::PeriodicJob("sconesite Article sync",period),
       m_module(module) {};
 
   virtual bool run()
   {
-    //DEBUG_LOG("SconesiteJob running");
     m_module.refresh();
     reset_timeout();
     return false;
@@ -55,10 +56,10 @@ protected:
 
 //=========================================================================
 SconesiteModule::SconesiteModule()
-  : scx::Module("http:sconesite",scx::version())
+  : scx::Module("sconesite",scx::version())
 {
 #ifndef DISABLE_JOBS
-  m_job = scx::Kernel::get()->add_job(new SconesiteJob(*this,scx::Time(7)));
+  m_job = scx::Kernel::get()->add_job(new SconesiteJob(*this,scx::Time(SCONESITE_JOB_PERIOD)));
 #endif
 }
 

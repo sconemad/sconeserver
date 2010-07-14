@@ -73,12 +73,20 @@ void ModuleLoaderDLL::load_module()
         
       case 3:
         // modpath/parent/module/.libs/module.so (DEV)
-        if (!m_parent) continue;
-        path = get_path() +
-               FilePath(m_parent->name()) +
-               FilePath(m_name) +
-               FilePath(".libs") +
-               FilePath(m_name + ".so");
+        if (m_parent) {
+	  Module* mod = m_parent;
+	  FilePath parent_path;
+	  while (true) {
+	    parent_path = FilePath(mod->name()) + parent_path;
+	    mod = mod->m_parent;
+	    if (!mod->m_parent) break;
+	  }
+	  path = get_path() +
+	         FilePath(parent_path) +
+	         FilePath(m_name) +
+	         FilePath(".libs") +
+	         FilePath(m_name + ".so");
+	}
         break;
 
       default: return; // Can't find it anywhere

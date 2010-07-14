@@ -154,6 +154,13 @@ if test "x$SCONESITE_IMAGE" == "xyes"; then
   )
 fi
 
+# Sconesite:rss module
+AC_ARG_WITH([sconesite-rss],
+  [AC_HELP_STRING([--with-sconesite-rss],[Enable Sconesite:rss module])],
+  [SCONESITE_RSS="$withval"],
+  [SCONESITE_RSS="yes"]
+)
+
 # DbSql module
 AC_ARG_WITH([dbsql],
   [AC_HELP_STRING([--with-dbsql],[Enable SQL Database module])],
@@ -248,6 +255,7 @@ AM_CONDITIONAL(BUILD_TESTBUILDER, test x$TESTBUILDER = xyes)
 AM_CONDITIONAL(BUILD_LETTUCE, test x$LETTUCE = xyes)
 AM_CONDITIONAL(BUILD_SCONESITE, test x$SCONESITE = xyes)
 AM_CONDITIONAL(BUILD_SCONESITE_IMAGE, test x$SCONESITE_IMAGE = xyes)
+AM_CONDITIONAL(BUILD_SCONESITE_RSS, test x$SCONESITE_RSS = xyes)
 AM_CONDITIONAL(BUILD_DBSQL, test x$DBSQL = xyes)
 
 CPPFLAGS="$CPPFLAGS -Wall"
@@ -271,14 +279,15 @@ AC_CONFIG_FILES([http/Makefile])
 AC_CONFIG_FILES([http/getfile/Makefile])
 AC_CONFIG_FILES([http/dirindex/Makefile])
 AC_CONFIG_FILES([http/errorpage/Makefile])
+AC_CONFIG_FILES([http/sconesite/Makefile])
+AC_CONFIG_FILES([http/sconesite/image/Makefile])
+AC_CONFIG_FILES([http/sconesite/rss/Makefile])
 AC_CONFIG_FILES([exec/Makefile])
 AC_CONFIG_FILES([forward/Makefile])
 AC_CONFIG_FILES([tftp/Makefile])
 AC_CONFIG_FILES([test/Makefile])
 AC_CONFIG_FILES([testbuilder/Makefile])
 AC_CONFIG_FILES([lettuce/Makefile])
-AC_CONFIG_FILES([sconesite/Makefile])
-AC_CONFIG_FILES([sconesite/image/Makefile])
 AC_CONFIG_FILES([dbsql/Makefile])
 
 AC_OUTPUT
@@ -306,6 +315,7 @@ The following modules will be built:
     + errorpage    yes
     + sconesite    $SCONESITE
       + image      $SCONESITE_IMAGE
+      + rss        $SCONESITE_RSS
   + ssl            $SSL
   + exec           yes   
   + forward        yes   

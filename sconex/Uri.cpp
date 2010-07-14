@@ -194,7 +194,7 @@ const std::string& Uri::get_query() const
 }
 
 //=============================================================================
-std::string Uri::get_string() const
+std::string Uri::get_base() const
 {
   std::ostringstream oss;
   if (!m_scheme->empty()) {
@@ -206,6 +206,15 @@ std::string Uri::get_string() const
   if (*m_port > 0) {
     oss << ":" << *m_port;
   }
+  return oss.str();
+} 
+
+//=============================================================================
+std::string Uri::get_string() const
+{
+  std::ostringstream oss;
+  oss << get_base();
+
   if (!m_path->empty()) {
     oss << "/" << *m_path;
   }
@@ -250,6 +259,7 @@ Arg* Uri::op(const Auth& auth, OpType optype, const std::string& opname, Arg* ri
 	if (name == "port") return new scx::ArgInt(*m_port);
 	if (name == "path") return new scx::ArgString(*m_path);
 	if (name == "query") return new scx::ArgString(*m_query);
+	if (name == "base") return new scx::ArgString(get_base());
       }
     } break;
     case Arg::Prefix: 

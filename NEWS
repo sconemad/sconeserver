@@ -28,6 +28,7 @@
           - Server side inline SconeScript.
           - Supports multipart form upload.
           - Image manipulation module using ImageMagick.
+	  - RSS/Atom syndication client module
 
         * New module: 'dbsql' MySQL datbase support.
         * New module: 'forward' connection forwarding.

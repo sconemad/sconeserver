@@ -139,19 +139,16 @@ bool RenderMarkupContext::handle_start(
 
     // Monkey about with some of the standard HTML tags!
     
-    if (name == "img") {
-      std::string link = attrs["src"];
-      if (link[0] != '/' && link.find(":") == std::string::npos) {
-	attrs["src"] = "/" + m_article->get_href_path() + link;
-      }
-
-    } else if (name == "a" || name == "area") {
-      std::string link = attrs["href"];
+    if (name == "a" || name == "area" || name == "img") {
+      std::string link_attr = (name == "img" ? "src" : "href");
+      std::string link = attrs[link_attr];
       if (link.find(":") == std::string::npos) {
         if (link[0] != '/') {
           // Expand relative hrefs into full paths so they work anywhere
-          attrs["href"] = "/" + m_article->get_href_path() + link;
-        }
+          attrs[link_attr] = m_base_url + "/" + m_article->get_href_path() + link;
+        } else {
+	  attrs[link_attr] = m_base_url + link;
+	}
       } else {
         // Add class 'external' to offsite links
         std::string& c = attrs["class"];
@@ -480,16 +477,27 @@ scx::Arg* RenderMarkupContext::arg_method(const scx::Auth& auth,const std::strin
     }
     if (!art) return new scx::ArgError("No article to process");
 
-    scx::Arg* a_section = l->get(1);
-    std::string section = "";
-    if (a_section) section = a_section->get_string();
-    
     // Save current state and setup to process new article
-    Article* orig_art = m_article; m_article = art;
-    std::string orig_section = m_section; m_section = section;
-    bool orig_inhibit = m_inhibit; m_inhibit = (!m_section.empty());
+    Article* orig_art = m_article; 
+    std::string orig_section = m_section; 
+    bool orig_inhibit = m_inhibit; 
     bool orig_auto_number = m_auto_number;
+    std::string orig_base_url = m_base_url; 
+
+    // Setup defaults for processing new article
+    m_article = art;
+    m_section = "";
+    m_inhibit = (!m_section.empty());
+    m_base_url = "";
     
+    // Read any options
+    scx::ArgMap* opts = dynamic_cast<scx::ArgMap*>(l->get(1));
+    if (opts) {
+      scx::Arg* opt = 0;
+      if (opt = opts->lookup("section")) m_section = opt->get_string();
+      if (opt = opts->lookup("base_url")) m_base_url = opt->get_string();
+    }
+
     art->process(*this);
 
     // Restore previous state
@@ -497,6 +505,7 @@ scx::Arg* RenderMarkupContext::arg_method(const scx::Auth& auth,const std::strin
     m_section = orig_section;
     m_inhibit = orig_inhibit;
     m_auto_number = orig_auto_number;
+    m_base_url = orig_base_url;
     return 0;
   }
 

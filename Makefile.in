@@ -231,7 +231,7 @@ AM_CPPFLAGS = \
 
 sconed_SOURCES = main.cpp
 sconed_LDADD = $(top_builddir)/sconex/libsconex.la
-MODULES = router http mime simple ssl stat exec forward tftp test testbuilder lettuce sconesite dbsql
+MODULES = router http mime simple ssl stat exec forward tftp test testbuilder lettuce dbsql
 SUBDIRS = sconex doc $(MODULES)
 doc_DATA = AUTHORS COPYING INSTALL NEWS README THANKS TODO
 sysconf_DATA = sconeserver.conf.example

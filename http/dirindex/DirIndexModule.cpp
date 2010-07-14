@@ -38,7 +38,7 @@ public:
 
   DirIndexStream(
     scx::Module& module
-  ) : http::ResponseStream("http:dirindex"),
+  ) : http::ResponseStream("dirindex"),
       m_module(module)
   {
 

@@ -1,4 +1,16 @@
 
+2010-07-14 Andrew Wedgbury <wedge@sconemad.com>
+
+	* sconesite: Relocate from root to http subdirectory.
+	* sconesite/rss: New RSS/Atom feed (client) module.
+	* http/Session: Clean up job name and timeout.
+	* sconesite/SconesiteModule: Clean up job name and timeout.
+	* sconesite/RenderMarkup: Support multiple options in 
+	process_article(). Add base_url option for links.
+	* sconex/Uri: Add base() method for getting base part of Uri.
+	* sconex/ModuleLoaderDLL: Improve dev mode module searching.
+	* all: Rationalise module naming, now same as directory.
+	
 2010-05-21 Andrew Wedgbury <wedge@sconemad.com>
 
 	* getfile, dirindex, errorpage, sconesite: Improve logging.

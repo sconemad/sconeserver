@@ -41,7 +41,7 @@ public:
 
   GetFileStream(
     scx::Module& module
-  ) : Stream("http:getfile"),
+  ) : Stream("getfile"),
       m_module(module)
   {
 

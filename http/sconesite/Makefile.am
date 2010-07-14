@@ -4,7 +4,7 @@
 AM_CPPFLAGS = -I$(top_srcdir)
 
 if BUILD_SCONESITE
-  SUBDIRS = image
+  SUBDIRS = image rss
   pkglib_LTLIBRARIES = sconesite.la
 endif
 
@@ -20,7 +20,7 @@ RenderMarkup.cpp \
 Template.cpp \
 XMLDoc.cpp
 
-sconesiteincludedir = $(includedir)/sconesite
+sconesiteincludedir = $(includedir)/http/sconesite
 
 sconesiteinclude_HEADERS = \
 SconesiteModule.h \

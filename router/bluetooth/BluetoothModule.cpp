@@ -49,7 +49,7 @@ SCONESERVER_MODULE(BluetoothModule);
 
 //=========================================================================
 BluetoothModule::BluetoothModule(
-) : scx::Module("router:bluetooth",scx::version())
+) : scx::Module("bluetooth",scx::version())
 {
 
 }

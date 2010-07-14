@@ -98,7 +98,7 @@ public:
 
   ErrorPageStream(
     scx::Module& module
-  ) : Stream("http:errorpage"),
+  ) : Stream("errorpage"),
       m_module(module),
       m_file_mode(false)
   {

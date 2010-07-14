@@ -28,20 +28,21 @@ namespace http {
 
 class SessionManager;
 
+#define SESSION_JOB_TIMEOUT 30
+
 //=========================================================================
 class SessionCleanupJob : public scx::PeriodicJob {
 
 public:
 
   SessionCleanupJob(SessionManager& manager, const scx::Time& period)
-    : scx::PeriodicJob("http::SessionManager",period),
+    : scx::PeriodicJob("http Session cleanup",period),
       m_manager(manager) {};
 
   virtual ~SessionCleanupJob() {};
 
   virtual bool run()
   {
-    //    DEBUG_LOG("SessionCleanupJob running");
     m_manager.check_sessions();
     reset_timeout();
     return false;
@@ -56,7 +57,7 @@ SessionManager::SessionManager(HTTPModule& module)
   : m_module(module)
 {
 #ifndef DISABLE_JOBS
-  m_job = scx::Kernel::get()->add_job(new SessionCleanupJob(*this,scx::Time(30)));
+  m_job = scx::Kernel::get()->add_job(new SessionCleanupJob(*this,scx::Time(SESSION_JOB_TIMEOUT)));
 #endif
 }
 

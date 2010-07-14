@@ -1,7 +1,7 @@
 # SconeServer (http://www.sconemad.com)
 # automake file for http module
 
-SUBDIRS = dirindex getfile errorpage
+SUBDIRS = dirindex getfile errorpage sconesite
 
 AM_CPPFLAGS = -I$(top_srcdir)
 

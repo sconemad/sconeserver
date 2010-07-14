@@ -117,6 +117,7 @@ private:
 
   void set_parent(Module* parent);
   friend class ModuleLoader;
+  friend class ModuleLoaderDLL;
   // Parent module (ModuleLoader can set this)
 
   std::string m_name;

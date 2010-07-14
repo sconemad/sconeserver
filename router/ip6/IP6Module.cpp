@@ -49,7 +49,7 @@ SCONESERVER_MODULE(IP6Module);
 
 //=========================================================================
 IP6Module::IP6Module(
-) : scx::Module("router:ip6",scx::version())
+) : scx::Module("ip6",scx::version())
 {
 
 }

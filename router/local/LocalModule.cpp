@@ -49,7 +49,7 @@ SCONESERVER_MODULE(LocalModule);
 
 //=========================================================================
 LocalModule::LocalModule(
-) : scx::Module("router:local",scx::version())
+) : scx::Module("local",scx::version())
 {
 
 }

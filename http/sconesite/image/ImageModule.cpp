@@ -60,7 +60,7 @@ SCONESERVER_MODULE(ImageModule);
 
 //=========================================================================
 ImageModule::ImageModule(
-) : scx::Module("sconesite::image",scx::version())
+) : scx::Module("image",scx::version())
 {
   ::InitializeMagick(NULL);
 }
