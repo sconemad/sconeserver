@@ -484,20 +484,19 @@ scx::Arg* RenderMarkupContext::arg_method(const scx::Auth& auth,const std::strin
     bool orig_auto_number = m_auto_number;
     std::string orig_base_url = m_base_url; 
 
-    // Setup defaults for processing new article
+    // Setup defaults for processing new article, reading any options
     m_article = art;
     m_section = "";
-    m_inhibit = (!m_section.empty());
     m_base_url = "";
-    
-    // Read any options
     scx::ArgMap* opts = dynamic_cast<scx::ArgMap*>(l->get(1));
     if (opts) {
       scx::Arg* opt = 0;
       if (opt = opts->lookup("section")) m_section = opt->get_string();
       if (opt = opts->lookup("base_url")) m_base_url = opt->get_string();
     }
+    m_inhibit = (!m_section.empty());
 
+    // Process the article
     art->process(*this);
 
     // Restore previous state

@@ -1,4 +1,9 @@
 
+2010-07-15 Andrew Wedgbury <wedge@sconemad.com>
+
+	* sconex/Uri: Fix bug where there is a query but no path.
+	* sconesite/RenderMarkup: Initialise inhibit state properly.
+	
 2010-07-14 Andrew Wedgbury <wedge@sconemad.com>
 
 	* sconesite: Relocate from root to http subdirectory.

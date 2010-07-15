@@ -219,6 +219,9 @@ std::string Uri::get_string() const
     oss << "/" << *m_path;
   }
   if (!m_query->empty()) {
+    if (m_path->empty()) {
+      oss << "/";
+    }
     oss << "?" << *m_query;
   }
   return oss.str();
