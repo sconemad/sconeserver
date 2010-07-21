@@ -75,7 +75,7 @@ scx::Arg* DbSqlProfile::arg_method(
 {
   scx::ArgList* l = dynamic_cast<scx::ArgList*>(args);
 
-  if (!auth.trusted()) return new scx::ArgError("Not permitted");
+  //  if (!auth.trusted()) return new scx::ArgError("Not permitted");
 
   if ("Query" == name) {
     scx::Arg* a_str = l->get(0);

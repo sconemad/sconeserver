@@ -1,4 +1,10 @@
 
+2010-07-21 Andrew Wedgbury <wedge@sconemad.com>
+
+	* sconex/Date: Refactor string parsing, allow for args.
+	* dbsql/DbSqlQuery: Use prepared statements. 
+	Implement MySQL parameter/result to arg binding system.
+
 2010-07-15 Andrew Wedgbury <wedge@sconemad.com>
 
 	* sconex/Uri: Fix bug where there is a query but no path.

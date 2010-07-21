@@ -27,6 +27,38 @@ Free Software Foundation, Inc.,
 
 namespace dbsql {
 
+//=========================================================================
+class DbSqlArg {
+
+public:
+
+  DbSqlArg();
+  ~DbSqlArg();
+
+  void init_param(MYSQL_BIND& bind, const scx::Arg* arg);
+  void init_result(MYSQL_BIND& bind, MYSQL_FIELD& field);
+  scx::Arg* get_arg();
+
+private:
+  enum_field_types m_type;
+  unsigned long m_length;
+  my_bool m_is_null;
+
+  char* m_str_data;
+  union {
+    short short_data;
+    long int  long_data;
+    long long int longlong_data;
+    float float_data;
+    double double_data;
+    MYSQL_TIME time_data;
+  } m_data;
+
+};
+
+typedef std::vector<DbSqlArg> DbSqlArgList;
+
+
 //=============================================================================
 class DbSqlQuery : public scx::Arg {
 
@@ -46,11 +78,23 @@ public:
 
 protected:
 
+  void init();
+  std::string log_error(const std::string& context, bool permanent);
+  scx::Arg* get_error();
+
   DbSqlProfile& m_profile;
   scx::ModuleRef m_ref;
   std::string* m_query;
   MYSQL* m_conn;
+  MYSQL_STMT* m_stmt;
 
+  MYSQL_BIND* m_param_bind;
+  DbSqlArgList* m_param_args;
+
+  MYSQL_BIND* m_result_bind;
+  DbSqlArgList* m_result_args;
+
+  std::string* m_error;
 };
 
 };

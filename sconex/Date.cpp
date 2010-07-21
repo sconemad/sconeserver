@@ -85,111 +85,7 @@ Date::Date(
 {
   DEBUG_COUNT_CONSTRUCTOR(Date);
   init_tables();
-  int hour=-1;
-  int minute=-1;
-  int second=-1;
-  int date=-1;
-  int month=-1;
-  int year=-1;
-  bool got_zone=false;
-  TimeZone tz;
-  char pre=' ';
-  std::string::const_iterator it = str.begin();
-
-  while (it < str.end()) {
-
-    if (isalnum(*it)) {
-      std::string::const_iterator it1(it);
-
-      if (isalpha(*it)) {
-        while (it < str.end() && isalpha(*it)) ++it;
-        std::string token(it1,it);
-        strup(token);
-        if (month<0) {
-          MonthNameMap::const_iterator m_it = s_month_table->find(token);
-          if (m_it != s_month_table->end()) {
-            month = m_it->second;
-            continue;
-          }
-        }
-        
-        if (!got_zone) {
-          TimeZone::TimeZoneOffsetMap::const_iterator z_it =
-            TimeZone::s_zone_table->find(token);
-          if (z_it != TimeZone::s_zone_table->end()) {
-            tz = TimeZone(std::string(token));
-            continue;
-          }
-        }
-        
-
-      } else {
-        while (it < str.end() && isdigit(*it)) ++it;
-        std::string token(it1,it);
-        int num = atoi(token.c_str());
-
-        if (date<0 && num>0 && num<=31) {
-          date=num;
-        } else if (month<0 && num>0 && num<=12) {
-          month=num-1;
-        } else if (year<0 && num>=1970) {
-          year=num;
-        } else if (hour<0 && num>=0 && num<24) {
-          hour=num;
-        } else if (minute<0 && num>=0 && num<60) {
-          minute=num;
-        } else if (second<0 && num>=0 && num<60) {
-          second=num;
-        } else if (year<0 && num>=70 && num<=99) {
-          year=1900+num;
-        } else if (year<0 && num>=0 && num<=99) {
-          year=2000+num;
-        } else if (!got_zone && token.length()==4 &&
-                   (pre=='-' || pre=='+')) {
-          char ps[2] = {pre,'\0'};
-          tz = TimeZone(std::string(ps) + token);
-          got_zone = true;
-        }
-      }
-    } else {
-      pre = (*it);
-      ++it;
-    }
-  }
-
-  if (month<0 && year<0 && date>0 && hour>0 && minute>0) {
-    second=minute;
-    minute=hour;
-    hour=date;
-    date=-1;
-  } else if (month<0 && year<0 && date>0 && hour>0) {
-    minute=hour;
-    hour=date;
-    date=-1;
-  }
-
-  struct tm tms;
-  tms.tm_isdst = -1;
-  tms.tm_wday = -1;
-  tms.tm_yday = -1;
-  tms.tm_sec = second<0 ? 0 : second;
-  tms.tm_min = minute<0 ? 0 : minute;
-  tms.tm_hour = hour<0 ? 0 : hour;
-  tms.tm_mday = date<0 ? 1 : date;
-  tms.tm_mon = month<0 ? 0 : month;
-  tms.tm_year = year<1970 ? 70 : (year-1900);
-
-  *m_local = local;
-  *m_time = mktime(&tms);
-
-  if (!local || got_zone) {
-    // Adjust mktime results from local
-    // edit: I don't think this is required?
-    //*m_time += TimeZone::local(Date(*m_time)).seconds();
-  }
-
-  // Adjust to UTC from given timezone
-  *m_time -= tz.seconds();
+  parse_string(str,local);
 }
 
 //=============================================================================
@@ -203,20 +99,27 @@ Date::Date(Arg* args)
   ArgList* l = dynamic_cast<ArgList*>(args);
 
   Arg* a = l->get(0);
-  ArgInt* a_int = dynamic_cast<ArgInt*>(a);
-  if (a_int) {
-    *m_time = a->get_int();
-    
-  } else {
-    time_t tmp;
-    *m_time = ::time(&tmp);
-  }
-
   Arg* local = l->get(1);
-  *m_local = (local ? local->get_int() : 0);
 
-  // Adjust to UTC  
-  *m_time -= timezone().seconds();
+  ArgString* a_string = dynamic_cast<ArgString*>(a);
+  if (a_string) {
+    // Parse from string
+    parse_string(a_string->get_string(),(local ? local->get_int() : false));
+
+  } else {
+    ArgInt* a_int = dynamic_cast<ArgInt*>(a);
+    if (a_int) {
+      *m_time = a->get_int();
+      
+    } else {
+      time_t tmp;
+      *m_time = ::time(&tmp);
+    }
+    *m_local = (local ? local->get_int() : 0);
+    
+    // Adjust to UTC  
+    *m_time -= timezone().seconds();
+  }
 }
 
 //=============================================================================
@@ -670,6 +573,122 @@ bool Date::get_tms(struct tm& tms) const
 
   memcpy(&tms,tmr,sizeof(tm));
   return true;
+}
+
+//=============================================================================
+void Date::parse_string(const std::string& str, bool local)
+{
+  int hour=-1;
+  int minute=-1;
+  int second=-1;
+  int date=-1;
+  int month=-1;
+  int year=-1;
+  bool got_zone=false;
+  bool year_first=false;
+  TimeZone tz;
+  char pre=' ';
+  std::string::const_iterator it = str.begin();
+
+  while (it < str.end()) {
+
+    if (isalnum(*it)) {
+      std::string::const_iterator it1(it);
+
+      if (isalpha(*it)) {
+        while (it < str.end() && isalpha(*it)) ++it;
+        std::string token(it1,it);
+        strup(token);
+        if (month<0) {
+          MonthNameMap::const_iterator m_it = s_month_table->find(token);
+          if (m_it != s_month_table->end()) {
+            month = m_it->second;
+            continue;
+          }
+        }
+        
+        if (!got_zone) {
+          TimeZone::TimeZoneOffsetMap::const_iterator z_it =
+            TimeZone::s_zone_table->find(token);
+          if (z_it != TimeZone::s_zone_table->end()) {
+            tz = TimeZone(std::string(token));
+            continue;
+          }
+        }
+        
+
+      } else {
+        while (it < str.end() && isdigit(*it)) ++it;
+        std::string token(it1,it);
+        int num = atoi(token.c_str());
+
+        if (!year_first && date<0 && num>0 && num<=31) {
+          date=num;
+        } else if (!year_first && month<0 && num>0 && num<=12) {
+          month=num-1;
+        } else if (year_first && month<0 && num>0 && num<=12) {
+          month=num-1;
+        } else if (year_first && date<0 && num>0 && num<=31) {
+          date=num;
+        } else if (year<0 && num>=1970) {
+          year=num;
+	  year_first = (date<0 && month<0);
+        } else if (hour<0 && num>=0 && num<24) {
+          hour=num;
+        } else if (minute<0 && num>=0 && num<60) {
+          minute=num;
+        } else if (second<0 && num>=0 && num<60) {
+          second=num;
+        } else if (year<0 && num>=70 && num<=99) {
+          year=1900+num;
+        } else if (year<0 && num>=0 && num<=99) {
+          year=2000+num;
+        } else if (!got_zone && token.length()==4 &&
+                   (pre=='-' || pre=='+')) {
+          char ps[2] = {pre,'\0'};
+          tz = TimeZone(std::string(ps) + token);
+          got_zone = true;
+        }
+      }
+    } else {
+      pre = (*it);
+      ++it;
+    }
+  }
+
+  if (month<0 && year<0 && date>0 && hour>0 && minute>0) {
+    second=minute;
+    minute=hour;
+    hour=date;
+    date=-1;
+  } else if (month<0 && year<0 && date>0 && hour>0) {
+    minute=hour;
+    hour=date;
+    date=-1;
+  }
+
+  struct tm tms;
+  tms.tm_isdst = -1;
+  tms.tm_wday = -1;
+  tms.tm_yday = -1;
+  tms.tm_sec = second<0 ? 0 : second;
+  tms.tm_min = minute<0 ? 0 : minute;
+  tms.tm_hour = hour<0 ? 0 : hour;
+  tms.tm_mday = date<0 ? 1 : date;
+  tms.tm_mon = month<0 ? 0 : month;
+  tms.tm_year = year<1970 ? 70 : (year-1900);
+
+  *m_local = local;
+  *m_time = mktime(&tms);
+
+  if (!local || got_zone) {
+    // Adjust mktime results from local
+    // edit: I don't think this is required?
+    //*m_time += TimeZone::local(Date(*m_time)).seconds();
+  }
+
+  // Adjust to UTC from given timezone
+  *m_time -= tz.seconds();
 }
 
 //=============================================================================

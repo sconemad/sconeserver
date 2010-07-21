@@ -266,7 +266,7 @@ void TimeDate_ut()
 
   UTMSG("string");
 
-  const int nds = 30;
+  const int nds = 32;
   Date ds[nds];
   UTMSG("all the following should represent exactly the same date & time:");
   UTCOD(ds[0] = Date("Tue, 02 Aug 2005 12:34:56"));
@@ -299,6 +299,8 @@ void TimeDate_ut()
   UTCOD(ds[27] = Date("Wed 03 August 2005 00:34:56 M"));
   UTCOD(ds[28] = Date("Wed, 03-Aug-2005 01:34:56 +1300"));
   UTCOD(ds[29] = Date("Wednesday, 03-Aug-2005 02:34:56 +1400"));
+  UTCOD(ds[30] = Date("2005-08-02 12:34:56"));
+  UTCOD(ds[31] = Date("2005 Aug 02 12:34:56"));
 
   for (int ids=0; ids<nds; ++ids) {
     std::cout << " ds[" << ids << "] = " << ds[ids].string() << "\n";

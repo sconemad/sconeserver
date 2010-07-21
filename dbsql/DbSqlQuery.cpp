@@ -21,32 +21,162 @@ Free Software Foundation, Inc.,
 
 
 #include "DbSqlQuery.h"
+#include "sconex/utils.h"
 
 namespace dbsql {
 
+// Uncomment to enable debug info
+//#define DbSqlQuery_DEBUG_LOG(m) DEBUG_LOG(m)
+
+#ifndef DbSqlQuery_DEBUG_LOG
+#  define DbSqlQuery_DEBUG_LOG(m)
+#endif
+
 //=========================================================================
-class DbSqlBind {
-public:
-
-  DbSqlBind(enum_field_types type)
-    : m_type(type)
-  {
+DbSqlArg::DbSqlArg()
+  : m_str_data(0)
+{
     
-  };
-
-  ~DbSqlBind()
-  {
-
-  };
-
-
-public:
-  enum_field_types m_type; // enum_field_type
-
-
 };
 
-typedef std::vector<DbSqlBind> DbSqlBindList;
+//=========================================================================
+DbSqlArg::~DbSqlArg()
+{
+  delete[] m_str_data;
+};
+  
+//=========================================================================
+void DbSqlArg::init_param(MYSQL_BIND& bind, const scx::Arg* arg)
+{
+  memset(&bind,0,sizeof(MYSQL_BIND));
+  m_type = MYSQL_TYPE_LONG;
+  m_is_null = false;
+  m_length = 0;
+  bind.buffer = (void*)&m_data;
+
+  if (arg == 0) {
+    m_is_null = true;
+    DbSqlQuery_DEBUG_LOG("Binding NULL param");
+
+  } else {
+    const std::type_info& ti = typeid(*arg);
+
+    if (typeid(scx::ArgString) == ti) {
+      m_type = MYSQL_TYPE_STRING;
+      const std::string value = arg->get_string();
+      m_str_data = scx::new_c_str(value);
+      m_length = value.size();
+      bind.buffer = (void*)m_str_data;
+      DbSqlQuery_DEBUG_LOG("Binding string param '" << value << "'");
+
+    } else if (typeid(scx::ArgInt) == ti) {
+      m_type = MYSQL_TYPE_LONG;
+      long value = arg->get_int();
+      m_data.long_data = value;
+      m_length = sizeof(value);
+      DbSqlQuery_DEBUG_LOG("Binding long int param '" << value << "'");
+      
+    } else if (typeid(scx::ArgReal) == ti) {
+      m_type = MYSQL_TYPE_DOUBLE;
+      double value = ((scx::ArgReal*)arg)->get_real();
+      m_data.double_data = value;
+      m_length = sizeof(value);
+      DbSqlQuery_DEBUG_LOG("Binding double param '" << value << "'");
+      
+    } else if (typeid(scx::Date) == ti) {
+      m_type = MYSQL_TYPE_DATETIME;
+      const scx::Date* value = dynamic_cast<const scx::Date*>(arg);
+      m_data.time_data.year = value->year();
+      m_data.time_data.month = (unsigned int)(value->month() + 1);
+      m_data.time_data.day = value->mday();
+      m_data.time_data.hour = value->hour();
+      m_data.time_data.minute = value->minute();
+      m_data.time_data.second = value->second();
+      m_data.time_data.second_part = 0;
+      m_data.time_data.neg = 0;
+      m_data.time_data.time_type = MYSQL_TIMESTAMP_DATETIME;
+      m_length = sizeof(MYSQL_TIME);
+      DbSqlQuery_DEBUG_LOG("Binding datetime param '" << value->code() << "'");
+      
+    } else {
+      m_is_null = true;
+      DbSqlQuery_DEBUG_LOG("Unsupported param binding, using NULL");
+    }
+  }
+
+  bind.buffer_type = m_type;
+  bind.buffer_length = m_length;
+  bind.is_null = &m_is_null;
+  bind.length = &m_length;
+}
+  
+//=========================================================================
+void DbSqlArg::init_result(MYSQL_BIND& bind, MYSQL_FIELD& field)
+{
+  memset(&bind,0,sizeof(MYSQL_BIND));
+  m_type = field.type;
+  m_is_null = false;
+  m_length = 0;
+  
+  DbSqlQuery_DEBUG_LOG("Binding result '" << field.name << "' type " << field.type);
+  switch (m_type) {
+  case MYSQL_TYPE_STRING:
+  case MYSQL_TYPE_VAR_STRING:
+    m_type = MYSQL_TYPE_STRING;
+    m_length = 1024;
+    m_str_data = new char[1024];
+    m_str_data[0] = '\0';
+    bind.buffer = (void*)m_str_data;
+    break;
+    
+  default:
+    bind.buffer = (void*)&m_data;
+    break;
+  }
+  
+  bind.buffer_type = m_type;
+  bind.buffer_length = m_length;
+  bind.is_null = &m_is_null;
+  bind.length = &m_length;
+}
+  
+//=========================================================================
+scx::Arg* DbSqlArg::get_arg()
+{
+  switch (m_type) {
+  case MYSQL_TYPE_STRING:
+  case MYSQL_TYPE_VAR_STRING:
+    return new scx::ArgString(m_str_data);
+    
+  case MYSQL_TYPE_SHORT:
+    return new scx::ArgInt(m_data.short_data);
+    
+  case MYSQL_TYPE_LONG:
+    return new scx::ArgInt(m_data.long_data);
+    
+  case MYSQL_TYPE_LONGLONG:
+    return new scx::ArgInt(m_data.longlong_data);
+    
+  case MYSQL_TYPE_FLOAT:
+    return new scx::ArgReal(m_data.float_data);
+    
+  case MYSQL_TYPE_DOUBLE:
+    return new scx::ArgReal(m_data.double_data);
+
+  case MYSQL_TYPE_DATETIME:
+    return new scx::Date(m_data.time_data.year,
+			 m_data.time_data.month,
+			 m_data.time_data.day,
+			 m_data.time_data.hour,
+			 m_data.time_data.minute,
+			 m_data.time_data.second,
+			 false);
+    
+  default:
+    break;
+  }
+  return new scx::ArgError("Unknown type");
+}
 
 
 //=========================================================================
@@ -55,9 +185,17 @@ DbSqlQuery::DbSqlQuery(DbSqlProfile& profile,
   : m_profile(profile),
     m_ref(m_profile.m_module.ref()),
     m_query(new std::string(query)),
-    m_conn(profile.new_connection())
+    m_conn(profile.new_connection()),
+    m_stmt(0),
+    m_param_bind(0),
+    m_param_args(0),
+    m_result_bind(0),
+    m_result_args(0),
+    m_error(0)
+
 {
   DEBUG_COUNT_CONSTRUCTOR(DbSqlQuery);
+  init();
 }
 
 //=========================================================================
@@ -66,9 +204,16 @@ DbSqlQuery::DbSqlQuery(const DbSqlQuery& c)
     m_profile(c.m_profile),
     m_ref(c.m_ref),
     m_query(new std::string(*c.m_query)),
-    m_conn(c.m_profile.new_connection())
+    m_conn(c.m_profile.new_connection()),
+    m_stmt(0),
+    m_param_bind(0),
+    m_param_args(0),
+    m_result_bind(0),
+    m_result_args(0),
+    m_error(0)
 {
   DEBUG_COUNT_CONSTRUCTOR(DbSqlQuery);
+  init();
 }
 
 //=========================================================================
@@ -77,7 +222,13 @@ DbSqlQuery::DbSqlQuery(RefType ref, DbSqlQuery& c)
     m_profile(c.m_profile),
     m_ref(c.m_ref),
     m_query(c.m_query),
-    m_conn(c.m_conn)
+    m_conn(c.m_conn),
+    m_stmt(c.m_stmt),
+    m_param_bind(c.m_param_bind),
+    m_param_args(c.m_param_args),
+    m_result_bind(c.m_result_bind),
+    m_result_args(c.m_result_args),
+    m_error(c.m_error)
 {
   DEBUG_COUNT_CONSTRUCTOR(DbSqlQuery);
 }
@@ -87,7 +238,17 @@ DbSqlQuery::~DbSqlQuery()
 {
   if (last_ref()) {
     delete m_query;
+
+    if (m_stmt) {
+      ::mysql_stmt_close(m_stmt);
+      delete[] m_param_bind;
+      delete m_param_args;
+      delete[] m_result_bind;
+      delete m_result_args;
+    }
+
     ::mysql_close(m_conn);
+    delete m_error;
   }
   DEBUG_COUNT_DESTRUCTOR(DbSqlQuery);
 }
@@ -113,7 +274,8 @@ std::string DbSqlQuery::get_string() const
 //=========================================================================
 int DbSqlQuery::get_int() const
 {
-  return !m_query->empty();
+  // Return false in the case of a permanent error
+  return (m_error == 0);
 }
 
 //=========================================================================
@@ -124,28 +286,53 @@ scx::Arg* DbSqlQuery::op(const scx::Auth& auth,scx::Arg::OpType optype, const st
     scx::ArgList* l = dynamic_cast<scx::ArgList*>(right);
     
     if ("exec" == m_method) {
-      if (is_const()) return new scx::ArgError("Not permitted");
-      
       m_profile.m_module.log("{"+m_profile.m_name+"} exec: "+*m_query);
-      if (::mysql_query(m_conn,m_query->c_str())) {
-	// Error
-	return new scx::ArgError(::mysql_error(m_conn));
+
+      if (m_error) {
+	// If there is a permanent error, don't execute the query, return the error
+	return get_error();
       }
-      
-      MYSQL_RES* res = ::mysql_use_result(m_conn);
+
+      if (m_param_args) {
+	// If the statement has parameters, check and bind
+	if (l->size() != (int)m_param_args->size()) {
+	  return new scx::ArgError(log_error("Incorrect number of parameters",false));
+	}
+
+	for (int i=0; i<(int)m_param_args->size(); ++i) {
+	  (*m_param_args)[i].init_param(m_param_bind[i],l->get(i));
+	}
+	
+	if (::mysql_stmt_bind_param(m_stmt,m_param_bind)) {
+	  return new scx::ArgError(log_error("mysql_stmt_bind_param",false));
+	}
+      }
+
+      // Execute the statement
+
+      if (::mysql_stmt_execute(m_stmt)) {
+	return new scx::ArgError(log_error("mysql_stmt_bind_param",false));
+      }
+
+      int affected_rows = ::mysql_stmt_affected_rows(m_stmt);
+      if (affected_rows >= 0) {
+	// This sort of query has no results, just return the number of affected rows
+	DbSqlQuery_DEBUG_LOG("Affected rows: " << affected_rows);
+	return new scx::ArgInt(affected_rows);
+      }
+
+      // Fetch results row by row
       
       scx::ArgList* list = new scx::ArgList();
-      MYSQL_ROW row;
-      while ((row = ::mysql_fetch_row(res)) != 0) {
-	unsigned int n = ::mysql_num_fields(res);
+      while (!::mysql_stmt_fetch(m_stmt)) {
+	DbSqlQuery_DEBUG_LOG("Fetched result row");
 	scx::ArgList* row_list = new scx::ArgList();
-	for (unsigned int i=0; i<n; ++i) {
-	  row_list->give( new scx::ArgString(row[i]) );
+	for (int i=0; i<(int)m_result_args->size(); ++i) {
+	  row_list->give( (*m_result_args)[i].get_arg() );
 	}
 	list->give(row_list);
       }
-      
-      ::mysql_free_result(res);
+      DbSqlQuery_DEBUG_LOG("End of results");
       return list;
     }
     
@@ -154,6 +341,10 @@ scx::Arg* DbSqlQuery::op(const scx::Auth& auth,scx::Arg::OpType optype, const st
     if ("." == opname) {
       std::string name = right->get_string();
 
+      if (name == "error") {
+	return get_error();
+      }
+
       if (name == "exec") return new_method(name);
     }
 
@@ -161,4 +352,79 @@ scx::Arg* DbSqlQuery::op(const scx::Auth& auth,scx::Arg::OpType optype, const st
   return SCXBASE Arg::op(auth,optype,opname,right);
 }
 
+//=========================================================================
+void DbSqlQuery::init()
+{
+  // Initialise and prepare statement
+  
+  m_stmt = ::mysql_stmt_init(m_conn);
+  if (!m_stmt) {
+    log_error("mysql_stmt_init",true);
+    return;
+  }
+  
+  if (::mysql_stmt_prepare(m_stmt,m_query->c_str(),m_query->size())) {
+    log_error("mysql_stmt_prepare",true);
+    return;
+  }
+  
+  // Setup the parameter (input) bindings
+  
+  int params = ::mysql_stmt_param_count(m_stmt);
+  DbSqlQuery_DEBUG_LOG("Statement has " << params << " parameters");
+
+  if (params > 0) {
+    m_param_bind = new MYSQL_BIND[params];
+    m_param_args = new DbSqlArgList(params);
+  }
+
+  // Setup the result (output) bindings
+  
+  MYSQL_RES* res = ::mysql_stmt_result_metadata(m_stmt);
+  int fields = ::mysql_num_fields(res);
+  DbSqlQuery_DEBUG_LOG("Result contains " << fields << " fields");
+  
+  m_result_bind = new MYSQL_BIND[fields];
+  m_result_args = new DbSqlArgList(fields);
+  for (int i=0; i<fields; ++i) {
+    MYSQL_FIELD* field = ::mysql_fetch_field(res);
+    (*m_result_args)[i].init_result(m_result_bind[i],*field);
+  }
+  ::mysql_free_result(res);
+  
+  if (::mysql_stmt_bind_result(m_stmt,m_result_bind)) {
+    log_error("mysql_stmt_bind_result",true);
+    return;
+  }
+}
+
+//=========================================================================
+std::string DbSqlQuery::log_error(const std::string& context, bool permanent)
+{
+  std::string error = context;
+  if (m_stmt) {
+    error += std::string(": ") + ::mysql_stmt_error(m_stmt);
+  }
+  DbSqlQuery_DEBUG_LOG(error);
+
+  if (permanent) {
+    // Save the error if its permanent
+    if (m_error == 0) {
+      m_error = new std::string();
+    }
+    (*m_error) = error;
+  }
+
+  return error;
+}
+
+//=========================================================================
+scx::Arg* DbSqlQuery::get_error()
+{
+  if (m_error) {
+    return new scx::ArgError(*m_error);
+  }
+  return 0;
+}
+  
 };

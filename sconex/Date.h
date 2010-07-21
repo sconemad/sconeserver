@@ -123,6 +123,7 @@ public:
 protected:
 
   bool get_tms(struct tm& tms) const;
+  void parse_string(const std::string& str, bool local);
   
   time_t* m_time;
   bool* m_local;
