@@ -1,6 +1,11 @@
 
 2010-07-21 Andrew Wedgbury <wedge@sconemad.com>
 
+	* dbsql/DbSqlQuery: Handle MySQL blob type.
+	* dbsql/DbSqlProfile: Parse host:port:db from db string.
+	
+2010-07-21 Andrew Wedgbury <wedge@sconemad.com>
+
 	* sconex/Date: Refactor string parsing, allow for args.
 	* dbsql/DbSqlQuery: Use prepared statements. 
 	Implement MySQL parameter/result to arg binding system.

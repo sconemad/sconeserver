@@ -75,6 +75,7 @@ scx::Arg* DbSqlProfile::arg_method(
 {
   scx::ArgList* l = dynamic_cast<scx::ArgList*>(args);
 
+  // Allow this for now
   //  if (!auth.trusted()) return new scx::ArgError("Not permitted");
 
   if ("Query" == name) {
@@ -90,21 +91,43 @@ scx::Arg* DbSqlProfile::arg_method(
 //=============================================================================
 MYSQL* DbSqlProfile::new_connection()
 {
-  // TODO: decode host:port:db string
-  std::string db = m_database;
+  std::string db = "";
   std::string host = "";
   unsigned int port = 0;
 
+  std::string::size_type i1 = m_database.find_first_of(":");
+  if (i1 != std::string::npos) {
+    std::string::size_type i2 = m_database.find_first_of(":",i1+1);
+    if (i2 != std::string::npos) {
+      // host:port:db
+      host = m_database.substr(0,i1);
+      std::string s_port = m_database.substr(i1+1,i2-i1+1);
+      port = (unsigned int)atoi(s_port.c_str());
+      db = m_database.substr(i2+1);
+
+    } else {
+      // host:db
+      host = m_database.substr(0,i1);
+      db = m_database.substr(i1+1);
+    }
+  } else {
+    // db
+    db = m_database;
+  }
+
+  DEBUG_LOG("Connecting to db '" << host << ":" << port << ":" << db <<
+            "' as user '" << m_username << "'");
+  
   MYSQL* conn = ::mysql_init(0);
-  if (::mysql_real_connect(conn,
-			   host.c_str(),
-			   m_username.c_str(),
-			   m_password.c_str(),
-			   db.c_str(),
-			   port,
-			   0,
-			   0)) {
-    // error?
+  if (0 == ::mysql_real_connect(conn,
+                                host.c_str(),
+                                m_username.c_str(),
+                                m_password.c_str(),
+                                db.c_str(),
+                                port,
+                                0,
+                                0)) {
+    DEBUG_LOG("mysql_real_connect: Error occurred!");
   }
   return conn;
 }

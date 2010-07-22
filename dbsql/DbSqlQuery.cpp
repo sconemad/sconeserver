@@ -122,10 +122,10 @@ void DbSqlArg::init_result(MYSQL_BIND& bind, MYSQL_FIELD& field)
   switch (m_type) {
   case MYSQL_TYPE_STRING:
   case MYSQL_TYPE_VAR_STRING:
-    m_type = MYSQL_TYPE_STRING;
+  case MYSQL_TYPE_BLOB:
     m_length = 1024;
-    m_str_data = new char[1024];
-    m_str_data[0] = '\0';
+    m_str_data = new char[m_length];
+    memset(m_str_data,0,m_length);
     bind.buffer = (void*)m_str_data;
     break;
     
@@ -146,7 +146,12 @@ scx::Arg* DbSqlArg::get_arg()
   switch (m_type) {
   case MYSQL_TYPE_STRING:
   case MYSQL_TYPE_VAR_STRING:
-    return new scx::ArgString(m_str_data);
+  case MYSQL_TYPE_BLOB:
+    if (m_length >= 0) {
+      m_str_data[m_length] = '\0';
+      return new scx::ArgString(m_str_data);
+    }
+    break;
     
   case MYSQL_TYPE_SHORT:
     return new scx::ArgInt(m_data.short_data);

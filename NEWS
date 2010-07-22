@@ -1,5 +1,5 @@
 
-0.8.0 2010-05-xx Andrew Wedgbury <wedge@sconemad.com>
+0.8.0 2010-07-xx Andrew Wedgbury <wedge@sconemad.com>
 
         * Major SconeScript improvements:
          - Short circuit | and & operators.
@@ -30,7 +30,10 @@
           - Image manipulation module using ImageMagick.
 	  - RSS/Atom syndication client module
 
-        * New module: 'dbsql' MySQL datbase support.
+        * New module: 'dbsql' MySQL datbase support, includes:
+          - Prepared statement support (prevents SQL injection attacks).
+          - SconeScript integration for MySQL parameter and result types.
+
         * New module: 'forward' connection forwarding.
         * New module: 'lettuce' (http://www.sconemad.com/lettuce)
 
