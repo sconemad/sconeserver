@@ -37,12 +37,15 @@ public:
 
   void init_param(MYSQL_BIND& bind, const scx::Arg* arg);
   void init_result(MYSQL_BIND& bind, MYSQL_FIELD& field);
+
+  const std::string& get_name();
   scx::Arg* get_arg();
 
 private:
   enum_field_types m_type;
   unsigned long m_length;
   my_bool m_is_null;
+  std::string m_name;
 
   char* m_str_data;
   union {

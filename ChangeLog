@@ -1,4 +1,9 @@
 
+2010-07-27 Andrew Wedgbury <wedge@sconemad.com>
+
+	* dbsql/DbSqlQuery: New API, results are now fetched one
+	row at a time, accessed by column name.
+	
 2010-07-21 Andrew Wedgbury <wedge@sconemad.com>
 
 	* dbsql/DbSqlQuery: Handle MySQL blob type.

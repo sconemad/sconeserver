@@ -117,6 +117,7 @@ void DbSqlArg::init_result(MYSQL_BIND& bind, MYSQL_FIELD& field)
   m_type = field.type;
   m_is_null = false;
   m_length = 0;
+  m_name = field.name;
   
   DbSqlQuery_DEBUG_LOG("Binding result '" << field.name << "' type " << field.type);
   switch (m_type) {
@@ -139,15 +140,24 @@ void DbSqlArg::init_result(MYSQL_BIND& bind, MYSQL_FIELD& field)
   bind.is_null = &m_is_null;
   bind.length = &m_length;
 }
+
+//=========================================================================
+const std::string& DbSqlArg::get_name()
+{
+  return m_name;
+}
   
 //=========================================================================
 scx::Arg* DbSqlArg::get_arg()
 {
+  if (m_is_null) return 0;
+
   switch (m_type) {
   case MYSQL_TYPE_STRING:
   case MYSQL_TYPE_VAR_STRING:
   case MYSQL_TYPE_BLOB:
     if (m_length >= 0) {
+      if (m_length >= 1024) m_length = 1024-1;
       m_str_data[m_length] = '\0';
       return new scx::ArgString(m_str_data);
     }
@@ -326,19 +336,21 @@ scx::Arg* DbSqlQuery::op(const scx::Auth& auth,scx::Arg::OpType optype, const st
 	return new scx::ArgInt(affected_rows);
       }
 
-      // Fetch results row by row
-      
-      scx::ArgList* list = new scx::ArgList();
-      while (!::mysql_stmt_fetch(m_stmt)) {
-	DbSqlQuery_DEBUG_LOG("Fetched result row");
-	scx::ArgList* row_list = new scx::ArgList();
-	for (int i=0; i<(int)m_result_args->size(); ++i) {
-	  row_list->give( (*m_result_args)[i].get_arg() );
-	}
-	list->give(row_list);
+      return new scx::ArgInt(1);
+    }
+
+    if ("next_result" == m_method) {
+      if (m_error) return get_error();
+      if (!m_stmt) return new scx::ArgError("No statement");
+
+      int err = ::mysql_stmt_fetch(m_stmt);
+      if (err == 1) {
+	return new scx::ArgError(log_error("mysql_stmt_fetch",false));
       }
-      DbSqlQuery_DEBUG_LOG("End of results");
-      return list;
+      if (err == MYSQL_DATA_TRUNCATED) {
+	DbSqlQuery_DEBUG_LOG("mysql_stmt_fetch() data truncated");
+      }
+      return new scx::ArgInt(err != MYSQL_NO_DATA);
     }
     
   } else if (scx::Arg::Binary == optype) {
@@ -346,11 +358,28 @@ scx::Arg* DbSqlQuery::op(const scx::Auth& auth,scx::Arg::OpType optype, const st
     if ("." == opname) {
       std::string name = right->get_string();
 
-      if (name == "error") {
-	return get_error();
+      if (name == "error") return get_error();
+
+      if (name == "result") {
+	scx::ArgMap* row = new scx::ArgMap();
+	for (int i=0; i<(int)m_result_args->size(); ++i) {
+   	  DbSqlArg& rarg = (*m_result_args)[i];
+	  row->give(rarg.get_name(),rarg.get_arg());
+	}
+	return row;
       }
 
-      if (name == "exec") return new_method(name);
+      if (name == "result_list") {
+	scx::ArgList* row = new scx::ArgList();
+	for (int i=0; i<(int)m_result_args->size(); ++i) {
+   	  DbSqlArg& rarg = (*m_result_args)[i];
+	  row->give(rarg.get_arg());
+	}
+	return row;
+      }
+
+      if (name == "exec" ||
+	  name == "next_result") return new_method(name);
     }
 
   }
@@ -386,20 +415,22 @@ void DbSqlQuery::init()
   // Setup the result (output) bindings
   
   MYSQL_RES* res = ::mysql_stmt_result_metadata(m_stmt);
-  int fields = ::mysql_num_fields(res);
-  DbSqlQuery_DEBUG_LOG("Result contains " << fields << " fields");
-  
-  m_result_bind = new MYSQL_BIND[fields];
-  m_result_args = new DbSqlArgList(fields);
-  for (int i=0; i<fields; ++i) {
-    MYSQL_FIELD* field = ::mysql_fetch_field(res);
-    (*m_result_args)[i].init_result(m_result_bind[i],*field);
-  }
-  ::mysql_free_result(res);
-  
-  if (::mysql_stmt_bind_result(m_stmt,m_result_bind)) {
-    log_error("mysql_stmt_bind_result",true);
-    return;
+  if (res) {
+    int fields = ::mysql_num_fields(res);
+    DbSqlQuery_DEBUG_LOG("Result contains " << fields << " fields");
+    
+    m_result_bind = new MYSQL_BIND[fields];
+    m_result_args = new DbSqlArgList(fields);
+    for (int i=0; i<fields; ++i) {
+      MYSQL_FIELD* field = ::mysql_fetch_field(res);
+      (*m_result_args)[i].init_result(m_result_bind[i],*field);
+    }
+    ::mysql_free_result(res);
+    
+    if (::mysql_stmt_bind_result(m_stmt,m_result_bind)) {
+      log_error("mysql_stmt_bind_result",true);
+      return;
+    }
   }
 }
 
