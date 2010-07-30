@@ -31,7 +31,8 @@ namespace scx {
  
 //=============================================================================
 StreamSocket::StreamSocket()
-  : m_addr_remote(0)
+  : m_addr_remote(0),
+    m_client(false)
 {
   DEBUG_COUNT_CONSTRUCTOR(StreamSocket);
 }
@@ -83,7 +84,8 @@ void StreamSocket::pair(
 
 //=============================================================================
 Condition StreamSocket::connect(
-  const SocketAddress* addr
+  const SocketAddress* addr,
+  bool blocking
 )
 {
   DEBUG_ASSERT(state()==Descriptor::Closed,"connect() called on open socket");
@@ -120,8 +122,17 @@ Condition StreamSocket::connect(
   const struct sockaddr* sa = addr->get_sockaddr();
   socklen_t sa_size = addr->get_sockaddr_size();
 
+  // Mark the socket as a client
+  m_client = true;
+
+  if (blocking) set_blocking(true);
+
   // Call connect
-  if ( ::connect(m_socket,sa,sa_size) < 0) {
+  int err = ::connect(m_socket,sa,sa_size);
+
+  if (blocking) set_blocking(false);
+
+  if (err < 0) {
     switch (error()) {
     
       case Descriptor::Wait:
@@ -147,6 +158,12 @@ Condition StreamSocket::connect(
 const SocketAddress* StreamSocket::get_remote_addr() const
 {
   return m_addr_remote;
+}
+
+//=============================================================================
+bool StreamSocket::is_client() const
+{
+  return m_client;
 }
 
 //=============================================================================

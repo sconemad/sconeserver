@@ -34,8 +34,13 @@ class SSLModule;
 
 //=============================================================================
 class SSLStream : public scx::Stream {
-
 public:
+
+  enum Sequence {
+    Start,
+    Connecting,
+    Connected    
+  };
 
   SSLStream(
     SSLModule& mod,
@@ -51,6 +56,9 @@ public:
 
   virtual std::string stream_status() const;
   
+  scx::Condition init_ssl();
+  scx::Condition connect_ssl(scx::Stream::Event e);
+
   void set_last_read_cond(scx::Condition c);
   void set_last_write_cond(scx::Condition c);
 
@@ -58,6 +66,7 @@ protected:
 
   SSLModule& m_mod;
   std::string m_channel;
+  bool m_client;
   
   SSL* m_ssl;
   X509* m_client_cert;

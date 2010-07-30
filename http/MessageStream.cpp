@@ -32,6 +32,7 @@ Free Software Foundation, Inc.,
 #include "sconex/VersionTag.h"
 #include "sconex/Date.h"
 #include "sconex/StreamSocket.h"
+#include "sconex/utils.h"
 
 namespace http {
   
@@ -287,14 +288,21 @@ bool MessageStream::connect_request_module(bool error)
 //=============================================================================
 bool MessageStream::build_header()
 {
-  // Should persistant connections be used
+  // Should a persistant connection be used?
+  // Used by default for HTTP versions greater than 1.0
   bool persist = (m_response.get_version() > scx::VersionTag(1,0));
-  if (m_request->get_header("Connection") == "close") {
-    // Copy to response
-    m_response.set_header("Connection","close");
-    persist = false;
-  } else if (m_response.get_header("Connection") == "close") {
-    persist = false;
+  if (persist) {
+    // Check if either the request or response have specified Connection: close,
+    // if so then respect this and switch off persistant connection.
+    std::string req_con = m_request->get_header("Connection"); scx::strlow(req_con);
+    std::string resp_con = m_response.get_header("Connection"); scx::strlow(resp_con);
+    if (req_con == "close") {
+      // Copy to response
+      m_response.set_header("Connection","close");
+      persist = false;
+    } else if (resp_con == "close") {
+      persist = false;
+    }
   }
 
   // Can a body be sent with this response type

@@ -23,6 +23,8 @@ Free Software Foundation, Inc.,
 #include "SSLModule.h"
 #include "SSLChannel.h"
 
+#include "sconex/StreamSocket.h"
+
 // Uncomment to enable debug info for the SSL Stream
 //#define SSLStream_DEBUG_LOG(m) DEBUG_LOG(m)
 
@@ -46,13 +48,14 @@ SSLStream::SSLStream(
 ) : Stream("ssl"),
     m_mod(mod),
     m_channel(channel),
+    m_client(false),
     m_ssl(0),
     m_seq(0),
     m_init_retries(0),
     m_last_read_cond(scx::Ok),
     m_last_write_cond(scx::Ok)
 {
-  enable_event(scx::Stream::Readable,true);
+
 }
 
 //=============================================================================
@@ -129,8 +132,21 @@ scx::Condition SSLStream::event(scx::Stream::Event e)
   switch (e) {
   
     case scx::Stream::Opening: { // OPENING
-      if (m_seq <= 1) {
-        return scx::Wait;
+      if (m_seq == Start) {
+	// Determine if this is a client connection by examining the socket
+	scx::StreamSocket* socket = dynamic_cast<scx::StreamSocket*>(&endpoint());
+	if (socket) {
+	  m_client = socket->is_client();
+	}
+	if (m_client) {
+	  enable_event(scx::Stream::Writeable,true);
+	} else {
+	  enable_event(scx::Stream::Readable,true);
+	}
+	return init_ssl();
+      }
+      if (m_seq != Connected) {
+	return scx::Wait;
       }
     } break;
 
@@ -140,43 +156,14 @@ scx::Condition SSLStream::event(scx::Stream::Event e)
     } break;
     
     case scx::Stream::Readable: { // READABLE
-      if (m_seq==0) {
-        m_last_read_cond=scx::Ok;
-        m_last_write_cond=scx::Ok;
-        
-        SSLChannel* channel = m_mod.find_channel(m_channel);     
-        m_ssl = channel->new_ssl();
-        DEBUG_ASSERT(m_ssl!=0,"event(read) Invalid SSL object");
-        
-        m_bio = BIO_new_scxsp(this,0);
-        SSL_set_bio(m_ssl,m_bio,m_bio);
-        BIO_set_ssl(m_bio,m_ssl,BIO_CLOSE);
-        BIO_set_nbio(m_bio,1);
-      
-        ++m_seq;
-      }
-    
-      if (m_seq==1) {    
-        int i = SSL_accept(m_ssl);
-        int e = SSL_get_error(m_ssl,i);
-        
-        SSLStream_DEBUG_LOG("event(read) SSL_Accept returned " << i << " error="
-                            << e << " retry=" << m_init_retries);
-        
-        if (++m_init_retries > 10) {
-          DEBUG_LOG("accept aborted after 10 retries");
-          return scx::Error;
-        }
-        
-        if (e!=0) {
-          return scx::Wait;
-        }
-        
-        SSLStream_DEBUG_LOG("Opened SSL connection using "
-                            << SSL_get_cipher(m_ssl));
-        
-        enable_event(scx::Stream::Opening,true);
-        ++m_seq;
+      if (m_seq == Connecting) {
+	return connect_ssl(e);
+      }   
+    } break;
+
+    case scx::Stream::Writeable: { // WRITEABLE
+      if (m_seq == Connecting) {
+	return connect_ssl(e);
       }   
     } break;
 
@@ -184,6 +171,68 @@ scx::Condition SSLStream::event(scx::Stream::Event e)
       break;
   }  
     
+  return scx::Ok;
+}
+
+//=============================================================================
+scx::Condition SSLStream::init_ssl()
+{
+  m_last_read_cond=scx::Ok;
+  m_last_write_cond=scx::Ok;
+  
+  SSLChannel* channel = m_mod.find_channel(m_channel);     
+  m_ssl = channel->new_ssl();
+  if (m_ssl == 0) {
+    m_mod.log("init_ssl) Invalid SSL object",scx::Logger::Error);
+    return scx::Error;
+  }
+  
+  m_bio = BIO_new_scxsp(this,0);
+  SSL_set_bio(m_ssl,m_bio,m_bio);
+  BIO_set_ssl(m_bio,m_ssl,BIO_CLOSE);
+  BIO_set_nbio(m_bio,1);
+  
+  m_seq = Connecting;
+  return scx::Wait;
+}
+
+//=============================================================================
+scx::Condition SSLStream::connect_ssl(scx::Stream::Event e)
+{
+  int ret = 0;
+  if (m_client) {
+    // Client mode - we initiate connection
+    ret = SSL_connect(m_ssl);
+  } else {
+    // Server mode - we accept connection
+    ret = SSL_accept(m_ssl);
+  }
+  int err = SSL_get_error(m_ssl,ret);
+        
+  SSLStream_DEBUG_LOG("connect_ssl " << (m_client ? "client" : "server") 
+		      << " attempt " << m_init_retries 
+		      << " returned " << ret 
+		      << " error " << err);
+  
+  if (++m_init_retries > 10) {
+    DEBUG_LOG("connect_ssl aborted after 10 retries");
+    return scx::Error;
+  }
+  
+  if (err != 0) {
+    if (e == scx::Stream::Writeable) {
+      enable_event(scx::Stream::Writeable,false);
+      enable_event(scx::Stream::Readable,true);
+    }
+    return scx::Wait;
+  }
+  
+  SSLStream_DEBUG_LOG("Opened SSL connection using " << SSL_get_cipher(m_ssl));
+  
+  m_seq = Connected;
+  enable_event(scx::Stream::Opening,true);
+  enable_event(scx::Stream::Readable,false);
+  enable_event(scx::Stream::Writeable,false);
   return scx::Ok;
 }
 

@@ -22,6 +22,7 @@
          - HTTP Authentication realm support using htpasswd files.
          - Session management.
          - Multipart POST processing.
+         - Scriptable HTTP client.
 
         * New module: 'sconesite' web site management, includes:
           - XML template driven page generation.

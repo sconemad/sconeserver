@@ -84,6 +84,79 @@ std::string Response::get_header(const std::string& name) const
 }
 
 //===========================================================================
+bool Response::parse_response(const std::string& str)
+{
+  std::string::size_type start = 0;
+  std::string::size_type end = 0;
+
+  // Parse HTTP
+  
+  end = str.find_first_of("/");
+  if (end == std::string::npos) {
+    DEBUG_LOG("Bad response header (missing HTTP version)");
+    return false;
+  }
+  std::string http = str.substr(start,end);
+  if (http != "HTTP") {
+    DEBUG_LOG("Bad response header (missing HTTP string)");
+    return false;
+  }
+  start = end + 1;
+
+  // Parse version
+  
+  std::string sdig;
+  int ver_major=1;
+  int ver_minor=0;
+
+  end = str.find_first_of(".",start);
+  if (end == std::string::npos) {
+    DEBUG_LOG("Bad response header (missing HTTP version digit 1)");
+    return false;
+  }
+  sdig = str.substr(start,end-start);
+  ver_major = atoi(sdig.c_str());
+  start = end + 1;
+
+  end = str.find_first_of(" ",start);
+  if (end == std::string::npos) {
+    DEBUG_LOG("Bad response header (missing HTTP version digit 2)");
+    return false;
+  }
+  sdig = str.substr(start,end-start);
+  ver_minor = atoi(sdig.c_str());
+  start = end + 1;
+
+  m_version = scx::VersionTag(ver_major,ver_minor);
+
+  // Parse status code
+
+  start = str.find_first_not_of(" ",start);
+  end = str.find_first_of(" ",start);
+  if (end == std::string::npos) {
+    DEBUG_LOG("Bad response header (missing status code)");
+    return false;
+  }
+  sdig = str.substr(start,end-start);
+  m_status = Status((Status::Code)atoi(sdig.c_str()));
+  if (!m_status.valid()) {
+    DEBUG_LOG("Bad response header (invalid status code)");
+    return false;
+  }
+
+  // Ignore the rest, its not meant for us
+
+  return true;
+}
+
+//===========================================================================
+bool Response::parse_header(const std::string& str)
+{
+  std::string name = m_headers.parse_line(str);
+  return (!name.empty());
+}
+
+//===========================================================================
 std::string Response::build_header_string()
 {
   std::string str = "HTTP/" + m_version.get_string() + " " + 

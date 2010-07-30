@@ -47,11 +47,13 @@ public:
   );
   // Create a pair of linked UNIX domain sockets (using socketpair)
   
-  Condition connect(const SocketAddress* addr);
+  Condition connect(const SocketAddress* addr, bool blocking=false);
   // Connect to address
 
   const SocketAddress* get_remote_addr() const;
   // Get the remote address
+
+  bool is_client() const;
 
 protected:
 
@@ -67,6 +69,8 @@ protected:
   );
 
   SocketAddress* m_addr_remote;
+
+  bool m_client;
 
 private:
 

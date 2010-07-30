@@ -47,15 +47,33 @@ Request::~Request()
 }
 
 //===========================================================================
+void Request::set_method(const std::string& method)
+{
+  m_method = method;
+}
+
+//===========================================================================
 const std::string& Request::get_method() const
 {
   return m_method;
 }
 
 //===========================================================================
+void Request::set_uri(const scx::Uri& uri)
+{
+  m_uri = uri;
+}
+
+//===========================================================================
 const scx::Uri& Request::get_uri() const
 {
   return m_uri;
+}
+
+//===========================================================================
+void Request::set_version(const scx::VersionTag& ver)
+{
+  m_version = ver;
 }
 
 //===========================================================================
@@ -115,6 +133,18 @@ bool Request::parse_request(const std::string& str, bool secure)
   m_version = scx::VersionTag(ver_major,ver_minor);
 
   return true;
+}
+
+//===========================================================================
+void Request::set_header(const std::string& name, const std::string& value)
+{
+  m_headers.set(name,value);
+}
+
+//===========================================================================
+bool Request::remove_header(const std::string& name)
+{
+  return m_headers.erase(name);
 }
 
 //===========================================================================
@@ -278,6 +308,16 @@ std::string Request::get_param(const std::string& name) const
 bool Request::is_param(const std::string& name) const
 {
   return (m_params.lookup(name) != 0);
+}
+
+//=========================================================================
+std::string Request::build_header_string()
+{
+  std::string str =
+    m_method + " " + m_uri.get_string() + " HTTP/" + m_version.get_string() + CRLF +
+    m_headers.get_all() + CRLF;
+  
+  return str;
 }
 
 //=========================================================================

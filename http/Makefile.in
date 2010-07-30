@@ -59,9 +59,10 @@ am__installdirs = "$(DESTDIR)$(pkglibdir)" "$(DESTDIR)$(sysconfdir)" \
 pkglibLTLIBRARIES_INSTALL = $(INSTALL)
 LTLIBRARIES = $(pkglib_LTLIBRARIES)
 http_la_LIBADD =
-am_http_la_OBJECTS = AuthRealm.lo ConnectionStream.lo DocRoot.lo \
-	Host.lo HostMapper.lo HTTPModule.lo MessageStream.lo \
-	Request.lo Response.lo ResponseStream.lo Session.lo Status.lo
+am_http_la_OBJECTS = AuthRealm.lo Client.lo ConnectionStream.lo \
+	DocRoot.lo Host.lo HostMapper.lo HTTPModule.lo \
+	MessageStream.lo Request.lo Response.lo ResponseStream.lo \
+	Session.lo Status.lo
 http_la_OBJECTS = $(am_http_la_OBJECTS)
 http_la_LINK = $(LIBTOOL) --tag=CXX $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) \
 	--mode=link $(CXXLD) $(AM_CXXFLAGS) $(CXXFLAGS) \
@@ -219,6 +220,7 @@ AM_CPPFLAGS = -I$(top_srcdir)
 pkglib_LTLIBRARIES = http.la
 http_la_SOURCES = \
 AuthRealm.cpp \
+Client.cpp \
 ConnectionStream.cpp \
 DocRoot.cpp \
 Host.cpp \
@@ -234,6 +236,7 @@ Status.cpp
 httpincludedir = $(includedir)/http
 httpinclude_HEADERS = \
 AuthRealm.h \
+Client.h \
 ConnectionStream.h \
 DocRoot.h \
 Host.h \
@@ -320,6 +323,7 @@ distclean-compile:
 	-rm -f *.tab.c
 
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/AuthRealm.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/Client.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/ConnectionStream.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/DocRoot.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/HTTPModule.Plo@am__quote@

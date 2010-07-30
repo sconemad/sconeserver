@@ -1,4 +1,16 @@
 
+2010-07-30 Andrew Wedgbury <wedge@sconemad.com>
+
+	* sconex/StreamSocket: Add client flag, blocking connect.
+	* ssl/SSLModule: Support client mode channels.
+	* ssl/SSLChannel: Support client mode.
+	* ssl/SSLStream: Tidy up, support client mode connections.
+	* http/MessageStream: Use case-insensitive check for
+	Connection: close header.
+	* http/Request: Allow requests to be built for clients.
+	* http/Response: Parse responses and access values.
+	* http/Client: New http client system.
+	
 2010-07-27 Andrew Wedgbury <wedge@sconemad.com>
 
 	* dbsql/DbSqlQuery: New API, results are now fetched one

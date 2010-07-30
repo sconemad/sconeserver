@@ -187,13 +187,13 @@ scx::Arg* SSLModule::arg_method(
   
   if ("add" == name) {
     std::string s_name;
-    const scx::ArgString* a_name =
-      dynamic_cast<const scx::ArgString*>(l->get(0));
-    if (a_name) {
-      s_name = a_name->get_string();
-    } else {
-      return new scx::ArgError("ssl::add() Name must be specified");
-    }
+    const scx::ArgString* a_name = dynamic_cast<const scx::ArgString*>(l->get(0));
+    if (!a_name) return new scx::ArgError("ssl::add() Name must be specified");
+    s_name = a_name->get_string();
+
+    bool b_client = false;
+    const scx::ArgInt* a_client = dynamic_cast<const scx::ArgInt*>(l->get(1));
+    if (a_client) b_client = (0 != a_client->get_int());
 
     // Check channel doesn't already exist
     if (find_channel(s_name)) {
@@ -201,7 +201,7 @@ scx::Arg* SSLModule::arg_method(
                                "' already exists");
     }
 
-    m_channels[s_name] = new SSLChannel(*this,s_name);
+    m_channels[s_name] = new SSLChannel(*this,s_name,b_client);
     return 0;
   }
   

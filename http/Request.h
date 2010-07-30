@@ -42,15 +42,22 @@ public:
   );
   virtual ~Request();
 
+  void set_method(const std::string& method);
   const std::string& get_method() const;
+
+  void set_uri(const scx::Uri& uri);
   const scx::Uri& get_uri() const;
+  
+  void set_version(const scx::VersionTag& ver);
   const scx::VersionTag& get_version() const;
+
   bool parse_request(const std::string& str, bool secure);
 
+  void set_header(const std::string& name, const std::string& value);
+  bool remove_header(const std::string& name);
   std::string get_header(const std::string& name) const;
   scx::MimeHeader get_header_parsed(const std::string& name) const;
   bool parse_header(const std::string& str);
-
 
   void set_host(Host* host);
   const Host* get_host() const;
@@ -79,6 +86,8 @@ public:
   std::string get_param(const std::string& name) const;
   bool is_param(const std::string& name) const;
 
+  std::string build_header_string();
+  
   // ArgObject interface
   virtual scx::Arg* arg_lookup(const std::string& name);
   virtual scx::Arg* arg_method(const scx::Auth& auth,const std::string& name,scx::Arg* args);

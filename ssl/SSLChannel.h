@@ -38,7 +38,8 @@ public:
 
   SSLChannel(
     SSLModule& mod,
-    const std::string& name
+    const std::string& name,
+    bool client
   );
 
   ~SSLChannel();

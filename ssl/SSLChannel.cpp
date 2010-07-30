@@ -27,12 +27,17 @@ Free Software Foundation, Inc.,
 //=========================================================================
 SSLChannel::SSLChannel(
   SSLModule& mod,
-  const std::string& name
+  const std::string& name,
+  bool client
 )
   : m_mod(mod),
     m_name(name)
 {
-  m_ctx = SSL_CTX_new( SSLv23_server_method() );
+  if (client) {
+    m_ctx = SSL_CTX_new( SSLv23_client_method() );
+  } else {
+    m_ctx = SSL_CTX_new( SSLv23_server_method() );
+  }
 
   DEBUG_ASSERT(0 != m_ctx,"SSLChannel() Bad SSL context");
 }

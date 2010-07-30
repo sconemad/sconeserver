@@ -9,6 +9,7 @@ pkglib_LTLIBRARIES = http.la
 
 http_la_SOURCES = \
 AuthRealm.cpp \
+Client.cpp \
 ConnectionStream.cpp \
 DocRoot.cpp \
 Host.cpp \
@@ -25,6 +26,7 @@ httpincludedir = $(includedir)/http
 
 httpinclude_HEADERS = \
 AuthRealm.h \
+Client.h \
 ConnectionStream.h \
 DocRoot.h \
 Host.h \

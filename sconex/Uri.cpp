@@ -257,11 +257,11 @@ Arg* Uri::op(const Auth& auth, OpType optype, const std::string& opname, Arg* ri
         
       } else if ("." == opname) { // Scope resolution
 	std::string name = right->get_string();
-	if (name == "scheme") return new scx::ArgString(*m_scheme);
-	if (name == "host") return new scx::ArgString(*m_host);
-	if (name == "port") return new scx::ArgInt(*m_port);
-	if (name == "path") return new scx::ArgString(*m_path);
-	if (name == "query") return new scx::ArgString(*m_query);
+	if (name == "scheme") return new scx::ArgString(get_scheme());
+	if (name == "host") return new scx::ArgString(get_host());
+	if (name == "port") return new scx::ArgInt(get_port());
+	if (name == "path") return new scx::ArgString(get_path());
+	if (name == "query") return new scx::ArgString(get_query());
 	if (name == "base") return new scx::ArgString(get_base());
       }
     } break;

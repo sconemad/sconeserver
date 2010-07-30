@@ -28,6 +28,8 @@ Free Software Foundation, Inc.,
 #include "sconex/ModuleInterface.h"
 #include "sconex/ModuleLoaderDLL.h"
 #include "sconex/StreamDebugger.h"
+
+#include "http/Client.h"
 namespace http {
 
 SCONESERVER_MODULE(HTTPModule);
@@ -106,7 +108,8 @@ scx::Arg* HTTPModule::arg_lookup(const std::string& name)
 {
   // Methods
   
-  if ("set_idle_timeout" == name) {
+  if ("set_idle_timeout" == name ||
+      "client" == name) {
     return new_method(name);
   }
 
@@ -141,6 +144,28 @@ scx::Arg* HTTPModule::arg_method(
     return 0;
   }
   
+  if ("client" == name) {
+    
+    const scx::ArgString* method = dynamic_cast<const scx::ArgString*>(l->get(0));
+    if (!method) return new scx::ArgError("No method specified");
+
+    const scx::Uri* uri = dynamic_cast<const scx::Uri*>(l->get(1));
+    if (!uri) return new scx::ArgError("No uri specified");
+
+    std::string data;
+    const scx::Arg* adata = l->get(2);
+    if (adata) data = adata->get_string();
+
+    Client client(*this);
+    Status status = client.run(method->get_string(),*uri,data);
+
+    if (!status.valid()) {
+      return new scx::ArgError("Connection error");
+    }
+
+    return new scx::ArgString(client.get_response_data());
+  }
+
   return SCXBASE Module::arg_method(auth,name,args);
 }
 

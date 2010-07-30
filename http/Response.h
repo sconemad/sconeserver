@@ -48,6 +48,8 @@ public:
   bool remove_header(const std::string& name);
   std::string get_header(const std::string& name) const;
 
+  bool parse_response(const std::string& str);
+  bool parse_header(const std::string& str);
   std::string build_header_string();
   
   // ArgObject interface
