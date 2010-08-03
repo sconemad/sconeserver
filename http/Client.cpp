@@ -32,26 +32,126 @@ Free Software Foundation, Inc.,
 namespace http {
 
 //=============================================================================
-Client::Client(HTTPModule& module)
+Client::Client(HTTPModule& module,
+               const std::string& method,
+               const scx::Uri& url)
   : m_module(module),
-    m_stream(0),
-    m_error(false)
+    m_request(new Request("client","")),
+    m_response(new Response()),
+    m_response_data(new std::string()),
+    m_mutex(new scx::Mutex()),
+    m_complete(new scx::ConditionEvent()),
+    m_error(new bool(false))
 {
+  DEBUG_COUNT_CONSTRUCTOR(HTTPClient);
+  m_request->set_method(method);
+  m_request->set_uri(url);
+}
 
+//=============================================================================
+Client::Client(const Client& c)
+  : Arg(c),
+    m_module(c.m_module),
+    m_request(new Request(*c.m_request)),
+    m_response(new Response(*c.m_response)),
+    m_response_data(new std::string(*c.m_response_data)),
+    m_mutex(new scx::Mutex()),
+    m_complete(new scx::ConditionEvent()),
+    m_error(new bool(*c.m_error))
+{
+  DEBUG_COUNT_CONSTRUCTOR(HTTPClient);
+}
+
+//=============================================================================
+Client::Client(RefType ref, Client& c)
+  : Arg(ref,c),
+    m_module(c.m_module),
+    m_request(c.m_request),
+    m_response(c.m_response),
+    m_response_data(c.m_response_data),
+    m_mutex(c.m_mutex),
+    m_complete(c.m_complete),
+    m_error(c.m_error)
+{
+  DEBUG_COUNT_CONSTRUCTOR(HTTPClient);
+  
 }
 
 //=============================================================================
 Client::~Client()
 {
-
+  if (last_ref()) {
+    delete m_request;
+    delete m_response;
+    delete m_response_data;
+    delete m_mutex;
+    delete m_complete;
+    delete m_error;
+  }
+  DEBUG_COUNT_DESTRUCTOR(HTTPClient);
 }
 
 //=============================================================================
-Status Client::run(
-  const std::string& method,
-  const scx::Uri& url,
-  const std::string& post_data)
+scx::Arg* Client::new_copy() const
 {
+  return new Client(*this);
+}
+
+//=============================================================================
+scx::Arg* Client::ref_copy(RefType ref)
+{
+  return new Client(ref,*this);
+}
+
+//=============================================================================
+std::string Client::get_string() const
+{
+  return m_request->get_method() + " " + m_request->get_uri().get_string();
+}
+  
+//=============================================================================
+int Client::get_int() const
+{
+  return !(*m_error);
+}
+
+//=============================================================================
+scx::Arg* Client::op(const scx::Auth& auth,scx::Arg::OpType optype, const std::string& opname, scx::Arg* right)
+{
+  if (is_method_call(optype,opname)) {
+    
+    scx::ArgList* l = dynamic_cast<scx::ArgList*>(right);
+
+    if ("run" == m_method) {
+      std::string data;
+      const scx::Arg* adata = l->get(0);
+      if (adata) data = adata->get_string();
+      
+      bool success = run(data);
+      return new scx::ArgInt(success);
+    }
+    
+  } else if (scx::Arg::Binary == optype) {
+
+    if ("." == opname) {
+      std::string name = right->get_string();
+      
+      if (name == "request") return new scx::ArgObject(m_request);
+      if (name == "response") return new scx::ArgObject(m_response);
+      if (name == "data") return new scx::ArgString(*m_response_data);
+      
+      if (name == "run") return new_method(name);
+    }
+    
+  }
+  return SCXBASE Arg::op(auth,optype,opname,right);
+}
+
+//=============================================================================
+bool Client::run(const std::string& request_data)
+{
+  const scx::Uri url = m_request->get_uri();
+  
   // Lookup the router.ip module and use to create an IP4 socket address
   scx::SocketAddress* addr = 0;    
   scx::ModuleRef router = scx::Kernel::get()->get_module("router");
@@ -66,58 +166,88 @@ Status Client::run(
     }
   }
 
+  if (addr == 0) {
+    DEBUG_LOG("Unable to create socket address");
+    return false;
+  }
+  
   // Create the socket  
   scx::StreamSocket* sock = new scx::StreamSocket();
 
+  // Set idle timeout
+  sock->set_timeout(scx::Time(m_module.get_idle_timeout()));
+  
   // Add SSL stream if its a secure http url
   if (url.get_scheme() == "https") {
     scx::ModuleRef ssl = scx::Kernel::get()->get_module("ssl");
+    if (!ssl.valid()) {
+      delete sock;
+      delete addr;
+      DEBUG_LOG("SSL support unavailable");
+      return false;
+    }
     scx::ArgList args;
     args.give( new scx::ArgString("client") );
-    ssl.module()->connect(sock,&args);
+    if (!ssl.module()->connect(sock,&args)) {
+      delete sock;
+      delete addr;
+      DEBUG_LOG("SSL failure");
+      return false;
+    }
   }
 
   // Add client stream
   ClientStream* cs = new ClientStream(m_module,this,
-				      method,url,post_data,
-				      m_response,m_response_data);
+				      *m_request,request_data,
+				      *m_response,*m_response_data);
   sock->add_stream(cs);
 
-  // Start the socket connection and give to the kernel for async processing
+  // Start the socket connection
   scx::Condition err = sock->connect(addr);
-  scx::Kernel::get()->connect(sock,0);
-
-  // Now wait for the completion signal
-  m_mutex.lock();
-  m_complete.wait(m_mutex);
-  m_mutex.unlock();
-
+  if (err != scx::Ok && err != scx::Wait) {
+    delete sock;
+    delete addr;
+    DEBUG_LOG("Unable to initiate connection");
+    return false;
+  }
   delete addr;
 
-  return m_error ? Status((Status::Code)0) : m_response.get_status();
+  // Give to the kernel for async processing
+  if (!scx::Kernel::get()->connect(sock,0)) {
+    delete sock;
+    DEBUG_LOG("System failure");
+    return false;
+  }
+
+  // Now wait for the completion signal
+  m_mutex->lock();
+  m_complete->wait(*m_mutex);
+  m_mutex->unlock();
+
+  return !(*m_error);
 }
 
 //=============================================================================
 const Response& Client::get_response() const
 {
-  return m_response;
+  return *m_response;
 }
 
 //=============================================================================
 const std::string& Client::get_response_data() const
 {
-  return m_response_data;
+  return *m_response_data;
 }
 
 //=============================================================================
 void Client::event_complete(bool error)
 {
-  m_mutex.lock();
+  m_mutex->lock();
 
-  m_error = error;
-  m_complete.signal();
+  *m_error = error;
+  m_complete->signal();
 
-  m_mutex.unlock();
+  m_mutex->unlock();
 }
 
 
@@ -125,22 +255,21 @@ void Client::event_complete(bool error)
 ClientStream::ClientStream(
   HTTPModule& module,
   Client* client,
-  const std::string& method,
-  const scx::Uri& url,
-  const std::string& post_data,
+  Request& request,
+  const std::string& request_data,
   Response& response,
   std::string& response_data
 ) : scx::LineBuffer("http:client",1024),
     m_module(module),
     m_client(client),
-    m_request("client",""),
-    m_request_data(post_data),
+    m_request(request),
+    m_request_data(request_data),
     m_response(response),
     m_response_data(response_data),
     m_seq(SendHeaders),
     m_buffer(0)
 {
-  build_request(method,url);
+  build_request(m_request.get_method(),m_request.get_uri());
   enable_event(scx::Stream::Writeable,true);
 }
 
@@ -200,6 +329,7 @@ scx::Condition ClientStream::event(scx::Stream::Event e)
               // went wrong!
 	      return scx::Error;
             }
+            endpoint().reset_timeout();
           }
         }
       }
@@ -211,6 +341,7 @@ scx::Condition ClientStream::event(scx::Stream::Event e)
 	if (na > 0) {
 	  buffer[na] = '\0';
 	  m_response_data += buffer;
+          endpoint().reset_timeout();
 	}
 	if (c != scx::Ok && c != scx::Wait) {
 	  enable_event(scx::Stream::Readable,false);
@@ -335,6 +466,7 @@ void ClientStream::build_request(const std::string& method, const scx::Uri& url)
     std::ostringstream oss;
     oss << body_len;
     m_request.set_header("Content-Length",oss.str());
+    m_request.set_header("Content-Type","application/x-www-form-urlencoded");
   }
 
   // Other headers

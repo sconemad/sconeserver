@@ -180,7 +180,11 @@ scx::Condition SSLStream::init_ssl()
   m_last_read_cond=scx::Ok;
   m_last_write_cond=scx::Ok;
   
-  SSLChannel* channel = m_mod.find_channel(m_channel);     
+  SSLChannel* channel = m_mod.find_channel(m_channel);
+  if (!channel) {
+    m_mod.log("init_ssl) Invalid SSL channel",scx::Logger::Error);
+    return scx::Error;
+  }
   m_ssl = channel->new_ssl();
   if (m_ssl == 0) {
     m_mod.log("init_ssl) Invalid SSL object",scx::Logger::Error);

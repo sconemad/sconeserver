@@ -25,6 +25,8 @@ Free Software Foundation, Inc.,
 #include "http/HTTPModule.h"
 #include "http/Request.h"
 #include "http/Response.h"
+
+#include "sconex/Arg.h"
 #include "sconex/LineBuffer.h"
 #include "sconex/Uri.h"
 #include "sconex/Mutex.h"
@@ -33,16 +35,26 @@ namespace http {
 class ClientStream;
 
 //=============================================================================
-class HTTP_API Client {
+class HTTP_API Client : public scx::Arg {
+
 public:
 
-  Client(HTTPModule& module);
-  ~Client();
+  Client(HTTPModule& module,
+         const std::string& method,
+         const scx::Uri& url);
+  Client(const Client& c);
+  Client(RefType ref, Client& c);
+  virtual ~Client();
+  virtual scx::Arg* new_copy() const;
+  virtual scx::Arg* ref_copy(RefType ref);
 
-  Status run(
-    const std::string& method,
-    const scx::Uri& url,
-    const std::string& post_data = "");
+  virtual std::string get_string() const;
+  virtual int get_int() const;
+
+  virtual scx::Arg* op(const scx::Auth& auth,scx::Arg::OpType optype, const std::string& opname, scx::Arg* right);
+
+  bool run(
+    const std::string& request_data = "");
 
   const Response& get_response() const;
   const std::string& get_response_data() const;
@@ -53,14 +65,13 @@ private:
 
   HTTPModule& m_module;
 
-  ClientStream* m_stream;
+  Request* m_request;
+  Response* m_response;
+  std::string* m_response_data;
 
-  Response m_response;
-  std::string m_response_data;
-
-  scx::Mutex m_mutex;
-  scx::ConditionEvent m_complete;
-  bool m_error;
+  scx::Mutex* m_mutex;
+  scx::ConditionEvent* m_complete;
+  bool* m_error;
 };
 
 //=============================================================================
@@ -79,9 +90,8 @@ public:
   ClientStream(
     HTTPModule& module,
     Client* client,
-    const std::string& method,
-    const scx::Uri& url,
-    const std::string& post_data,
+    Request& request,
+    const std::string& request_data,
     Response& response,
     std::string& response_data
   );
@@ -102,8 +112,8 @@ private:
   HTTPModule& m_module;
   Client* m_client;
 
-  Request m_request;
-  std::string m_request_data;
+  Request& m_request;
+  const std::string& m_request_data;
 
   Response& m_response;
   std::string& m_response_data;

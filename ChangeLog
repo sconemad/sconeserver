@@ -1,4 +1,11 @@
 
+2010-08-03 Andrew Wedgbury <wedge@sconemad.com>
+
+	* ssl/SSLStream: Check for non existent channels.
+	* http/Client: 	Turn into an Arg class.
+	Add Content-Type header when there is data.
+	* http/HTTPModule: Allow client object construction.
+	
 2010-07-30 Andrew Wedgbury <wedge@sconemad.com>
 
 	* sconex/StreamSocket: Add client flag, blocking connect.
