@@ -109,6 +109,7 @@ scx::Arg* HTTPModule::arg_lookup(const std::string& name)
   // Methods
   
   if ("set_idle_timeout" == name ||
+      "set_client_proxy" == name ||
       "Client" == name) {
     return new_method(name);
   }
@@ -116,6 +117,7 @@ scx::Arg* HTTPModule::arg_lookup(const std::string& name)
   // Properties
   
   if ("idle_timeout" == name) return new scx::ArgInt(m_idle_timeout);
+  if ("client_proxy" == name) return m_client_proxy.ref_copy(scx::Arg::ConstRef);
   
   // Sub-objects
   
@@ -143,6 +145,13 @@ scx::Arg* HTTPModule::arg_method(
     m_idle_timeout = n_timeout;
     return 0;
   }
+
+  if ("set_client_proxy" == name) {
+    const scx::Uri* a_proxy = dynamic_cast<const scx::Uri*>(l->get(0));
+    if (!a_proxy) return new scx::ArgError("set_client_proxy() Must specify proxy Uri");
+    m_client_proxy = *a_proxy;
+    return 0;
+  }
   
   if ("Client" == name) {
     const scx::ArgString* method = dynamic_cast<const scx::ArgString*>(l->get(0));
@@ -161,6 +170,12 @@ scx::Arg* HTTPModule::arg_method(
 unsigned int HTTPModule::get_idle_timeout() const
 {
   return m_idle_timeout;
+}
+
+//=============================================================================
+const scx::Uri& HTTPModule::get_client_proxy() const
+{
+  return m_client_proxy;
 }
   
 };

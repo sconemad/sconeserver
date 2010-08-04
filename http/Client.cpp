@@ -150,7 +150,15 @@ scx::Arg* Client::op(const scx::Auth& auth,scx::Arg::OpType optype, const std::s
 //=============================================================================
 bool Client::run(const std::string& request_data)
 {
-  const scx::Uri url = m_request->get_uri();
+  bool proxy = false;
+  scx::Uri addr_url = m_module.get_client_proxy();
+  if (addr_url.get_int()) {
+    // Connect to proxy
+    proxy = true;
+  } else {
+    // Connect direct to host given in uri
+    addr_url = m_request->get_uri();
+  }
   
   // Lookup the router.ip module and use to create an IP4 socket address
   scx::SocketAddress* addr = 0;    
@@ -159,8 +167,8 @@ bool Client::run(const std::string& request_data)
     scx::ModuleRef ip = router.module()->get_module("ip");
     if (ip.valid()) {
       scx::ArgList args;
-      args.give( new scx::ArgString(url.get_host()) );
-      args.give( new scx::ArgInt(url.get_port()) );
+      args.give( new scx::ArgString(addr_url.get_host()) );
+      args.give( new scx::ArgInt(addr_url.get_port()) );
       scx::Arg* ret = ip.module()->arg_method(scx::Auth::Trusted,"addr",&args);
       addr = dynamic_cast<scx::SocketAddress*>(ret);
     }
@@ -177,8 +185,15 @@ bool Client::run(const std::string& request_data)
   // Set idle timeout
   sock->set_timeout(scx::Time(m_module.get_idle_timeout()));
   
-  // Add SSL stream if its a secure http url
-  if (url.get_scheme() == "https") {
+  // Is this a secure http connection?
+  if (m_request->get_uri().get_scheme() == "https") {
+    
+    // If a proxy is in use, add a connect stream to setup the tunnel
+    if (proxy) {
+      sock->add_stream( new ProxyConnectStream(m_module,*m_request) );
+    }
+    
+    // Find the ssl module, if available
     scx::ModuleRef ssl = scx::Kernel::get()->get_module("ssl");
     if (!ssl.valid()) {
       delete sock;
@@ -186,6 +201,8 @@ bool Client::run(const std::string& request_data)
       DEBUG_LOG("SSL support unavailable");
       return false;
     }
+
+    // Connect an SSL stream to this socket
     scx::ArgList args;
     args.give( new scx::ArgString("client") );
     if (!ssl.module()->connect(sock,&args)) {
@@ -266,7 +283,7 @@ ClientStream::ClientStream(
     m_request_data(request_data),
     m_response(response),
     m_response_data(response_data),
-    m_seq(SendHeaders),
+    m_seq(Send),
     m_buffer(0)
 {
   build_request(m_request.get_method(),m_request.get_uri());
@@ -287,14 +304,31 @@ scx::Condition ClientStream::event(scx::Stream::Event e)
 {
   switch (e) {
     
-    case scx::Stream::Opening: { // OPENING
+    case scx::Stream::Writeable: { // WRITEABLE
+
+      if (m_seq == Send) {
+        int na = 0;
+        scx::Condition c = Stream::write(m_buffer->head(),m_buffer->used(),na);
+	if (c != scx::Ok && c != scx::Wait) {
+	  return c;
+	}
+        m_buffer->pop(na);
+        
+        if (m_buffer->used() == 0) {
+          // Finished sending request
+          delete m_buffer;
+          m_buffer = 0;
+          std::string method = m_request.get_method();
+	  m_seq = RecieveResponse;
+	  enable_event(scx::Stream::Writeable,false);
+	  enable_event(scx::Stream::Readable,true);
+        } else {
+	  return scx::Wait;
+	}
+      }
 
     } break;
 
-    case scx::Stream::Closing: { // CLOSING
-
-    } break;
-    
     case scx::Stream::Readable: { // READABLE
       std::string line;
 
@@ -350,46 +384,7 @@ scx::Condition ClientStream::event(scx::Stream::Event e)
 	  return c;
 	}
       }
-
-      //      if (m_seq != RecieveBody) {
-      //        return scx::Wait;
-      //      }
       
-    } break;
-
-    case scx::Stream::Writeable: { // WRITEABLE
-
-      if (m_seq == SendHeaders) {
-        int na = 0;
-        scx::Condition c = Stream::write(m_buffer->head(),m_buffer->used(),na);
-        m_buffer->pop(na);
-        
-        if (m_buffer->used() == 0) {
-          // Finished sending request
-          delete m_buffer;
-          m_buffer = 0;
-          std::string method = m_request.get_method();
-	  //          if (method == "POST" ||
-	  //              method == "PUT") {
-            // Request requires a body
-	  //            m_seq = SendBody;
-	  //          } else {
-            m_seq = RecieveResponse;
-	    enable_event(scx::Stream::Writeable,false);
-            enable_event(scx::Stream::Readable,true);
-	    //          }
-        } else {
-	  return scx::Wait;
-	}
-      }
-
-      if (m_seq == SendBody) {
-	Stream::write(m_request_data);
-	m_seq = RecieveResponse;
-	enable_event(scx::Stream::Writeable,false);
-	enable_event(scx::Stream::Readable,true);
-      }
-
     } break;
 
     default: 
@@ -402,21 +397,13 @@ scx::Condition ClientStream::event(scx::Stream::Event e)
 //=============================================================================
 scx::Condition ClientStream::read(void* buffer,int n,int& na)
 {
-  if (m_seq == RecieveBody) {
-    return scx::StreamTokenizer::read(buffer,n,na);
-  }
-  na = 0;
-  return scx::Wait;
+  return scx::StreamTokenizer::read(buffer,n,na);
 }
 
 //=============================================================================
 scx::Condition ClientStream::write(const void* buffer,int n,int& na)
 {
-  if (m_seq == SendBody) {
-    return scx::StreamTokenizer::write(buffer,n,na);
-  }
-  na = 0;
-  return scx::Wait;
+  return scx::StreamTokenizer::write(buffer,n,na);
 }
 
 //=============================================================================
@@ -426,8 +413,7 @@ std::string ClientStream::stream_status() const
   oss << scx::StreamTokenizer::stream_status()
       << " seq:";
   switch (m_seq) {
-    case SendHeaders: oss << "SEND-HEADERS"; break;
-    case SendBody: oss << "SEND-BODY"; break;
+    case Send: oss << "SEND"; break;
     case RecieveResponse: oss << "RECV-RESP"; break;
     case RecieveHeaders: oss << "RECV-HEADERS"; break;
     case RecieveBody: oss << "RECV-BODY"; break;
@@ -479,6 +465,111 @@ void ClientStream::build_request(const std::string& method, const scx::Uri& url)
   if (body_len > 0) {
     m_buffer->push_string(m_request_data);
   }
+}
+
+
+//=============================================================================
+ProxyConnectStream::ProxyConnectStream(
+  HTTPModule& module,
+  Request& request
+) : scx::LineBuffer("http:proxy-connect",1024),
+    m_module(module),
+    m_request(request),
+    m_seq(Send)
+{
+  enable_event(scx::Stream::Writeable,true);
+}
+
+//=============================================================================
+ProxyConnectStream::~ProxyConnectStream()
+{
+
+}
+
+//=============================================================================
+scx::Condition ProxyConnectStream::event(scx::Stream::Event e)
+{
+  switch (e) {
+    
+    case scx::Stream::Opening: { // OPENING
+      if (m_seq != Established) {
+	return scx::Wait;
+      }
+    } break;
+
+    case scx::Stream::Writeable: { // WRITEABLE
+
+      if (m_seq == Send) {
+	scx::Uri url = m_request.get_uri();
+	std::ostringstream oss;
+	oss << "CONNECT " << url.get_host() << ":" << url.get_port() << " HTTP/1.1\r\n\r\n";
+	write(oss.str());
+	m_seq = RecieveResponse;
+	enable_event(scx::Stream::Writeable,false);
+	enable_event(scx::Stream::Readable,true);
+      }
+
+    } break;
+
+    case scx::Stream::Readable: { // READABLE
+      std::string line;
+
+      if (m_seq == RecieveResponse) {
+        if (scx::Ok == tokenize(line)) {
+          if (m_response.parse_response(line)) {
+	    // Check the status code to see if the proxy accepted
+	    if (m_response.get_status().code() != Status::Ok) {
+	      DEBUG_LOG("PROXY CONNECT FAILED: " << line);
+	      return scx::Error;
+	    }
+            m_seq = RecieveHeaders;
+          } else {
+            // went wrong!
+	    return scx::Error;
+          }
+        }
+      }
+
+      if (m_seq == RecieveHeaders) {
+        while (scx::Ok == tokenize(line)) {
+          if (line.empty()) {
+	    // Tunnel is established, our job is done!
+	    m_seq = Established;
+	    enable_event(scx::Stream::Readable,false);
+	    break;
+          } else {
+            if (!m_response.parse_header(line)) {
+              // went wrong!
+	      return scx::Error;
+            }
+            endpoint().reset_timeout();
+          }
+        }
+      }
+
+    } break;
+
+    default: 
+      break;
+  }
+  
+  return scx::Ok;
+}
+
+//=============================================================================
+std::string ProxyConnectStream::stream_status() const
+{
+  std::ostringstream oss;
+  oss << scx::StreamTokenizer::stream_status()
+      << " seq:";
+  switch (m_seq) {
+    case Send: oss << "SEND"; break;
+    case RecieveResponse: oss << "RECV-RESP"; break;
+    case RecieveHeaders: oss << "RECV-HEADERS"; break;
+    case Established: oss << "ESTABLISHED"; break;
+    default: oss << "UNKNOWN!"; break;
+  }
+  return oss.str();
 }
   
 };

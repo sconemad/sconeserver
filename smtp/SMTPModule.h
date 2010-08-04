@@ -1,8 +1,8 @@
 /* SconeServer (http://www.sconemad.com)
 
-HTTP (HyperText Transfer Protocol) Module
+SMTP (Simple Mail Transfer Protocol) Module
 
-Copyright (c) 2000-2004 Andrew Wedgbury <wedge@sconemad.com>
+Copyright (c) 2000-2010 Andrew Wedgbury <wedge@sconemad.com>
 
 This program is free software; you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -19,28 +19,21 @@ along with this program (see the file COPYING); if not, write to the
 Free Software Foundation, Inc.,
 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA */
 
-#ifndef httpModule_h
-#define httpModule_h
+#ifndef smtpModule_h
+#define smtpModule_h
 
-#include "http/http.h"
-#include "http/HostMapper.h"
-#include "http/AuthRealm.h"
-#include "http/Session.h"
 #include "sconex/Module.h"
 #include "sconex/Descriptor.h"
 #include "sconex/Uri.h"
 
-namespace http {
+namespace smtp {
 
-class HostMapper;
-class HTTPModule;
-  
 //=============================================================================
-class HTTP_API HTTPModule : public scx::Module {
+class SMTPModule : public scx::Module {
 public:
 
-  HTTPModule();
-  virtual ~HTTPModule();
+  SMTPModule();
+  virtual ~SMTPModule();
 
   virtual std::string info() const;
 
@@ -51,27 +44,12 @@ public:
     scx::ArgList* args
   );
 
-  HostMapper& get_hosts();
-  AuthRealmManager& get_realms();
-  SessionManager& get_sessions();
-
-  unsigned int get_idle_timeout() const;
-
-  const scx::Uri& get_client_proxy() const;
-
   virtual scx::Arg* arg_lookup(const std::string& name);
   virtual scx::Arg* arg_method(const scx::Auth& auth,const std::string& name,scx::Arg* args);
   
 protected:
 
 private:
-
-  HostMapper m_hosts;
-  AuthRealmManager m_realms;
-  SessionManager m_sessions;
-
-  unsigned int m_idle_timeout;
-  scx::Uri m_client_proxy;
 
 };
 

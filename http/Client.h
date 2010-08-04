@@ -53,8 +53,7 @@ public:
 
   virtual scx::Arg* op(const scx::Auth& auth,scx::Arg::OpType optype, const std::string& opname, scx::Arg* right);
 
-  bool run(
-    const std::string& request_data = "");
+  bool run(const std::string& request_data = "");
 
   const Response& get_response() const;
   const std::string& get_response_data() const;
@@ -79,8 +78,7 @@ class HTTP_API ClientStream : public scx::LineBuffer {
 public:
 
   enum Sequence {
-    SendHeaders,
-    SendBody,
+    Send,
     RecieveResponse,
     RecieveHeaders,
     RecieveBody,
@@ -120,6 +118,38 @@ private:
 
   Sequence m_seq;
   scx::Buffer* m_buffer;
+};
+
+//=============================================================================
+class HTTP_API ProxyConnectStream : public scx::LineBuffer {
+public:
+
+  enum Sequence {
+    Send,
+    RecieveResponse,
+    RecieveHeaders,
+    Established
+  };
+
+  ProxyConnectStream(
+    HTTPModule& module,
+    Request& request
+  );
+  
+  virtual ~ProxyConnectStream();
+
+  virtual scx::Condition event(scx::Stream::Event e);
+
+  virtual std::string stream_status() const;
+  
+private:
+
+  HTTPModule& m_module;
+
+  Request& m_request;
+  Response m_response;
+
+  Sequence m_seq;
 };
 
 };
