@@ -86,9 +86,8 @@ int Module::init()
 //=============================================================================
 void Module::close()
 {
-  for (std::list<ModuleLoader*>::iterator it = m_modules.begin();
-       it != m_modules.end();
-       it++) {
+  std::list<ModuleLoader*>::reverse_iterator it;
+  for (it = m_modules.rbegin(); it != m_modules.rend(); it++) {
     delete (*it);
   }
   m_modules.clear();

@@ -24,28 +24,117 @@ Free Software Foundation, Inc.,
 #include "sconex/Logger.h"
 #include "sconex/VersionTag.h"
 #include "sconex/utils.h"
-#include "sconex/StreamSocket.h"
 #include "sconex/Kernel.h"
 #include "sconex/Date.h"
+#include "sconex/StreamSocket.h"
+#include "sconex/StreamDebugger.h"
 namespace smtp {
 
 //=============================================================================
-Client::Client(SMTPModule& module)
+MessageHeader::MessageHeader()
+{
+  // Generate a globally unique id for this message
+  timeval tv;
+  gettimeofday(&tv,0);
+  scx::Date now(tv.tv_sec);
+
+  std::ostringstream oss;
+  oss << "SconeServer." << scx::version().get_string();
+  oss << "." << scx::Date::now().dcode();
+  oss << "." << std::setw(6) << std::setfill('0') << tv.tv_usec;
+  oss << "." << pthread_self();
+  oss << "@" << scx::Kernel::get()->get_system_nodename();
+
+  m_id = oss.str();   
+}
+  
+//=============================================================================
+std::string MessageHeader::get_string() const
+{
+  std::string str;
+
+  str += "Date: " + scx::Date::now().string() + CRLF;
+  str += "From: " + m_from + CRLF;
+  
+  std::vector<std::string>::const_iterator it;
+
+  if (m_to_rcpts.size()) {
+    str += "To: ";
+    for (it=m_to_rcpts.begin(); it!=m_to_rcpts.end(); ++it) {
+      if (it != m_to_rcpts.begin()) str += ", ";
+      str += *it;
+    }
+    str += CRLF;
+  }
+  
+  if (m_cc_rcpts.size()) {
+    str += "Cc: ";
+    for (it=m_cc_rcpts.begin(); it!=m_cc_rcpts.end(); ++it) {
+      if (it != m_cc_rcpts.begin()) str += ", ";
+      str += *it;
+    }
+    str += CRLF;
+  }
+
+  str += "Subject: " + m_subject + CRLF;
+  str += "Message-ID: <" + m_id + ">" CRLF;
+  str += "User-Agent: SconeServer/" + scx::version().get_string() + CRLF;
+  str += "MIME-Version: 1.0" CRLF;
+  str += "Content-Type: text/plain; charset=us-ascii" CRLF;
+  
+  m_extra_headers.get_all();
+  return str;
+}
+
+//=============================================================================
+void MessageHeader::get_all_rcpts(std::vector<std::string>& rcpts) const
+{
+  std::vector<std::string>::const_iterator it;
+  
+  for (it=m_to_rcpts.begin(); it!=m_to_rcpts.end(); ++it) {
+    rcpts.push_back(*it);
+  }
+  
+  for (it=m_cc_rcpts.begin(); it!=m_cc_rcpts.end(); ++it) {
+    rcpts.push_back(*it);
+  }
+
+  for (it=m_bcc_rcpts.begin(); it!=m_bcc_rcpts.end(); ++it) {
+    rcpts.push_back(*it);
+  }
+}
+  
+  
+//=============================================================================
+Client::Client(SMTPModule& module, const scx::ArgList* args)
   : m_module(module),
-    m_mutex(new scx::Mutex()),
-    m_complete(new scx::ConditionEvent()),
-    m_error(new bool(false))
+    m_header(new MessageHeader()),
+    m_mutex(0),
+    m_complete(0),
+    m_result(new Result(Unknown)),
+    m_result_str(new std::string())
 {
   DEBUG_COUNT_CONSTRUCTOR(SMTPClient);
+
+  const scx::ArgString* a_subject = dynamic_cast<const scx::ArgString*>(args->get(0));
+  if (a_subject) m_header->m_subject = a_subject->get_string();
+
+  const scx::ArgString* a_from = dynamic_cast<const scx::ArgString*>(args->get(1));
+  if (a_from) m_header->m_from = a_from->get_string();
+
+  const scx::ArgString* a_to_rcpt = dynamic_cast<const scx::ArgString*>(args->get(2));
+  if (a_to_rcpt) m_header->m_to_rcpts.push_back(a_to_rcpt->get_string());
 }
 
 //=============================================================================
 Client::Client(const Client& c)
   : Arg(c),
     m_module(c.m_module),
-    m_mutex(new scx::Mutex()),
-    m_complete(new scx::ConditionEvent()),
-    m_error(new bool(*c.m_error))
+    m_header(new MessageHeader(*c.m_header)),
+    m_mutex(0),
+    m_complete(0),
+    m_result(new Result(*c.m_result)),
+    m_result_str(new std::string(*c.m_result_str))
 {
   DEBUG_COUNT_CONSTRUCTOR(SMTPClient);
 }
@@ -54,9 +143,11 @@ Client::Client(const Client& c)
 Client::Client(RefType ref, Client& c)
   : Arg(ref,c),
     m_module(c.m_module),
+    m_header(c.m_header),
     m_mutex(c.m_mutex),
     m_complete(c.m_complete),
-    m_error(c.m_error)
+    m_result(c.m_result),
+    m_result_str(c.m_result_str)
 {
   DEBUG_COUNT_CONSTRUCTOR(SMTPClient);
   
@@ -66,9 +157,9 @@ Client::Client(RefType ref, Client& c)
 Client::~Client()
 {
   if (last_ref()) {
-    delete m_mutex;
-    delete m_complete;
-    delete m_error;
+    delete m_header;
+    delete m_result;
+    delete m_result_str;
   }
   DEBUG_COUNT_DESTRUCTOR(SMTPClient);
 }
@@ -88,13 +179,13 @@ scx::Arg* Client::ref_copy(RefType ref)
 //=============================================================================
 std::string Client::get_string() const
 {
-  return "SMTP Client";
+  return m_header->m_subject;
 }
   
 //=============================================================================
 int Client::get_int() const
 {
-  return !(*m_error);
+  return (*m_result == Success);
 }
 
 //=============================================================================
@@ -109,16 +200,41 @@ scx::Arg* Client::op(const scx::Auth& auth,scx::Arg::OpType optype, const std::s
       const scx::Arg* adata = l->get(0);
       if (adata) data = adata->get_string();
       
-      bool success = send(data);
-      return new scx::ArgInt(success);
+      return send(data);
+    }
+
+    if ("add_recipient" == m_method) {
+      const scx::ArgString* a_rcpt = dynamic_cast<const scx::ArgString*>(l->get(0));
+      if (!a_rcpt) return new scx::ArgError("add_recipient() Must specify recipient");
+      m_header->m_to_rcpts.push_back(a_rcpt->get_string());
+      return 0;
+    }
+
+    if ("add_cc_recipient" == m_method) {
+      const scx::ArgString* a_rcpt = dynamic_cast<const scx::ArgString*>(l->get(0));
+      if (!a_rcpt) return new scx::ArgError("add_cc_recipient() Must specify recipient");
+      m_header->m_cc_rcpts.push_back(a_rcpt->get_string());
+      return 0;
+    }
+
+    if ("add_bcc_recipient" == m_method) {
+      const scx::ArgString* a_rcpt = dynamic_cast<const scx::ArgString*>(l->get(0));
+      if (!a_rcpt) return new scx::ArgError("add_bcc_recipient() Must specify recipient");
+      m_header->m_bcc_rcpts.push_back(a_rcpt->get_string());
+      return 0;
     }
     
   } else if (scx::Arg::Binary == optype) {
 
     if ("." == opname) {
       std::string name = right->get_string();
+
+      if (name == "result") return new scx::ArgString(*m_result_str);
       
-      if (name == "send") return new_method(name);
+      if (name == "send" ||
+          name == "add_recipient" ||
+          name == "add_cc_recipient" ||
+          name == "add_bcc_recipient") return new_method(name);
     }
     
   }
@@ -126,242 +242,380 @@ scx::Arg* Client::op(const scx::Auth& auth,scx::Arg::OpType optype, const std::s
 }
 
 //=============================================================================
-bool Client::send(const std::string& message)
+scx::Arg* Client::send(const std::string& message)
 {
-  scx::Uri addr_url = scx::Uri("smtp://localhost");
-  
-  // Lookup the router.ip module and use to create an IP4 socket address
-  scx::SocketAddress* addr = 0;    
-  scx::ModuleRef router = scx::Kernel::get()->get_module("router");
-  if (router.valid()) {
-    scx::ModuleRef ip = router.module()->get_module("ip");
-    if (ip.valid()) {
-      scx::ArgList args;
-      args.give( new scx::ArgString(addr_url.get_host()) );
-      args.give( new scx::ArgInt(addr_url.get_port()) );
-      scx::Arg* ret = ip.module()->arg_method(scx::Auth::Trusted,"addr",&args);
-      addr = dynamic_cast<scx::SocketAddress*>(ret);
-    }
-  }
+  scx::StreamSocket* sock = m_module.new_server_connection();
 
-  if (addr == 0) {
-    DEBUG_LOG("Unable to create socket address");
-    return false;
+  if (!sock) {
+    DEBUG_LOG("No mail server specified");
+    return new scx::ArgError("Configuration error");
   }
   
-  // Create the socket  
-  scx::StreamSocket* sock = new scx::StreamSocket();
-
   // Set idle timeout
   sock->set_timeout(15);
+
+  // Add debug stream
+  sock->add_stream(new scx::StreamDebugger("smtp-client"));
   
-  std::string from = "wedge@sconemad.com";
-  std::string rcpt = "wedge@sconemad.com";
-
   // Add client stream
-  ClientStream* cs = new ClientStream(m_module,this,from,rcpt,message);
+  ClientStream* cs = new ClientStream(m_module,this);
   sock->add_stream(cs);
-
-  // Start the socket connection
-  scx::Condition err = sock->connect(addr);
-  if (err != scx::Ok && err != scx::Wait) {
+  
+  if (!cs->set_message(*m_header,message)) {
+    // Something is badly wrong with the message,
+    // don't attempt to send it
     delete sock;
-    delete addr;
-    DEBUG_LOG("Unable to initiate connection");
-    return false;
-  }
-  delete addr;
+    *m_result_str = "Missing sender or recipient";
+    return new scx::ArgInt(0);
+  }    
 
+  *m_result = Client::Unknown;
+  
+  // Create completion event and mutex
+  m_mutex = new scx::Mutex();
+  m_complete = new scx::ConditionEvent();
+  m_mutex->lock();
+  
   // Give to the kernel for async processing
   if (!scx::Kernel::get()->connect(sock,0)) {
+    m_mutex->unlock();
     delete sock;
     DEBUG_LOG("System failure");
-    return false;
+    return new scx::ArgError("System failure");
   }
-
+  
   // Now wait for the completion signal
-  m_mutex->lock();
   m_complete->wait(*m_mutex);
+  
+  // Clean up
   m_mutex->unlock();
+  delete m_mutex; m_mutex = 0;
+  delete m_complete; m_complete = 0;
 
-  return !(*m_error);
+  // Log result
+  if (*m_result != Success) {
+    m_module.log("SMTP session completed with error:" + (*m_result_str),scx::Logger::Error);
+  } else {
+    m_module.log("SMTP session completed succesfully: " + (*m_result_str));
+  }
+  
+  return new scx::ArgInt(*m_result == Success); 
 }
 
 //=============================================================================
-void Client::event_complete(bool error)
+void Client::event_complete(Result result,const std::string& result_str)
 {
-  m_mutex->lock();
-
-  *m_error = error;
-  m_complete->signal();
-
-  m_mutex->unlock();
+  if (m_mutex) {
+    m_mutex->lock();
+    
+    *m_result = result;
+    *m_result_str = result_str;
+    m_complete->signal();
+    
+    m_mutex->unlock();
+  }
 }
 
 
 //=============================================================================
 ClientStream::ClientStream(
   SMTPModule& module,
-  Client* client,
-  const std::string& from,
-  const std::string& rcpt,
-  const std::string& message
+  Client* client
 ) : scx::LineBuffer("smtp:client",1024),
     m_module(module),
     m_client(client),
-    m_from(from),
-    m_rcpt(rcpt),
-    m_message(message),
+    m_result(Client::Unknown),
     m_seq(Start),
+    m_rcpt_seq(0),
     m_buffer(0)
 {
-  next_state();
+
 }
 
 //=============================================================================
 ClientStream::~ClientStream()
 {
-  delete m_buffer;
-  if (m_seq != End) {
-    m_client->event_complete(true);
+  if (m_seq != End && m_buffer != 0) {
+    // If we're being deleted during a session,
+    // inform client of a connection error
+    m_client->event_complete(Client::Failure,"Network error");
   }
+  delete m_buffer;
 }
 
 //=============================================================================
-scx::Condition ClientStream::next_state()
+bool ClientStream::set_message(
+  const MessageHeader& header,
+  const std::string& message
+)
 {
-  m_seq = (Sequence)((int)m_seq + 1);
-  switch (m_seq) {
+  DEBUG_ASSERT(m_seq == Start,"SMTP Client already running");
+  
+  std::string hdr_string = header.get_string();
+  std::string end_string = CRLF "." CRLF;
 
-  case RecvGreeting: 
-  case RecvHeloResp:
-  case RecvFromResp:
-  case RecvRcptResp:
-  case RecvDataResp:
-  case RecvBodyResp:
-  case RecvQuitResp:
-    enable_event(scx::Stream::Readable,true);
-    enable_event(scx::Stream::Writeable,false);
-    break;
-    
-  case SendHelo:
-  case SendFrom:
-  case SendRcpt:
-  case SendData:
-  case SendBody:
-  case SendQuit:
-    enable_event(scx::Stream::Readable,false);
-    enable_event(scx::Stream::Writeable,true);
-    break;
-
-  case End:
-    enable_event(scx::Stream::Readable,false);
-    enable_event(scx::Stream::Writeable,false);
-    m_client->event_complete(false);
-    return scx::End;
+  // Sanitise the message string by replacing \n. with \n..
+  std::string m;
+  std::string::size_type start = 0;
+  while (true) {
+    std::string::size_type end = message.find("\n.",start);
+    if (end == std::string::npos) {
+      m.append(message.substr(start));
+      break;
+    } else {
+      m.append(message.substr(start,end-start));
+      m.append("\n..");
+    }
+    start = end + 2;
   }
 
-  return scx::Ok;
+  delete m_buffer;
+  m_buffer = new scx::Buffer(hdr_string.length() +
+                             m.length() +
+                             end_string.length());
+
+  m_buffer->push_string(hdr_string);
+  m_buffer->push_string(m);
+  m_buffer->push_string(end_string);
+
+  m_from = header.m_from;
+  if (m_from.empty()) {
+    // No "from" address
+    return false;
+  }
+
+  m_rcpts.clear();
+  header.get_all_rcpts(m_rcpts);
+  if (m_rcpts.size() == 0) {
+    // No recipients
+    return false;
+  }
+
+  return true;
 }
 
 //=============================================================================
 scx::Condition ClientStream::event(scx::Stream::Event e)
 {
   scx::Condition c = scx::Ok;
+  int na = 0;
+  int code = 0;
   std::string line;
 
   switch (m_seq) {
 
-  case RecvGreeting:
-    c = tokenize(line);
-    if (c != scx::Ok) return c;
-    DEBUG_LOG("SMTP greeting: " << line);
-    break;
+    case Start:
+      if (m_buffer == 0) {
+        DEBUG_LOG("Message has not been setup");
+        return scx::Error;
+      }
+      m_seq = RecvGreeting;
+      break;
+    
+    case RecvGreeting:
+      c = read_smtp_resp(code,line);
+      if (c != scx::Ok) return c;
+      if (code != 220) {
+        m_seq = SendQuit;
+        m_result = Client::Failure;
+        m_result_str = line;
+      } else {
+        m_seq = SendHelo;
+      }
+      break;
+      
+    case SendHelo:
+      write("HELO "+scx::Kernel::get()->get_system_nodename()+CRLF);
+      m_seq = RecvHeloResp;
+      break;
+      
+    case RecvHeloResp:
+      c = read_smtp_resp(code,line);
+      if (c != scx::Ok) return c;
+      if (code != 250) {
+        m_seq = SendQuit;
+        m_result = Client::Failure;
+        m_result_str = line;
+      } else {
+        m_seq = SendFrom;
+      }
+      break;
+      
+    case SendFrom:
+      write("MAIL FROM:"+format_email_address(m_from)+CRLF);
+      m_seq = RecvFromResp;
+      break;
+      
+    case RecvFromResp:
+      c = read_smtp_resp(code,line);
+      if (c != scx::Ok) return c;
+      if (code != 250) {
+        m_seq = SendQuit;
+        m_result = Client::Failure;
+        m_result_str = line;
+      } else {
+        m_seq = SendRcpt;
+      }
+      break;
+      
+    case SendRcpt:
+      if (m_rcpt_seq >= m_rcpts.size()) {
+        DEBUG_LOG("Missing recipient");
+        return scx::Error;
+      }
+      write("RCPT TO:"+format_email_address(m_rcpts[m_rcpt_seq])+CRLF);
+      m_seq = RecvRcptResp;
+      break;
+      
+    case RecvRcptResp:
+      c = read_smtp_resp(code,line);
+      if (c != scx::Ok) return c;
+      if (code != 250 && code != 251) {
+        m_seq = SendQuit;
+        m_result = Client::Failure;
+        m_result_str = line;
+      } else if (++m_rcpt_seq < m_rcpts.size()) {
+        // Another recipient
+        m_seq = SendRcpt;
+      } else {
+        // Last recipient, continue to send data
+        m_seq = SendData;
+      }
+      break;
+      
+    case SendData:
+      write("DATA" CRLF);
+      m_seq = RecvDataResp;
+      break;
+      
+    case RecvDataResp:
+      c = read_smtp_resp(code,line);
+      if (c != scx::Ok) return c;
+      if (code != 354) {
+        m_seq = SendQuit;
+        m_result = Client::Failure;
+        m_result_str = line;
+      } else {
+        m_seq = SendBody;
+      }
+      break;
+      
+    case SendBody: 
+      c = Stream::write(m_buffer->head(),m_buffer->used(),na);
+      if (c != scx::Ok && c != scx::Wait) {
+        return c;
+      }
+      m_buffer->pop(na);
+      if (m_buffer->used() != 0) {
+        // More data to be sent
+        return scx::Ok;
+      }
+      m_seq = RecvBodyResp;
+      break;
 
-  case SendHelo:
-    write("HELO localhost\r\n");
-    break;
+    case RecvBodyResp:
+      c = read_smtp_resp(code,line);
+      if (c != scx::Ok) return c;
+      m_result_str = line;
+      if (code != 250) {
+        m_seq = SendQuit;
+        m_result = Client::Failure;
+      } else {
+        m_seq = SendQuit;
+        m_result = Client::Success;
+      }
+      break;
+      
+    case SendQuit:
+      write("QUIT" CRLF);
+      m_seq = RecvQuitResp;
+      break;
 
-  case RecvHeloResp:
-    c = tokenize(line);
-    if (c != scx::Ok) return c;
-    DEBUG_LOG("SMTP helo resp: " << line);
-    break;
-
-  case SendFrom:
-    write("MAIL FROM:<"+m_from+">\r\n");
-    break;
-
-  case RecvFromResp:
-    c = tokenize(line);
-    if (c != scx::Ok) return c;
-    DEBUG_LOG("SMTP from resp: " << line);
-    break;
-
-  case SendRcpt:
-    write("RCPT TO:<"+m_rcpt+">\r\n");
-    break;
-
-  case RecvRcptResp:
-    c = tokenize(line);
-    if (c != scx::Ok) return c;
-    DEBUG_LOG("SMTP rcpt resp: " << line);
-    break;
-
-  case SendData:
-    write("DATA\r\n");
-    break;
-
-  case RecvDataResp:
-    c = tokenize(line);
-    if (c != scx::Ok) return c;
-    DEBUG_LOG("SMTP data resp: " << line);
-    break;
-
-  case SendBody:
-    write("Date: "+scx::Date::now().string()+"\r\n");
-    write("Subject: Test message\r\n");
-    write("From: "+m_from+"\r\n");
-    write("To: "+m_rcpt+"\r\n");
-    write("\r\n");
-    write(m_message);
-    write("\r\n.\r\n");
-    break;
-
-  case RecvBodyResp:
-    c = tokenize(line);
-    if (c != scx::Ok) return c;
-    DEBUG_LOG("SMTP body resp: " << line);
-    break;
-
-  case SendQuit:
-    write("QUIT\r\n");
-    break;
-
-  case RecvQuitResp:
-    c = tokenize(line);
-    if (c != scx::Ok) return c;
-    DEBUG_LOG("SMTP quit resp: " << line);
-    break;
-
-  default:
-    break;
+    case RecvQuitResp:
+      c = read_smtp_resp(code,line);
+      if (c != scx::Ok) return c;
+      if (code >= 400) {
+        m_result = Client::Failure;
+        m_result_str = line;
+      }
+      m_seq = End;
+      m_client->event_complete(m_result,m_result_str);
+      return scx::End;
+      
+    default:
+      break;
   }
 
-  return next_state();
+  setup_state();
+  return scx::Ok;
 }
 
 //=============================================================================
 std::string ClientStream::stream_status() const
 {
-  std::ostringstream oss;
-  oss << scx::StreamTokenizer::stream_status()
-      << " seq:";
+  return scx::StreamTokenizer::stream_status();
+}
+
+//=============================================================================
+void ClientStream::setup_state()
+{
+  // Enable read/write events according to state
   switch (m_seq) {
-    // Cannot be bothered!
-    default: oss << "UNKNOWN!"; break;
+
+    case RecvGreeting: 
+    case RecvHeloResp:
+    case RecvFromResp:
+    case RecvRcptResp:
+    case RecvDataResp:
+    case RecvBodyResp:
+    case RecvQuitResp:
+      enable_event(scx::Stream::Readable,true);
+      enable_event(scx::Stream::Writeable,false);
+      break;
+    
+    case SendHelo:
+    case SendFrom:
+    case SendRcpt:
+    case SendData:
+    case SendBody:
+    case SendQuit:
+      enable_event(scx::Stream::Readable,false);
+      enable_event(scx::Stream::Writeable,true);
+      break;
+      
+    default:
+      enable_event(scx::Stream::Readable,false);
+      enable_event(scx::Stream::Writeable,false);
+      break;
   }
-  return oss.str();
+}
+
+//=============================================================================
+  scx::Condition ClientStream::read_smtp_resp(int& code,std::string& line)
+{
+  code = 0;
+  scx::Condition c = tokenize(line);
+  //DEBUG_LOG("SMTP server: " << line);
+  if (c == scx::Ok) {
+    std::string::size_type end = line.find_first_of(" \r\n");
+    std::string token = line.substr(0,end);
+    code = atoi(token.c_str());
+  }
+  return c;
+}
+  
+//=============================================================================
+std::string ClientStream::format_email_address(const std::string& str)
+{
+  std::string::size_type start = str.find_first_of("<");
+  if (start == std::string::npos) {
+    return "<"+str+">";
+  } 
+  std::string::size_type end = str.find_last_of(">");
+  if (end == std::string::npos) {
+    return "<"+str.substr(start)+">";
+  }
+  return str.substr(start,end-start+1);
 }
 
 };

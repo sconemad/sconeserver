@@ -1,0 +1,8 @@
+# SconeServer (http://www.sconemad.com)
+# SMTP module configuration file
+
+# This is a sensible default on UNIX-like systems using sendmail.
+# Will also work for exim if /usr/sbin/sendmail is symlinked to exim.
+# (-bs tells sendmail/exim to accept SMTP commands on standard input)
+
+ smtp.set_server("/usr/sbin/sendmail -bs");

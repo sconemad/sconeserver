@@ -27,14 +27,40 @@ Free Software Foundation, Inc.,
 #include "sconex/Arg.h"
 #include "sconex/LineBuffer.h"
 #include "sconex/Mutex.h"
+#include "sconex/MimeHeader.h"
 namespace smtp {
 
+//=============================================================================
+class MessageHeader {
+
+public:
+
+  MessageHeader();
+  
+  std::string get_string() const;
+  void get_all_rcpts(std::vector<std::string>& rcpts) const;
+
+  std::string m_id;
+  std::string m_from;
+  std::vector<std::string> m_to_rcpts;
+  std::vector<std::string> m_cc_rcpts;
+  std::vector<std::string> m_bcc_rcpts;
+  std::string m_subject;
+  scx::MimeHeaderTable m_extra_headers;
+};
+  
 //=============================================================================
 class Client : public scx::Arg {
 
 public:
 
-  Client(SMTPModule& module);
+  enum Result {
+    Unknown,
+    Success,
+    Failure
+  };
+  
+  Client(SMTPModule& module,const scx::ArgList* args);
   Client(const Client& c);
   Client(RefType ref, Client& c);
   virtual ~Client();
@@ -46,17 +72,21 @@ public:
 
   virtual scx::Arg* op(const scx::Auth& auth,scx::Arg::OpType optype, const std::string& opname, scx::Arg* right);
 
-  bool send(const std::string& message);
+  scx::Arg* send(const std::string& message);
 
-  void event_complete(bool error);
+  void event_complete(Result result,const std::string& result_str);
 
 private:
 
   SMTPModule& m_module;
 
+  MessageHeader* m_header;
+  
   scx::Mutex* m_mutex;
   scx::ConditionEvent* m_complete;
-  bool* m_error;
+
+  Result* m_result;
+  std::string* m_result_str;
 };
 
 //=============================================================================
@@ -77,30 +107,36 @@ public:
 
   ClientStream(
     SMTPModule& module,
-    Client* client,
-    const std::string& from,
-    const std::string& rcpt,
-    const std::string& message
+    Client* client
   );
   
   virtual ~ClientStream();
 
-  scx::Condition next_state();
-
+  bool set_message(const MessageHeader& header,
+                   const std::string& message);
+  
   virtual scx::Condition event(scx::Stream::Event e);
 
   virtual std::string stream_status() const;
-  
+
+protected:
+
+  void setup_state();
+  scx::Condition read_smtp_resp(int& code,std::string& line);
+  std::string format_email_address(const std::string& str);
+
 private:
 
   SMTPModule& m_module;
   Client* m_client;
-
-  const std::string& m_from;
-  const std::string& m_rcpt;
-  const std::string& m_message;
-
+  Client::Result m_result;
+  std::string m_result_str;
+  
+  std::string m_from;
+  std::vector<std::string> m_rcpts;
+  
   Sequence m_seq;
+  unsigned int m_rcpt_seq;
   scx::Buffer* m_buffer;
 };
 

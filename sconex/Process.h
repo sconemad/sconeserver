@@ -39,10 +39,12 @@ public:
 
   static void init();
   
-  Process(const std::string& exe);	
+  Process(const std::string& exe = "");
 
   ~Process();
 
+  void parse_command_line(const std::string& cmd);
+  
   void add_arg(const std::string& arg);
   // Add an argument to the list
   

@@ -25,6 +25,7 @@ Free Software Foundation, Inc.,
 #include "sconex/Arg.h"
 #include "sconex/Logger.h"
 #include "sconex/ModuleInterface.h"
+#include "sconex/Process.h"
 
 namespace smtp {
 
@@ -32,7 +33,8 @@ SCONESERVER_MODULE(SMTPModule);
 
 //=========================================================================
 SMTPModule::SMTPModule()
-  : SCXBASE Module("smtp",scx::version())
+  : SCXBASE Module("smtp",scx::version()),
+    m_server(0)
 {
 
 }
@@ -40,7 +42,7 @@ SMTPModule::SMTPModule()
 //=========================================================================
 SMTPModule::~SMTPModule()
 {
-
+  
 }
 
 //=========================================================================
@@ -56,6 +58,15 @@ int SMTPModule::init()
 }
 
 //=========================================================================
+void SMTPModule::close()
+{
+  if (m_server) {
+    delete m_server;
+    m_server = 0;
+  }
+}
+  
+//=========================================================================
 bool SMTPModule::connect(
   scx::Descriptor* endpoint,
   scx::ArgList* args
@@ -69,8 +80,15 @@ scx::Arg* SMTPModule::arg_lookup(const std::string& name)
 {
   // Methods
   
-  if ("Client" == name) {
+  if ("Client" == name ||
+      "set_server" == name) {
     return new_method(name);
+  }
+
+  // Properties
+  if ("server" == name) {
+    if (!m_server) return 0;
+    return m_server->ref_copy(scx::Arg::ConstRef);
   }
 
   return SCXBASE Module::arg_lookup(name);
@@ -86,10 +104,61 @@ scx::Arg* SMTPModule::arg_method(
   scx::ArgList* l = dynamic_cast<scx::ArgList*>(args);
 
   if ("Client" == name) {
-    return new Client(*this);
+    return new Client(*this,l);
+  }
+
+  if ("set_server" == name) {
+    scx::Arg* new_server = l->take(0);
+    delete m_server;
+    m_server = new_server;
+    return 0;
   }
 
   return SCXBASE Module::arg_method(auth,name,args);
 }
 
+//=============================================================================
+const scx::Arg* SMTPModule::get_server() const
+{
+  return m_server;
+}
+
+//=============================================================================
+scx::StreamSocket* SMTPModule::new_server_connection()
+{
+  const scx::SocketAddress* server_addr = dynamic_cast<const scx::SocketAddress*>(m_server);
+  const scx::ArgString* server_str = dynamic_cast<const scx::ArgString*>(m_server);
+
+  if (server_addr) {
+    // Server is specifed with a socket address
+    scx::StreamSocket* sock = new scx::StreamSocket();
+
+    // Initiate socket connection
+    scx::Condition err = sock->connect(server_addr);
+    if (err != scx::Ok && err != scx::Wait) {
+      DEBUG_LOG("Unable to initiate connection to mail server");
+      delete sock;
+      return false;
+    }
+    return sock;
+
+  } else if (server_str) {
+    // Server is specified by a local process
+    scx::Process* proc = new scx::Process();
+    proc->parse_command_line(server_str->get_string());
+    proc->set_user(scx::User::current());
+    
+    // Launch process
+    if (!proc->launch()) {
+      DEBUG_LOG("Unable to launch mail server process");
+      delete proc;
+      return false;
+    }
+
+    return proc;
+  }
+
+  return 0;
+}
+  
 };

@@ -824,6 +824,33 @@ Process::~Process()
 }
 
 //============================================================================
+void Process::parse_command_line(const std::string& cmd)
+{
+  DEBUG_ASSERT(m_runstate==Unstarted,"parse_command_line() Process already launched");
+  std::string::size_type start = 0;
+  int ntok=0;
+  while (true) {
+    start = cmd.find_first_not_of(" ",start);
+    std::string::size_type end = cmd.find_first_of(" ",start);
+    if (start == std::string::npos) break;
+    std::string token;
+    if (end == std::string::npos) {
+      token = std::string(cmd,start);
+    } else {
+      token = std::string(cmd,start,end-start);
+    }
+    if (!ntok) {
+      m_exe = token;
+      add_arg(token);
+    } else {
+      add_arg(token);
+    }
+    start = end;
+    ++ntok;
+  }
+}
+  
+//============================================================================
 void Process::add_arg(const std::string& arg)
 {
   DEBUG_ASSERT(m_runstate==Unstarted,"add_arg() Process already launched");

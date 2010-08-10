@@ -1,4 +1,15 @@
 
+2010-08-10 Andrew Wedgbury <wedge@sconemad.com>
+
+	* smtp/SMTPModule: Pass args to Client constructor.
+	Allow server process/address to be set.
+	* smtp/SMTPClient: Restructure, use buffered write. 
+	Support for Subject, From, To, Cc, Bcc, Message Id, etc.
+	* sconex/Process: Add parse_command_line helper.
+	* testbuilder/BuildStep: Use Process::parse_command_line().
+	* sconex/User: Fix current() to get effective user.
+	* sconex/Module: Delete modules in reverse, fixes ref bug.
+	
 2010-08-04 Andrew Wedgbury <wedge@sconemad.com>
 
 	* http/Client: Support http and https connection via proxy.

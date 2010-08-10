@@ -197,35 +197,11 @@ bool BuildStep::launch()
           << "---------------------------------------\n"
           << " SconeServer testbuilder log file\n"
           << "\n";
-  
-  std::string::size_type start = 0;
-  int ntok=0;
-  while (true) {
-    start = m_command.find_first_not_of(" ",start);
-    std::string::size_type end = m_command.find_first_of(" ",start);
-    if (start == std::string::npos) {
-      break;
-    }
-    std::string token;
-    if (end == std::string::npos) {
-      token = std::string(m_command,start);
-    } else {
-      token = std::string(m_command,start,end-start);
-    }
-    if (!ntok) {
-      process = new scx::Process(token);
-      process->add_arg(token);
-      oss_log << " Command: " << token << "\n"
-              << " Args: ";
 
-    } else {
-      DEBUG_ASSERT(process,"launch() Process should have been created");
-      oss_log << token << " ";
-      process->add_arg(token);
-    }
-    start = end;
-    ++ntok;
-  }
+  process = new scx::Process();
+  process->parse_command_line(m_command);
+  oss_log << " Command: " << m_command << "\n";
+
   oss_log << "\n"
           << " Working dir: " << m_dir.path() << "\n"
           << "---------------------------------------"

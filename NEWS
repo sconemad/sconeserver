@@ -35,7 +35,11 @@
           - Prepared statement support (prevents SQL injection attacks).
           - SconeScript integration for MySQL parameter and result types.
 
+        * New module: 'smtp' mail client, includes:
+          - Sends mail direct to local MTA process or over remote SMTP.
+
         * New module: 'forward' connection forwarding.
+
         * New module: 'lettuce' (http://www.sconemad.com/lettuce)
 
 0.7.0 2006-06-24 Andrew Wedgbury <wedge@sconemad.com>

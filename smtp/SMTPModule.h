@@ -25,6 +25,7 @@ Free Software Foundation, Inc.,
 #include "sconex/Module.h"
 #include "sconex/Descriptor.h"
 #include "sconex/Uri.h"
+#include "sconex/StreamSocket.h"
 
 namespace smtp {
 
@@ -38,7 +39,8 @@ public:
   virtual std::string info() const;
 
   virtual int init();
-
+  virtual void close();
+  
   virtual bool connect(
     scx::Descriptor* endpoint,
     scx::ArgList* args
@@ -47,10 +49,16 @@ public:
   virtual scx::Arg* arg_lookup(const std::string& name);
   virtual scx::Arg* arg_method(const scx::Auth& auth,const std::string& name,scx::Arg* args);
   
+  const scx::Arg* get_server() const;
+
+  scx::StreamSocket* new_server_connection();
+
 protected:
 
 private:
 
+  scx::Arg* m_server;
+  
 };
 
 };
