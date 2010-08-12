@@ -87,7 +87,7 @@ void Feed::refresh(bool force)
       DEBUG_LOG("Error refreshing feed: " << m_id);
     }
     
-    delete xmldoc;
+    xmlFreeDoc(xmldoc);
     xmlFreeParserCtxt(cx);
   }
 }

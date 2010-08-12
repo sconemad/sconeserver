@@ -10,21 +10,25 @@ AM_INIT_AUTOMAKE
 AM_CONFIG_HEADER(config.h)
 AM_MAINTAINER_MODE
 
-# Check testbuilder scripts are upto date
-test -d /var/testbuilder/scripts && test -d testbuilder/scripts && cp -fu testbuilder/scripts/* /var/testbuilder/scripts/
-
 AC_DISABLE_STATIC
 
 # Programs
 AC_PROG_CXX
-AC_PROG_CC
-AC_PROG_CPP
 AC_PROG_INSTALL
 AC_PROG_LN_S
 AC_PROG_MAKE_SET
 AC_PROG_RANLIB
 AC_LIBTOOL_DLOPEN
 AC_PROG_LIBTOOL
+
+# Use this to disable all optimisations in order to run with valgrind
+AC_ARG_ENABLE([valgrind],
+  [AC_HELP_STRING([--enable-valgrind],[Enable valgrind mode (no optimisations)])],
+  [CXXFLAGS="-g -O0"]
+)
+
+# Enable all warnings
+CXXFLAGS="$CXXFLAGS -Wall"
 
 # Libraries
 AC_CHECK_LIB([dl],[dlopen])
@@ -78,7 +82,7 @@ AC_ARG_WITH([bluetooth],
 # Include if OpenSSL headers are found
 AC_ARG_WITH([openssl_path],
   [AC_HELP_STRING([--with-openssl-path=PATH],[Set path to OpenSSL])],
-  [CPPFLAGS="$CPPFLAGS -I$withval/include";],
+  [CXXFLAGS="$CXXFLAGS -I$withval/include";],
 )
 AC_ARG_WITH([ssl],
   [AC_HELP_STRING([--with-ssl],[Enable secure sockets module])],
@@ -128,10 +132,10 @@ AC_ARG_WITH([sconesite],
   [SCONESITE="$withval"],
   [SCONESITE="yes"]
 )
-## if we use libxml for sconesite:
+# Need libxml2 for Sconesite
 if test "x$SCONESITE" == "xyes"; then
   AC_CHECK_LIB([xml2],[xmlNewDoc],
-    [CPPFLAGS="$CPPFLAGS `xml2-config --cflags`"],
+    [CXXFLAGS="$CXXFLAGS `xml2-config --cflags`"],
     [AC_MSG_ERROR([library 'xml2' is required for Sconesite])]
   )
 fi
@@ -145,7 +149,7 @@ AC_ARG_WITH([sconesite-image],
 # Need ImageMagick for Sconesite:image
 if test "x$SCONESITE_IMAGE" == "xyes"; then
   AC_CHECK_LIB([Magick++],[InitializeMagick],
-    [CPPFLAGS="$CPPFLAGS `Magick++-config --cppflags`"
+    [CXXFLAGS="$CXXFLAGS `Magick++-config --cppflags`"
      SCONESITE_IMAGE_LIBADD=`Magick++-config --libs`
      AC_SUBST(SCONESITE_IMAGE_LIBADD)
      SCONESITE_IMAGE_LDFLAGS=`Magick++-config --ldflags`
@@ -162,27 +166,21 @@ AC_ARG_WITH([sconesite-rss],
 )
 
 # DbSql module
+# Include by default if mysqlclient headers are found
 AC_ARG_WITH([dbsql],
   [AC_HELP_STRING([--with-dbsql],[Enable SQL Database module])],
   [DBSQL="$withval"],
-  [DBSQL="yes"]
+  [AC_CHECK_HEADER([mysql/mysql.h],[DBSQL="yes"],[DBSQL="no"])]
 )
 # Need mysqlclient library for dbsql
 if test "x$DBSQL" == "xyes"; then
   AC_CHECK_LIB([mysqlclient],[mysql_init],
-    [CPPFLAGS="$CPPFLAGS -I/usr/include/mysql"
+    [CXXFLAGS="$CXXFLAGS -I/usr/include/mysql"
      DBSQL_LIBADD="-lmysqlclient"
      AC_SUBST(DBSQL_LIBADD)],
     [AC_MSG_ERROR([library 'mysqlclient' is required for dbsql])]
   )
 fi
-
-# SMTP module
-AC_ARG_WITH([smtp],
-  [AC_HELP_STRING([--with-smtp],[Enable SMTP module])],
-  [SMTP="$withval"],
-  [SMTP="yes"]
-)
 
 
 # Checks for header files.
@@ -265,9 +263,6 @@ AM_CONDITIONAL(BUILD_SCONESITE, test x$SCONESITE = xyes)
 AM_CONDITIONAL(BUILD_SCONESITE_IMAGE, test x$SCONESITE_IMAGE = xyes)
 AM_CONDITIONAL(BUILD_SCONESITE_RSS, test x$SCONESITE_RSS = xyes)
 AM_CONDITIONAL(BUILD_DBSQL, test x$DBSQL = xyes)
-AM_CONDITIONAL(BUILD_SMTP, test x$SMTP = xyes)
-
-CPPFLAGS="$CPPFLAGS -Wall"
 
 AC_CONFIG_FILES([Makefile])
 AC_CONFIG_FILES([sconex/Makefile])
@@ -306,7 +301,7 @@ AC_MSG_RESULT([
 ------------------------------------------------------------------------------
 $PACKAGE-$VERSION is now configured as follows:
   Target:          $target
-  Compiler:        $CPP $CPPFLAGS
+  Compiler:        $CXX $CXXFLAGS
   Source path:     $srcdir
   Install prefix:  $prefix
 
@@ -330,10 +325,10 @@ The following modules will be built:
   + exec           yes   
   + forward        yes   
   + tftp           yes
-  + test           yes
-  + examples       $EXAMPLES
+  + dbsql          $DBSQL
+  + smtp	   yes
   + testbuilder    $TESTBUILDER
   + lettuce        $LETTUCE
-  + dbsql          $DBSQL
-  + smtp	   $SMTP
+  + test           yes
+  + examples       $EXAMPLES
 ])

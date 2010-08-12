@@ -124,7 +124,7 @@ Uri.h \
 User.h \
 VersionTag.h
 
-libsconex_la_LDFLAGS = -version-info 0:0:0
+libsconex_la_LDFLAGS = -version-info 1:0:0
 
 check_PROGRAMS = utest
 

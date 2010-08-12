@@ -1,0 +1,6 @@
+# SconeServer (http://www.sconemad.com)
+# dbsql module configuration file
+
+# Define database profiles
+
+# add("id","host:port:db","username","password");

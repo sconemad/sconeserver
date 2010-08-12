@@ -1,2 +1,9 @@
 # SconeServer (http://www.sconemad.com)
 # sconesite module configuration file
+
+ insmod("image");
+ insmod("rss");
+
+# Define sconesite profiles
+
+ add("test","/var/www/sconesite_test");

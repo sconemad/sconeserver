@@ -214,13 +214,7 @@ scx::Arg* RouterChain::arg_method(
 
       log("Listening on " + sa->get_string());
       
-      // Construct argument list with route name
-      scx::ArgList* listener_args = new scx::ArgList();
-      listener_args->give(new scx::ArgString(m_name));
-      
-      scx::Kernel::get()->connect(ls,listener_args);
-      
-      delete listener_args;
+      scx::Kernel::get()->connect(ls,0);
 
     } else {
       // DATAGRAM socket
@@ -240,8 +234,7 @@ scx::Arg* RouterChain::arg_method(
       mp->add_module_ref(m_module.ref());
       ds->add_stream(mp);
   
-      scx::ArgList* listener_args = new scx::ArgList();
-      scx::Kernel::get()->connect(ds,listener_args);
+      scx::Kernel::get()->connect(ds,0);
     }
     return 0;
   }
@@ -263,8 +256,7 @@ scx::Arg* RouterChain::arg_method(
 
     if (connect(ds)) {
       log("Listening (all) on " + sa->get_string());
-      scx::ArgList* listener_args = new scx::ArgList();
-      scx::Kernel::get()->connect(ds,listener_args);
+      scx::Kernel::get()->connect(ds,0);
     } else {
       delete ds;
       return new scx::ArgError("route::listen_all() Failed to create chain");

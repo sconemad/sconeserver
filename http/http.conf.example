@@ -6,11 +6,21 @@
  insmod("getfile");
  insmod("dirindex");
  insmod("errorpage");
+ insmod("sconesite");
 
 # Define hosts
 
- hosts.add("test","../test/site");
+ const WWWROOT = "/var/www/";
+
+ hosts.add("test","www.test.test",WWWROOT+"test");
   hosts.test.add("default","html");
   hosts.test.add("secure","html_secure");
+ hosts.redirect("test.test","test");
 
- hosts.map("*","test");
+# Default redirect - everything to the test host
+
+ hosts.redirect("*","test");
+
+# Define auth realms
+
+ realms.add("testrealm",WWWROOT+"testrealm");

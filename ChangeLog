@@ -1,4 +1,12 @@
 
+2010-08-12 Andrew Wedgbury <wedge@sconemad.com>
+
+	* configure: Tidy CXXFLAGS, add mode for valgrind.
+	* sconex/Makefile: Set library version number to 1.
+        * router/RouterChain: Fix leaked listener args.
+        * rss/Feed: Free xmlDoc using proper function.
+	* all: Tidy example configuration files.
+
 2010-08-10 Andrew Wedgbury <wedge@sconemad.com>
 
 	* smtp/SMTPModule: Pass args to Client constructor.
