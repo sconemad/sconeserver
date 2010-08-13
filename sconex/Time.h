@@ -79,7 +79,7 @@ public:
   Time operator+(const Time& t) const;
   Time operator-(const Time& t) const;
 
-  std::string string() const;
+  virtual std::string string() const;
 
   // Arg:
   virtual std::string get_string() const;
@@ -102,6 +102,7 @@ public:
   explicit TimeZone(time_t t=0);
   TimeZone(int hours,int minutes);
   TimeZone(const std::string& str);
+  TimeZone(Arg* args);
 
   TimeZone(const TimeZone& c);
   TimeZone(RefType ref, TimeZone& c);
@@ -119,11 +120,13 @@ public:
   TimeZone operator+(const Time& t) const;
   TimeZone operator-(const Time& t) const;
   
-  std::string string() const;
+  virtual std::string string() const;
 
 protected:
   friend class Date;
   
+  void parse_string(const std::string& str);
+
   void init_tables();
   void add_tz(const std::string& name,double hrs);
   typedef std::map<std::string,int> TimeZoneOffsetMap;

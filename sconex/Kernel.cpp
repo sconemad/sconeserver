@@ -172,6 +172,7 @@ Arg* Kernel::arg_lookup(const std::string& name)
       "Version" == name ||
       "Date" == name ||
       "Time" == name ||
+      "TimeZone" == name ||
       "Uri" == name ||
       "MimeType" == name ||
       "RegExp" == name) {
@@ -324,6 +325,9 @@ Arg* Kernel::arg_method(
   }
   if ("Time" == name) {
     return new Time(args);
+  }
+  if ("TimeZone" == name) {
+    return new TimeZone(args);
   }
   if ("Uri" == name) {
     return new Uri(args);

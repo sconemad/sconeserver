@@ -303,8 +303,8 @@ void TimeDate_ut()
   UTCOD(ds[31] = Date("2005 Aug 02 12:34:56"));
 
   for (int ids=0; ids<nds; ++ids) {
-    std::cout << " ds[" << ids << "] = " << ds[ids].string() << "\n";
-    UTEST(ds[ids].epoch_seconds() == 1122982496);
+    std::cout << " ds[" << ids << "] = " << ds[ids].string() << " = " << ds[ids].epoch_seconds() << "\n";
+    UTEST(ds[ids].epoch_seconds() == 1122986096);
     UTEST(ds[ids] == ds[0]);
   }
   

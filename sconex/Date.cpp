@@ -29,7 +29,7 @@ Date::MonthNameMap* Date::s_month_table = 0;
 //=============================================================================
 Date::Date()
   : m_time(new time_t(0)),
-    m_local(new bool(false))
+    m_timezone(new TimeZone())
 {
   DEBUG_COUNT_CONSTRUCTOR(Date);
   init_tables();
@@ -41,10 +41,13 @@ Date::Date(
   bool local
 )
   : m_time(new time_t(t)),
-    m_local(new bool(local))
+    m_timezone(new TimeZone())
 {
   DEBUG_COUNT_CONSTRUCTOR(Date);
   init_tables();
+  if (local) {
+    *m_timezone = TimeZone::local(t);
+  }
 }
 
 //=============================================================================
@@ -58,7 +61,7 @@ Date::Date(
   bool local
 )
   : m_time(new time_t()),
-    m_local(new bool(local))
+    m_timezone(new TimeZone())
 {
   DEBUG_COUNT_CONSTRUCTOR(Date);
   struct tm tms;
@@ -72,7 +75,18 @@ Date::Date(
   tms.tm_mon = month-1;
   tms.tm_year = year-1900;
 
-  *m_time = mktime(&tms) - timezone().seconds();
+  if (local) {
+    *m_time = mktime(&tms);
+
+    // Get local timezone
+    *m_timezone = TimeZone::local(*m_time);
+
+    // Adjust to UTC from local timezone
+    *m_time -= m_timezone->seconds();
+    
+  } else {
+    *m_time = timegm(&tms);
+  }
 }
 
 //=============================================================================
@@ -81,7 +95,7 @@ Date::Date(
   bool local
 )
   : m_time(new time_t(0)),
-    m_local(new bool(local))
+    m_timezone(new TimeZone())
 {
   DEBUG_COUNT_CONSTRUCTOR(Date);
   init_tables();
@@ -91,7 +105,7 @@ Date::Date(
 //=============================================================================
 Date::Date(Arg* args)
   : m_time(new time_t()),
-    m_local(new bool())
+    m_timezone(new TimeZone())
 {
   DEBUG_COUNT_CONSTRUCTOR(Date);
   init_tables();
@@ -99,12 +113,14 @@ Date::Date(Arg* args)
   ArgList* l = dynamic_cast<ArgList*>(args);
 
   Arg* a = l->get(0);
-  Arg* local = l->get(1);
+  Arg* a_local = l->get(1);
+  bool local = false;
+  if (a_local) local = a_local->get_int();
 
   ArgString* a_string = dynamic_cast<ArgString*>(a);
   if (a_string) {
     // Parse from string
-    parse_string(a_string->get_string(),(local ? local->get_int() : false));
+    parse_string(a_string->get_string(),local);
 
   } else {
     ArgInt* a_int = dynamic_cast<ArgInt*>(a);
@@ -115,10 +131,12 @@ Date::Date(Arg* args)
       time_t tmp;
       *m_time = ::time(&tmp);
     }
-    *m_local = (local ? local->get_int() : 0);
-    
-    // Adjust to UTC  
-    *m_time -= timezone().seconds();
+    if (local) {
+      *m_timezone = TimeZone::local(*m_time);
+
+      // Adjust to UTC from local timezone
+      *m_time -= m_timezone->seconds();
+    }
   }
 }
 
@@ -126,7 +144,7 @@ Date::Date(Arg* args)
 Date::Date(const Date& c)
   : Arg(c),
     m_time(new time_t(*c.m_time)),
-    m_local(new bool(*c.m_local))
+    m_timezone(new TimeZone(*c.m_timezone))
 {
   DEBUG_COUNT_CONSTRUCTOR(Date);
   init_tables();
@@ -136,7 +154,7 @@ Date::Date(const Date& c)
 Date::Date(RefType ref, Date& c)
   : Arg(ref,c),
     m_time(c.m_time),
-    m_local(c.m_local)
+    m_timezone(c.m_timezone)
 {
   DEBUG_COUNT_CONSTRUCTOR(Date);
   init_tables();
@@ -147,7 +165,7 @@ Date::~Date()
 {
   if (last_ref()) {
     delete m_time;
-    delete m_local;
+    delete m_timezone;
   }
   DEBUG_COUNT_DESTRUCTOR(Date);
 }
@@ -270,13 +288,17 @@ Time Date::time() const
 //=============================================================================
 Date Date::operator+(const Time& t) const
 {
-  return Date(*m_time + *t.m_time,*m_local);
+  Date d(*m_time + *t.m_time);
+  d.m_timezone = new TimeZone(*m_timezone);
+  return d;
 }
 
 //=============================================================================
 Date Date::operator-(const Time& t) const
 {
-  return Date(*m_time - *t.m_time,*m_local);
+  Date d(*m_time - *t.m_time);
+  d.m_timezone = new TimeZone(*m_timezone);
+  return d;
 }
 
 //=============================================================================
@@ -289,7 +311,7 @@ Time Date::operator-(const Date& t) const
 Date& Date::operator=(const Date& t)
 {
   *m_time = *t.m_time;
-  *m_local = *t.m_local;
+  *m_timezone = *t.m_timezone;
   return *this;
 }
 
@@ -461,24 +483,22 @@ time_t Date::epoch_seconds() const
 }
  
 //=============================================================================
-const bool Date::is_local() const
+const TimeZone& Date::timezone() const
 {
-  return *m_local;
+  return *m_timezone;
 }
 
 //=============================================================================
-void Date::set_local(bool yesno)
+Date Date::to_zone(const TimeZone& timezone) const
 {
-  *m_local = yesno;
+  Date d(*m_time);
+  d.set_timezone(timezone);
+  return d;
 }
-
 //=============================================================================
-TimeZone Date::timezone() const
+void Date::set_timezone(const TimeZone& timezone)
 {
-  if (*m_local) {
-    return TimeZone::local(*this);
-  }
-  return TimeZone::utc();
+  *m_timezone = timezone;
 }
 
 //=============================================================================
@@ -504,7 +524,15 @@ Arg* Date::op(const Auth& auth, OpType optype, const std::string& opname, Arg* r
       if (!a_fmt) return new ArgError("No format specified");
       return new ArgString(format(a_fmt->get_string()));
     }
-    
+
+    if ("to_zone" == m_method) {
+      TimeZone* a_zone = dynamic_cast<TimeZone*>(l->get(0));
+      if (a_zone) {
+	return to_zone(*a_zone).new_copy();
+      }
+      return new ArgError("to_zone() Invalid argument type");
+    }
+
   } else if (optype == Arg::Binary) {
     
     Date* rd = dynamic_cast<Date*>(right);
@@ -545,13 +573,14 @@ Arg* Date::op(const Auth& auth, OpType optype, const std::string& opname, Arg* r
       if (name == "year") return new ArgInt(year());
       if (name == "day") return new ArgInt(day());
       if (name == "yday") return new ArgInt(yday());
-      if (name == "timezone") return new ArgString(timezone().string());
+      if (name == "timezone") return m_timezone->ref_copy(Arg::ConstRef);
       if (name == "code") return new ArgString(code());
       if (name == "string") return new ArgString(string());
       if (name == "ansi") return new ArgString(ansi_string());
       if (name == "epoch_seconds") return new ArgInt(*m_time);
 
-      if (name == "format") return new_method(name);
+      if (name == "format" ||
+	  name == "to_zone") return new_method(name);
     }
   }
   return Arg::op(auth,optype,opname,right);
@@ -560,12 +589,8 @@ Arg* Date::op(const Auth& auth, OpType optype, const std::string& opname, Arg* r
 //=============================================================================
 bool Date::get_tms(struct tm& tms) const
 {
-  struct tm* tmr;
-  if (m_local) {
-    tmr = localtime(m_time);
-  } else {
-    tmr = gmtime(m_time);
-  }
+  time_t tadj = *m_time + m_timezone->seconds();
+  struct tm* tmr = gmtime(&tadj);
 
   if (tmr == 0) {
     return false;
@@ -586,7 +611,6 @@ void Date::parse_string(const std::string& str, bool local)
   int year=-1;
   bool got_zone=false;
   bool year_first=false;
-  TimeZone tz;
   char pre=' ';
   std::string::const_iterator it = str.begin();
 
@@ -611,7 +635,7 @@ void Date::parse_string(const std::string& str, bool local)
           TimeZone::TimeZoneOffsetMap::const_iterator z_it =
             TimeZone::s_zone_table->find(token);
           if (z_it != TimeZone::s_zone_table->end()) {
-            tz = TimeZone(std::string(token));
+            *m_timezone = TimeZone(std::string(token));
             continue;
           }
         }
@@ -646,7 +670,7 @@ void Date::parse_string(const std::string& str, bool local)
         } else if (!got_zone && token.length()==4 &&
                    (pre=='-' || pre=='+')) {
           char ps[2] = {pre,'\0'};
-          tz = TimeZone(std::string(ps) + token);
+          *m_timezone = TimeZone(std::string(ps) + token);
           got_zone = true;
         }
       }
@@ -678,17 +702,14 @@ void Date::parse_string(const std::string& str, bool local)
   tms.tm_mon = month<0 ? 0 : month;
   tms.tm_year = year<1970 ? 70 : (year-1900);
 
-  *m_local = local;
-  *m_time = mktime(&tms);
-
-  if (!local || got_zone) {
-    // Adjust mktime results from local
-    // edit: I don't think this is required?
-    //*m_time += TimeZone::local(Date(*m_time)).seconds();
+  if (local && !got_zone) {
+    *m_time = mktime(&tms);
+  } else {
+    *m_time = timegm(&tms);
   }
 
   // Adjust to UTC from given timezone
-  *m_time -= tz.seconds();
+  *m_time -= m_timezone->seconds();
 }
 
 //=============================================================================

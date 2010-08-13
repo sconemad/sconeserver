@@ -414,45 +414,33 @@ TimeZone::TimeZone(const std::string& str)
 {
   DEBUG_COUNT_CONSTRUCTOR(TimeZone);
   init_tables();
+  parse_string(str);
+}
 
-  // First lookup in zone table
-  TimeZoneOffsetMap::const_iterator zit = s_zone_table->find(str);
-  if (zit != s_zone_table->end()) {
-    *m_time = zit->second;
-    
-  } else {
-    std::string::const_iterator it = str.begin();
-    int sign=1;
+//=============================================================================
+TimeZone::TimeZone(Arg* args)
+{
+  DEBUG_COUNT_CONSTRUCTOR(TimeZone);
+  init_tables();
+  
+  scx::ArgList* l = dynamic_cast<scx::ArgList*>(args);
+  Arg* a = l->get(0);
 
-    while (it < str.end()) {
-
-      if (isdigit(*it)) {
-        std::string::const_iterator it1(it);
-        do ++it; while (it < str.end() && isdigit(*it));
-        std::string token(it1,it);
-        int value = atoi(token.c_str());
-        int hours = value/100;
-        int minutes = value - (hours*100);
-        *m_time = (hours*SECONDS_PER_HOUR) + (minutes*SECONDS_PER_MINUTE);
-        break;
-        
-      } else if (isalpha(*it)) {
-        std::string::const_iterator it1(it);
-        do ++it; while (it < str.end() && isalpha(*it));
-        std::string token(it1,it);
-        strup(token);
-        
-      } else if ((*it)=='-') {
-        sign = -1;
-        ++it;
-        
-      } else {
-        ++it;
-      }
-    }
-    *m_time *= sign;
+  ArgInt* a_int = dynamic_cast<ArgInt*>(a);
+  if (a_int) {
+    *m_time = 3600 * a_int->get_int();
+    return;
+  }
+  
+  ArgReal* a_real = dynamic_cast<ArgReal*>(a);
+  if (a_real) {
+    *m_time = (int)(3600.0*a_real->get_real());
+    return;
   }
 
+  if (a) {  
+    parse_string(a->get_string());
+  }
 }
 
 //=============================================================================
@@ -492,7 +480,7 @@ Arg* TimeZone::ref_copy(RefType ref)
 //=============================================================================
 TimeZone TimeZone::utc()
 {
-  return TimeZone(0);
+  return TimeZone();
 }
 
 //=============================================================================
@@ -547,6 +535,48 @@ std::string TimeZone::string() const
       << std::setfill('0') << std::setw(2) << minutes;
 
   return oss.str();
+}
+
+//=============================================================================
+void TimeZone::parse_string(const std::string& str)
+{
+  // First lookup in zone table
+  TimeZoneOffsetMap::const_iterator zit = s_zone_table->find(str);
+  if (zit != s_zone_table->end()) {
+    *m_time = zit->second;
+    
+  } else {
+    std::string::const_iterator it = str.begin();
+    int sign=1;
+
+    while (it < str.end()) {
+
+      if (isdigit(*it)) {
+        std::string::const_iterator it1(it);
+        do ++it; while (it < str.end() && isdigit(*it));
+        std::string token(it1,it);
+        int value = atoi(token.c_str());
+        int hours = value/100;
+        int minutes = value - (hours*100);
+        *m_time = (hours*SECONDS_PER_HOUR) + (minutes*SECONDS_PER_MINUTE);
+        break;
+        
+      } else if (isalpha(*it)) {
+        std::string::const_iterator it1(it);
+        do ++it; while (it < str.end() && isalpha(*it));
+        std::string token(it1,it);
+        strup(token);
+        
+      } else if ((*it)=='-') {
+        sign = -1;
+        ++it;
+        
+      } else {
+        ++it;
+      }
+    }
+    *m_time *= sign;
+  }
 }
 
 //=============================================================================

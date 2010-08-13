@@ -108,10 +108,9 @@ public:
 
   std::string format(const std::string& fmt) const;
   
-  const bool is_local() const;
-  void set_local(bool yesno);
-
-  TimeZone timezone() const;
+  const TimeZone& timezone() const;
+  Date to_zone(const TimeZone& timezone) const;
+  void set_timezone(const TimeZone& timezone);
   
   time_t epoch_seconds() const;
 
@@ -126,7 +125,7 @@ protected:
   void parse_string(const std::string& str, bool local);
   
   time_t* m_time;
-  bool* m_local;
+  TimeZone* m_timezone;
   
   void init_tables();
   typedef std::map<std::string,int> MonthNameMap;

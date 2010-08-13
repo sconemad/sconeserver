@@ -1,6 +1,12 @@
 
 2010-08-12 Andrew Wedgbury <wedge@sconemad.com>
 
+	* sconex/Date: Replace local flag with timezone.
+	* sconex/Time: Allow arg construction for TimeZone.
+	* sconex/Kernel: Hookup TimeZone arg constructor.
+
+2010-08-12 Andrew Wedgbury <wedge@sconemad.com>
+
 	* sconex/ArgProc: Fix rare segfault with short ops.
 	
 2010-08-12 Andrew Wedgbury <wedge@sconemad.com>
