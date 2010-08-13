@@ -26,7 +26,7 @@ Free Software Foundation, Inc.,
 namespace dbsql {
 
 // Uncomment to enable debug info
-#define DbSqlQuery_DEBUG_LOG(m) DEBUG_LOG(m)
+//#define DbSqlQuery_DEBUG_LOG(m) DEBUG_LOG(m)
 
 #ifndef DbSqlQuery_DEBUG_LOG
 #  define DbSqlQuery_DEBUG_LOG(m)

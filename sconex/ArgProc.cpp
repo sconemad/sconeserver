@@ -249,7 +249,7 @@ Arg* ArgProc::expression(int p, bool f, bool exec)
 	    // Normal binary op, handled by left Arg object
             Arg* new_left = 0;
 	    try {
-	      if (exec) new_left = left->op(m_auth,Arg::Binary,op,right);
+	      if (left) new_left = left->op(m_auth,Arg::Binary,op,right);
 	    } catch (...) {
 	      delete left;
 	      delete right;
