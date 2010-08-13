@@ -1,6 +1,10 @@
 
 2010-08-12 Andrew Wedgbury <wedge@sconemad.com>
 
+	* sconex/ArgProc: Fix rare segfault with short ops.
+	
+2010-08-12 Andrew Wedgbury <wedge@sconemad.com>
+
 	* configure: Tidy CXXFLAGS, add mode for valgrind.
 	* sconex/Makefile: Set library version number to 1.
         * router/RouterChain: Fix leaked listener args.
