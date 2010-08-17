@@ -76,10 +76,9 @@ void ModuleLoaderDLL::load_module()
         if (m_parent) {
 	  Module* mod = m_parent;
 	  FilePath parent_path;
-	  while (true) {
+	  while (mod && mod->m_parent) {
 	    parent_path = FilePath(mod->name()) + parent_path;
 	    mod = mod->m_parent;
-	    if (!mod->m_parent) break;
 	  }
 	  path = get_path() +
 	         FilePath(parent_path) +

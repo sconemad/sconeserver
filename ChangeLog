@@ -1,4 +1,8 @@
 
+2010-08-17 Andrew Wedgbury <wedge@sconemad.com>
+
+	* sconex/ModuleLoaderDLL: Fix segfault when module not found.
+
 2010-08-12 Andrew Wedgbury <wedge@sconemad.com>
 
 	* sconex/Date: Replace local flag with timezone.
