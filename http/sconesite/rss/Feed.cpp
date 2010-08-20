@@ -25,7 +25,7 @@ Free Software Foundation, Inc.,
 #include "libxml/nanohttp.h"
 
 //=========================================================================
-void ErrorHandler(void* vcx,const char* str,...)
+void RSSFeed_ErrorHandler(void* vcx,const char* str,...)
 {
   va_list vl;
   va_start(vl,1);
@@ -68,8 +68,8 @@ void Feed::refresh(bool force)
     xmlParserCtxt* cx;
     cx = xmlNewParserCtxt();
     cx->_private = this;
-    cx->sax->error = ErrorHandler;
-    cx->vctxt.error = ErrorHandler;
+    cx->sax->error = RSSFeed_ErrorHandler;
+    cx->vctxt.error = RSSFeed_ErrorHandler;
     
     int opts = 0;
     opts |= XML_PARSE_RECOVER;
@@ -176,6 +176,8 @@ scx::Arg* Feed::arg_method(const scx::Auth& auth,const std::string& name,scx::Ar
 //=========================================================================
 void Feed::process(xmlNode* root)
 {
+  if (!root) return;
+
   std::string root_name((char*)root->name);
   
   if (root_name == "rss") {

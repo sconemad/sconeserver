@@ -92,7 +92,7 @@ protected:
   
   scx::Date m_last_access;
   int m_clients;
-  bool m_opening;
+  volatile bool m_opening;
 
   static scx::Mutex* m_clients_mutex;
 };
