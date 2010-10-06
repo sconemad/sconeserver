@@ -20,8 +20,8 @@ Free Software Foundation, Inc.,
 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA */
 
 
-#include "sconesite/ArgFile.h"
-#include "sconesite/Article.h"
+#include "http/sconesite/ArgFile.h"
+#include "http/sconesite/Article.h"
 
 #include "sconex/ModuleInterface.h"
 #include "sconex/Module.h"

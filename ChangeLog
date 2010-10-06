@@ -1,4 +1,13 @@
 
+2010-10-06 Andrew Wedgbury <wedge@sconemad.com>
+
+	* image: Fix header paths following sconesite reolcation.
+	
+2010-08-22 Andrew Wedgbury <wedge@sconemad.com>
+
+	* rss/Feed: Fix segfault with invalid RSS feed data.
+	* sconesite/XMLDoc: Fix lockup with concurrent open calls.
+	
 2010-08-17 Andrew Wedgbury <wedge@sconemad.com>
 
 	* sconex/ModuleLoaderDLL: Fix segfault when module not found.
