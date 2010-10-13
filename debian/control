@@ -1,0 +1,14 @@
+Source: sconeserver
+Section: misc
+Priority: optional
+Maintainer: Andrew Wedgbury <wedge@sconemad.com>
+Standards-Version: 3.2.1
+Build-Depends: libpcre3-dev, libssl-dev, libxml2-dev, libmagick++-dev, libmysqlclient-dev, debhelper (>= 2)
+
+Package: sconeserver
+Architecture: any
+Depends: ${shlibs:Depends}, libpcre3, debconf
+Recommends: libssl, libxml2, libmagick++, libmysqlclient
+Description: Modular network server framework
+ SconeServer is a modular, object-orientated and extremely versatile network 
+ server framework for UNIX-like platforms.

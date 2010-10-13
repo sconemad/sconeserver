@@ -1,0 +1,6 @@
+sconeserver (0.9.0) unstable; urgency=low
+
+  * First sconeserver release as Debian package
+
+ -- Andrew Wedgbury <wedge@sconemad.com>  Tue, 12 Oct 2010 19:02:14 +0100
+

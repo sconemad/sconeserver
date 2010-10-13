@@ -1,4 +1,8 @@
 
+2010-10-13 Andrew Wedgbury <wedge@sconemad.com>
+
+	* debian: Add required files for creating Debian packages.
+
 2010-10-06 Andrew Wedgbury <wedge@sconemad.com>
 
 	* image: Fix header paths following sconesite reolcation.

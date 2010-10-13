@@ -189,7 +189,7 @@ build_vendor = @build_vendor@
 builddir = @builddir@
 datadir = @datadir@
 datarootdir = @datarootdir@
-docdir = $(datadir)/doc/$(PACKAGE)-$(VERSION)
+docdir = $(datadir)/doc/$(PACKAGE)
 dvidir = @dvidir@
 exec_prefix = @exec_prefix@
 host = @host@
@@ -233,11 +233,15 @@ sconed_SOURCES = main.cpp
 sconed_LDADD = $(top_builddir)/sconex/libsconex.la
 MODULES = router http mime simple ssl stat exec forward tftp test testbuilder lettuce dbsql smtp
 SUBDIRS = sconex doc $(MODULES)
-doc_DATA = AUTHORS COPYING INSTALL NEWS README THANKS TODO
+doc_DATA = AUTHORS COPYING ChangeLog INSTALL NEWS README THANKS TODO
 sysconf_DATA = sconeserver.conf.example
 EXTRA_DIST = \
 $(sysconf_DATA) \
-autogen.sh
+autogen.sh \
+debian/rules \
+debian/control \
+debian/changelog \
+debian/postrm
 
 all: config.h
 	$(MAKE) $(AM_MAKEFLAGS) all-recursive

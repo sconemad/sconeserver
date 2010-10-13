@@ -14,11 +14,15 @@ sconed_LDADD = $(top_builddir)/sconex/libsconex.la
 MODULES = router http mime simple ssl stat exec forward tftp test testbuilder lettuce dbsql smtp
 SUBDIRS = sconex doc $(MODULES)
 
-docdir=$(datadir)/doc/$(PACKAGE)-$(VERSION)
-doc_DATA = AUTHORS COPYING INSTALL NEWS README THANKS TODO
+docdir=$(datadir)/doc/$(PACKAGE)
+doc_DATA = AUTHORS COPYING ChangeLog INSTALL NEWS README THANKS TODO
 
 sysconf_DATA = sconeserver.conf.example
 
 EXTRA_DIST = \
 $(sysconf_DATA) \
-autogen.sh
+autogen.sh \
+debian/rules \
+debian/control \
+debian/changelog \
+debian/postrm
