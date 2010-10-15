@@ -35,10 +35,13 @@ public:
 
   TFTPProfile(
     TFTPModule& mod,
-    const std::string& name
+    const std::string& name,
+    const scx::FilePath& path
   );
 
   ~TFTPProfile();
+
+  const scx::FilePath& get_path() const;
 
   virtual std::string name() const;
   virtual scx::Arg* arg_lookup(const std::string& name);
@@ -51,6 +54,7 @@ private:
   TFTPModule& m_mod;
   
   std::string m_name;
+  scx::FilePath m_path;
 
 };
 

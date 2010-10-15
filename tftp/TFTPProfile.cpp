@@ -26,10 +26,12 @@ Free Software Foundation, Inc.,
 //=========================================================================
 TFTPProfile::TFTPProfile(
   TFTPModule& mod,
-  const std::string& name
+  const std::string& name,
+  const scx::FilePath& path
 )
   : m_mod(mod),
-    m_name(name)
+    m_name(name),
+    m_path(path)
 {
 
 }
@@ -38,6 +40,12 @@ TFTPProfile::TFTPProfile(
 TFTPProfile::~TFTPProfile()
 {
 
+}
+
+//=============================================================================
+const scx::FilePath& TFTPProfile::get_path() const
+{
+  return m_path;
 }
 
 //=============================================================================

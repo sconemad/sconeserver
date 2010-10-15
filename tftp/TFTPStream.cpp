@@ -42,6 +42,17 @@ enum TFTPOpCode {
   ERROR
 };
 
+enum TFTPErrorCode {
+  NotDefined = 0,
+  FileNotFound,
+  AccessViolation,
+  DiskFull,
+  IllegalOperation,
+  UnknownTransferID,
+  FileAlreadyExists,
+  NoSuchUser
+};
+
 #define TFTP_PACKET_SIZE 516
 
 //=============================================================================
@@ -68,7 +79,6 @@ TFTPStream::~TFTPStream()
 //=============================================================================
 scx::Condition TFTPStream::event(scx::Stream::Event e)
 {
-  endpoint().reset_timeout();
 
   if (e == scx::Stream::Readable) {
 
@@ -83,79 +93,124 @@ scx::Condition TFTPStream::event(scx::Stream::Event e)
     if (m_state == tftp_Request) {
 
       if (op != RRQ && op != WRQ) {
+	std::ostringstream oss;
+	oss << "Unexpected tftp op code: " << op;
+	log(oss.str(),scx::Logger::Error);
+	//	write_error(IllegalOperation,"Unexpected op code");
 	return scx::Error;
       }
 
       int start = 2;
       int end;
       for (end=start; packet[end] != 0; ++end) {
-	if (end >= TFTP_PACKET_SIZE) return scx::Error;
+	if (end >= TFTP_PACKET_SIZE) {
+	  log("Packet too large",scx::Logger::Error);
+	  write_error(IllegalOperation,"Packet too large");
+	  return scx::Error;
+	}
       }
+
+      TFTPProfile* profile = m_mod.find_profile(m_profile);
+      if (!profile) {
+	log("No tftp profile specified",scx::Logger::Error);
+	write_error(FileNotFound,"File not found");
+	return scx::Error;
+      }
+
       std::string file(&packet[start],end-start);
-      scx::FilePath path = "/tmp";
-      path += file;
-      std::cerr << "FILE: '" << path.path() << "'\n";
+      if ((file.length() > 0 && file[0] == '/') ||
+	  file.find("//") != std::string::npos ||
+	  file.find("..") != std::string::npos) {
+	log("Bad file name '" + file + "' - sending AccessViolation");
+	write_error(AccessViolation,"Access violation");
+	return scx::Error;
+      }
+
+      scx::FilePath path = profile->get_path() + file;
+      TFTPStream_DEBUG_LOG("FILE: '" << path.path() << "'");
       
       start = end+1;
       for (end=start; packet[end] != 0; ++end) {
-	if (end >= TFTP_PACKET_SIZE) return scx::Error;;
+	if (end >= TFTP_PACKET_SIZE) return scx::Error;
       }
       std::string mode(&packet[start],end-start);
-      std::cerr << "MODE: '" << mode << "'\n";
+      TFTPStream_DEBUG_LOG("MODE: '" << mode << "'");
       
       if (op == RRQ) {
 	m_state = tftp_ReadData;
-	std::cerr << "TFTP: Starting RRQ\n";
+	TFTPStream_DEBUG_LOG("Starting RRQ");
 
-	open_file(path,scx::File::Read);
+	if (!open_file(path,scx::File::Read)) {
+	  std::ostringstream oss;
+	  oss << "Unable to open file '" << path.path() << "' for reading - sending FileNotFound";
+	  log(oss.str(),scx::Logger::Error);
+	  write_error(FileNotFound,"File not found");
+	  return scx::Error;
+	}
+
+	log("RRQ - sending '"+path.path()+"'");
 
 	m_finished = false;
 	m_block = 1;
 	write_data(m_block++);
 
       } else if (op == WRQ) {
-	std::cerr << "TFTP: Starting WRQ\n";
+	TFTPStream_DEBUG_LOG("Starting WRQ");
 	m_state = tftp_WriteData;
 
-	open_file(path,
-		  scx::File::Write | scx::File::Create | scx::File::Truncate);
+	if (!open_file(path,scx::File::Write | scx::File::Create | scx::File::Truncate)) {
+	  std::ostringstream oss;
+	  oss << "Unable to open file '" << path.path() << "' for writing - sending AccessViolation";
+	  log(oss.str(),scx::Logger::Error);
+	  write_error(AccessViolation,"Access violation");
+	  return scx::Error;
+	}
+
+	log("WRQ - recieving '"+path.path()+"'");
 
 	m_finished = false;
 	m_block = 0;
        	write_ack(m_block++);
       }
 
+      endpoint().reset_timeout();
+
     } else if (m_state == tftp_ReadData) {
 
       if (op != ACK) {
-	std::cerr << "TFTP:   EXPECTED ACK packet\n";
+	log("EXPECTED ACK packet",scx::Logger::Error);
+	write_error(IllegalOperation,"Expected ACK");
 	return scx::Error;
       }
 
+      endpoint().reset_timeout();
+
       if (m_finished) {
 	m_state = tftp_Request;
+      } else {
+	write_data(m_block++);
       }
-
-      write_data(m_block++);
 
     } else if (m_state == tftp_WriteData) {
       
       if (op != DATA) {
-	std::cerr << "TFTP:   EXPECTED DATA packet\n";
+	log("EXPECTED DATA packet",scx::Logger::Error);
 	return scx::Error;
       }
 
       unsigned short* p_block = (unsigned short*)&packet[2];
       unsigned short block = ntohs(*p_block);
-      std::cerr << "TFTP:   WriteData block=" << block << "\n";
+      TFTPStream_DEBUG_LOG("WriteData block=" << block);
       if (block == m_block) {
 
+	endpoint().reset_timeout();
+      
 	char* p_data = &packet[4];
 	int data_size = na - 4;
 
 	int nfa = 0;
 	m_file->write(p_data,data_size,nfa);
-	std::cerr << "TFTP:   WROTE " << nfa << " of " << data_size << "\n";
+	TFTPStream_DEBUG_LOG("WROTE " << nfa << " of " << data_size);
 
        	write_ack(m_block++);
 
@@ -165,13 +220,15 @@ scx::Condition TFTPStream::event(scx::Stream::Event e)
 	}
 
       } else {
-	std::cerr << "TFTP:   EXPECTED block=" << m_block << "\n";
+	std::ostringstream oss;
+	oss << "EXPECTED block=" << m_block;
+	write_error(UnknownTransferID,"Unknown transfer ID");
+	log(oss.str(),scx::Logger::Error);
       }
     }
     
   }  
     
-  std::cerr << "\n";
   return scx::Ok;
 }
 
@@ -213,10 +270,10 @@ bool TFTPStream::write_ack(unsigned short block)
   int na = 0;
 
   write(packet,packet_size,na);
-  std::cerr << "TFTP: SENT ACK ("
-	    << " block:" <<  block 
-	    << " na:" << na
-	    << ")\n";
+  TFTPStream_DEBUG_LOG("SENT ACK ("
+		       << " block:" <<  block 
+		       << " na:" << na
+		       << ")");
 
   return (na == packet_size);
 }
@@ -224,7 +281,7 @@ bool TFTPStream::write_ack(unsigned short block)
 //=============================================================================
 bool TFTPStream::write_data(unsigned short block)
 {
-  const int packet_size = TFTP_PACKET_SIZE;
+  int packet_size = TFTP_PACKET_SIZE;
   char packet[packet_size];
 
   unsigned short* p_op = (unsigned short*)&packet[0];
@@ -240,15 +297,46 @@ bool TFTPStream::write_data(unsigned short block)
   m_file->read(p_data,data_size,na);
 
   if (na < data_size) {
+    packet_size = na + 4;
     m_finished = true;
   }
 
   write(packet,packet_size,na);
-  std::cerr << "TFTP: SENT DATA ("
-	    << " block:" <<  block 
-	    << " na:" << na
-	    << ")\n";
+  TFTPStream_DEBUG_LOG("SENT DATA ("
+		       << " block:" <<  block 
+		       << " na:" << na
+		       << ")");
 
   return !m_finished;
 }
 
+//=============================================================================
+bool TFTPStream::write_error(unsigned short code, const std::string& message)
+{
+  const int packet_size = 4 + message.length() + 1;
+  char packet[packet_size];
+
+  unsigned short* p_op = (unsigned short*)&packet[0];
+  *p_op = htons(ERROR);
+
+  unsigned short* p_code = (unsigned short*)&packet[2];
+  *p_code = htons(code);
+
+  memcpy(&packet[4],message.c_str(),message.length()+1);
+
+  int na = 0;
+
+  write(packet,packet_size,na);
+  TFTPStream_DEBUG_LOG("SENT ERROR ("
+		       << " code:" <<  code 
+		       << " message:" << message
+		       << ")");
+
+  return (na == packet_size);
+}
+
+//=============================================================================
+void TFTPStream::log(const std::string& message, scx::Logger::Level level)
+{
+  m_mod.log("{"+m_profile+"} "+message,level);
+}

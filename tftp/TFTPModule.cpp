@@ -136,41 +136,32 @@ scx::Arg* TFTPModule::arg_method(
   if (!auth.admin()) return new scx::ArgError("Not permitted");
 
   if ("add" == name) {
-    std::string s_name;
-    const scx::ArgString* a_name =
-      dynamic_cast<const scx::ArgString*>(l->get(0));
-    if (a_name) {
-      s_name = a_name->get_string();
-    } else {
-      return new scx::ArgError("tftp::add() Name must be specified");
-    }
+    const scx::ArgString* a_name = dynamic_cast<const scx::ArgString*>(l->get(0));
+    if (!a_name) return new scx::ArgError("tftp::add() Name must be specified");
+    std::string s_name = a_name->get_string();
+
+    const scx::ArgString* a_path = dynamic_cast<const scx::ArgString*>(l->get(1));
+    if (!a_path) return new scx::ArgError("tftp::add() Path must be specified");
+    scx::FilePath p_path = scx::FilePath(a_path->get_string());
 
     // Check profile doesn't already exist
     if (find_profile(s_name)) {
-      return new scx::ArgError("ssl::add() Profile '" + s_name +
-                               "' already exists");
+      return new scx::ArgError("tftp::add() Profile '" + s_name + "' already exists");
     }
 
-    m_profiles[s_name] = new TFTPProfile(*this,s_name);
+    m_profiles[s_name] = new TFTPProfile(*this,s_name,p_path);
     return 0;
   }
   
   if ("remove" == name) {
-    std::string s_name;
     const scx::ArgString* a_name =
       dynamic_cast<const scx::ArgString*>(l->get(0));
-    if (a_name) {
-      s_name = a_name->get_string();
-    } else {
-      return new scx::ArgError("ssl::remove() Name must be specified");
-    }
+    if (!a_name) return new scx::ArgError("tftp::remove() Name must be specified");
+    std::string s_name = a_name->get_string();
 
     // Remove profile
     TFTPProfile* profile = find_profile(s_name);
-    if (!profile) {
-      return new scx::ArgError("ssl::remove() Profile '" + s_name +
-                               "' does not exist");
-    }
+    if (!profile) return new scx::ArgError("tftp::remove() Profile '" + s_name + "' does not exist");
       
     delete profile;
     m_profiles.erase(s_name);
