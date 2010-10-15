@@ -289,7 +289,7 @@ Time Date::time() const
 Date Date::operator+(const Time& t) const
 {
   Date d(*m_time + *t.m_time);
-  d.m_timezone = new TimeZone(*m_timezone);
+  *d.m_timezone = *m_timezone;
   return d;
 }
 
@@ -297,7 +297,7 @@ Date Date::operator+(const Time& t) const
 Date Date::operator-(const Time& t) const
 {
   Date d(*m_time - *t.m_time);
-  d.m_timezone = new TimeZone(*m_timezone);
+  *d.m_timezone = *m_timezone;
   return d;
 }
 

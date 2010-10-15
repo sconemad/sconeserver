@@ -70,7 +70,7 @@ Condition DatagramChannel::endpoint_read(void* buffer,int n,int& na)
     delete[] m_buffer;
     m_buffer = 0;
     m_buffer_size = 0;
-    m_virtual_events = (1<<Stream::Writeable);
+    m_virtual_events &= ~(1<<Stream::Readable);
     return scx::Ok;
   }
   

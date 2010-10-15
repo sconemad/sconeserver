@@ -166,7 +166,7 @@ int Socket::bind(
   int ier = addr->socket_bind(m_socket);
   
   if (ier < 0) {
-    DESCRIPTOR_DEBUG_LOG("bind() could not bind to address, e=" << ier);
+    DESCRIPTOR_DEBUG_LOG("bind() could not bind to address, e=" << ier << ", errno=" << errno);
     return 1;
   }
   

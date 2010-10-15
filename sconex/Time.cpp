@@ -379,8 +379,8 @@ Arg* Time::op(const Auth& auth, OpType optype, const std::string& opname, Arg* r
       if (name == "seconds") return new ArgInt(seconds());
       if (name == "weeks") return new ArgReal(to_weeks());
       if (name == "days") return new ArgReal(to_days());
-      if (name == "hours") return new ArgInt(to_hours());
-      if (name == "minutes") return new ArgInt(to_minutes());
+      if (name == "hours") return new ArgReal(to_hours());
+      if (name == "minutes") return new ArgReal(to_minutes());
       if (name == "string") return new ArgString(string());
     }
   }

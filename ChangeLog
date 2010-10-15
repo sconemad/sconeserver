@@ -1,4 +1,18 @@
+	
+2010-10-15 Andrew Wedgbury <wedge@sconemad.com>
 
+	* configure: Update version to 0.9.0.
+	* debian: Change pkglibdir to libdir.
+	* doc/examples: Relocate dir to (root)/examples, remove doc.
+	* sconex/IOBase: New common base for Descriptor and Stream.
+	* sconex/Descriptor: Derive from IOBase.
+	Correct virutal event maps to event_mask in get_event_mask.
+	* sconex/DatagramChannel: Fix event update in endpoint_read.
+	* sconex/Stream: Derive from IOBase.
+	* sconex/Date: Correct tz handling in operator+ and -.
+	* sconex/Time: Arg return hours & minutes as ArgReal.
+	* tftp: Fix this module so it basically works!	
+	
 2010-10-13 Andrew Wedgbury <wedge@sconemad.com>
 
 	* debian: Add required files for creating Debian packages.

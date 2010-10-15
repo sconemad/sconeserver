@@ -74,25 +74,21 @@ Condition Descriptor::write(const void* buffer,int n,int& na)
 }
 
 //=============================================================================
-// Write adaptor for zero terminated string
-//
 int Descriptor::write(const char* string)
 {
   int nw=0;
   int len = strlen(string);
-  write(string,len,nw);
+  Descriptor::write(string,len,nw);
   DEBUG_ASSERT(nw==len,"write(const char*) Did not write complete string");
   return nw;
 }
 
 //=============================================================================
-// Write adaptor for c++ string
-//
 int Descriptor::write(const std::string& string)
 {
   int nw=0;
   int len = string.size();
-  write(string.c_str(),len,nw);
+  Descriptor::write(string.c_str(),len,nw);
   DEBUG_ASSERT(nw==len,"write(const std::string&) Did not write string");
   if (nw!=len) throw std::exception();
   return nw;
@@ -301,8 +297,8 @@ int Descriptor::get_event_mask()
     
   } else if (m_state != Closed) {
     if (fd() < 0) {
-      if (m_virtual_events & (1<<Stream::Readable)) event_mask |= Stream::SendReadable;
-      if (m_virtual_events & (1<<Stream::Writeable)) event_mask |= Stream::SendWriteable;
+      if (m_virtual_events & (1<<Stream::Readable)) event_mask |= (1<<Stream::SendReadable);
+      if (m_virtual_events & (1<<Stream::Writeable)) event_mask |= (1<<Stream::SendWriteable);
     }
     std::list<Stream*>::const_iterator it = m_streams.begin();
     while (it != m_streams.end()) {

@@ -23,12 +23,13 @@ Free Software Foundation, Inc.,
 #define scxStream_h
 
 #include "sconex/sconex.h"
+#include "sconex/IOBase.h"
 #include "sconex/Descriptor.h"
 #include "sconex/ModuleRef.h"
 namespace scx {
 
 //=============================================================================
-class SCONEX_API Stream {
+class SCONEX_API Stream : public IOBase {
 
 public:
 

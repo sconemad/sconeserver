@@ -125,8 +125,7 @@ Condition DatagramSocket::endpoint_read(
 
   // Fatal error occured,
   na = 0;
-  DATAGRAMSOCKET_DEBUG_LOG("read() error: " << error());
-  DATAGRAMSOCKET_DEBUG_LOG("error code: " << errno);
+  DATAGRAMSOCKET_DEBUG_LOG("read() error: " << error() << ", errno:" << errno);
   m_state = Socket::Closed;
   return scx::Error;
 }
@@ -158,7 +157,7 @@ Condition DatagramSocket::endpoint_write(
 
   // Fatal error occured
   na = 0;
-  DATAGRAMSOCKET_DEBUG_LOG("write() error: " << error());
+  DATAGRAMSOCKET_DEBUG_LOG("write() error: " << error() << ", errno:" << errno);
   m_state = Socket::Closed;
   return scx::Error;
 }

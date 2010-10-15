@@ -15,8 +15,7 @@
 @SET_MAKE@
 
 # SconeServer (http://www.sconemad.com)
-# automake file for Rot13 example module
-
+# automake file for TuesdayOnly example module
 
 VPATH = @srcdir@
 pkgdatadir = $(datadir)/@PACKAGE@
@@ -37,9 +36,8 @@ POST_UNINSTALL = :
 build_triplet = @build@
 host_triplet = @host@
 target_triplet = @target@
-subdir = doc/examples/rot13
-DIST_COMMON = $(noinst_HEADERS) $(srcdir)/Makefile.am \
-	$(srcdir)/Makefile.in
+subdir = examples/tuesdayonly
+DIST_COMMON = $(srcdir)/Makefile.am $(srcdir)/Makefile.in
 ACLOCAL_M4 = $(top_srcdir)/aclocal.m4
 am__aclocal_m4_deps = $(top_srcdir)/configure.in
 am__configure_deps = $(am__aclocal_m4_deps) $(CONFIGURE_DEPENDENCIES) \
@@ -56,13 +54,13 @@ am__strip_dir = `echo $$p | sed -e 's|^.*/||'`;
 am__installdirs = "$(DESTDIR)$(pkglibdir)"
 pkglibLTLIBRARIES_INSTALL = $(INSTALL)
 LTLIBRARIES = $(pkglib_LTLIBRARIES)
-rot13_la_LIBADD =
-am_rot13_la_OBJECTS = Rot13Module.lo Rot13Stream.lo
-rot13_la_OBJECTS = $(am_rot13_la_OBJECTS)
-rot13_la_LINK = $(LIBTOOL) --tag=CXX $(AM_LIBTOOLFLAGS) \
+tuesdayonly_la_LIBADD =
+am_tuesdayonly_la_OBJECTS = TuesdayOnly.lo
+tuesdayonly_la_OBJECTS = $(am_tuesdayonly_la_OBJECTS)
+tuesdayonly_la_LINK = $(LIBTOOL) --tag=CXX $(AM_LIBTOOLFLAGS) \
 	$(LIBTOOLFLAGS) --mode=link $(CXXLD) $(AM_CXXFLAGS) \
-	$(CXXFLAGS) $(rot13_la_LDFLAGS) $(LDFLAGS) -o $@
-@BUILD_EXAMPLES_TRUE@am_rot13_la_rpath = -rpath $(pkglibdir)
+	$(CXXFLAGS) $(tuesdayonly_la_LDFLAGS) $(LDFLAGS) -o $@
+@BUILD_EXAMPLES_TRUE@am_tuesdayonly_la_rpath = -rpath $(pkglibdir)
 DEFAULT_INCLUDES = -I.@am__isrc@ -I$(top_builddir)
 depcomp = $(SHELL) $(top_srcdir)/depcomp
 am__depfiles_maybe = depfiles
@@ -75,9 +73,8 @@ CXXLD = $(CXX)
 CXXLINK = $(LIBTOOL) --tag=CXX $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) \
 	--mode=link $(CXXLD) $(AM_CXXFLAGS) $(CXXFLAGS) $(AM_LDFLAGS) \
 	$(LDFLAGS) -o $@
-SOURCES = $(rot13_la_SOURCES)
-DIST_SOURCES = $(rot13_la_SOURCES)
-HEADERS = $(noinst_HEADERS)
+SOURCES = $(tuesdayonly_la_SOURCES)
+DIST_SOURCES = $(tuesdayonly_la_SOURCES)
 ETAGS = etags
 CTAGS = ctags
 DISTFILES = $(DIST_COMMON) $(DIST_SOURCES) $(TEXINFOS) $(EXTRA_DIST)
@@ -199,17 +196,11 @@ target_vendor = @target_vendor@
 top_builddir = @top_builddir@
 top_srcdir = @top_srcdir@
 AM_CPPFLAGS = -I$(top_srcdir)
-@BUILD_EXAMPLES_TRUE@pkglib_LTLIBRARIES = rot13.la
-rot13_la_SOURCES = \
-Rot13Module.cpp \
-Rot13Stream.cpp
+@BUILD_EXAMPLES_TRUE@pkglib_LTLIBRARIES = tuesdayonly.la
+tuesdayonly_la_SOURCES = \
+TuesdayOnly.cpp 
 
-rot13_la_LDFLAGS = -module -avoid-version
-noinst_HEADERS = \
-Rot13Module.h \
-Rot13Stream.h
-
-EXTRA_DIST = Makefile.example
+tuesdayonly_la_LDFLAGS = -module -avoid-version
 all: all-am
 
 .SUFFIXES:
@@ -223,9 +214,9 @@ $(srcdir)/Makefile.in: @MAINTAINER_MODE_TRUE@ $(srcdir)/Makefile.am  $(am__confi
 	      exit 1;; \
 	  esac; \
 	done; \
-	echo ' cd $(top_srcdir) && $(AUTOMAKE) --gnits  doc/examples/rot13/Makefile'; \
+	echo ' cd $(top_srcdir) && $(AUTOMAKE) --gnits  examples/tuesdayonly/Makefile'; \
 	cd $(top_srcdir) && \
-	  $(AUTOMAKE) --gnits  doc/examples/rot13/Makefile
+	  $(AUTOMAKE) --gnits  examples/tuesdayonly/Makefile
 .PRECIOUS: Makefile
 Makefile: $(srcdir)/Makefile.in $(top_builddir)/config.status
 	@case '$?' in \
@@ -270,8 +261,8 @@ clean-pkglibLTLIBRARIES:
 	  echo "rm -f \"$${dir}/so_locations\""; \
 	  rm -f "$${dir}/so_locations"; \
 	done
-rot13.la: $(rot13_la_OBJECTS) $(rot13_la_DEPENDENCIES) 
-	$(rot13_la_LINK) $(am_rot13_la_rpath) $(rot13_la_OBJECTS) $(rot13_la_LIBADD) $(LIBS)
+tuesdayonly.la: $(tuesdayonly_la_OBJECTS) $(tuesdayonly_la_DEPENDENCIES) 
+	$(tuesdayonly_la_LINK) $(am_tuesdayonly_la_rpath) $(tuesdayonly_la_OBJECTS) $(tuesdayonly_la_LIBADD) $(LIBS)
 
 mostlyclean-compile:
 	-rm -f *.$(OBJEXT)
@@ -279,8 +270,7 @@ mostlyclean-compile:
 distclean-compile:
 	-rm -f *.tab.c
 
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/Rot13Module.Plo@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/Rot13Stream.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/TuesdayOnly.Plo@am__quote@
 
 .cpp.o:
 @am__fastdepCXX_TRUE@	$(CXXCOMPILE) -MT $@ -MD -MP -MF $(DEPDIR)/$*.Tpo -c -o $@ $<
@@ -384,7 +374,7 @@ distdir: $(DISTFILES)
 	done
 check-am: all-am
 check: check-am
-all-am: Makefile $(LTLIBRARIES) $(HEADERS)
+all-am: Makefile $(LTLIBRARIES)
 installdirs:
 	for dir in "$(DESTDIR)$(pkglibdir)"; do \
 	  test -z "$$dir" || $(MKDIR_P) "$$dir"; \

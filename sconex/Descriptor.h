@@ -61,6 +61,7 @@ Free Software Foundation, Inc.,
 #define scxDescriptor_h
 
 #include "sconex/sconex.h"
+#include "sconex/IOBase.h"
 #include "sconex/Date.h"
 #include "sconex/Job.h"
 namespace scx {
@@ -68,23 +69,21 @@ namespace scx {
 class Stream;
 class DescriptorThread;
   
-enum Condition { Ok, Wait, End, Close, Error };
-
 //=============================================================================
-class SCONEX_API Descriptor {
+class SCONEX_API Descriptor : public IOBase {
 
 public:
 
   Descriptor();
   virtual ~Descriptor();
 
-  Condition read(void* buffer,int n,int& na);
-  Condition write(const void* buffer,int n,int& na);
+  virtual Condition read(void* buffer,int n,int& na);
+  virtual Condition write(const void* buffer,int n,int& na);
 
   int write(const char* string);
   int write(const std::string& string);
-  // write string from buffer to descriptor
-  
+  // write string in various formats
+
   virtual void close() =0;
     
   enum State { Closed, Closing, Connected, Connecting, Listening };
