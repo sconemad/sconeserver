@@ -61,8 +61,8 @@ LTLIBRARIES = $(pkglib_LTLIBRARIES)
 http_la_LIBADD =
 am_http_la_OBJECTS = AuthRealm.lo Client.lo ConnectionStream.lo \
 	DocRoot.lo Host.lo HostMapper.lo HTTPModule.lo \
-	MessageStream.lo Request.lo Response.lo ResponseStream.lo \
-	Session.lo Status.lo
+	MessageStream.lo PartialResponseStream.lo Request.lo \
+	Response.lo ResponseStream.lo Session.lo Status.lo
 http_la_OBJECTS = $(am_http_la_OBJECTS)
 http_la_LINK = $(LIBTOOL) --tag=CXX $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) \
 	--mode=link $(CXXLD) $(AM_CXXFLAGS) $(CXXFLAGS) \
@@ -227,6 +227,7 @@ Host.cpp \
 HostMapper.cpp \
 HTTPModule.cpp \
 MessageStream.cpp \
+PartialResponseStream.cpp \
 Request.cpp \
 Response.cpp \
 ResponseStream.cpp \
@@ -244,6 +245,7 @@ HostMapper.h \
 http.h \
 HTTPModule.h \
 MessageStream.h \
+PartialResponseStream.h \
 Request.h \
 Response.h \
 ResponseStream.h \
@@ -330,6 +332,7 @@ distclean-compile:
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/Host.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/HostMapper.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/MessageStream.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/PartialResponseStream.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/Request.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/Response.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/ResponseStream.Plo@am__quote@

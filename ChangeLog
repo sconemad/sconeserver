@@ -1,4 +1,9 @@
 	
+2010-11-05 Andrew Wedgbury <wedge@sconemad.com>
+
+	* http/PartialResponseStream: HTTP Range request handler.
+	* http/ConnectionStream: Use above stream for range requests.
+
 2010-10-15 Andrew Wedgbury <wedge@sconemad.com>
 
 	* configure: Update version to 0.9.0.

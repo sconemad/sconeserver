@@ -23,6 +23,7 @@ Free Software Foundation, Inc.,
 #include "http/ConnectionStream.h"
 #include "http/Request.h"
 #include "http/MessageStream.h"
+#include "http/PartialResponseStream.h"
 #include "http/Status.h"
 
 #include "sconex/Logger.h"
@@ -184,6 +185,13 @@ bool ConnectionStream::process_request(Request*& request)
   MessageStream* msg = new MessageStream(m_module,*this,request);
   msg->add_module_ref(m_module.ref());
   endpoint().add_stream(msg);
+
+  if (!request->get_header("Range").empty()) {
+    // Request specifies a byte range - add a partial response stream
+    PartialResponseStream* pss = new PartialResponseStream(m_module);
+    pss->add_module_ref(m_module.ref());
+    endpoint().add_stream(pss);
+  }
 
   request = 0;
 

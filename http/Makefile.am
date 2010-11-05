@@ -16,6 +16,7 @@ Host.cpp \
 HostMapper.cpp \
 HTTPModule.cpp \
 MessageStream.cpp \
+PartialResponseStream.cpp \
 Request.cpp \
 Response.cpp \
 ResponseStream.cpp \
@@ -34,6 +35,7 @@ HostMapper.h \
 http.h \
 HTTPModule.h \
 MessageStream.h \
+PartialResponseStream.h \
 Request.h \
 Response.h \
 ResponseStream.h \
