@@ -1,9 +1,12 @@
-#!/bin/sh
+#! /bin/sh
 
-echo "Generating build information..."
+srcdir=`dirname $0`
+test -z "$srcdir" && srcdir=.
 
-aclocal
-autoheader
-automake --gnits --include-deps --add-missing --copy 
-autoconf
-rm -rf ./autom4te.cache
+ORIGDIR=`pwd`
+cd $srcdir
+
+autoreconf --force -v --install || exit 1
+cd $ORIGDIR || exit $?
+
+$srcdir/configure --enable-maintainer-mode "$@"

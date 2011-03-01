@@ -19,6 +19,7 @@ Buffer.cpp \
 ConfigFile.cpp \
 ConfigStream.cpp \
 Console.cpp \
+Database.cpp \
 DatagramChannel.cpp \
 DatagramMultiplexer.cpp \
 DatagramSocket.cpp \
@@ -79,6 +80,7 @@ Buffer.h \
 ConfigFile.h \
 ConfigStream.h \
 Console.h \
+Database.h \
 DatagramChannel.h \
 DatagramMultiplexer.h \
 DatagramSocket.h \
@@ -106,6 +108,7 @@ Multiplexer.h \
 Mutex.h \
 NullFile.h \
 Process.h \
+Provider.h \
 RegExp.h \
 Response.h \
 Socket.h \

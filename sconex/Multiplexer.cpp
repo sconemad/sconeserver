@@ -30,6 +30,7 @@ Multiplexer::Multiplexer()
   : m_num_threads(0),
     m_main_thread(pthread_self()),
     m_latency(1000000),
+    m_enable_jobs(true),
     m_loops(0),
     m_jobs_run(0),
     m_job_waits(0),
@@ -197,7 +198,7 @@ int Multiplexer::spin()
   if (select(maxfd+1, &fds_read, &fds_write, &fds_except, &time) < 0) {
     // Select returned an error or it was interrupted
     if (errno != EINTR) {
-      DEBUG_LOG("select failed, errno=" << errno);
+      DEBUG_LOG_ERRNO("select failed");
     }
 
   } else {
@@ -222,6 +223,9 @@ int Multiplexer::spin()
 	    events |= (FD_ISSET(fd,&fds_write) ? (1<<Stream::Writeable) : 0);
 	  }
 	  djob->set_events(events);
+	} else if (!m_enable_jobs) {
+	  // Ignore all non-descriptor jobs
+	  continue;
 	} 
 	if (job->should_run()) {
 	  // Run the job
@@ -329,6 +333,9 @@ std::string Multiplexer::describe() const
       case Job::Cycle: state = "C"; break;
       case Job::Purge: state = "X"; break;
     }
+    if (!m_enable_jobs && 0 == dynamic_cast<DescriptorJob*>(job)) {
+      state = "D";
+    }
     
     oss << " {" << job->get_id() << "} " << state 
 	<< " " << job->type() 
@@ -369,6 +376,12 @@ void Multiplexer::set_latency(long latency)
 long Multiplexer::get_latency() const
 {
   return m_latency;
+}
+
+//=============================================================================
+void Multiplexer::enable_jobs(bool yesno)
+{
+  m_enable_jobs = yesno;
 }
 
 //=============================================================================
@@ -464,6 +477,9 @@ void Multiplexer::check_thread_pool()
 void Multiplexer::interrupt_select()
 {
   if (m_num_threads > 0) {
+    // Interrupt the main thread's select() call by sending it a signal, this is
+    // because we don't want to wait for select to timeout when we know that there
+    // is a new job waiting to be actioned.
     pthread_kill(m_main_thread,SIGUSR1);
   }
 }

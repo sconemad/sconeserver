@@ -69,7 +69,9 @@ public:
 
   void set_latency(long latency);
   long get_latency() const;
-  
+
+  void enable_jobs(bool yesno);
+
 protected:
 
   void interrupt_select();
@@ -102,6 +104,7 @@ private:
   pthread_t m_main_thread;
 
   long m_latency;
+  bool m_enable_jobs;
   
   // Statistics:
   long m_loops;

@@ -22,6 +22,7 @@ Free Software Foundation, Inc.,
 
 #include "DbSqlModule.h"
 #include "DbSqlProfile.h"
+#include "DbSqlQuery.h"
 
 namespace dbsql {
 
@@ -42,6 +43,8 @@ DbSqlModule::~DbSqlModule()
        ++it) {
     delete it->second;
   }
+
+  scx::Database::unregister_provider("MySQL");
 }
 
 //=========================================================================
@@ -53,6 +56,7 @@ std::string DbSqlModule::info() const
 //=========================================================================
 int DbSqlModule::init()
 {
+  scx::Database::register_provider("MySQL",this);
   return Module::init();
 }
 
@@ -147,4 +151,36 @@ DbSqlProfile* DbSqlModule::lookup_profile(const std::string& profile)
   return 0;
 }
 
+//=========================================================================
+DbSqlQuery* DbSqlModule::new_query(const std::string& profile,const std::string& query)
+{
+  DbSqlProfile* p = lookup_profile(profile);
+  if (!p) return 0;
+
+  return new DbSqlQuery(*p,query);
+}
+
+//=========================================================================
+scx::Database* DbSqlModule::create_new(const scx::ArgMap& args)
+{
+  const scx::Arg* a_profile = args.lookup("profile");
+  if (!a_profile) return 0;
+
+  const scx::Arg* a_db = args.lookup("database");
+  if (!a_db) return 0;
+  
+  const scx::Arg* a_user = args.lookup("username");
+  if (!a_user) return 0;
+  
+  const scx::Arg* a_pass = args.lookup("password");
+  if (!a_pass) return 0;
+
+  return new DbSqlProfile(*this,
+                          a_profile->get_string(),
+                          a_db->get_string(),
+                          a_user->get_string(),
+                          a_pass->get_string());
+}
+
+  
 };

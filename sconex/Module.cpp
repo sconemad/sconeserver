@@ -336,7 +336,8 @@ Arg* Module::arg_method(
       // Cause the module to be loaded immediately
       ModuleRef r = loader->ref();
       if (!r.valid()) {
-        return new ArgError("insmod() Cannot load module [" + name + "]");      
+        remove_module(loader);
+        return new ArgError("insmod() Cannot load module [" + name + "]");
       }
     }
     return 0;

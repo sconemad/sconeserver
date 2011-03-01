@@ -23,7 +23,6 @@ Free Software Foundation, Inc.,
 #define DbSqlQuery_h
 
 #include "DbSqlProfile.h"
-#include "sconex/Arg.h"
 
 namespace dbsql {
 
@@ -63,7 +62,7 @@ typedef std::vector<DbSqlArg> DbSqlArgList;
 
 
 //=============================================================================
-class DbSqlQuery : public scx::Arg {
+class DbSqlQuery : public scx::DbQuery {
 
 public:
 
@@ -79,6 +78,12 @@ public:
 
   virtual scx::Arg* op(const scx::Auth& auth,scx::Arg::OpType optype, const std::string& opname, scx::Arg* right);
 
+  // DbQuery interface:
+  virtual scx::Arg* exec(const scx::ArgList& args);
+  virtual bool next_result();
+  virtual scx::ArgMap* result() const;
+  virtual scx::ArgList* result_list() const;
+  
 protected:
 
   void init();

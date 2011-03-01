@@ -22,15 +22,20 @@ Free Software Foundation, Inc.,
 #ifndef DbSqlModule_h
 #define DbSqlModule_h
 
+#include "sconex/Database.h"
 #include "sconex/ModuleInterface.h"
 #include "sconex/Module.h"
+#include "sconex/Provider.h"
 
 namespace dbsql {
 
 class DbSqlProfile;
+class DbSqlQuery;
 
 //=============================================================================
-class DbSqlModule : public scx::Module {
+class DbSqlModule : public scx::Module,
+                    public scx::Provider<scx::Database>
+{
 public:
 
   DbSqlModule();
@@ -50,6 +55,10 @@ public:
 
   DbSqlProfile* lookup_profile(const std::string& profile);
 
+  DbSqlQuery* new_query(const std::string& profile,const std::string& query);
+
+  virtual scx::Database* create_new(const scx::ArgMap& args);
+  
 protected:
 
 private:

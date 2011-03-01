@@ -157,6 +157,7 @@ Arg* Kernel::arg_lookup(const std::string& name)
       "set_user" == name ||
       "set_thread_pool" == name ||
       "set_latency" == name ||
+      "enable_jobs" == name ||
       "defined" == name ||
       "ref" == name ||
       "constref" == name) {
@@ -286,6 +287,20 @@ Arg* Kernel::arg_method(
     log(oss.str());
 
     m_spinner.set_latency((long)n_latency);
+    return 0;
+  }
+
+  if ("enable_jobs" == name) {
+    if (!auth.admin()) return new ArgError("Not permitted");
+    const scx::ArgInt* a_enable = dynamic_cast<const scx::ArgInt*>(l->get(0));
+    if (!a_enable) return new ArgError("enable_jobs() Enable flag not specified");
+    if (a_enable->get_int()) {
+      log("Enabling non-descriptor jobs");
+      m_spinner.enable_jobs(true);
+    } else {
+      log("Disabling non-descriptor jobs");
+      m_spinner.enable_jobs(false);
+    }
     return 0;
   }
 

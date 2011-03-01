@@ -71,16 +71,25 @@ Condition TermBuffer::read(void* buffer,int n,int& na)
     Stream::write(ansi("00m"));
 
   } else {
+    /*
+    for (int i=0; i<nw; ++i) {
+      char buf[8];
+      sprintf(buf,"<%02x> ",ch[i]);
+      Stream::write(buf);
+    }
+    */
     switch (ch[0]) {
-    
-    case 0x1b: // Arrow key
-      /*
-      for (int i=0; i<nw; ++i) {
-	char buf[8];
-	sprintf(buf,"<%02x> ",ch[i]);
-	Stream::write(buf);
-      }
-      */
+
+    case CEOT: 
+      m_line = "exit\n";
+      na = m_line.length();
+      memcpy(buffer,m_line.data(),na);
+      c = Ok;
+      Stream::write(ansi("01;31m")+"exit;"+ansi("00m")+"\n");
+      m_line = "";
+      break;
+      
+    case '\e': // Escape sequence
       if (ch[1] == 0x5b) {
 	switch (ch[2]) {
 	  case 0x41: { // UP
@@ -110,7 +119,7 @@ Condition TermBuffer::read(void* buffer,int n,int& na)
       }
       break;
       
-    case 0x7f: // Backspace
+    case CERASE: // Backspace
       m_history_add = true;
       if (m_line.length() > 0) {
 	m_line.erase(m_line.length()-1,1);
@@ -121,7 +130,7 @@ Condition TermBuffer::read(void* buffer,int n,int& na)
       }
       break;
       
-    case 0x0a: // Enter
+    case '\n': // Enter
       if (m_line.length() > 0 && m_line[0] == '!') { // Pick history item
 	std::string snum = m_line.substr(1);
 	unsigned int num = atoi(snum.c_str());

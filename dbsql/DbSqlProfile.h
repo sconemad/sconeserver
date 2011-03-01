@@ -24,6 +24,7 @@ Free Software Foundation, Inc.,
 
 #include "DbSqlModule.h"
 #include "sconex/ArgObject.h"
+#include "sconex/Mutex.h"
 
 #include <mysql.h>
 
@@ -32,7 +33,7 @@ namespace dbsql {
 class DbSqlModule;
 
 //=========================================================================
-class DbSqlProfile : public scx::ArgObjectInterface {
+class DbSqlProfile : public scx::Database {
 
 public:
 
@@ -44,23 +45,37 @@ public:
   
   ~DbSqlProfile();
 
+  virtual scx::DbQuery* new_query(const std::string& query);
+  
   virtual std::string name() const;
   virtual scx::Arg* arg_lookup(const std::string& name);
   virtual scx::Arg* arg_method(const scx::Auth& auth,const std::string& name,scx::Arg* args);
 
-  MYSQL* new_connection();
-
+  MYSQL* get_connection();
+  void release_connection(MYSQL* conn);
+  
 private:
 
   friend class DbSqlQuery;
+  friend class DbSqlConnection;
 
   DbSqlModule& m_module;
 
   std::string m_name;
+
   std::string m_database;
+  std::string m_host;
+  int m_port;
   std::string m_username;
   std::string m_password;
 
+  typedef std::list<MYSQL*> ConnectionList;
+  ConnectionList m_connection_pool;
+
+  scx::Mutex m_pool_mutex;
+
+  int m_num_connections;
+  int m_pool_max;
 };
 
 };

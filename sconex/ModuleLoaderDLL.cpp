@@ -136,6 +136,7 @@ bool ModuleLoaderDLL::load_dll(
   m_dll = dlopen(filename.c_str(),RTLD_LAZY | RTLD_GLOBAL); //RTLD_NOW);
 
   if (m_dll==0) {
+    log(std::string("dlopen error: ") + dlerror());
     return false;
   }
 

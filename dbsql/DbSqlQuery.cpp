@@ -200,7 +200,7 @@ DbSqlQuery::DbSqlQuery(DbSqlProfile& profile,
   : m_profile(profile),
     m_ref(m_profile.m_module.ref()),
     m_query(new std::string(query)),
-    m_conn(profile.new_connection()),
+    m_conn(profile.get_connection()),
     m_stmt(0),
     m_param_bind(0),
     m_param_args(0),
@@ -215,11 +215,11 @@ DbSqlQuery::DbSqlQuery(DbSqlProfile& profile,
 
 //=========================================================================
 DbSqlQuery::DbSqlQuery(const DbSqlQuery& c)
-  : Arg(c),
+  : scx::DbQuery(c),
     m_profile(c.m_profile),
     m_ref(c.m_ref),
     m_query(new std::string(*c.m_query)),
-    m_conn(c.m_profile.new_connection()),
+    m_conn(c.m_profile.get_connection()),
     m_stmt(0),
     m_param_bind(0),
     m_param_args(0),
@@ -233,7 +233,7 @@ DbSqlQuery::DbSqlQuery(const DbSqlQuery& c)
 
 //=========================================================================
 DbSqlQuery::DbSqlQuery(RefType ref, DbSqlQuery& c)
-  : Arg(ref,c),
+  : scx::DbQuery(ref,c),
     m_profile(c.m_profile),
     m_ref(c.m_ref),
     m_query(c.m_query),
@@ -262,7 +262,7 @@ DbSqlQuery::~DbSqlQuery()
       delete m_result_args;
     }
 
-    ::mysql_close(m_conn);
+    m_profile.release_connection(m_conn);
     delete m_error;
   }
   DEBUG_COUNT_DESTRUCTOR(DbSqlQuery);
@@ -301,56 +301,13 @@ scx::Arg* DbSqlQuery::op(const scx::Auth& auth,scx::Arg::OpType optype, const st
     scx::ArgList* l = dynamic_cast<scx::ArgList*>(right);
     
     if ("exec" == m_method) {
-      m_profile.m_module.log("{"+m_profile.m_name+"} exec: "+*m_query);
-
-      if (m_error) {
-	// If there is a permanent error, don't execute the query, return the error
-	return get_error();
-      }
-
-      if (m_param_args) {
-	// If the statement has parameters, check and bind
-	if (l->size() != (int)m_param_args->size()) {
-	  return new scx::ArgError(log_error("Incorrect number of parameters",false));
-	}
-
-	for (int i=0; i<(int)m_param_args->size(); ++i) {
-	  (*m_param_args)[i].init_param(m_param_bind[i],l->get(i));
-	}
-	
-	if (::mysql_stmt_bind_param(m_stmt,m_param_bind)) {
-	  return new scx::ArgError(log_error("mysql_stmt_bind_param",false));
-	}
-      }
-
-      // Execute the statement
-
-      if (::mysql_stmt_execute(m_stmt)) {
-	return new scx::ArgError(log_error("mysql_stmt_bind_param",false));
-      }
-
-      int affected_rows = ::mysql_stmt_affected_rows(m_stmt);
-      if (affected_rows >= 0) {
-	// This sort of query has no results, just return the number of affected rows
-	DbSqlQuery_DEBUG_LOG("Affected rows: " << affected_rows);
-	return new scx::ArgInt(affected_rows);
-      }
-
-      return new scx::ArgInt(1);
+      return exec(*l);
     }
 
     if ("next_result" == m_method) {
       if (m_error) return get_error();
       if (!m_stmt) return new scx::ArgError("No statement");
-
-      int err = ::mysql_stmt_fetch(m_stmt);
-      if (err == 1) {
-	return new scx::ArgError(log_error("mysql_stmt_fetch",false));
-      }
-      if (err == MYSQL_DATA_TRUNCATED) {
-	DbSqlQuery_DEBUG_LOG("mysql_stmt_fetch() data truncated");
-      }
-      return new scx::ArgInt(err != MYSQL_NO_DATA);
+      return new scx::ArgInt( next_result() );
     }
     
   } else if (scx::Arg::Binary == optype) {
@@ -359,24 +316,8 @@ scx::Arg* DbSqlQuery::op(const scx::Auth& auth,scx::Arg::OpType optype, const st
       std::string name = right->get_string();
 
       if (name == "error") return get_error();
-
-      if (name == "result") {
-	scx::ArgMap* row = new scx::ArgMap();
-	for (int i=0; i<(int)m_result_args->size(); ++i) {
-   	  DbSqlArg& rarg = (*m_result_args)[i];
-	  row->give(rarg.get_name(),rarg.get_arg());
-	}
-	return row;
-      }
-
-      if (name == "result_list") {
-	scx::ArgList* row = new scx::ArgList();
-	for (int i=0; i<(int)m_result_args->size(); ++i) {
-   	  DbSqlArg& rarg = (*m_result_args)[i];
-	  row->give(rarg.get_arg());
-	}
-	return row;
-      }
+      if (name == "result") return result();
+      if (name == "result_list") return result_list();
 
       if (name == "exec" ||
 	  name == "next_result") return new_method(name);
@@ -387,10 +328,94 @@ scx::Arg* DbSqlQuery::op(const scx::Auth& auth,scx::Arg::OpType optype, const st
 }
 
 //=========================================================================
+scx::Arg* DbSqlQuery::exec(const scx::ArgList& args)
+{
+  //  m_profile.m_module.log("{"+m_profile.m_name+"} exec: "+*m_query);
+  
+  if (m_error) {
+    // If there is a permanent error, don't execute the query, return the error
+    return get_error();
+  }
+  
+  if (m_param_args) {
+    // If the statement has parameters, check and bind
+    if (args.size() != (int)m_param_args->size()) {
+	  return new scx::ArgError(log_error("Incorrect number of parameters",false));
+    }
+    
+    for (int i=0; i<(int)m_param_args->size(); ++i) {
+      (*m_param_args)[i].init_param(m_param_bind[i],args.get(i));
+    }
+    
+    if (::mysql_stmt_bind_param(m_stmt,m_param_bind)) {
+      return new scx::ArgError(log_error("mysql_stmt_bind_param",false));
+    }
+  }
+  
+  // Execute the statement
+  
+  if (::mysql_stmt_execute(m_stmt)) {
+    return new scx::ArgError(log_error("mysql_stmt_bind_param",false));
+  }
+  
+  int affected_rows = ::mysql_stmt_affected_rows(m_stmt);
+  if (affected_rows >= 0) {
+    // This sort of query has no results, just return the number of affected rows
+    DbSqlQuery_DEBUG_LOG("Affected rows: " << affected_rows);
+    return new scx::ArgInt(affected_rows);
+  }
+  
+  return new scx::ArgInt(1);
+}
+
+//=========================================================================
+bool DbSqlQuery::next_result()
+{
+  if (m_error || !m_stmt) return false;
+  
+  int err = ::mysql_stmt_fetch(m_stmt);
+  if (err == 1) {
+    log_error("mysql_stmt_fetch",false);
+    return false;
+  }
+  if (err == MYSQL_DATA_TRUNCATED) {
+    DbSqlQuery_DEBUG_LOG("mysql_stmt_fetch() data truncated");
+  }
+  return (err != MYSQL_NO_DATA);
+}
+
+//=========================================================================
+scx::ArgMap* DbSqlQuery::result() const
+{
+  scx::ArgMap* row = new scx::ArgMap();
+  for (int i=0; i<(int)m_result_args->size(); ++i) {
+    DbSqlArg& rarg = (*m_result_args)[i];
+    row->give(rarg.get_name(),rarg.get_arg());
+  }
+  return row;
+}
+
+//=========================================================================
+scx::ArgList* DbSqlQuery::result_list() const
+{
+  scx::ArgList* row = new scx::ArgList();
+  for (int i=0; i<(int)m_result_args->size(); ++i) {
+    DbSqlArg& rarg = (*m_result_args)[i];
+    row->give(rarg.get_arg());
+  }
+  return row;
+}
+
+//=========================================================================
 void DbSqlQuery::init()
 {
   // Initialise and prepare statement
   
+  if (m_conn == 0) {
+    log_error("mysql_real_connect",true);
+    return;
+  }
+
   m_stmt = ::mysql_stmt_init(m_conn);
   if (!m_stmt) {
     log_error("mysql_stmt_init",true);

@@ -27,6 +27,7 @@ Free Software Foundation, Inc.,
 #include "sconex/FilePath.h"
 #include "sconex/FileDir.h"
 #include "sconex/FileStat.h"
+#include "sconex/Database.h"
 
 SCONESERVER_MODULE(TestModule);
 
@@ -54,7 +55,8 @@ std::string TestModule::info() const
 scx::Arg* TestModule::arg_lookup(const std::string& name)
 {
   // Methods
-  if ("filedir" == name) {
+  if ("filedir" == name ||
+      "db" == name) {
     return new_method(name);
   }      
 
@@ -129,5 +131,17 @@ scx::Arg* TestModule::arg_method(
     
   }
 
+  if ("db" == name) {
+    const scx::Arg* a_type = l->get(0);
+    if (!a_type) return 0;
+
+    const scx::Arg* a_args = l->get(1);
+    const scx::ArgMap* a_args_map = dynamic_cast<const scx::ArgMap*>(a_args);
+    
+    scx::Database* db = scx::Database::create_new(a_type->get_string(),*a_args_map);
+    
+    return new scx::ArgObject(db);
+  }
+  
   return SCXBASE Module::arg_method(auth,name,args);
 }
