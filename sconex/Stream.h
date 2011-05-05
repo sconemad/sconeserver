@@ -25,13 +25,20 @@ Free Software Foundation, Inc.,
 #include "sconex/sconex.h"
 #include "sconex/IOBase.h"
 #include "sconex/Descriptor.h"
-#include "sconex/ModuleRef.h"
+#include "sconex/Provider.h"
 namespace scx {
+
+class Module;
+class ScriptRef;
 
 //=============================================================================
 class SCONEX_API Stream : public IOBase {
 
 public:
+
+  // Create a new stream of the specified type
+  static Stream* create_new(const std::string& type,
+			    const ScriptRef* args);
 
   Stream(const std::string& stream_name);
   virtual ~Stream();
@@ -98,7 +105,7 @@ public:
   void set_chain(Stream* chain);
   // Get/set chain pointer
 
-  void add_module_ref(ModuleRef ref);
+  void add_module_ref(Module* module);
   // Make this stream reference a module
   // This should prevent the module from being unloaded while this stream is
   // active.
@@ -114,6 +121,12 @@ public:
 
   std::string event_status() const;
   // Get a string indicating the current event status of this stream.
+
+  // Stream provider interface
+  static void register_stream(const std::string& type,
+			      Provider<Stream>* factory);
+  static void unregister_stream(const std::string& type,
+				Provider<Stream>* factory);
   
 protected:
 
@@ -146,17 +159,23 @@ protected:
       
 private:
 
-  int m_events;
   // Event status
+  int m_events;
 
-  std::list<ModuleRef*> m_module_refs;
   // List of modules used by this stream
+  typedef std::list<ScriptRef*> ModuleRefList;
+  ModuleRefList m_module_refs;
   
-  Stream* m_chain;
   // Upstream pointer
+  Stream* m_chain;
 
-  Descriptor* m_endpoint;
   // Endpoint (where the data is ultimately written to and read from)
+  Descriptor* m_endpoint;
+
+  static void init();
+
+  // Stream providers
+  static ProviderScheme<Stream>* s_providers;
   
 };
 

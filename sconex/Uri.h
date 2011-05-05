@@ -2,13 +2,7 @@
 
 Uniform Resource Indentifier 
 
-In the form "scheme://host:port/path?query"
-As defined in RFC2396
-
-NOTE: The scheme and host parts are case-insensitive, and are always stored
-in lowercase.
-
-Copyright (c) 2000-2006 Andrew Wedgbury <wedge@sconemad.com>
+Copyright (c) 2000-2011 Andrew Wedgbury <wedge@sconemad.com>
 
 This program is free software; you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -29,12 +23,17 @@ Free Software Foundation, Inc.,
 #define scxUri_h
 
 #include "sconex/sconex.h"
-#include "sconex/Arg.h"
+#include "sconex/ScriptBase.h"
 namespace scx {
 
 //===========================================================================
-class SCONEX_API Uri : public Arg {
-
+// Uri - Uniform Resource Indicator in the form 
+// "scheme://host:port/path?query" as defined in RFC2396.
+//
+// NOTE: The scheme and host parts are case-insensitive, and are always stored
+// in lowercase.
+//
+class SCONEX_API Uri : public ScriptObject {
 public:
 
   Uri();
@@ -46,14 +45,11 @@ public:
     const std::string& path,
     const std::string& query = ""
   );
-  Uri(Arg* args);
-
+  Uri(const ScriptRef* args);
   Uri(const Uri& c);
-  Uri(RefType ref, Uri& c);
   virtual ~Uri();
 
-  Arg* new_copy() const;
-  Arg* ref_copy(RefType ref);
+  ScriptObject* new_copy() const;
 
   void set_scheme(const std::string& scheme);
   void set_host(const std::string& host);
@@ -71,7 +67,10 @@ public:
   virtual std::string get_string() const;
   virtual int get_int() const;
   
-  virtual Arg* op(const Auth& auth, OpType optype, const std::string& opname, Arg* right);
+  virtual ScriptRef* script_op(const ScriptAuth& auth,
+			       const ScriptRef& ref,
+			       const ScriptOp& op,
+			       const ScriptRef* right=0);
   
   Uri& operator=(const Uri& v);
 
@@ -87,11 +86,11 @@ protected:
   
   void from_string(const std::string& str);
   
-  std::string* m_scheme;
-  std::string* m_host;
-  short* m_port;
-  std::string* m_path;
-  std::string* m_query;
+  std::string m_scheme;
+  std::string m_host;
+  short m_port;
+  std::string m_path;
+  std::string m_query;
 };
 
 };

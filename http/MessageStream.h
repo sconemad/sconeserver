@@ -27,6 +27,7 @@ Free Software Foundation, Inc.,
 
 #include "http/HTTPModule.h"
 #include "http/Status.h"
+#include "http/Request.h"
 #include "http/Response.h"
 #include "sconex/Stream.h"
 #include "sconex/VersionTag.h"
@@ -37,9 +38,6 @@ namespace scx { class Buffer; };
 namespace http {
 
 class ConnectionStream;
-class Request;
-class FSNode;
-class FSDirectory;
 class DocRoot;
 class Host;
 
@@ -87,8 +85,8 @@ private:
   
   HTTPModule& m_module;
   ConnectionStream& m_httpstream;
-  Request* m_request;
-  Response m_response;
+  Request::Ref m_request;
+  Response::Ref m_response;
 
   bool m_error_response;
 

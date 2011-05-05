@@ -22,6 +22,7 @@ Free Software Foundation, Inc.,
 #include "sconex/ModuleLoader.h"
 #include "sconex/Module.h"
 #include "sconex/Logger.h"
+#include "sconex/ScriptTypes.h"
 namespace scx {
 
 typedef Module* (*PROC_SCONESERVER_MODULE) (void);
@@ -34,10 +35,11 @@ ModuleLoader::ModuleLoader(
 ) 
   : m_name(name),
     m_autoload_config(true),
-    m_module(mod),
+    m_module(0),
     m_parent(parent)
 {
   DEBUG_COUNT_CONSTRUCTOR(ModuleLoader);
+  if (mod) m_module = new Module::Ref(mod);
 }
 	
 //=============================================================================
@@ -62,7 +64,7 @@ FilePath ModuleLoader::get_path() const
 }
   
 //=============================================================================
-ModuleRef ModuleLoader::ref()
+Module::Ref ModuleLoader::get_module()
 {
   MutexLocker locker(m_mutex);
   
@@ -71,20 +73,21 @@ ModuleRef ModuleLoader::ref()
     load_module();
 
     if (m_module) {
+      Module* m = m_module->object();
       log("Loaded module [" + m_name + "] " +
-          m_module->name() + "-" + m_module->version().get_string());
-      m_module->set_parent(m_parent);
-      m_module->set_autoload_config(m_autoload_config);
-      m_module->set_conf_path(m_config_path);
-      m_module->init();
+          m->name() + "-" + m->version().get_string());
+      m->set_parent(m_parent);
+      m->set_autoload_config(m_autoload_config);
+      m->set_conf_path(m_config_path);
+      m->init();
 
     } else {
-      return ModuleRef();
+      return Module::Ref(0);
     }
 
   }
 
-  return m_module->ref();
+  return *m_module;
 }
 
 //=============================================================================

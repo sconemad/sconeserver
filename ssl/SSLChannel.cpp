@@ -1,8 +1,8 @@
 /* SconeServer (http://www.sconemad.com)
 
-SSL Channel (wraps an OpenSSL context)
+SSL Channel
 
-Copyright (c) 2000-2004 Andrew Wedgbury <wedge@sconemad.com>
+Copyright (c) 2000-2011 Andrew Wedgbury <wedge@sconemad.com>
 
 This program is free software; you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -23,16 +23,17 @@ Free Software Foundation, Inc.,
 
 #include "SSLChannel.h"
 #include "SSLModule.h"
+#include "sconex/ScriptTypes.h"
 
 //=========================================================================
-SSLChannel::SSLChannel(
-  SSLModule& mod,
-  const std::string& name,
-  bool client
-)
-  : m_mod(mod),
+SSLChannel::SSLChannel(SSLModule& mod,
+		       const std::string& name,
+		       bool client
+) : m_mod(mod),
     m_name(name)
 {
+  m_parent = &m_mod;
+
   if (client) {
     m_ctx = SSL_CTX_new( SSLv23_client_method() );
   } else {
@@ -55,46 +56,47 @@ SSL* SSLChannel::new_ssl()
 }
 
 //=============================================================================
-std::string SSLChannel::name() const
+std::string SSLChannel::get_string() const
 {
   return m_name;
 }
 
 //=============================================================================
-scx::Arg* SSLChannel::arg_lookup(
-  const std::string& name
-)
+scx::ScriptRef* SSLChannel::script_op(const scx::ScriptAuth& auth,
+				      const scx::ScriptRef& ref,
+				      const scx::ScriptOp& op,
+				      const scx::ScriptRef* right)
 {
-  // Methods
-  if ("load_key" == name) {
-    return new_method(name);
+  if (op.type() == scx::ScriptOp::Lookup) {
+    const std::string name = right->object()->get_string();
+
+    // Methods
+    if ("load_key" == name) {
+      return new scx::ScriptMethodRef(ref,name);
+    }
   }
 
-  return SCXBASE ArgObjectInterface::arg_lookup(name);
+  return scx::ScriptObject::script_op(auth,ref,op,right);
 }
 
 //=============================================================================
-scx::Arg* SSLChannel::arg_method(
-  const scx::Auth& auth,
-  const std::string& name,
-  scx::Arg* args
-)
+scx::ScriptRef* SSLChannel::script_method(const scx::ScriptAuth& auth,
+					  const scx::ScriptRef& ref,
+					  const std::string& name,
+					  const scx::ScriptRef* args)
 {
-  scx::ArgList* l = dynamic_cast<scx::ArgList*>(args);
-
-  if (!auth.admin()) return new scx::ArgError("Not permitted");
+  if (!auth.admin()) return scx::ScriptError::new_ref("Not permitted");
 
   if ("load_key" == name) {
 
-    const scx::ArgString* a_key =
-      dynamic_cast<const scx::ArgString*>(l->get(0));
-    if (!a_key) {
-      return new scx::ArgError("load_key() Key name must be supplied");
-    }
+    const scx::ScriptString* a_key =
+      scx::get_method_arg<scx::ScriptString>(args,0,"key");
+    if (!a_key)
+      return scx::ScriptError::new_ref("Key name must be supplied");
     scx::FilePath key = m_mod.get_conf_path() + a_key->get_string();
 
-    const scx::ArgString* a_cert =
-      dynamic_cast<const scx::ArgString*>(l->get(1));
+    const scx::ScriptString* a_cert =
+      scx::get_method_arg<scx::ScriptString>(args,1,"cert");
     scx::FilePath cert = m_mod.get_conf_path();
     if (a_cert) {
       cert = cert + a_cert->get_string();
@@ -106,22 +108,22 @@ scx::Arg* SSLChannel::arg_method(
           m_ctx,
           cert.path().c_str(),
           SSL_FILETYPE_PEM) <= 0) {
-      return new scx::ArgError("load_key() Error loading certificate");
+      return scx::ScriptError::new_ref("Error loading certificate");
     }
     
     if (SSL_CTX_use_PrivateKey_file(
           m_ctx,
           key.path().c_str(),
           SSL_FILETYPE_PEM) <= 0) {
-      return new scx::ArgError("load_key() Error loading private key");
+      return scx::ScriptError::new_ref("Error loading private key");
     }
     
     if (!SSL_CTX_check_private_key(m_ctx)) {
-      return new scx::ArgError("load_key() Loaded keys do not match");
+      return scx::ScriptError::new_ref("Loaded keys do not match");
     }
     
     return 0;
   }
   
-  return SCXBASE ArgObjectInterface::arg_method(auth,name,args);
+  return scx::ScriptObject::script_method(auth,ref,name,args);
 }

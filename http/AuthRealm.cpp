@@ -1,8 +1,8 @@
 /* SconeServer (http://www.sconemad.com)
 
-http Authorisation Realm
+HTTP Authorisation
 
-Copyright (c) 2000-2009 Andrew Wedgbury <wedge@sconemad.com>
+Copyright (c) 2000-2011 Andrew Wedgbury <wedge@sconemad.com>
 
 This program is free software; you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -27,28 +27,29 @@ Free Software Foundation, Inc.,
 #include "sconex/Uri.h"
 #include "sconex/LineBuffer.h"
 #include "sconex/User.h"
+#include "sconex/File.h"
+#include "sconex/ScriptTypes.h"
 
 namespace http {
 
 //=========================================================================
-HTTPUser::HTTPUser(
-  HTTPModule& module,
-  const std::string& username,
-  const std::string& password,
-  const scx::FilePath& path
-) : scx::ArgStore(path),
-    m_module(module),
+HTTPUser::HTTPUser(HTTPModule& module,
+		   const std::string& username,
+		   const std::string& password,
+		   const scx::FilePath& path)
+  : m_module(module),
     m_username(username),
     m_password(password)
 {
   DEBUG_COUNT_CONSTRUCTOR(HTTPUser);
-  load();
+  m_parent = &m_module;
+  //  load();
 }
 
 //=========================================================================
 HTTPUser::~HTTPUser()
 {
-  save();
+  //  save();
   DEBUG_COUNT_DESTRUCTOR(HTTPUser);
 }
 
@@ -62,7 +63,9 @@ bool HTTPUser::authorised(const std::string& password)
   struct crypt_data data;
   memset(&data,0,sizeof(data));
   data.initialized = 0;
-  std::string check = crypt_r(password.c_str(), m_password.c_str(), &data);
+  std::string check = crypt_r(password.c_str(),
+			      m_password.c_str(),
+			      &data);
 
   // could use this if crypt_r not available:
   //  std::string check = crypt(password.c_str(), m_password.c_str());
@@ -71,46 +74,28 @@ bool HTTPUser::authorised(const std::string& password)
 }
 
 //=========================================================================
-std::string HTTPUser::name() const
+std::string HTTPUser::get_string() const
 {
-  return m_username;
+  //  return m_username;
+  return scx::ScriptMap::get_string();
 }
 
-//=============================================================================
-scx::Arg* HTTPUser::arg_lookup(
-  const std::string& name
-)
+//=========================================================================
+scx::ScriptRef* HTTPUser::script_op(const scx::ScriptAuth& auth,
+				    const scx::ScriptRef& ref,
+				    const scx::ScriptOp& op,
+				    const scx::ScriptRef* right)
 {
-  return SCXBASE ArgStore::arg_lookup(name);
+  return scx::ScriptMap::script_op(auth,ref,op,right);
 }
 
-//=============================================================================
-scx::Arg* HTTPUser::arg_resolve(const std::string& name)
+//=========================================================================
+scx::ScriptRef* HTTPUser::script_method(const scx::ScriptAuth& auth,
+					const scx::ScriptRef& ref,
+					const std::string& name,
+					const scx::ScriptRef* args)
 {
-  scx::Arg* a = arg_lookup(name);
-  if (BAD_ARG(a)) {
-    delete a;
-    a = m_module.arg_resolve(name);
-  }
-  return a;
-}
-
-//=============================================================================
-scx::Arg* HTTPUser::arg_method(
-  const scx::Auth& auth,
-  const std::string& name,
-  scx::Arg* args
-)
-{
-  //  scx::ArgList* l = dynamic_cast<scx::ArgList*>(args);
-
-  if ("reset" == name) {
-
-    // Let ArgStore do its reset stuff too
-    return SCXBASE ArgStore::arg_method(auth,name,args);
-  }
-
-  return SCXBASE ArgStore::arg_method(auth,name,args);
+  return scx::ScriptMap::script_method(auth,ref,name,args);
 }
 
 
@@ -124,6 +109,7 @@ AuthRealm::AuthRealm(
     m_path(path)
 {
   DEBUG_COUNT_CONSTRUCTOR(AuthRealm);
+  m_parent = &m_module;
 }
 
 //=========================================================================
@@ -142,74 +128,69 @@ HTTPUser* AuthRealm::lookup_user(const std::string& username)
 {
   UserMap::iterator it = m_users.find(username);
   if (it != m_users.end()) {
-    return it->second;
+    return it->second->object();
   }
   return 0;
 }
 
 //=========================================================================
-bool AuthRealm::authorised(const std::string& username, const std::string& password)
+bool AuthRealm::authorised(const std::string& username,
+			   const std::string& password)
 {
   refresh();
   scx::MutexLocker locker(m_mutex);
   UserMap::const_iterator it = m_users.find(username);
   if (it != m_users.end()) {
-    HTTPUser* user = it->second;
+    HTTPUser* user = it->second->object();
     return user->authorised(password);
   }
   return false;
 }
 
 //=========================================================================
-std::string AuthRealm::name() const
+std::string AuthRealm::get_string() const
 {
   return m_name;
 }
 
 //=============================================================================
-scx::Arg* AuthRealm::arg_lookup(const std::string& name)
+scx::ScriptRef* AuthRealm::script_op(const scx::ScriptAuth& auth,
+				     const scx::ScriptRef& ref,
+				     const scx::ScriptOp& op,
+				     const scx::ScriptRef* right)
 {
-  // Methods
-  if ("auth" == name) {
-    return new_method(name);
+  if (op.type() == scx::ScriptOp::Lookup) {
+    const std::string name = right->object()->get_string();
+
+    // Methods
+    if ("auth" == name) {
+      return new scx::ScriptMethodRef(ref,name);
+    }
   }
 
-  return SCXBASE ArgObjectInterface::arg_lookup(name);
+  return scx::ScriptObject::script_op(auth,ref,op,right);
 }
 
 //=============================================================================
-scx::Arg* AuthRealm::arg_resolve(const std::string& name)
+scx::ScriptRef* AuthRealm::script_method(const scx::ScriptAuth& auth,
+					 const scx::ScriptRef& ref,
+					 const std::string& name,
+					 const scx::ScriptRef* args)
 {
-  scx::Arg* a = arg_lookup(name);
-  if (BAD_ARG(a)) {
-    delete a;
-    a = m_module.arg_resolve(name);
-  }
-  return a;
-}
-
-//=============================================================================
-scx::Arg* AuthRealm::arg_method(
-  const scx::Auth& auth,
-  const std::string& name,
-  scx::Arg* args
-)
-{
-  scx::ArgList* l = dynamic_cast<scx::ArgList*>(args);
-
   if ("auth" == name) {
-    if (!auth.trusted()) return new scx::ArgError("Not permitted");
-    const scx::ArgString* a_user =
-      dynamic_cast<const scx::ArgString*>(l->get(0));
+    if (!auth.trusted()) return scx::ScriptError::new_ref("Not permitted");
+
+    const scx::ScriptString* a_user =
+      scx::get_method_arg<scx::ScriptString>(args,0,"username");
     if (!a_user) {
-      return new scx::ArgError("auth() No user specified");
+      return scx::ScriptError::new_ref("auth() No username specified");
     }
     std::string s_user = a_user->get_string();
 
-    const scx::ArgString* a_pass =
-      dynamic_cast<const scx::ArgString*>(l->get(1));
+    const scx::ScriptString* a_pass =
+      scx::get_method_arg<scx::ScriptString>(args,1,"password");
     if (!a_pass) {
-      return new scx::ArgError("auth() No pass specified");
+      return scx::ScriptError::new_ref("auth() No password specified");
     }
     std::string s_pass = a_pass->get_string();
 
@@ -218,18 +199,18 @@ scx::Arg* AuthRealm::arg_method(
     scx::MutexLocker locker(m_mutex);
     UserMap::const_iterator it = m_users.find(s_user);
     if (it == m_users.end()) {
-      return new scx::ArgError("auth() User does not exist");
+      return scx::ScriptError::new_ref("auth() User does not exist");
     }
     
-    HTTPUser* user = it->second;
-    if (!user->authorised(s_pass)) {
-      return new scx::ArgError("auth() Invalid password");
+    HTTPUser::Ref* user = it->second;
+    if (!user->object()->authorised(s_pass)) {
+      return scx::ScriptError::new_ref("auth() Invalid password");
     }
     
-    return new scx::ArgObject(user);
+    return user->ref_copy(ref.reftype());
   }
 
-  return SCXBASE ArgObjectInterface::arg_method(auth,name,args);
+  return scx::ScriptObject::script_method(auth,ref,name,args);
 }
 
 //=========================================================================
@@ -256,7 +237,8 @@ void AuthRealm::refresh()
 	  password = line.substr(i);
 	  if (!username.empty() && !password.empty()) {
 	    scx::FilePath path(m_path + username);
-	    m_users[username] = new HTTPUser(m_module,username,password,path);
+	    HTTPUser* user = new HTTPUser(m_module,username,password,path);
+	    m_users[username] = new HTTPUser::Ref(user);
 	  }
 	}
 	file.close();
@@ -272,7 +254,7 @@ AuthRealmManager::AuthRealmManager(
   HTTPModule& module
 ) : m_module(module)
 {
-
+  m_parent = &m_module;
 }
 
 //=========================================================================
@@ -290,100 +272,94 @@ AuthRealm* AuthRealmManager::lookup_realm(const std::string& name)
 {
   AuthRealmMap::const_iterator it = m_realms.find(name);
   if (it != m_realms.end()) {
-    return it->second;
+    return it->second->object();
   }
   return 0;
 }
 
 //=============================================================================
-scx::Arg* AuthRealmManager::arg_lookup(const std::string& name)
+scx::ScriptRef* AuthRealmManager::script_op(const scx::ScriptAuth& auth,
+					    const scx::ScriptRef& ref,
+					    const scx::ScriptOp& op,
+					    const scx::ScriptRef* right)
 {
-  // Methods
-  if ("add" == name ||
-      "remove" == name) {
-    return new_method(name);
-  }
-
-  // Sub-objects
-  
-  if ("list" == name) {
-    scx::ArgList* list = new scx::ArgList();
-    for (AuthRealmMap::const_iterator it = m_realms.begin();
-	 it != m_realms.end();
-	 ++it) {
-      list->give(new scx::ArgObject(it->second));
+  if (op.type() == scx::ScriptOp::Lookup) {
+    const std::string name = right->object()->get_string();
+    
+    // Methods
+    if ("add" == name ||
+	"remove" == name) {
+      return new scx::ScriptMethodRef(ref,name);
     }
-    return list;
+    
+    // Sub-objects
+    if ("list" == name) {
+      scx::ScriptList* list = new scx::ScriptList();
+      scx::ScriptRef* list_ref = new scx::ScriptRef(list);
+      for (AuthRealmMap::const_iterator it = m_realms.begin();
+	   it != m_realms.end();
+	   ++it) {
+	list->give(it->second->ref_copy(ref.reftype()));
+      }
+      return list_ref;
+    }
+    
+    AuthRealmMap::const_iterator it = m_realms.find(name);
+    if (it != m_realms.end()) {
+      AuthRealm::Ref* r = it->second;
+      return r->ref_copy(ref.reftype());
+    }
   }
   
-  AuthRealmMap::const_iterator it = m_realms.find(name);
-  if (it != m_realms.end()) {
-    AuthRealm* r = it->second;
-    return new scx::ArgObject(r);
-  }
-  
-  return SCXBASE ArgObjectInterface::arg_lookup(name);
+  return scx::ScriptObject::script_op(auth,ref,op,right);
 }
 
 //=============================================================================
-scx::Arg* AuthRealmManager::arg_resolve(const std::string& name)
+scx::ScriptRef* AuthRealmManager::script_method(const scx::ScriptAuth& auth,
+						const scx::ScriptRef& ref,
+						const std::string& name,
+						const scx::ScriptRef* args)
 {
-  scx::Arg* a = arg_lookup(name);
-  if (BAD_ARG(a)) {
-    delete a;
-    a = m_module.arg_resolve(name);
-  }
-  return a;
-}
-
-//=============================================================================
-scx::Arg* AuthRealmManager::arg_method(
-  const scx::Auth& auth,
-  const std::string& name,
-  scx::Arg* args
-)
-{
-  scx::ArgList* l = dynamic_cast<scx::ArgList*>(args);
-
-  if (!auth.admin()) return new scx::ArgError("Not permitted");
+  if (!auth.admin()) return scx::ScriptError::new_ref("Not permitted");
 
   if ("add" == name) {
-    const scx::ArgString* a_realm =
-      dynamic_cast<const scx::ArgString*>(l->get(0));
+    const scx::ScriptString* a_realm =
+      scx::get_method_arg<scx::ScriptString>(args,0,"name");
     if (!a_realm) {
-      return new scx::ArgError("add_realm() No realm specified");
+      return scx::ScriptError::new_ref("add() No realm specified");
     }
     std::string s_realm = a_realm->get_string();
 
     AuthRealmMap::const_iterator it = m_realms.find(s_realm);
     if (it != m_realms.end()) {
-      return new scx::ArgError("add_realm() Realm already exists");
+      return scx::ScriptError::new_ref("add() Realm already exists");
     }
 
-    const scx::ArgString* a_path =
-      dynamic_cast<const scx::ArgString*>(l->get(1));
+    const scx::ScriptString* a_path =
+      scx::get_method_arg<scx::ScriptString>(args,1,"path");
     if (!a_path) {
-      return new scx::ArgError("add_realm() No path specified");
+      return scx::ScriptError::new_ref("add() No path specified");
     }
     std::string s_path = a_path->get_string();
     
     log("Adding realm '" + s_realm + "'");
-    m_realms[s_realm] = new AuthRealm(m_module,s_realm,s_path);
+    AuthRealm* realm = new AuthRealm(m_module,s_realm,s_path);
+    m_realms[s_realm] = new AuthRealm::Ref(realm);
 
-    return 0;
+    return new AuthRealm::Ref(realm);
   }
 
   if ("remove" == name) {
-    const scx::ArgString* a_realm =
-      dynamic_cast<const scx::ArgString*>(l->get(0));
+    const scx::ScriptString* a_realm =
+      scx::get_method_arg<scx::ScriptString>(args,0,"name");
     if (!a_realm) {
-      return new scx::ArgError("add_realm() No realm specified");
+      return scx::ScriptError::new_ref("add_realm() No realm specified");
     }
     std::string s_realm = a_realm->get_string();
 
     AuthRealmMap::iterator it = m_realms.find(s_realm);
     if (it == m_realms.end()) {
-      return new scx::ArgError("add_realm() Realm does not exist");
+      return scx::ScriptError::new_ref("add_realm() Realm does not exist");
     }
     
     log("Removing realm '" + s_realm + "'");
@@ -393,7 +369,7 @@ scx::Arg* AuthRealmManager::arg_method(
     return 0;
   }
 
-  return SCXBASE ArgObjectInterface::arg_method(auth,name,args);
+  return scx::ScriptObject::script_method(auth,ref,name,args);
 }
 
 };

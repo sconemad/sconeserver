@@ -2,13 +2,7 @@
 
 MIME Type
 
-In the form "type/subtype *(;name=(value | "value"))
-As defined in RFC 1521
-
-NOTE: The type, subtype and parameter names are case-insensitive, and are 
-always stored in lowercase.
-
-Copyright (c) 2000-2006 Andrew Wedgbury <wedge@sconemad.com>
+Copyright (c) 2000-2011 Andrew Wedgbury <wedge@sconemad.com>
 
 This program is free software; you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -29,12 +23,17 @@ Free Software Foundation, Inc.,
 #define scxMimeType_h
 
 #include "sconex/sconex.h"
-#include "sconex/Arg.h"
+#include "sconex/ScriptBase.h"
 namespace scx {
 
 //===========================================================================
-class SCONEX_API MimeType : public Arg {
-
+// MimeType - A MimeType in the form "type/subtype *(;name=(value | "value"))
+// As defined in RFC 1521
+//
+// NOTE: The type, subtype and parameter names are case-insensitive, and are 
+// always stored in lowercase.
+//
+class SCONEX_API MimeType : public ScriptObject {
 public:
 
   MimeType();
@@ -44,14 +43,12 @@ public:
     const std::string& subtype,
     const std::string& params = ""
   );
-  MimeType(Arg* args);
+  MimeType(const ScriptRef* args);
 
   MimeType(const MimeType& c);
-  MimeType(RefType ref, MimeType& c);
   virtual ~MimeType();
 
-  Arg* new_copy() const;
-  Arg* ref_copy(RefType ref);
+  ScriptObject* new_copy() const;
 
   void set_type(const std::string& type);
   void set_subtype(const std::string& subtype);
@@ -65,7 +62,10 @@ public:
   virtual std::string get_string() const;
   virtual int get_int() const;
   
-  virtual Arg* op(const Auth& auth, OpType optype, const std::string& opname, Arg* right);
+  virtual ScriptRef* script_op(const ScriptAuth& auth,
+			       const ScriptRef& ref,
+			       const ScriptOp& op,
+			       const ScriptRef* right=0);
   
   MimeType& operator=(const MimeType& v);
 
@@ -77,11 +77,11 @@ protected:
   void from_string(const std::string& str);
   void params_from_string(const std::string& str);
   
-  std::string* m_type;
-  std::string* m_subtype;
+  std::string m_type;
+  std::string m_subtype;
 
   typedef std::map<std::string,std::string> ParamMap;
-  ParamMap* m_params;
+  ParamMap m_params;
 
 };
 

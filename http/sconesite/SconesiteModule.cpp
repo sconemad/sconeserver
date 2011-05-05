@@ -2,7 +2,7 @@
 
 Sconesite Module
 
-Copyright (c) 2000-2006 Andrew Wedgbury <wedge@sconemad.com>
+Copyright (c) 2000-2011 Andrew Wedgbury <wedge@sconemad.com>
 
 This program is free software; you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -26,7 +26,7 @@ Free Software Foundation, Inc.,
 
 #include "sconex/ModuleInterface.h"
 #include "sconex/Module.h"
-#include "sconex/Arg.h"
+#include "sconex/ScriptTypes.h"
 #include "sconex/Stream.h"
 #include "sconex/Kernel.h"
 
@@ -58,17 +58,18 @@ protected:
 SconesiteModule::SconesiteModule()
   : scx::Module("sconesite",scx::version())
 {
-#ifndef DISABLE_JOBS
-  m_job = scx::Kernel::get()->add_job(new SconesiteJob(*this,scx::Time(SCONESITE_JOB_PERIOD)));
-#endif
+  scx::Stream::register_stream("sconesite",this);
+
+  m_job = scx::Kernel::get()->add_job(
+    new SconesiteJob(*this,scx::Time(SCONESITE_JOB_PERIOD)));
 }
 
 //=========================================================================
 SconesiteModule::~SconesiteModule()
 {
-#ifndef DISABLE_JOBS  
+  scx::Stream::unregister_stream("sconesite",this);
+
   scx::Kernel::get()->end_job(m_job);
-#endif
 
   for (ProfileMap::const_iterator it = m_profiles.begin();
        it != m_profiles.end();
@@ -84,29 +85,24 @@ std::string SconesiteModule::info() const
 }
 
 //=========================================================================
-bool SconesiteModule::connect(
-  scx::Descriptor* endpoint,
-  scx::ArgList* args
-)
+void SconesiteModule::provide(const std::string& type,
+			      const scx::ScriptRef* args,
+			      scx::Stream*& object)
 {
-  const scx::ArgString* profile_name =
-    dynamic_cast<const scx::ArgString*>(args->get(0));
+  const scx::ScriptString* profile_name =
+    scx::get_method_arg<scx::ScriptString>(args,0,"profile");
   if (!profile_name) {
     log("No profile specified, aborting connection");
-    return false;
   }
 
   Profile* profile = lookup_profile(profile_name->get_string());
   if (!profile) {
-    log("Unknown profile '"+profile_name->get_string()+"' specified, aborting connection");
-    return false;
+    log("Unknown profile '"+profile_name->get_string()+
+	"' specified, aborting connection");
   }
   
-  SconesiteStream* s = new SconesiteStream(*this,profile);
-  s->add_module_ref(ref());
-  
-  endpoint->add_stream(s);
-  return true;
+  object = new SconesiteStream(*this,*profile);
+  object->add_module_ref(this);
 }
 
 //=========================================================================
@@ -115,7 +111,7 @@ void SconesiteModule::refresh()
   for (ProfileMap::iterator it = m_profiles.begin();
        it != m_profiles.end();
        ++it) {
-    Profile* profile = it->second;
+    Profile* profile = it->second->object();
     profile->refresh();
   }
 }
@@ -125,71 +121,71 @@ Profile* SconesiteModule::lookup_profile(const std::string& profile)
 {
   ProfileMap::const_iterator it = m_profiles.find(profile);
   if (it != m_profiles.end()) {
-    return it->second;
+    return it->second->object();
   }
 
   return 0;
 }
 
 //=============================================================================
-scx::Arg* SconesiteModule::arg_lookup(const std::string& name)
+scx::ScriptRef* SconesiteModule::script_op(const scx::ScriptAuth& auth,
+					   const scx::ScriptRef& ref,
+					   const scx::ScriptOp& op,
+					   const scx::ScriptRef* right)
 {
-  // Methods
+  if (op.type() == scx::ScriptOp::Lookup) {
+    const std::string name = right->object()->get_string();
 
-  if ("add" == name) {
-    return new_method(name);
-  }      
+    // Methods
+    if ("add" == name) {
+      return new scx::ScriptMethodRef(ref,name);
+    }      
 
-  // Properties
-
-  // Sub-objects
-
-  ProfileMap::const_iterator it = m_profiles.find(name);
-  if (it != m_profiles.end()) {
-    Profile* p = it->second;
-    return new scx::ArgObject(p);
+    // Sub-objects
+    
+    ProfileMap::const_iterator it = m_profiles.find(name);
+    if (it != m_profiles.end()) {
+      return it->second->ref_copy(ref.reftype());
+    }
   }
-  
-  return SCXBASE Module::arg_lookup(name);
+
+  return scx::Module::script_op(auth,ref,op,right);
 }
 
 //=============================================================================
-scx::Arg* SconesiteModule::arg_method(
-  const scx::Auth& auth,
-  const std::string& name,
-  scx::Arg* args
-)
+scx::ScriptRef* SconesiteModule::script_method(const scx::ScriptAuth& auth,
+					       const scx::ScriptRef& ref,
+					       const std::string& name,
+					       const scx::ScriptRef* args)
 {
-  scx::ArgList* l = dynamic_cast<scx::ArgList*>(args);
-
   if ("add" == name) {
-    if (!auth.admin()) return new scx::ArgError("Not permitted");
+    if (!auth.admin()) return scx::ScriptError::new_ref("Not permitted");
 
-    const scx::ArgString* a_profile =
-      dynamic_cast<const scx::ArgString*>(l->get(0));
+    const scx::ScriptString* a_profile =
+      scx::get_method_arg<scx::ScriptString>(args,0,"name");
     if (!a_profile) {
-      return new scx::ArgError("add() No profile name specified");
+      return scx::ScriptError::new_ref("add() No profile name specified");
     }
     std::string s_profile = a_profile->get_string();
     
-    const scx::ArgString* a_path =
-      dynamic_cast<const scx::ArgString*>(l->get(1));
+    const scx::ScriptString* a_path =
+      scx::get_method_arg<scx::ScriptString>(args,1,"path");
     if (!a_path) {
-      return new scx::ArgError("add() No path specified");
+      return scx::ScriptError::new_ref("add() No path specified");
     }
 
     ProfileMap::const_iterator it = m_profiles.find(s_profile);
     if (it != m_profiles.end()) {
-      return new scx::ArgError("add() Profile already exists");
+      return scx::ScriptError::new_ref("add() Profile already exists");
     }
         
     scx::FilePath path = a_path->get_string();
-    log("Adding profile '" + s_profile + "' dir '" +
-        path.path() + "'");
-    m_profiles[s_profile] = new Profile(*this,s_profile,path);
+    log("Adding profile '" + s_profile + "' dir '" + path.path() + "'");
+    Profile* profile = new Profile(*this,s_profile,path);
+    m_profiles[s_profile] = new Profile::Ref(profile);
 
-    return 0;
+    return new Profile::Ref(profile);
   }
   
-  return SCXBASE Module::arg_method(auth,name,args);
+  return scx::Module::script_method(auth,ref,name,args);
 }

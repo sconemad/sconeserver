@@ -2,16 +2,18 @@
 
 A very simple module which only allows connections on Tuesdays!
 
-Copyright (c) 2000-2006 Andrew Wedgbury <wedge@sconemad.com> */
+Copyright (c) 2000-2011 Andrew Wedgbury <wedge@sconemad.com> */
 
 #include "sconex/Module.h"
 #include "sconex/ModuleInterface.h"
 #include "sconex/Date.h"
+#include "sconex/Stream.h"
 
 //=============================================================================
 // Our module class, which must be derived from scx::Module
-class TuesdayOnlyModule : public scx::Module {
-
+//
+class TuesdayOnlyModule : public scx::Module,
+			  public scx::Provider<scx::Stream> {
 public:
 
   TuesdayOnlyModule();
@@ -20,12 +22,10 @@ public:
 
   virtual std::string info() const;
   
-  virtual int init();
-
-  virtual bool connect(
-    scx::Descriptor* endpoint,
-    scx::ArgList* args
-  );
+  // Provider<scx::Stream> method
+  virtual void provide(const std::string& type,
+		       const scx::ScriptRef* args,
+		       scx::Stream*& object);
 
 };
 
@@ -36,7 +36,7 @@ SCONESERVER_MODULE(TuesdayOnlyModule);
 //=============================================================================
 // Constructor
 TuesdayOnlyModule::TuesdayOnlyModule()
-  : scx::Module("tuesdayonly", scx::VersionTag(1,0,0))
+  : scx::Module("tuesdayonly", scx::version())
 {
   // Specify module name and version in base constructor
 }
@@ -52,26 +52,16 @@ TuesdayOnlyModule::~TuesdayOnlyModule()
 // Return an information string describing this module
 std::string TuesdayOnlyModule::info() const
 {
-  return "Copyright (c) 2000-2005 Andrew Wedgbury\n"
-  "A very simple example module which only allows connections on Tuesdays!\n";
+  return "A very simple example module which only allows connections on "
+         "Tuesdays!";
 }
   
 //=============================================================================
-// Initialise the module
-int TuesdayOnlyModule::init()
+// Request to provide a stream
+//
+void TuesdayOnlyModule::provide(const std::string& type,
+				const scx::ScriptRef* args,
+				scx::Stream*& object)
 {
-  // Everything is fine so return 0
-  return 0;
-}
 
-//=============================================================================
-// Notification of connection attempt
-bool TuesdayOnlyModule::connect(
-  scx::Descriptor* /* endpoint */,
-  scx::ArgList* /* args */
-)
-{
-  // Return 'true' only if today is a tuesday, otherwise return 'false' -
-  // causing the connection to be dropped.
-  return (scx::Date::now().day() == scx::Date::Tue);
 }

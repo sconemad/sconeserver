@@ -1,8 +1,8 @@
 /* SconeServer (http://www.sconemad.com)
 
-http Authorisation Realm
+HTTP Authorisation
 
-Copyright (c) 2000-2009 Andrew Wedgbury <wedge@sconemad.com>
+Copyright (c) 2000-2011 Andrew Wedgbury <wedge@sconemad.com>
 
 This program is free software; you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -23,33 +23,45 @@ Free Software Foundation, Inc.,
 #define httpAuthRealm_h
 
 #include "http/http.h"
-#include "sconex/ArgObject.h"
-#include "sconex/ArgStore.h"
+#include "sconex/ScriptBase.h"
+#include "sconex/ScriptTypes.h"
 #include "sconex/FilePath.h"
+#include "sconex/Date.h"
+#include "sconex/Mutex.h"
 namespace http {
 
 class HTTPModule;
 class MessageStream;
 
 //=============================================================================
-class HTTP_API HTTPUser : public scx::ArgStore {
+// HTTPUser - An authorised HTTP user
+//
+class HTTP_API HTTPUser : public scx::ScriptMap {
 public:
 
-  HTTPUser(
-    HTTPModule& module,
-    const std::string& username,
-    const std::string& password,
-    const scx::FilePath& path
-  );
+  HTTPUser(HTTPModule& module,
+	   const std::string& username,
+	   const std::string& password,
+	   const scx::FilePath& path);
 
   virtual ~HTTPUser();
 
   bool authorised(const std::string& password);
 
-  virtual std::string name() const;
-  virtual scx::Arg* arg_lookup(const std::string& name);
-  virtual scx::Arg* arg_resolve(const std::string& name);
-  virtual scx::Arg* arg_method(const scx::Auth& auth,const std::string& name,scx::Arg* args);
+  // ScriptObject methods
+  virtual std::string get_string() const;
+
+  virtual scx::ScriptRef* script_op(const scx::ScriptAuth& auth,
+				    const scx::ScriptRef& ref,
+				    const scx::ScriptOp& op,
+				    const scx::ScriptRef* right=0);
+
+  virtual scx::ScriptRef* script_method(const scx::ScriptAuth& auth,
+					const scx::ScriptRef& ref,
+					const std::string& name,
+					const scx::ScriptRef* args);
+
+  typedef scx::ScriptRefTo<HTTPUser> Ref;
 
 private:
 
@@ -61,26 +73,40 @@ private:
 };
 
 //=============================================================================
-class HTTP_API AuthRealm : public scx::ArgObjectInterface {
+// AuthRealm - An authorisation realm, essentially a collection of authorised 
+// users. A realm can then be assigned to control access to one or more
+// HTTP resources.
+// 
+//
+class HTTP_API AuthRealm : public scx::ScriptObject {
 public:
 
-  AuthRealm(
-    HTTPModule& module,
-    const std::string name,
-    const scx::FilePath& path
-  );
-  // Create an authrealm for specified profile and root path
+  // Create an authorisation realm for specified profile and root path
+  AuthRealm(HTTPModule& module,
+	    const std::string name,
+	    const scx::FilePath& path);
 
   virtual ~AuthRealm();
 
   HTTPUser* lookup_user(const std::string& username);
   
-  bool authorised(const std::string& username, const std::string& password);
+  bool authorised(const std::string& username,
+		  const std::string& password);
 
-  virtual std::string name() const;
-  virtual scx::Arg* arg_lookup(const std::string& name);
-  virtual scx::Arg* arg_resolve(const std::string& name);
-  virtual scx::Arg* arg_method(const scx::Auth& auth,const std::string& name,scx::Arg* args);
+  // ScriptObject methods
+  virtual std::string get_string() const;
+
+  virtual scx::ScriptRef* script_op(const scx::ScriptAuth& auth,
+				    const scx::ScriptRef& ref,
+				    const scx::ScriptOp& op,
+				    const scx::ScriptRef* right=0);
+
+  virtual scx::ScriptRef* script_method(const scx::ScriptAuth& auth,
+					const scx::ScriptRef& ref,
+					const std::string& name,
+					const scx::ScriptRef* args);
+
+  typedef scx::ScriptRefTo<AuthRealm> Ref;
   
 protected:
 
@@ -94,13 +120,15 @@ private:
   scx::Date m_modtime;
   scx::Mutex m_mutex;
 
-  //  typedef HASH_TYPE<std::string,HTTPUser*> UserMap;
-  typedef std::map<std::string,HTTPUser*> UserMap;
+  typedef std::map<std::string,HTTPUser::Ref*> UserMap;
   UserMap m_users;
 };
 
 //=============================================================================
-class HTTP_API AuthRealmManager : public scx::ArgObjectInterface {
+// AuthRealmManager - Manages the available authorisation realms.
+//
+//
+class HTTP_API AuthRealmManager : public scx::ScriptObject {
 public:
 
   AuthRealmManager(HTTPModule& module);
@@ -109,9 +137,18 @@ public:
   
   AuthRealm* lookup_realm(const std::string& name);
 
-  virtual scx::Arg* arg_lookup(const std::string& name);
-  virtual scx::Arg* arg_resolve(const std::string& name);
-  virtual scx::Arg* arg_method(const scx::Auth& auth,const std::string& name,scx::Arg* args);
+  // ScriptObject methods
+  virtual scx::ScriptRef* script_op(const scx::ScriptAuth& auth,
+				    const scx::ScriptRef& ref,
+				    const scx::ScriptOp& op,
+				    const scx::ScriptRef* right=0);
+
+  virtual scx::ScriptRef* script_method(const scx::ScriptAuth& auth,
+					const scx::ScriptRef& ref,
+					const std::string& name,
+					const scx::ScriptRef* args);
+
+  typedef scx::ScriptRefTo<AuthRealmManager> Ref;
   
 protected:
 
@@ -119,11 +156,9 @@ private:
 
   HTTPModule& m_module;
 
-  typedef std::map<std::string,AuthRealm*> AuthRealmMap;
+  typedef std::map<std::string,AuthRealm::Ref*> AuthRealmMap;
   AuthRealmMap m_realms;
 };
-
-
 
 };
 #endif

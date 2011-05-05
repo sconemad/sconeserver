@@ -23,30 +23,33 @@ Free Software Foundation, Inc.,
 #define scxRegExp_h
 
 #include "sconex/sconex.h"
-#include "sconex/Arg.h"
+#include "sconex/ScriptBase.h"
 namespace scx {
 
 //===========================================================================
-class SCONEX_API RegExp : public Arg {
+class SCONEX_API RegExp : public ScriptObject {
 
 public:
 
-  RegExp(
-    const std::string& pattern
-  );  
-  RegExp(Arg* args);
-
+  RegExp(const std::string& pattern);  
+  RegExp(const ScriptRef* args);
   RegExp(const RegExp& c);
-  RegExp(RefType ref, RegExp& c);
   virtual ~RegExp();
   
-  Arg* new_copy() const;
-  Arg* ref_copy(RefType ref);
+  ScriptObject* new_copy() const;
 
   virtual std::string get_string() const;
   virtual int get_int() const;
   
-  virtual Arg* op(const Auth& auth, OpType optype, const std::string& opname, Arg* right);
+  virtual ScriptRef* script_op(const ScriptAuth& auth,
+			       const ScriptRef& ref,
+			       const ScriptOp& op,
+			       const ScriptRef* right=0);
+
+  virtual ScriptRef* script_method(const ScriptAuth& auth,
+				   const ScriptRef& ref,
+				   const std::string& name,
+				   const ScriptRef* args);
   
   bool operator==(const RegExp& v) const;
   bool operator!=(const RegExp& v) const;
@@ -55,7 +58,7 @@ protected:
 
   void from_string(const std::string& str);
   
-  std::string* m_pattern;
+  std::string m_pattern;
   pcre* m_pcre;
 };
 

@@ -40,6 +40,8 @@ public:
   ~Template();
 
   virtual const ArticleHeading& get_headings() const;
+
+  typedef scx::ScriptRefTo<Template> Ref;
   
 protected:
 

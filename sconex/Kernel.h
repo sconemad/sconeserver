@@ -48,25 +48,32 @@ public:
 
   virtual void set_logger(Logger* logger);
   
+  // Connect descriptor
   virtual bool connect(
     Descriptor* d,
-    ArgList* args
+    ScriptRef* args
   );
-  // Connect descriptor
 
+  // Add a job to the kernel
   JobID add_job(Job* job);
-  // Add a job to the multiplexer
 
-  bool end_job(JobID jobid);
   // End a job
+  bool end_job(JobID jobid);
 
-  virtual Arg* arg_lookup(const std::string& name);
-  virtual Arg* arg_method(const Auth& auth, const std::string& name,Arg* args);
+  virtual ScriptRef* script_op(const ScriptAuth& auth,
+			       const ScriptRef& ref,
+			       const ScriptOp& op,
+			       const ScriptRef* right);
   
+  virtual ScriptRef* script_method(const ScriptAuth& auth,
+				   const ScriptRef& ref,
+				   const std::string& name,
+				   const ScriptRef* args);
+  
+  // Access system info
   const std::string& get_system_nodename() const;
   const std::string& get_system_version() const;
   const std::string& get_system_hardware() const;
-  // Some system info
   
 protected:
 
@@ -83,7 +90,7 @@ private:
   std::string m_system_version;
   std::string m_system_hardware;
   
-  static Kernel* s_kernel;
+  static ScriptRefTo<Kernel>* s_kernel;
   
 };
 

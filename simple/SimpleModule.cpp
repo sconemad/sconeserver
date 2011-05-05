@@ -2,7 +2,7 @@
 
 Simple TCP/IP services module
 
-Copyright (c) 2000-2004 Andrew Wedgbury <wedge@sconemad.com>
+Copyright (c) 2000-2011 Andrew Wedgbury <wedge@sconemad.com>
 
 This program is free software; you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -26,7 +26,7 @@ Free Software Foundation, Inc.,
 #include "sconex/Socket.h"
 #include "sconex/Date.h"
 #include "sconex/Response.h"
-#include "sconex/Arg.h"
+#include "sconex/ScriptTypes.h"
 
 SCONESERVER_MODULE(SimpleModule);
 
@@ -34,13 +34,21 @@ SCONESERVER_MODULE(SimpleModule);
 SimpleModule::SimpleModule()
   : scx::Module("simple",scx::version())
 {
-
+  scx::Stream::register_stream("echo",this);
+  scx::Stream::register_stream("discard",this);
+  scx::Stream::register_stream("daytime",this);
+  scx::Stream::register_stream("chargen",this);
+  scx::Stream::register_stream("time",this);
 }
 
 //=========================================================================
 SimpleModule::~SimpleModule()
 {
-
+  scx::Stream::unregister_stream("echo",this);
+  scx::Stream::unregister_stream("discard",this);
+  scx::Stream::unregister_stream("daytime",this);
+  scx::Stream::unregister_stream("chargen",this);
+  scx::Stream::unregister_stream("time",this);
 }
 
 //=========================================================================
@@ -51,70 +59,44 @@ std::string SimpleModule::info() const
 }
 
 //=========================================================================
-bool SimpleModule::connect(
-  scx::Descriptor* endpoint,
-  scx::ArgList* args
-)
+void SimpleModule::provide(const std::string& type,
+			   const scx::ScriptRef* args,
+			   scx::Stream*& object)
 {
-  const scx::ArgString* a_service =
-    dynamic_cast<const scx::ArgString*>(args->get(0));
-  std::string service;
-  if (a_service) {
-    // Use service name if one was passed
-    service = a_service->get_string();
-  } else {
-    // Otherwise try to determine the service associated with the local port
-    scx::Socket* sock = dynamic_cast<scx::Socket*>(endpoint);
-    if (sock) {
-      scx::SocketAddress* addr =
-        const_cast<scx::SocketAddress*>(sock->get_local_addr());
-      scx::ArgString a_right("service");
-      scx::Arg* a_addr_service = addr->op(scx::Auth::Untrusted,scx::Arg::Binary,".",&a_right);
-      service = a_addr_service->get_string();
-    }
-  }
+  if ("echo" == type) {
+    object = new EchoStream();
+    object->add_module_ref(this);
+    
+  } else if ("discard" == type) {
+    object = new DiscardStream();
+    object->add_module_ref(this);
 
-  if ("echo" == service) {
-    EchoStream* s = new EchoStream();
-    s->add_module_ref(ref());
-    endpoint->set_timeout(scx::Time(60));
-    endpoint->add_stream(s);
-    return true;
-
-  } else if ("discard" == service) {
-    DiscardStream* s = new DiscardStream();
-    s->add_module_ref(ref());
-    endpoint->set_timeout(scx::Time(60));
-    endpoint->add_stream(s);
-    return true;
-
-  } else if ("daytime" == service) {
+  } else if ("daytime" == type) {
     // RFC867
     std::string str = scx::Date::now(true).string() + std::string("\r\n");
-    endpoint->add_stream( new scx::Response(str) );
-    return true;
+    object = new scx::Response(str);
     
-  } else if ("chargen" == service) {
-    ChargenStream* s = new ChargenStream();
-    s->add_module_ref(ref());
-    endpoint->set_timeout(scx::Time(60));
-    endpoint->add_stream(s);
-    return true;
+  } else if ("chargen" == type) {
+    object = new ChargenStream();
+    object->add_module_ref(this);
 
-  } else if ("time" == service) {
+  } else if ("time" == type) {
     // RFC868
     uint32_t t = htonl(scx::Date::now().epoch_seconds() + 2208988800u);
-    endpoint->add_stream( new scx::Response(&t,4) );
-    return true;
-   
+    object = new scx::Response(&t,4);
+
   }
-  
-  return false;
 }
 
-//=========================================================================
-bool SimpleModule::unload()
-{
-  return true;
+/* -- this doesn't fit into the new provider fw, could use an "auto" stream?
+// Otherwise try to determine the type associated with the local port
+scx::Socket* sock = dynamic_cast<scx::Socket*>(endpoint);
+if (sock) {
+  scx::SocketAddress* addr =
+    const_cast<scx::SocketAddress*>(sock->get_local_addr());
+  scx::ArgString a_right("service");
+  scx::Arg* a_addr_service = addr->op(scx::Auth::Untrusted,scx::Arg::Binary,".",&a_right);
+  type = a_addr_service->get_string();
+ }
 }
-
+*/

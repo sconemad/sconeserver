@@ -2,7 +2,7 @@
 
 http Document root
 
-Copyright (c) 2000-2006 Andrew Wedgbury <wedge@sconemad.com>
+Copyright (c) 2000-2011 Andrew Wedgbury <wedge@sconemad.com>
 
 This program is free software; you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -22,44 +22,56 @@ Free Software Foundation, Inc.,
 #ifndef httpDocRoot_h
 #define httpDocRoot_h
 
-#include "http/HTTPModule.h"
-#include "sconex/ArgObject.h"
-#include "sconex/ArgStore.h"
+#include "http/http.h"
+#include "sconex/ScriptBase.h"
+#include "sconex/ScriptTypes.h"
+#include "sconex/FilePath.h"
+
+namespace scx { class Descriptor; }
+
 namespace http {
 
+class HTTPModule;
+class Host;
 class HostMapper;
 class Request;
 class Response;
 class AuthRealm;
 
 //=============================================================================
-class ModuleMap {
+// StreamMap - Connects an incoming HTTP request to a stream for handling.
+//
+class StreamMap {
 public:
 
-  ModuleMap(
+  StreamMap(
     HTTPModule& module,
-    const std::string& name,
-    scx::ArgList* args
+    const std::string& type,
+    scx::ScriptRef* args
   );
   
-  ~ModuleMap();
+  ~StreamMap();
 
-  const std::string& get_name() const;
+  const std::string& get_type() const;
   
-  bool connect_module(scx::Descriptor* endpoint);
+  bool connect(scx::Descriptor* endpoint);
   
 private:
   HTTPModule& m_module;
 
-  std::string m_name;
-  scx::ArgList* m_args;
+  std::string m_type;
+  scx::ScriptRef* m_args;
 };
 
   
 //=============================================================================
-class HTTP_API DocRoot : public scx::ArgObjectInterface {
+// DocRoot - Represents an HTTP document root for a given host and profile
+// configuration.
+//
+class HTTP_API DocRoot : public scx::ScriptObject {
 public:
 
+  // Create a docroot for specified host, profile and root path
   DocRoot(
     HTTPModule& module,
     Host& host,
@@ -67,30 +79,53 @@ public:
     const scx::FilePath& path
   );
   
-  // Create a docroot for specified profile and root path
-
   virtual ~DocRoot();
 
   const std::string get_profile() const;
 
-  bool connect_request(scx::Descriptor* endpoint, Request& request, Response& response);
+  // Process an incoming connection request
+  bool connect_request(scx::Descriptor* endpoint,
+		       Request& request,
+		       Response& response);
 
-  ModuleMap* lookup_extn_mod(const std::string& name) const;
-  ModuleMap* lookup_path_mod(const std::string& name, std::string& pathinfo) const;
+  // Lookup stream map to use for a particular file extension
+  StreamMap* lookup_extn_map(const std::string& name) const;
 
+  // Lookup stream map to use for a path
+  StreamMap* lookup_path_map(const std::string& name,
+			     std::string& pathinfo) const;
+
+  // Lookup realm to use for path
   std::string lookup_realm_map(const std::string& name) const;
   
-  const scx::Arg* get_param(const std::string& name) const;
-  void set_param(const std::string& name, scx::Arg* value);
+  // Get/set parameter stored with this profile
+  const scx::ScriptRef* get_param(const std::string& name) const;
+  void set_param(const std::string& name,
+		 scx::ScriptRef* value);
 
-  virtual std::string name() const;
-  virtual scx::Arg* arg_resolve(const std::string& name);
-  virtual scx::Arg* arg_lookup(const std::string& name);
-  virtual scx::Arg* arg_method(const scx::Auth& auth,const std::string& name,scx::Arg* args);
+  // ScriptObject methods
+  virtual std::string get_string() const;
+
+  virtual scx::ScriptRef* script_op(const scx::ScriptAuth& auth,
+				    const scx::ScriptRef& ref,
+				    const scx::ScriptOp& op,
+				    const scx::ScriptRef* right=0);
+
+  virtual scx::ScriptRef* script_method(const scx::ScriptAuth& auth,
+					const scx::ScriptRef& ref,
+					const std::string& name,
+					const scx::ScriptRef* args);
+
+  typedef scx::ScriptRefTo<DocRoot> Ref;
   
 protected:
 
-  bool check_auth(Request& request, Response& response);
+  // Check HTTP authorization for this request.
+  // Returns true if it passes.
+  // Returns false if it fails, in which case the response headers are  set 
+  // appropriately to request client authentication.
+  bool check_auth(Request& request, 
+		  Response& response);
   
 private:
 
@@ -100,14 +135,14 @@ private:
   
   scx::FilePath m_path;
 
-  typedef std::map<std::string,ModuleMap*> PatternMap;
+  typedef std::map<std::string,StreamMap*> PatternMap;
   PatternMap m_extn_mods;
   PatternMap m_path_mods;
 
   typedef std::map<std::string,std::string> RealmMap;
   RealmMap m_realm_maps;
 
-  scx::ArgStore m_params;
+  scx::ScriptMap::Ref m_params;
 };
 
 };

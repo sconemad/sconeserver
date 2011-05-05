@@ -1,8 +1,8 @@
 /* SconeServer (http://www.sconemad.com)
 
-Sconesite Context
+Sconesite document processing context
 
-Copyright (c) 2000-2009 Andrew Wedgbury <wedge@sconemad.com>
+Copyright (c) 2000-2011 Andrew Wedgbury <wedge@sconemad.com>
 
 This program is free software; you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -23,30 +23,38 @@ Free Software Foundation, Inc.,
 #define sconesiteContext_h
 
 #include "XMLDoc.h"
-#include "sconex/ArgObject.h"
+#include "sconex/ScriptBase.h"
 
 //=========================================================================
-class Context : public scx::ArgObjectInterface {
-
+// Context - A document processing context
+//
+class Context : public scx::ScriptObject {
 public:
 
   Context();
   ~Context();
 
-  // XMLDoc interface
   virtual bool handle_doc_start(XMLDoc* doc);
-  virtual bool handle_doc_end(XMLDoc* doc);
-  virtual bool handle_start(const std::string& name, XMLAttrs& attrs, bool empty, void* data) =0;
-  virtual bool handle_end(const std::string& name, XMLAttrs& attr, void* data) =0;
-  virtual void handle_process(const std::string& name, const char* data) =0;
-  virtual void handle_text(const char* text) =0;
-  virtual void handle_comment(const char* text) =0;
-  virtual void handle_error(const std::string& msg) =0;
 
-  // ArgObject interface
-  virtual scx::Arg* arg_resolve(const std::string& name);
-  virtual scx::Arg* arg_lookup(const std::string& name);
-  virtual scx::Arg* arg_method(const scx::Auth& auth,const std::string& name,scx::Arg* args);
+  virtual bool handle_doc_end(XMLDoc* doc);
+
+  virtual bool handle_start(const std::string& name, 
+			    XMLAttrs& attrs, 
+			    bool empty, 
+			    void* data) =0;
+
+  virtual bool handle_end(const std::string& name, 
+			  XMLAttrs& attr, 
+			  void* data) =0;
+
+  virtual void handle_process(const std::string& name, 
+			      const char* data) =0;
+
+  virtual void handle_text(const char* text) =0;
+
+  virtual void handle_comment(const char* text) =0;
+
+  virtual void handle_error(const std::string& msg) =0;
 
 protected:
 

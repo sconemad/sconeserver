@@ -2,7 +2,7 @@
 
 Simple TCP/IP services module
 
-Copyright (c) 2000-2004 Andrew Wedgbury <wedge@sconemad.com>
+Copyright (c) 2000-2011 Andrew Wedgbury <wedge@sconemad.com>
 
 This program is free software; you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -23,10 +23,11 @@ Free Software Foundation, Inc.,
 #define SimpleModule_h
 
 #include "sconex/Module.h"
+#include "sconex/Stream.h"
 
 //=============================================================================
-class SimpleModule : public scx::Module {
-
+class SimpleModule : public scx::Module,
+                     public scx::Provider<scx::Stream> {
 public:
   
   SimpleModule();
@@ -34,17 +35,10 @@ public:
 
   virtual std::string info() const;
   
-  virtual bool connect(
-    scx::Descriptor* endpoint,
-    scx::ArgList* args
-  );
-
-  virtual bool unload();
-
-protected:
-
-private:
-
+  // Provider<scx::Stream> method
+  virtual void provide(const std::string& type,
+		       const scx::ScriptRef* args,
+		       scx::Stream*& object);
 };
 
 #endif

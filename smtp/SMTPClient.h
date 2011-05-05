@@ -2,7 +2,7 @@
 
 SMTP Client
 
-Copyright (c) 2000-2010 Andrew Wedgbury <wedge@sconemad.com>
+Copyright (c) 2000-2011 Andrew Wedgbury <wedge@sconemad.com>
 
 This program is free software; you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -24,10 +24,11 @@ Free Software Foundation, Inc.,
 
 #include "smtp/SMTPModule.h"
 
-#include "sconex/Arg.h"
+#include "sconex/ScriptBase.h"
 #include "sconex/LineBuffer.h"
 #include "sconex/Mutex.h"
 #include "sconex/MimeHeader.h"
+
 namespace smtp {
 
 //=============================================================================
@@ -48,49 +49,62 @@ public:
   std::string m_subject;
   scx::MimeHeaderTable m_extra_headers;
 };
+
   
 //=============================================================================
-class Client : public scx::Arg {
-
+class SMTPClient : public scx::ScriptObject {
 public:
 
+  // Result states
   enum Result {
     Unknown,
-    Success,
-    Failure
+    Success, 
+    Failure 
   };
   
-  Client(SMTPModule& module,const scx::ArgList* args);
-  Client(const Client& c);
-  Client(RefType ref, Client& c);
-  virtual ~Client();
-  virtual scx::Arg* new_copy() const;
-  virtual scx::Arg* ref_copy(RefType ref);
+  SMTPClient(SMTPModule& module,
+	 const scx::ScriptRef* args);
+  SMTPClient(const SMTPClient& c);
+  virtual ~SMTPClient();
+
+  scx::ScriptRef* send(const std::string& message);
+
+  void event_complete(Result result,const std::string& result_str);
+
+  // ScriptObject methods
+  virtual scx::ScriptObject* new_copy() const;
 
   virtual std::string get_string() const;
   virtual int get_int() const;
 
-  virtual scx::Arg* op(const scx::Auth& auth,scx::Arg::OpType optype, const std::string& opname, scx::Arg* right);
+  virtual scx::ScriptRef* script_op(const scx::ScriptAuth& auth,
+				    const scx::ScriptRef& ref,
+				    const scx::ScriptOp& op,
+				    const scx::ScriptRef* right=0);
 
-  scx::Arg* send(const std::string& message);
+  virtual scx::ScriptRef* script_method(const scx::ScriptAuth& auth,
+					const scx::ScriptRef& ref,
+					const std::string& name,
+					const scx::ScriptRef* args);
 
-  void event_complete(Result result,const std::string& result_str);
+  typedef scx::ScriptRefTo<SMTPClient> Ref;
 
 private:
 
   SMTPModule& m_module;
 
-  MessageHeader* m_header;
+  MessageHeader m_header;
   
-  scx::Mutex* m_mutex;
-  scx::ConditionEvent* m_complete;
+  scx::Mutex m_mutex;
+  scx::ConditionEvent m_complete;
 
-  Result* m_result;
-  std::string* m_result_str;
+  Result m_result;
+  std::string m_result_str;
 };
 
+
 //=============================================================================
-class ClientStream : public scx::LineBuffer {
+class SMTPClientStream : public scx::LineBuffer {
 public:
 
   enum Sequence {
@@ -105,12 +119,10 @@ public:
     End
   };
 
-  ClientStream(
-    SMTPModule& module,
-    Client* client
-  );
+  SMTPClientStream(SMTPModule& module,
+		   SMTPClient* client);
   
-  virtual ~ClientStream();
+  virtual ~SMTPClientStream();
 
   bool set_message(const MessageHeader& header,
                    const std::string& message);
@@ -128,8 +140,8 @@ protected:
 private:
 
   SMTPModule& m_module;
-  Client* m_client;
-  Client::Result m_result;
+  SMTPClient* m_client;
+  SMTPClient::Result m_result;
   std::string m_result_str;
   
   std::string m_from;

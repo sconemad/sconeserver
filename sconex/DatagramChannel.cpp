@@ -45,7 +45,7 @@ DatagramChannel::DatagramChannel(
 //=============================================================================
 DatagramChannel::~DatagramChannel()
 {
-  m_multiplexer.notify_close(m_addr_remote->get_string());
+  m_multiplexer.notify_channel_closing(this);
   delete m_addr_remote;
   delete[] m_buffer;
 }

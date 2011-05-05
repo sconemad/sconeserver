@@ -2,7 +2,7 @@
 
 HTTP Get file module
 
-Copyright (c) 2000-2005 Andrew Wedgbury <wedge@sconemad.com>
+Copyright (c) 2000-2011 Andrew Wedgbury <wedge@sconemad.com>
 
 This program is free software; you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -36,7 +36,6 @@ Free Software Foundation, Inc.,
 
 //=========================================================================
 class GetFileStream : public scx::Stream {
-
 public:
 
   GetFileStream(
@@ -54,7 +53,8 @@ public:
   
 protected:
 
-  void log(const std::string message,scx::Logger::Level level = scx::Logger::Info)
+  void log(const std::string message,
+	   scx::Logger::Level level = scx::Logger::Info)
   {
     http::MessageStream* msg = GET_HTTP_MESSAGE();
     if (msg) {
@@ -111,13 +111,15 @@ protected:
       resp.set_header("Content-Length",oss.str());
 
       // Lookup MIME type for file
-      scx::ModuleRef mime = scx::Kernel::get()->get_module("mime");
+      scx::Module::Ref mime = scx::Kernel::get()->get_module("mime");
       if (mime.valid()) {
-        scx::ArgList args;
-        args.give( new scx::ArgString(path.path()) );
-        scx::Arg* ret = mime.module()->arg_method(scx::Auth::Untrusted,"lookup",&args);
+        scx::ScriptList::Ref args(new scx::ScriptList());
+        args.object()->give( scx::ScriptString::new_ref(path.path()) );
+	scx::ScriptMethodRef lookup_method(mime,"lookup");
+        scx::ScriptRef* ret = 
+	  lookup_method.call(scx::ScriptAuth::Untrusted,&args);
         scx::MimeType* mimetype = 0;
-        if (ret && (mimetype = dynamic_cast<scx::MimeType*>(ret))) {
+        if (ret && (mimetype = dynamic_cast<scx::MimeType*>(ret->object()))) {
           resp.set_header("Content-Type",mimetype->get_string());
         }
         delete ret;
@@ -154,7 +156,8 @@ private:
 
 
 //=========================================================================
-class GetFileModule : public scx::Module {
+class GetFileModule : public scx::Module,
+		      public scx::Provider<scx::Stream> {
 public:
 
   GetFileModule();
@@ -164,10 +167,10 @@ public:
 
   virtual int init();
   
-  virtual bool connect(
-    scx::Descriptor* endpoint,
-    scx::ArgList* args
-  );
+  // Provider<Stream> method
+  virtual void provide(const std::string& type,
+		       const scx::ScriptRef* args,
+		       scx::Stream*& object);
 
 protected:
 
@@ -181,13 +184,13 @@ SCONESERVER_MODULE(GetFileModule);
 GetFileModule::GetFileModule(
 ) : scx::Module("http:getfile",scx::version())
 {
-
+  scx::Stream::register_stream("getfile",this);
 }
 
 //=========================================================================
 GetFileModule::~GetFileModule()
 {
-
+  scx::Stream::unregister_stream("getfile",this);
 }
 
 //=========================================================================
@@ -203,14 +206,10 @@ int GetFileModule::init()
 }
 
 //=========================================================================
-bool GetFileModule::connect(
-  scx::Descriptor* endpoint,
-  scx::ArgList* args
-)
+void GetFileModule::provide(const std::string& type,
+			    const scx::ScriptRef* args,
+			    scx::Stream*& object)
 {
-  GetFileStream* s = new GetFileStream(*this);
-  s->add_module_ref(ref());
-  
-  endpoint->add_stream(s);
-  return true;
+  object = new GetFileStream(*this);
+  object->add_module_ref(this);
 }

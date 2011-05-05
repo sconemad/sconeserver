@@ -3,19 +3,21 @@
 
 AM_CPPFLAGS = -I$(top_srcdir)
 
-pkglib_LTLIBRARIES = testbuilder.la
+if BUILD_TESTBUILDER
+  pkglib_LTLIBRARIES = testbuilder.la
+endif
 
 testbuilder_la_SOURCES = \
-TestBuilderControlStream.cpp \
 TestBuilderModule.cpp \
+TestBuilderControlStream.cpp \
 BuildProfile.cpp \
 Build.cpp \
 BuildProcessStream.cpp \
 BuildStep.cpp
 
 noinst_HEADERS = \
-TestBuilderControlStream.h \
 TestBuilderModule.h \
+TestBuilderControlStream.h \
 BuildProfile.h \
 Build.h \
 BuildProcessStream.h \

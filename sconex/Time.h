@@ -2,7 +2,7 @@
 
 Time and TimeZone
 
-Copyright (c) 2000-2006 Andrew Wedgbury <wedge@sconemad.com>
+Copyright (c) 2000-2011 Andrew Wedgbury <wedge@sconemad.com>
 
 This program is free software; you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -23,7 +23,7 @@ Free Software Foundation, Inc.,
 #define scxTime_h
 
 #include "sconex/sconex.h"
-#include "sconex/Arg.h"
+#include "sconex/ScriptBase.h"
 #include <time.h>
 namespace scx {
 
@@ -37,33 +37,33 @@ const int SECONDS_PER_HOUR   = 3600;
 const int SECONDS_PER_MINUTE = 60;
 
 class Date;
-class Arg;
 
 //=============================================================================
-class SCONEX_API Time : public Arg {
-
+class SCONEX_API Time : public ScriptObject {
 public:
 
   Time();
   Time(int t);
+  Time(const timeval& tv);
   Time(int minutes,int seconds);
   Time(int hours,int minutes,int seconds);
   Time(int days,int hours,int minutes,int seconds);
   Time(int weeks,int days,int hours,int minutes,int seconds);
   Time(const std::string& str);
-  Time(Arg* args);
+  Time(const ScriptRef* args);
 
   Time(const Time& c);
-  Time(RefType ref, Time& c);
   ~Time();
 
-  virtual Arg* new_copy() const;
-  virtual Arg* ref_copy(RefType ref);
+  virtual ScriptObject* new_copy() const;
 
-  // Get the time in seconds
+  // Get the time in seconds (ignoring partial seconds)
   int seconds() const;
-
+  
   // These return the total time converted to these units
+  double to_microseconds() const;
+  double to_milliseconds() const;
+  double to_seconds() const;
   double to_weeks() const;
   double to_days() const;
   double to_hours() const;
@@ -74,42 +74,52 @@ public:
   void get(int& days,int& hours,int& minutes,int& seconds) const;
   void get(int& weeks,int& days,int& hours,int& minutes,int& seconds) const;
 
+  // Get microsecond component
+  int microseconds() const;
+
   Time& operator=(const Time& t);
 
   Time operator+(const Time& t) const;
   Time operator-(const Time& t) const;
 
-  virtual std::string string() const;
+  enum Precision { 
+    Weeks, Days, Hours, Minutes, Seconds, Milliseconds, Microseconds 
+  };
 
-  // Arg:
+  virtual std::string string(Precision precision=Seconds) const;
+
+  // ScriptObject methods:
   virtual std::string get_string() const;
   virtual int get_int() const;
-  virtual Arg* op(const Auth& auth, OpType optype, const std::string& opname, Arg* right);
+
+  virtual ScriptRef* script_op(const ScriptAuth& auth,
+			       const ScriptRef& ref,
+			       const ScriptOp& op,
+			       const ScriptRef* right=0);
+
+  typedef ScriptRefTo<Time> Ref;
 
 protected:
   friend class Date;
   friend class TimeZone;
-  time_t* m_time;
+  timeval m_time;
   
 };
 
 
 //=============================================================================
 class SCONEX_API TimeZone : public Time {
-
 public:
 
   explicit TimeZone(time_t t=0);
   TimeZone(int hours,int minutes);
   TimeZone(const std::string& str);
-  TimeZone(Arg* args);
+  TimeZone(const ScriptRef* args);
 
   TimeZone(const TimeZone& c);
-  TimeZone(RefType ref, TimeZone& c);
   ~TimeZone();
 
-  virtual Arg* new_copy() const;
-  virtual Arg* ref_copy(RefType ref);
+  virtual ScriptObject* new_copy() const;
 
   static TimeZone utc();
   // Get the UTC timezone (i.e. +0000 or GMT)
@@ -122,13 +132,16 @@ public:
   
   virtual std::string string() const;
 
+  typedef ScriptRefTo<TimeZone> Ref;
+
 protected:
   friend class Date;
   
   void parse_string(const std::string& str);
 
-  void init_tables();
-  void add_tz(const std::string& name,double hrs);
+  static void init_tables();
+  static void add_tz(const std::string& name,double hrs);
+
   typedef std::map<std::string,int> TimeZoneOffsetMap;
   static TimeZoneOffsetMap* s_zone_table;
 

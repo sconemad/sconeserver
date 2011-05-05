@@ -25,6 +25,7 @@ Free Software Foundation, Inc.,
 #include "ExecModule.h"
 #include "sconex/Stream.h"
 #include "sconex/Module.h"
+#include "sconex/ScriptTypes.h"
 
 namespace scx { class Process; }
 
@@ -33,10 +34,8 @@ class ExecStream : public scx::Stream {
 
 public:
 
-  ExecStream(
-    ExecModule& module,
-    scx::ArgList* args
-  );
+  ExecStream(ExecModule& module,
+	     scx::ScriptList* args);
 
   ~ExecStream();
   
@@ -51,7 +50,7 @@ protected:
 private:
 
   ExecModule& m_module;
-  scx::ArgList* m_args;
+  scx::ScriptList* m_args;
   scx::Process* m_process;
 
   bool m_cgi_mode;

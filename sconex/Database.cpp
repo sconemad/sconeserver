@@ -27,48 +27,56 @@ namespace scx {
 template class Provider<Database>;
 template class ProviderScheme<Database>;
   
-ProviderScheme<Database>* Database::s_providers = 0;
+ProviderScheme<Database::Ref>* Database::s_providers = 0;
   
 //=========================================================================
-Database* Database::create_new(
-  const std::string& type,
-  const ArgMap& args
-)
+Database::Ref* Database::open(const std::string& type,
+			      const ScriptRef* args)
 {
   init();
-  return s_providers->create_new(type,args);
+  return s_providers->provide(type,args);
 }
 
 //=========================================================================
 Database::Database()
 {
+  DEBUG_COUNT_CONSTRUCTOR(Database);
+}
 
+//=========================================================================
+Database::Database(const Database& c)
+  : ScriptObject(c)
+{
+  DEBUG_COUNT_CONSTRUCTOR(Database);
 }
 
 //=========================================================================
 Database::~Database()
 {
-
+  DEBUG_COUNT_DESTRUCTOR(Database);
 }
 
 //=========================================================================
 void Database::register_provider(const std::string& type,
-                                 Provider<Database>* factory)
+                                 Provider<Database::Ref>* factory)
 {
+  init();
   s_providers->register_provider(type,factory);
 }
   
 //=========================================================================
-void Database::unregister_provider(const std::string& type)
+void Database::unregister_provider(const std::string& type,
+				   Provider<Database::Ref>* factory)
 {
-  s_providers->unregister_provider(type);
+  init();
+  s_providers->unregister_provider(type,factory);
 }
   
 //=========================================================================
 void Database::init()
 {
   if (!s_providers) {
-    s_providers = new ProviderScheme<Database>();
+    s_providers = new ProviderScheme<Database::Ref>();
   }
 }
 
@@ -76,21 +84,20 @@ void Database::init()
 //=========================================================================
 DbQuery::DbQuery()
 {
-
+  DEBUG_COUNT_CONSTRUCTOR(DbQuery);
 }
   
 //=========================================================================
 DbQuery::DbQuery(const DbQuery& c)
-  : Arg(c)
+  : ScriptObject(c)
 {
-
+  DEBUG_COUNT_CONSTRUCTOR(DbQuery);
 }
-  
-//=========================================================================
-DbQuery::DbQuery(RefType ref, DbQuery& c)
-  : Arg(ref,c)
-{
 
+//=========================================================================
+DbQuery::~DbQuery()
+{
+  DEBUG_COUNT_DESTRUCTOR(DbQuery);
 }
   
 };

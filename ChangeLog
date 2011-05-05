@@ -1,4 +1,34 @@
 
+2011-05-05 Andrew Wedgbury <wedge@sconemad.com>
+
+	* all: Rename SconeScript "Arg..." base classes to "Script...", as that
+	makes more sense. This is quite a big change!
+	* sconex/ScriptBase: ScriptObject replaces Arg, with ScriptRef as a
+	ref counting smart pointer (ref is held by the ScriptObject).
+	* sconex/ScriptTypes: Standard Script types moved here.
+	* sconex/ScriptExpr: Was ArgProc, added multiple context lookup,
+	standard context with type provider registration.
+	* sconex/ScriptEngine: Was ArgScript.
+	* sconex/ScriptStatement: Was ArgStatement.
+	* sconex/ArgObject: Removed, all ArgObjectInterface classes now derive
+	directly from ScriptObject.
+	* sconex/ModuleRef: Removed, ScriptRef takes over this functionality.
+	* sconex/Process: Fix non-serious compiler warnings.
+	* sconex/Stream: Add stream provider registration.
+	* sconex/Module: Remove connect method (now use stream provider API).
+	* sconex/Kernel: Move standard script ctors to standard context.
+	* sconex/Date: Store timeval to give microsecond-precision dates.
+	* sconex/Time: Store timeval to give microsecond-precision times.
+	* sconex/Logger: Output microseconds in log.
+	* mysql: Was dbsql, improve using new Database provider API.
+	* server: Was router, rename to make more sense, use stream providers.
+	* stat: Refer to stat types by name to allow further expansion.
+	* ip: Moved from router/ip.
+	* ip6: Moved from router/ip6.
+	* local: Moved from router/local.
+	* bluetooth: Moved from router/bluetooth.
+	* rss: Moved from http/sconesite/rss. 
+
 2011-02-29 Andrew Wedgbury <wedge@sconemad.com>
 
 	* sconex/TermBuffer: Handle ^D, use proper constants for keycodes.
@@ -21,13 +51,13 @@
 	* doc/examples: Relocate dir to (root)/examples, remove doc.
 	* sconex/IOBase: New common base for Descriptor and Stream.
 	* sconex/Descriptor: Derive from IOBase.
-	Correct virutal event maps to event_mask in get_event_mask.
+	Correct virtual event maps to event_mask in get_event_mask.
 	* sconex/DatagramChannel: Fix event update in endpoint_read.
 	* sconex/Stream: Derive from IOBase.
 	* sconex/Date: Correct tz handling in operator+ and -.
 	* sconex/Time: Arg return hours & minutes as ArgReal.
-	* tftp: Fix this module so it basically works!	
-	
+	* tftp: Fix this module so it basically works!
+
 2010-10-13 Andrew Wedgbury <wedge@sconemad.com>
 
 	* debian: Add required files for creating Debian packages.
@@ -35,12 +65,12 @@
 2010-10-06 Andrew Wedgbury <wedge@sconemad.com>
 
 	* image: Fix header paths following sconesite reolcation.
-	
+
 2010-08-22 Andrew Wedgbury <wedge@sconemad.com>
 
 	* rss/Feed: Fix segfault with invalid RSS feed data.
 	* sconesite/XMLDoc: Fix lockup with concurrent open calls.
-	
+
 
 2010-08-17 Andrew Wedgbury <wedge@sconemad.com>
 

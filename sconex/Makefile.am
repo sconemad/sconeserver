@@ -8,12 +8,6 @@ lib_LTLIBRARIES = libsconex.la
 libsconex_la_SOURCES = \
 sconex.cpp \
 utils.cpp \
-Arg.cpp \
-ArgObject.cpp \
-ArgProc.cpp \
-ArgScript.cpp \
-ArgStatement.cpp \
-ArgStore.cpp \
 Base64.cpp \
 Buffer.cpp \
 ConfigFile.cpp \
@@ -41,13 +35,17 @@ MimeType.cpp \
 Module.cpp \
 ModuleLoader.cpp \
 ModuleLoaderDLL.cpp \
-ModuleRef.cpp \
 Multiplexer.cpp \
 Mutex.cpp \
 NullFile.cpp \
 Process.cpp \
 RegExp.cpp \
 Response.cpp \
+ScriptBase.cpp \
+ScriptEngine.cpp \
+ScriptExpr.cpp \
+ScriptStatement.cpp \
+ScriptTypes.cpp \
 Socket.cpp \
 SocketAddress.cpp \
 Stream.cpp \
@@ -69,12 +67,6 @@ sconexincludedir = $(includedir)/sconex
 sconexinclude_HEADERS = \
 sconex.h \
 utils.h \
-Arg.h \
-ArgObject.h \
-ArgProc.h \
-ArgScript.h \
-ArgStatement.h \
-ArgStore.h \
 Base64.h \
 Buffer.h \
 ConfigFile.h \
@@ -103,7 +95,6 @@ Module.h \
 ModuleInterface.h \
 ModuleLoader.h \
 ModuleLoaderDLL.h \
-ModuleRef.h \
 Multiplexer.h \
 Mutex.h \
 NullFile.h \
@@ -111,6 +102,11 @@ Process.h \
 Provider.h \
 RegExp.h \
 Response.h \
+ScriptBase.h \
+ScriptEngine.h \
+ScriptExpr.h \
+ScriptStatement.h \
+ScriptTypes.h \
 Socket.h \
 SocketAddress.h \
 Stream.h \
@@ -133,12 +129,12 @@ check_PROGRAMS = utest
 
 utest_SOURCES = \
 utest.cpp \
-Arg_ut.cpp \
 Buffer_ut.cpp \
 LineBuffer_ut.cpp \
 MemFile_ut.cpp \
 MimeHeader_ut.cpp \
 MimeType_ut.cpp \
+ScriptTypes_ut.cpp \
 TimeDate_ut.cpp \
 Uri_ut.cpp \
 utils_ut.cpp \

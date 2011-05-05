@@ -2,7 +2,7 @@
 
 Date
 
-Copyright (c) 2000-2006 Andrew Wedgbury <wedge@sconemad.com>
+Copyright (c) 2000-2011 Andrew Wedgbury <wedge@sconemad.com>
 
 This program is free software; you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -21,6 +21,7 @@ Free Software Foundation, Inc.,
 
 
 #include "sconex/Date.h"
+#include "sconex/ScriptTypes.h"
 #include "sconex/utils.h"
 namespace scx {
 
@@ -28,40 +29,35 @@ Date::MonthNameMap* Date::s_month_table = 0;
 
 //=============================================================================
 Date::Date()
-  : m_time(new time_t(0)),
-    m_timezone(new TimeZone())
+  : m_time()
 {
   DEBUG_COUNT_CONSTRUCTOR(Date);
   init_tables();
 }
 
 //=============================================================================
-Date::Date(
-  int t,
-  bool local
-)
-  : m_time(new time_t(t)),
-    m_timezone(new TimeZone())
+Date::Date(int t, bool local) 
+  : m_time(),
+    m_timezone(local ? TimeZone::local(t) : TimeZone())
 {
   DEBUG_COUNT_CONSTRUCTOR(Date);
   init_tables();
-  if (local) {
-    *m_timezone = TimeZone::local(t);
-  }
+  m_time.tv_sec = t;
 }
 
 //=============================================================================
-Date::Date(
-  int year,
-  int month,
-  int mday,
-  int hour,
-  int minute,
-  int second,
-  bool local
-)
-  : m_time(new time_t()),
-    m_timezone(new TimeZone())
+Date::Date(const timeval& tv, bool local)
+  : m_time(tv),
+    m_timezone(local ? TimeZone::local(tv.tv_sec) : TimeZone())
+{
+  DEBUG_COUNT_CONSTRUCTOR(Date);
+  init_tables();
+}
+
+//=============================================================================
+Date::Date(int year, int month, int mday, int hour, int minute, int second,
+	   bool local) 
+  : m_time()
 {
   DEBUG_COUNT_CONSTRUCTOR(Date);
   struct tm tms;
@@ -76,26 +72,22 @@ Date::Date(
   tms.tm_year = year-1900;
 
   if (local) {
-    *m_time = mktime(&tms);
+    m_time.tv_sec = mktime(&tms);
 
     // Get local timezone
-    *m_timezone = TimeZone::local(*m_time);
+    m_timezone = TimeZone::local(m_time.tv_sec);
 
     // Adjust to UTC from local timezone
-    *m_time -= m_timezone->seconds();
+    m_time.tv_sec -= m_timezone.seconds();
     
   } else {
-    *m_time = timegm(&tms);
+    m_time.tv_sec = timegm(&tms);
   }
 }
 
 //=============================================================================
-Date::Date(
-  const std::string& str,
-  bool local
-)
-  : m_time(new time_t(0)),
-    m_timezone(new TimeZone())
+Date::Date(const std::string& str, bool local)
+  : m_time()
 {
   DEBUG_COUNT_CONSTRUCTOR(Date);
   init_tables();
@@ -103,56 +95,41 @@ Date::Date(
 }
 
 //=============================================================================
-Date::Date(Arg* args)
-  : m_time(new time_t()),
-    m_timezone(new TimeZone())
+Date::Date(const ScriptRef* args)
+  : m_time()
 {
   DEBUG_COUNT_CONSTRUCTOR(Date);
   init_tables();
 
-  ArgList* l = dynamic_cast<ArgList*>(args);
-
-  Arg* a = l->get(0);
-  Arg* a_local = l->get(1);
+  const ScriptInt* a_local = get_method_arg<ScriptInt>(args,1,"local");
   bool local = false;
   if (a_local) local = a_local->get_int();
 
-  ArgString* a_string = dynamic_cast<ArgString*>(a);
+  const ScriptString* a_string = get_method_arg<ScriptString>(args,0,"string");
   if (a_string) {
     // Parse from string
     parse_string(a_string->get_string(),local);
 
   } else {
-    ArgInt* a_int = dynamic_cast<ArgInt*>(a);
+    const ScriptInt* a_int = get_method_arg<ScriptInt>(args,0,"value");
     if (a_int) {
-      *m_time = a->get_int();
+      m_time.tv_sec = a_int->get_int();
       
     } else {
-      time_t tmp;
-      *m_time = ::time(&tmp);
+      ::gettimeofday(&m_time,0);
     }
     if (local) {
-      *m_timezone = TimeZone::local(*m_time);
+      m_timezone = TimeZone::local(m_time);
 
       // Adjust to UTC from local timezone
-      *m_time -= m_timezone->seconds();
+      m_time.tv_sec -= m_timezone.seconds();
     }
   }
 }
 
 //=============================================================================
 Date::Date(const Date& c)
-  : Arg(c),
-    m_time(new time_t(*c.m_time)),
-    m_timezone(new TimeZone(*c.m_timezone))
-{
-  DEBUG_COUNT_CONSTRUCTOR(Date);
-  init_tables();
-}
-
-//=============================================================================
-Date::Date(RefType ref, Date& c)
-  : Arg(ref,c),
+  : ScriptObject(c),
     m_time(c.m_time),
     m_timezone(c.m_timezone)
 {
@@ -163,36 +140,33 @@ Date::Date(RefType ref, Date& c)
 //=============================================================================
 Date::~Date()
 {
-  if (last_ref()) {
-    delete m_time;
-    delete m_timezone;
-  }
   DEBUG_COUNT_DESTRUCTOR(Date);
 }
 
 //=============================================================================
-Arg* Date::new_copy() const
+ScriptObject* Date::new_copy() const
 {
   return new Date(*this);
 }
 
 //=============================================================================
-Arg* Date::ref_copy(RefType ref)
-{
-  return new Date(ref,*this);
-}
-
-//=============================================================================
 Date Date::now(bool local)
 {
-  time_t tmp;
-  return Date(::time(&tmp),local);
+  timeval tv;
+  ::gettimeofday(&tv,0);
+  return Date(tv,local);
 }
 
 //=============================================================================
 bool Date::valid() const
 {
-  return *m_time > 0;
+  return m_time.tv_sec > 0 || m_time.tv_usec > 0;
+}
+
+//=============================================================================
+int Date::microsecond() const
+{
+  return m_time.tv_usec;
 }
 
 //=============================================================================
@@ -288,81 +262,90 @@ Time Date::time() const
 //=============================================================================
 Date Date::operator+(const Time& t) const
 {
-  Date d(*m_time + *t.m_time);
-  *d.m_timezone = *m_timezone;
+  //  Date d(m_time + t.m_time);
+  timeval tv;
+  timeradd(&m_time, &t.m_time, &tv);
+  Date d(tv);
+  d.m_timezone = m_timezone;
   return d;
 }
 
 //=============================================================================
 Date Date::operator-(const Time& t) const
 {
-  Date d(*m_time - *t.m_time);
-  *d.m_timezone = *m_timezone;
+  timeval tv;
+  timersub(&m_time, &t.m_time, &tv);
+  Date d(tv);
+  d.m_timezone = m_timezone;
   return d;
 }
 
 //=============================================================================
 Time Date::operator-(const Date& t) const
 {
-  return Time(*m_time - *t.m_time);
+  timeval tv;
+  timersub(&m_time, &t.m_time, &tv);
+  return Time(tv);
 }
 
 //=============================================================================
 Date& Date::operator=(const Date& t)
 {
-  *m_time = *t.m_time;
-  *m_timezone = *t.m_timezone;
+  if (this != &t) {
+    m_time = t.m_time;
+    m_timezone = t.m_timezone;
+  }
   return *this;
 }
 
 //=============================================================================
 Date& Date::operator+=(const Time& t)
 {
-  *m_time += *t.m_time;
+  timeradd(&m_time, &t.m_time, &m_time);
   return *this;
 }
 
 //=============================================================================
 Date& Date::operator-=(const Time& t)
 {
-  *m_time -= *t.m_time;
+  timersub(&m_time, &t.m_time, &m_time);
   return *this;
 }
 
 //=============================================================================
 bool Date::operator==(const Date& t) const
 {
-  return (*m_time == *t.m_time);
+  return timercmp(&m_time,&t.m_time,==);
 }
 
 //=============================================================================
 bool Date::operator!=(const Date& t) const
 {
-  return (*m_time != *t.m_time);
+  return timercmp(&m_time,&t.m_time,!=);
 }
 
 //=============================================================================
 bool Date::operator>(const Date& t) const
 {
-  return (*m_time > *t.m_time);
+  return timercmp(&m_time,&t.m_time,>);
 }
 
 //=============================================================================
 bool Date::operator>=(const Date& t) const
 {
-  return (*m_time >= *t.m_time);
+  return timercmp(&m_time,&t.m_time,>) || timercmp(&m_time,&t.m_time,==);
 }
 
 //=============================================================================
 bool Date::operator<(const Date& t) const
 {
-  return (*m_time < *t.m_time);
+  return timercmp(&m_time,&t.m_time,<);
 }
 
 //=============================================================================
 bool Date::operator<=(const Date& t) const
 {
-  return (*m_time <= *t.m_time);
+  return timercmp(&m_time,&t.m_time,<) || timercmp(&m_time,&t.m_time,==);
 }
 
 //=============================================================================
@@ -479,26 +462,26 @@ std::string Date::format(const std::string& fmt) const
 //=============================================================================
 time_t Date::epoch_seconds() const
 {
-  return *m_time;
+  return m_time.tv_sec;
 }
  
 //=============================================================================
 const TimeZone& Date::timezone() const
 {
-  return *m_timezone;
+  return m_timezone;
 }
 
 //=============================================================================
 Date Date::to_zone(const TimeZone& timezone) const
 {
-  Date d(*m_time);
+  Date d(m_time);
   d.set_timezone(timezone);
   return d;
 }
 //=============================================================================
 void Date::set_timezone(const TimeZone& timezone)
 {
-  *m_timezone = timezone;
+  m_timezone = timezone;
 }
 
 //=============================================================================
@@ -510,86 +493,102 @@ std::string Date::get_string() const
 //=============================================================================
 int Date::get_int() const
 {
-  return *m_time;
+  return m_time.tv_sec;
 }
 //=============================================================================
-Arg* Date::op(const Auth& auth, OpType optype, const std::string& opname, Arg* right)
+ScriptRef* Date::script_op(const ScriptAuth& auth,
+			   const ScriptRef& ref,
+			   const ScriptOp& op,
+			   const ScriptRef* right)
 {
-  if (is_method_call(optype,opname)) {
+  if (right) { // binary ops
 
-    ArgList* l = dynamic_cast<ArgList*>(right);
-    
-    if ("format" == m_method) {
-      Arg* a_fmt = l->get(0);
-      if (!a_fmt) return new ArgError("No format specified");
-      return new ArgString(format(a_fmt->get_string()));
-    }
-
-    if ("to_zone" == m_method) {
-      TimeZone* a_zone = dynamic_cast<TimeZone*>(l->get(0));
-      if (a_zone) {
-	return to_zone(*a_zone).new_copy();
-      }
-      return new ArgError("to_zone() Invalid argument type");
-    }
-
-  } else if (optype == Arg::Binary) {
-    
-    Date* rd = dynamic_cast<Date*>(right);
+    const Date* rd = dynamic_cast<const Date*>(right->object());
     if (rd) { // Date x Date ops
-      if ("-" == opname) { // Minus (difference in time)
-	return new Time(*this - *rd);
-      } else if ("==" == opname) { // Equality
-	return new ArgInt(*this == *rd);
-      } else if ("==" == opname) { // Inequality
-	return new ArgInt(*this != *rd);
-      } else if (">" == opname) { // Greater than
-	return new ArgInt(*this > *rd);
-      } else if (">=" == opname) { // Greater than or equal to
-	return new ArgInt(*this >= *rd);
-      } else if ("<" == opname) { // Less than
-	return new ArgInt(*this < *rd);
-      } else if ("<=" == opname) { // Less than or equal to
-	return new ArgInt(*this <= *rd);
+      switch (op.type()) {
+      case ScriptOp::Subtract:
+	return new ScriptRef(new Time(*this - *rd));
+      case ScriptOp::Equality:
+	return new ScriptRef(new ScriptInt(*this == *rd));
+      case ScriptOp::Inequality:
+	return new ScriptRef(new ScriptInt(*this != *rd));
+      case ScriptOp::GreaterThan:
+	return new ScriptRef(new ScriptInt(*this > *rd));
+      case ScriptOp::GreaterThanOrEqualTo:
+	return new ScriptRef(new ScriptInt(*this >= *rd));
+      case ScriptOp::LessThan:
+	return new ScriptRef(new ScriptInt(*this < *rd));
+      case ScriptOp::LessThanOrEqualTo:
+	return new ScriptRef(new ScriptInt(*this <= *rd));
+      default: break;
       }
     }
 
-    Time* rt = dynamic_cast<Time*>(right);
+    const Time* rt = dynamic_cast<const Time*>(right->object());
     if (rt) { // Date x Time ops
-      if ("+" == opname) { // Plus
-	return new Date(*this + *rt);
-      } else if ("-" == opname) { // Minus
-	return new Date(*this - *rt);
+      switch (op.type()) {
+      case ScriptOp::Add:
+	return new ScriptRef(new Date(*this + *rt));
+      case ScriptOp::Subtract:
+	return new ScriptRef(new Date(*this - *rt));
+      default: break;
       }
     }
     
-    if ("." == opname) { // Scope resolution
-      std::string name = right->get_string();
-      if (name == "second") return new ArgInt(second());
-      if (name == "minute") return new ArgInt(minute());
-      if (name == "hour") return new ArgInt(hour());
-      if (name == "mday") return new ArgInt(mday());
-      if (name == "month") return new ArgInt(month());
-      if (name == "year") return new ArgInt(year());
-      if (name == "day") return new ArgInt(day());
-      if (name == "yday") return new ArgInt(yday());
-      if (name == "timezone") return m_timezone->ref_copy(Arg::ConstRef);
-      if (name == "code") return new ArgString(code());
-      if (name == "string") return new ArgString(string());
-      if (name == "ansi") return new ArgString(ansi_string());
-      if (name == "epoch_seconds") return new ArgInt(*m_time);
+    if (ScriptOp::Lookup == op.type()) {
+      std::string name = right->object()->get_string();
+      if (name == "second") return ScriptInt::new_ref(second());
+      if (name == "minute") return ScriptInt::new_ref(minute());
+      if (name == "hour") return ScriptInt::new_ref(hour());
+      if (name == "mday") return ScriptInt::new_ref(mday());
+      if (name == "month") return ScriptInt::new_ref(month());
+      if (name == "year") return ScriptInt::new_ref(year());
+      if (name == "day") return ScriptInt::new_ref(day());
+      if (name == "yday") return ScriptInt::new_ref(yday());
+      if (name == "code") return ScriptString::new_ref(code());
+      if (name == "string") return ScriptString::new_ref(string());
+      if (name == "ansi") return ScriptString::new_ref(ansi_string());
+      if (name == "epoch_seconds") return ScriptInt::new_ref(m_time.tv_sec);
+      if (name == "timezone") 
+	return new ScriptRef(m_timezone.new_copy());
 
       if (name == "format" ||
-	  name == "to_zone") return new_method(name);
+	  name == "to_zone") {
+	return new ScriptMethodRef(ref,name);
+      }
     }
   }
-  return Arg::op(auth,optype,opname,right);
+  
+  return ScriptObject::script_op(auth,ref,op,right);
 }
+
+//=============================================================================
+ScriptRef* Date::script_method(const ScriptAuth& auth,
+			       const ScriptRef& ref,
+			       const std::string& name,
+			       const ScriptRef* args)
+{
+  if ("format" == name) {
+    const ScriptString* a_fmt = get_method_arg<ScriptString>(args,0,"format");
+    if (!a_fmt) return ScriptError::new_ref("No format specified");
+    return ScriptString::new_ref(format(a_fmt->get_string()));
+  }
+  
+  if ("to_zone" == name) {
+    const TimeZone* a_zone = get_method_arg<TimeZone>(args,0,"timezone");
+    if (!a_zone) 
+      return ScriptError::new_ref("to_zone() Must specify a valid timezone");
+    return new ScriptRef(to_zone(*a_zone).new_copy());
+  }
+  
+  return ScriptObject::script_method(auth,ref,name,args);
+}
+
 
 //=============================================================================
 bool Date::get_tms(struct tm& tms) const
 {
-  time_t tadj = *m_time + m_timezone->seconds();
+  time_t tadj = m_time.tv_sec + m_timezone.seconds();
   struct tm* tmr = gmtime(&tadj);
 
   if (tmr == 0) {
@@ -635,7 +634,7 @@ void Date::parse_string(const std::string& str, bool local)
           TimeZone::TimeZoneOffsetMap::const_iterator z_it =
             TimeZone::s_zone_table->find(token);
           if (z_it != TimeZone::s_zone_table->end()) {
-            *m_timezone = TimeZone(std::string(token));
+            m_timezone = TimeZone(std::string(token));
             continue;
           }
         }
@@ -670,7 +669,7 @@ void Date::parse_string(const std::string& str, bool local)
         } else if (!got_zone && token.length()==4 &&
                    (pre=='-' || pre=='+')) {
           char ps[2] = {pre,'\0'};
-          *m_timezone = TimeZone(std::string(ps) + token);
+          m_timezone = TimeZone(std::string(ps) + token);
           got_zone = true;
         }
       }
@@ -703,13 +702,13 @@ void Date::parse_string(const std::string& str, bool local)
   tms.tm_year = year<1970 ? 70 : (year-1900);
 
   if (local && !got_zone) {
-    *m_time = mktime(&tms);
+    m_time.tv_sec = mktime(&tms);
   } else {
-    *m_time = timegm(&tms);
+    m_time.tv_sec = timegm(&tms);
   }
 
   // Adjust to UTC from given timezone
-  *m_time -= m_timezone->seconds();
+  m_time.tv_sec -= m_timezone.seconds();
 }
 
 //=============================================================================
@@ -726,12 +725,14 @@ void Date::init_tables()
     (*s_month_table)["FEB"]=1;
     (*s_month_table)["FEBRUARY"]=1;
     (*s_month_table)["FÉVRIER"]=1;
+    (*s_month_table)["FEVRIER"]=1;
     (*s_month_table)["FEBRUAR"]=1;
     
     (*s_month_table)["MAR"]=2;
     (*s_month_table)["MARCH"]=2;
     (*s_month_table)["MARS"]=2;
     (*s_month_table)["MÄRZ"]=2;
+    (*s_month_table)["MARZ"]=2;
       
     (*s_month_table)["APR"]=3;
     (*s_month_table)["APRIL"]=3;
@@ -753,6 +754,7 @@ void Date::init_tables()
     (*s_month_table)["AUG"]=7;
     (*s_month_table)["AUGUST"]=7;
     (*s_month_table)["AOÛT"]=7;
+    (*s_month_table)["AOUT"]=7;
     
     (*s_month_table)["SEP"]=8;
     (*s_month_table)["SEPTEMBER"]=8;
@@ -771,6 +773,7 @@ void Date::init_tables()
     (*s_month_table)["DEC"]=11;
     (*s_month_table)["DECEMBER"]=11;
     (*s_month_table)["DÉCEMBRE"]=11;
+    (*s_month_table)["DECEMBRE"]=11;
     (*s_month_table)["DEZEMBER"]=11;
   }
 }

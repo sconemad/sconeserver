@@ -38,12 +38,13 @@ EchoStream::~EchoStream()
 //=========================================================================
 scx::Condition EchoStream::event(scx::Stream::Event e)
 {
-  if ((e == scx::Stream::Opening) ||
-      (e == scx::Stream::Readable)) {
-    endpoint().reset_timeout();
+  if (e == scx::Stream::Opening) {
+    endpoint().set_timeout(scx::Time(60));
   }
   
   if (e == scx::Stream::Readable) {
+    endpoint().reset_timeout();
+
     char b;
     int na;
     scx::Condition c = Stream::read(&b,1,na);
@@ -74,12 +75,13 @@ DiscardStream::~DiscardStream()
 //=========================================================================
 scx::Condition DiscardStream::event(scx::Stream::Event e)
 {
-  if ((e == scx::Stream::Opening) ||
-      (e == scx::Stream::Readable)) {
-    endpoint().reset_timeout();
+  if (e == scx::Stream::Opening) {
+    endpoint().set_timeout(scx::Time(60));
   }
 
   if (e == scx::Stream::Readable) {
+    endpoint().reset_timeout();
+
     char b;
     int na;
     scx::Condition c = Stream::read(&b,1,na);
@@ -112,12 +114,13 @@ ChargenStream::~ChargenStream()
 //=========================================================================
 scx::Condition ChargenStream::event(scx::Stream::Event e)
 {
-  if ((e == scx::Stream::Opening) ||
-      (e == scx::Stream::Readable)) {
-    endpoint().reset_timeout();
+  if (e == scx::Stream::Opening) {
+    endpoint().set_timeout(scx::Time(60));
   }
 
   if (e == scx::Stream::Readable) {
+    endpoint().reset_timeout();
+
     char b;
     int na;
     scx::Condition c = Stream::read(&b,1,na);

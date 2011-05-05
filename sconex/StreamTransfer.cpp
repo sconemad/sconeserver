@@ -23,7 +23,7 @@ Free Software Foundation, Inc.,
 namespace scx {
 
 // Uncomment to enable debug logging
-//#define TRANSFER_DEBUG_LOG(m) STREAM_DEBUG_LOG(m)
+#define TRANSFER_DEBUG_LOG(m) STREAM_DEBUG_LOG(m)
 
 #ifndef TRANSFER_DEBUG_LOG
 #  define TRANSFER_DEBUG_LOG(m)
@@ -48,8 +48,6 @@ StreamTransfer::StreamTransfer(
   if (source_des) {
     source_des->add_stream(source);
   }
-
-  enable_event(Stream::Opening,true);
 }
 
 //=============================================================================

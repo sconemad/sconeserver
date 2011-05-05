@@ -2,7 +2,7 @@
 
 Trivial File Transfer Protocol (TFTP) Profile
 
-Copyright (c) 2000-2007 Andrew Wedgbury <wedge@sconemad.com>
+Copyright (c) 2000-2011 Andrew Wedgbury <wedge@sconemad.com>
 
 This program is free software; you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -24,11 +24,9 @@ Free Software Foundation, Inc.,
 #include "TFTPProfile.h"
 
 //=========================================================================
-TFTPProfile::TFTPProfile(
-  TFTPModule& mod,
-  const std::string& name,
-  const scx::FilePath& path
-)
+TFTPProfile::TFTPProfile(TFTPModule& mod,
+			 const std::string& name,
+			 const scx::FilePath& path)
   : m_mod(mod),
     m_name(name),
     m_path(path)
@@ -49,32 +47,7 @@ const scx::FilePath& TFTPProfile::get_path() const
 }
 
 //=============================================================================
-std::string TFTPProfile::name() const
+std::string TFTPProfile::get_string() const
 {
   return m_name;
-}
-
-//=============================================================================
-scx::Arg* TFTPProfile::arg_lookup(
-  const std::string& name
-)
-{
-  // Methods
-  if ("test" == name) {
-    return new_method(name);
-  }
-
-  return SCXBASE ArgObjectInterface::arg_lookup(name);
-}
-
-//=============================================================================
-scx::Arg* TFTPProfile::arg_method(
-  const scx::Auth& auth,
-  const std::string& name,
-  scx::Arg* args
-)
-{
-  scx::ArgList* l = dynamic_cast<scx::ArgList*>(args);
-
-  return SCXBASE ArgObjectInterface::arg_method(auth,name,args);
 }

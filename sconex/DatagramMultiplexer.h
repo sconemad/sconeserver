@@ -2,7 +2,7 @@
 
 sconex Datagram Multiplexer
 
-Copyright (c) 2000-2007 Andrew Wedgbury <wedge@sconemad.com>
+Copyright (c) 2000-2011 Andrew Wedgbury <wedge@sconemad.com>
 
 This program is free software; you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -31,24 +31,38 @@ class DatagramChannel;
 class Module;
 
 //=============================================================================
+// DatagramMultiplexer - Multiplexes a single datagram socket into multiple
+// virtual 'channels', each representing a connection to an  individual remote
+// socket.
+//
 class DatagramMultiplexer : public Stream {
 public:
   
-  DatagramMultiplexer(Module& router,const std::string& chain);
+  DatagramMultiplexer();
   virtual ~DatagramMultiplexer();
   
   virtual scx::Condition event(scx::Stream::Event e);
   virtual std::string stream_status() const;
 
-  void notify_close(const std::string& addr_remote);
+protected:
+
+  // Called when a new channel is opened
+  // Return true to accept, false to reject (default is to accept)
+  virtual bool channel_open(DatagramChannel* channel);
+
+  // Called when a channel is closed
+  virtual void channel_close(DatagramChannel* channel);
+
+  // Notification from DatagramChannel
+  void notify_channel_closing(DatagramChannel* channel);
+
+  friend class DatagramChannel;
 
 private:
 
-  Module& m_router;
-  std::string m_chain;
-  
   typedef HASH_TYPE<std::string,DatagramChannel*> DatagramChannelMap;
   DatagramChannelMap m_channels;
+
 };
 
 

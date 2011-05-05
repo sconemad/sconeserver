@@ -2,7 +2,7 @@
 
 Statistics Stream
 
-Copyright (c) 2000-2004 Andrew Wedgbury <wedge@sconemad.com>
+Copyright (c) 2000-2011 Andrew Wedgbury <wedge@sconemad.com>
 
 This program is free software; you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -23,19 +23,19 @@ Free Software Foundation, Inc.,
 #define statStream_h
 
 #include "StatModule.h"
+#include "StatChannel.h"
+
 #include "sconex/Stream.h"
 #include "sconex/Module.h"
 
 //=========================================================================
+// StatStream - A transparent stream which collects connection and data 
+// throughput statistics.
+//
 class StatStream : public scx::Stream {
-
 public:
 
-  StatStream(
-    StatModule& mod,
-    const std::string& channel
-  );
-
+  StatStream(StatModule& mod, StatChannel* channel);
   ~StatStream();
   
 protected:
@@ -49,13 +49,10 @@ protected:
   
 private:
 
-  void add_stats(
-    StatChannel::StatType type,
-    long count
-  );
+  void inc_stat(const std::string& type, long value);
   
   StatModule& m_mod;
-  std::string m_channel;  
+  StatChannel::Ref m_channel;  
 };
 
 #endif

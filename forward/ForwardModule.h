@@ -23,11 +23,13 @@ Free Software Foundation, Inc.,
 #define forwardModule_h
 
 #include "sconex/Module.h"
-#include "sconex/User.h"
+#include "sconex/Stream.h"
 
-//#########################################################################
-class ForwardModule : public scx::Module {
-
+//=============================================================================
+// ForwardModule - A module to forward connections on to another host
+//
+class ForwardModule : public scx::Module,
+                      public scx::Provider<scx::Stream> {
 public:
 
   ForwardModule();
@@ -35,14 +37,10 @@ public:
 
   virtual std::string info() const;
   
-  virtual bool connect(
-    scx::Descriptor* endpoint,
-    scx::ArgList* args
-  );
-
-  virtual scx::Arg* arg_lookup(const std::string& name);
-  virtual scx::Arg* arg_method(const scx::Auth& auth,const std::string& name,scx::Arg* args);
-
+  // Provider<scx::Stream> method
+  virtual void provide(const std::string& type,
+		       const scx::ScriptRef* args,
+		       scx::Stream*& object);
 protected:
 
 private:

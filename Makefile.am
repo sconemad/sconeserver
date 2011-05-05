@@ -11,7 +11,27 @@ bin_PROGRAMS = sconed
 sconed_SOURCES = main.cpp
 sconed_LDADD = $(top_builddir)/sconex/libsconex.la
 
-MODULES = router http mime simple ssl stat exec forward tftp test testbuilder lettuce dbsql smtp
+MODULES = \
+server \
+ip \
+ip6 \
+local \
+bluetooth \
+http \
+mime \
+simple \
+ssl \
+stat \
+exec \
+forward \
+tftp \
+test \
+testbuilder \
+lettuce \
+mysql \
+smtp \
+rss
+
 SUBDIRS = sconex examples $(MODULES)
 
 docdir=$(datadir)/doc/$(PACKAGE)

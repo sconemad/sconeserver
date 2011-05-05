@@ -2,7 +2,7 @@
 
 Sconesite Image module
 
-Copyright (c) 2000-2009 Andrew Wedgbury <wedge@sconemad.com>
+Copyright (c) 2000-2011 Andrew Wedgbury <wedge@sconemad.com>
 
 This program is free software; you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -19,12 +19,13 @@ along with this program (see the file COPYING); if not, write to the
 Free Software Foundation, Inc.,
 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA */
 
-
-#include "http/sconesite/ArgFile.h"
 #include "http/sconesite/Article.h"
 
 #include "sconex/ModuleInterface.h"
 #include "sconex/Module.h"
+#include "sconex/FilePath.h"
+#include "sconex/FileStat.h"
+#include "sconex/ScriptTypes.h"
 
 #include <Magick++.h>
 using namespace Magick;
@@ -41,14 +42,17 @@ public:
   virtual std::string info() const;
 
   virtual int init();
-  
-  virtual scx::Arg* arg_lookup(const std::string& name);
-  virtual scx::Arg* arg_method(const scx::Auth& auth,const std::string& name,scx::Arg* args);
 
-  virtual bool connect(
-    scx::Descriptor* endpoint,
-    scx::ArgList* args
-  );
+  // ScriptObject methods
+  virtual scx::ScriptRef* script_op(const scx::ScriptAuth& auth,
+				    const scx::ScriptRef& ref,
+				    const scx::ScriptOp& op,
+				    const scx::ScriptRef* right=0);
+
+  virtual scx::ScriptRef* script_method(const scx::ScriptAuth& auth,
+					const scx::ScriptRef& ref,
+					const std::string& name,
+					const scx::ScriptRef* args);
 
 protected:
 
@@ -84,83 +88,78 @@ int ImageModule::init()
 }
 
 //=============================================================================
-scx::Arg* ImageModule::arg_lookup(const std::string& name)
+scx::ScriptRef* ImageModule::script_op(const scx::ScriptAuth& auth,
+				       const scx::ScriptRef& ref,
+				       const scx::ScriptOp& op,
+				       const scx::ScriptRef* right)
 {
-  // Sub-objects
-  
-  if ("thumbnail" == name) {
-    return new_method(name);
+  if (op.type() == scx::ScriptOp::Lookup) {
+    const std::string name = right->object()->get_string();
+    
+    // Methods
+    if ("thumbnail" == name) {
+      return new scx::ScriptMethodRef(ref,name);
+    }
   }
 
-  return SCXBASE Module::arg_lookup(name);
+  return scx::Module::script_op(auth,ref,op,right);
 }
 
 //=============================================================================
-scx::Arg* ImageModule::arg_method(
-  const scx::Auth& auth,
-  const std::string& name,
-  scx::Arg* args
-)
+scx::ScriptRef* ImageModule::script_method(const scx::ScriptAuth& auth,
+					   const scx::ScriptRef& ref,
+					   const std::string& name,
+					   const scx::ScriptRef* args)
 {
-  scx::ArgList* l = dynamic_cast<scx::ArgList*>(args);
-
   if (name == "thumbnail") {
-    scx::Arg* a_art = l->get(0);
-    if (!a_art) return new scx::ArgError("No article specified");
-    scx::ArgObject* a_obj = dynamic_cast<scx::ArgObject*>(a_art);
-    if (!a_obj) return new scx::ArgError("No article specified");
-    Article* article = dynamic_cast<Article*>(a_obj->get_object());
-    if (!article) return new scx::ArgError("No article specified");
+
+    const Article* article = scx::get_method_arg<Article>(args,0,"article");
+    if (!article) 
+      return scx::ScriptError::new_ref("No article specified");
+
+    const scx::ScriptString* a_image = 
+      scx::get_method_arg<scx::ScriptString>(args,1,"image");
+    if (!a_image) 
+      return scx::ScriptError::new_ref("No image specified");
 
     const scx::FilePath& root = article->get_root();
-
-    scx::Arg* a_file = l->get(1);
-    if (!a_file) return new scx::ArgError("No file specified");
-    //    ArgFile* file = dynamic_cast<ArgFile*>(a_file);
-    scx::FilePath source = root + a_file->get_string();
+    scx::FilePath source = root + a_image->get_string();
     scx::FileStat source_stat(source);
+    if (!source_stat.exists()) 
+      return scx::ScriptError::new_ref("Image does not exist");
 
-    if (!source_stat.exists()) return new scx::ArgError("Image does not exist");
+    const scx::ScriptString* a_size = 
+      scx::get_method_arg<scx::ScriptString>(args,2,"size");
+    std::string size = "100x100";
+    if (a_size) size = a_size->get_string();
 
-    scx::Arg* a_thumb = l->get(2);
-    std::string thumb = "100x100";
-    if (a_thumb) thumb = a_thumb->get_string();
-
-    scx::FilePath dest = root + IMAGE_DIR + thumb + a_file->get_string();
+    scx::FilePath dest = root + IMAGE_DIR + size + a_image->get_string();
     scx::FileStat dest_stat(dest);
 
     if (!dest_stat.exists() || 
 	(dest_stat.time() < source_stat.time())) {
       // Thumbnail needs to be generated
-      scx::FilePath::mkdir(root + IMAGE_DIR + thumb,true,0777);
-      log("Generating " + thumb + " thumbnail for " + source.path());
+      scx::FilePath::mkdir(root + IMAGE_DIR + size,true,0777);
+      log("Generating " + size + " thumbnail for " + source.path());
       try {
 	Image image;
 	image.read(source.path());
-	image.transform(thumb);
+	image.transform(size);
 	image.write(dest.path());
       } catch (Exception& e) {
-	return new scx::ArgError(e.what());
+	return scx::ScriptError::new_ref(e.what());
       }
     }
 
     // Generate markup
     std::string href_root = "/" + article->get_href_path();
-    std::string img_href = href_root + a_file->get_string();
-    std::string thumb_href = href_root + IMAGE_DIR + "/" + thumb + "/" + a_file->get_string();
+    std::string img_href = href_root + a_image->get_string();
+    std::string thumb_href = href_root + IMAGE_DIR + "/" + size + "/" + 
+                             a_image->get_string();
 
-    return new scx::ArgString("<a href='"+img_href+"'><img src='"+thumb_href+"'/></a>");
+    return scx::ScriptString::new_ref(
+      "<a href='"+img_href+"'><img src='"+thumb_href+"'/></a>");
   }
 
-  return SCXBASE Module::arg_method(auth,name,args);
+  return scx::Module::script_method(auth,ref,name,args);
 }
-
-//=========================================================================
-bool ImageModule::connect(
-  scx::Descriptor* endpoint,
-  scx::ArgList* args
-)
-{
-  return true;
-}
-

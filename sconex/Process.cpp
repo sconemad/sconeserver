@@ -205,7 +205,8 @@ bool ProxyPacket::send(SOCKET s)
       cmptr->cmsg_len = CMSG_LEN(sizeof(int));
       cmptr->cmsg_level = SOL_SOCKET;
       cmptr->cmsg_type = SCM_RIGHTS;
-      *((int*) CMSG_DATA(cmptr)) = m_fd;
+      int* cmptr_fdptr = (int*)CMSG_DATA(cmptr);
+      *cmptr_fdptr = m_fd;
 #else
       msg.msg_accrights = (caddr_t)&m_fd;
       msg.msg_accrightslen = sizeof(int);
@@ -308,7 +309,8 @@ bool ProxyPacket::recv(SOCKET s)
     if (cmptr != 0 &&
 	cmptr->cmsg_len == CMSG_LEN(sizeof(int)) &&
 	m_fd == -1) {
-      m_fd = *( (int*)CMSG_DATA(cmptr) );
+      int* cmptr_fdptr = (int*)CMSG_DATA(cmptr);
+      m_fd = *cmptr_fdptr;
     }
 #else
     if (msg.msg_accrightslen == sizeof(int) &&
@@ -424,7 +426,7 @@ private:
   gid_t m_gid;
   // User/group to run process as
   
-  typedef struct ProcStat {
+  struct ProcStat {
     Process::RunState type;
     int code;
   };

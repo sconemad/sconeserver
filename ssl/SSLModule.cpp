@@ -26,7 +26,7 @@ Free Software Foundation, Inc.,
 
 #include "sconex/ModuleInterface.h"
 #include "sconex/StreamDebugger.h"
-#include "sconex/Arg.h"
+#include "sconex/ScriptTypes.h"
 
 #include <openssl/ssl.h>
 
@@ -65,12 +65,14 @@ void pthreads_locking_callback(int mode, int type, const char* file, int line)
 SSLModule::SSLModule()
   : scx::Module("ssl",scx::version())
 {
-
+  scx::Stream::register_stream("ssl",this);
 }
 
 //=========================================================================
 SSLModule::~SSLModule()
 {  
+  scx::Stream::unregister_stream("ssl",this);
+
   for (ChannelMap::const_iterator it = m_channels.begin();
        it != m_channels.end();
        it++) {
@@ -111,121 +113,117 @@ int SSLModule::init()
 }
 
 //=========================================================================
-bool SSLModule::connect(
-  scx::Descriptor* endpoint,
-  scx::ArgList* args
-)
-{
-  const scx::ArgString* channel =
-    dynamic_cast<const scx::ArgString*>(args->get(0));
-  if (!channel) {
-    log("No SSL channel specified, aborting connection");
-    return false;
-  }
-
-  SSLStream* s = new SSLStream(*this,channel->get_string());
-  s->add_module_ref(ref());
-  
-  endpoint->add_stream(s);
-  return true;
-}
-
-//=========================================================================
 SSLChannel* SSLModule::find_channel(const std::string& name)
 {
   ChannelMap::const_iterator it = m_channels.find(name);
   
   if (it != m_channels.end()) {
-    return it->second;
+    return it->second->object();
   }
   
   return 0;
 }
 
 //=============================================================================
-scx::Arg* SSLModule::arg_lookup(const std::string& name)
+scx::ScriptRef* SSLModule::script_op(const scx::ScriptAuth& auth,
+				     const scx::ScriptRef& ref,
+				     const scx::ScriptOp& op,
+				     const scx::ScriptRef* right)
 {
-  // Methods
+  if (op.type() == scx::ScriptOp::Lookup) {
+    const std::string name = right->object()->get_string();
 
-  if ("add" == name ||
-      "remove" == name) {
-    return new_method(name);
-  }      
+    // Methods
+    if ("add" == name ||
+	"remove" == name) {
+      return new scx::ScriptMethodRef(ref,name);
+    }      
 
-  // Properties
-  
-  if ("channels" == name) {
-    scx::ArgList* list = new scx::ArgList();
-    for (ChannelMap::const_iterator it = m_channels.begin();
-	 it != m_channels.end();
-	 ++it) {
-      list->give(new scx::ArgObject(it->second));
+    // Properties
+    if ("channels" == name) {
+      scx::ScriptList* list = new scx::ScriptList();
+      for (ChannelMap::const_iterator it = m_channels.begin();
+	   it != m_channels.end();
+	   ++it) {
+	list->give(it->second->ref_copy(ref.reftype()));
+      }
+      return new scx::ScriptRef(list);
     }
-    return list;
+
+    // Sub-objects
+    SSLChannel* channel = find_channel(name);
+    if (channel) {
+      return new scx::ScriptRef(channel);
+    }
   }
 
-  // Sub-objects
-  
-  SSLChannel* channel = find_channel(name);
-  if (channel) {
-    return new scx::ArgObject(channel);
-  }
-  
-  return SCXBASE Module::arg_lookup(name);
+  return scx::Module::script_op(auth,ref,op,right);
 }
 
 //=============================================================================
-scx::Arg* SSLModule::arg_method(
-  const scx::Auth& auth,
-  const std::string& name,
-  scx::Arg* args
-)
+scx::ScriptRef* SSLModule::script_method(const scx::ScriptAuth& auth,
+					 const scx::ScriptRef& ref,
+					 const std::string& name,
+					 const scx::ScriptRef* args)
 {
-  scx::ArgList* l = dynamic_cast<scx::ArgList*>(args);
-
-  if (!auth.admin()) return new scx::ArgError("Not permitted");
+  if (!auth.admin()) return scx::ScriptError::new_ref("Not permitted");
   
   if ("add" == name) {
-    std::string s_name;
-    const scx::ArgString* a_name = dynamic_cast<const scx::ArgString*>(l->get(0));
-    if (!a_name) return new scx::ArgError("ssl::add() Name must be specified");
-    s_name = a_name->get_string();
+    const scx::ScriptString* a_name = 
+      scx::get_method_arg<scx::ScriptString>(args,0,"name");
+    if (!a_name) 
+      return scx::ScriptError::new_ref("Name must be specified");
+    std::string s_name = a_name->get_string();
 
     bool b_client = false;
-    const scx::ArgInt* a_client = dynamic_cast<const scx::ArgInt*>(l->get(1));
+    const scx::ScriptInt* a_client = 
+      scx::get_method_arg<scx::ScriptInt>(args,1,"client");
     if (a_client) b_client = (0 != a_client->get_int());
 
     // Check channel doesn't already exist
-    if (find_channel(s_name)) {
-      return new scx::ArgError("ssl::add() Channel '" + s_name +
-                               "' already exists");
-    }
+    if (find_channel(s_name))
+      return scx::ScriptError::new_ref("Channel '" + s_name + "' exists");
 
-    m_channels[s_name] = new SSLChannel(*this,s_name,b_client);
-    return 0;
+    SSLChannel* channel = new SSLChannel(*this,s_name,b_client);
+    m_channels[s_name] = new SSLChannel::Ref(channel);
+
+    return new SSLChannel::Ref(channel);
   }
   
   if ("remove" == name) {
-    std::string s_name;
-    const scx::ArgString* a_name =
-      dynamic_cast<const scx::ArgString*>(l->get(0));
-    if (a_name) {
-      s_name = a_name->get_string();
-    } else {
-      return new scx::ArgError("ssl::remove() Name must be specified");
-    }
+    const scx::ScriptString* a_name = 
+      scx::get_method_arg<scx::ScriptString>(args,0,"name");
+    if (!a_name) 
+      return scx::ScriptError::new_ref("Name must be specified");
+    std::string s_name = a_name->get_string();
 
-    // Remove channel
-    SSLChannel* channel = find_channel(s_name);
-    if (!channel) {
-      return new scx::ArgError("ssl::remove() Channel '" + s_name +
-                               "' does not exist");
-    }
-      
-    delete channel;
-    m_channels.erase(s_name);
+    // Find and remove channel
+    ChannelMap::iterator it = m_channels.find(s_name);
+    if (it == m_channels.end())
+      return scx::ScriptError::new_ref("Channel '" + s_name + 
+				       "' does not exist");
+
+    delete it->second;
+    m_channels.erase(it);
+
     return 0;
   }
 
-  return SCXBASE Module::arg_method(auth,name,args);
+  return scx::Module::script_method(auth,ref,name,args);
+}
+
+//=========================================================================
+void SSLModule::provide(const std::string& type,
+			const scx::ScriptRef* args,
+			scx::Stream*& object)
+{
+  const scx::ScriptString* channel =
+    scx::get_method_arg<scx::ScriptString>(args,0,"channel");
+  if (!channel) {
+    log("No SSL channel specified, aborting connection");
+    return;
+  }
+
+  object = new SSLStream(*this,channel->get_string());
+  object->add_module_ref(this);
 }

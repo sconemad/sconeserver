@@ -59,7 +59,6 @@ std::string escape_quotes(const std::string& s)
     if ((isgraph(c) || ' '==c) && ('\"' != c && '\'' != c)) {
       r += c;
     } else {
-      char e = 0;
       switch (c) {
         case '\\': r += "\\\\"; break;
         case '\"': r += "\\\""; break;

@@ -2,7 +2,7 @@
 
 Statistics Stream
 
-Copyright (c) 2000-2004 Andrew Wedgbury <wedge@sconemad.com>
+Copyright (c) 2000-2011 Andrew Wedgbury <wedge@sconemad.com>
 
 This program is free software; you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -28,15 +28,13 @@ Free Software Foundation, Inc.,
 #include "sconex/Stream.h"
 
 //=========================================================================
-StatStream::StatStream(
-  StatModule& mod,
-  const std::string& channel
-)
+StatStream::StatStream(StatModule& mod,
+		       StatChannel* channel)
   : scx::Stream("stat"),
     m_mod(mod),
     m_channel(channel)
 {
-  add_stats(StatChannel::Connections,1);
+  inc_stat("conn",1);
 }
 
 //=========================================================================
@@ -49,7 +47,7 @@ StatStream::~StatStream()
 scx::Condition StatStream::read(void* buffer,int n,int& na)
 {
   scx::Condition c = Stream::read(buffer,n,na);
-  add_stats(StatChannel::BytesInput,na);
+  inc_stat("in",na);
   return c;
 }
 
@@ -57,7 +55,7 @@ scx::Condition StatStream::read(void* buffer,int n,int& na)
 scx::Condition StatStream::write(const void* buffer,int n,int& na)
 {
   scx::Condition c = Stream::write(buffer,n,na);
-  add_stats(StatChannel::BytesOutput,na);
+  inc_stat("out",na);
   return c;
 }
 
@@ -65,32 +63,16 @@ scx::Condition StatStream::write(const void* buffer,int n,int& na)
 std::string StatStream::stream_status() const
 {
   std::ostringstream oss;
-  oss << m_channel;
-
-  StatStream* unc = const_cast<StatStream*>(this);
-  StatChannel* channel = unc->m_mod.find_channel(m_channel);
-  if (channel) {
-    scx::Arg* a = channel->arg_lookup("connections");
-    oss << " con:" << (a ? a->get_string() : "?");
-    delete a;
-
-    a = channel->arg_lookup("input");
-    oss << " r:" << (a ? a->get_string() : "?");
-    delete a;
-
-    a = channel->arg_lookup("output");
-    oss << " w:" << (a ? a->get_string() : "?");
-    delete a;
-  } else {
-    oss << " (channel does not exist)";
-  }
-  
+  oss << m_channel.object()->get_string();
+  oss << " conn:" << m_channel.object()->get_stat("conn");
+  oss << " in:" << m_channel.object()->get_stat("in");
+  oss << " out:" << m_channel.object()->get_stat("out");
   return oss.str();
 }
 
 //=========================================================================
-void StatStream::add_stats(StatChannel::StatType type,long count)
+void StatStream::inc_stat(const std::string& type, long value)
 {
-  m_mod.add_stats(m_channel,type,count);
+  m_channel.object()->inc_stat(type,value);
 }
 

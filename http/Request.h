@@ -1,8 +1,8 @@
 /* SconeServer (http://www.sconemad.com)
 
-http Request
+HTTP Request
 
-Copyright (c) 2000-2004 Andrew Wedgbury <wedge@sconemad.com>
+Copyright (c) 2000-2011 Andrew Wedgbury <wedge@sconemad.com>
 
 This program is free software; you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -22,18 +22,21 @@ Free Software Foundation, Inc.,
 #ifndef httpRequest_h
 #define httpRequest_h
 
-#include "http/DocRoot.h"
-#include "sconex/ArgObject.h"
+#include "http/Session.h"
+#include "sconex/ScriptBase.h"
 #include "sconex/VersionTag.h"
 #include "sconex/Uri.h"
 #include "sconex/MimeHeader.h"
+#include "sconex/FilePath.h"
 namespace http {
 
-class Session;
+class DocRoot;
+class Host;
 
 //=============================================================================
-class HTTP_API Request : public scx::ArgObjectInterface {
-
+// Request - Represents a request message from an HTTP client.
+//
+class HTTP_API Request : public scx::ScriptObject {
 public:
 
   Request(
@@ -81,16 +84,27 @@ public:
   void set_path_info(const std::string& pathinfo);
   const std::string& get_path_info() const;  
   
-  void set_param(const std::string& name, scx::Arg* value);
+  void set_param(const std::string& name, scx::ScriptRef* value);
   void set_param(const std::string& name, const std::string& value);
   std::string get_param(const std::string& name) const;
   bool is_param(const std::string& name) const;
 
   std::string build_header_string();
-  
-  // ArgObject interface
-  virtual scx::Arg* arg_lookup(const std::string& name);
-  virtual scx::Arg* arg_method(const scx::Auth& auth,const std::string& name,scx::Arg* args);
+
+  // ScriptObject methods
+  virtual std::string get_string() const;
+
+  virtual scx::ScriptRef* script_op(const scx::ScriptAuth& auth,
+				    const scx::ScriptRef& ref,
+				    const scx::ScriptOp& op,
+				    const scx::ScriptRef* right=0);
+
+  virtual scx::ScriptRef* script_method(const scx::ScriptAuth& auth,
+					const scx::ScriptRef& ref,
+					const std::string& name,
+					const scx::ScriptRef* args);
+
+  typedef scx::ScriptRefTo<Request> Ref;
   
 private:
 
@@ -103,48 +117,49 @@ private:
   // <CR><LF>
   //
 
-  std::string m_method;
   // The request method (GET|POST|HEAD)
+  std::string m_method;
 
-  scx::Uri m_uri;
   // The uniform resource indicator being requested
+  scx::Uri m_uri;
 
-  scx::VersionTag m_version;
   // The HTTP version being used by the client
+  scx::VersionTag m_version;
   
-  scx::MimeHeaderTable m_headers;
   // Table containing request headers
+  scx::MimeHeaderTable m_headers;
 
 
   // ----
   // Decoded data:
   
-  Host* m_host;
   // The HTTP Host
+  Host* m_host;
 
-  std::string m_profile;
   // The profile
+  std::string m_profile;
 
-  std::string m_id;
   // Unique identifier for this request
+  std::string m_id;
   
-  DocRoot* m_docroot;
   // The document root corresponding to the above profile
+  DocRoot* m_docroot;
 
-  Session* m_session;
   // The HTTP session (if applicable)
+  Session::Ref* m_session;
 
-  scx::FilePath m_path;
   // Local file corresponding to the remote URI (if applicable)
+  scx::FilePath m_path;
   
+  // Username authenticated using HTTP authentication
+  // (empty if not authenticated)
   std::string m_auth_user;
-  // Username authenticated using HTTP authentication (empty if not authenticated)
 
-  std::string m_pathinfo;
   // Extra path information following path of invoked object
+  std::string m_pathinfo;
     
-  scx::ArgMap m_params;
   // Parameters sent with the request
+  scx::ScriptMap::Ref m_params;
   
 };
 

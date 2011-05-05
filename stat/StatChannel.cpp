@@ -22,14 +22,13 @@ Free Software Foundation, Inc.,
 
 #include "StatChannel.h"
 #include "StatModule.h"
+#include "sconex/ScriptTypes.h"
 
 //=========================================================================
-StatChannel::StatChannel(
-  const std::string& name
-)
+StatChannel::StatChannel(const std::string& name)
   : m_name(name)
 {
-  reset();
+
 }
 
 //=========================================================================
@@ -39,68 +38,83 @@ StatChannel::~StatChannel()
 }
 
 //=========================================================================
-void StatChannel::add_stats(
-  StatType type,
-  long count
-)
+void StatChannel::inc_stat(const std::string& type, long value)
 {
-  DEBUG_ASSERT(type >= 0 && type < Max,"add_stats() Invalid stat type");
-
-  m_stats[type] += count;
-}
-
-//=============================================================================
-void StatChannel::reset()
-{
-  for (int i=0; i<Max; ++i) {
-    m_stats[i]=0;
+  if (m_stats.count(type) == 0) {
+    m_stats[type] = value;
+  } else {
+    m_stats[type] += value;
   }
 }
 
 //=============================================================================
-std::string StatChannel::name() const
+long StatChannel::get_stat(const std::string& type) const
+{
+  StatMap::const_iterator it = m_stats.find(type);
+  if (it != m_stats.end()) {
+    return it->second;
+  }
+  return 0;
+}
+
+//=============================================================================
+void StatChannel::clear()
+{
+  m_stats.clear();
+}
+
+//=============================================================================
+std::string StatChannel::get_string() const
 {
   return m_name;
 }
 
 //=============================================================================
-scx::Arg* StatChannel::arg_lookup(
-  const std::string& name
-)
+scx::ScriptRef* StatChannel::script_op(const scx::ScriptAuth& auth,
+				       const scx::ScriptRef& ref,
+				       const scx::ScriptOp& op,
+				       const scx::ScriptRef* right)
 {
-  // Methods
+  if (op.type() == scx::ScriptOp::Lookup) {
+    const std::string name = right->object()->get_string();
 
-  if ("reset" == name) {
-    return new_method(name);
+    // Methods
+    if ("clear" == name) {
+      return new scx::ScriptMethodRef(ref,name);
+    }
+
+    // Properties
+    if ("list" == name) {
+      scx::ScriptMap* list = new scx::ScriptMap();
+      for (StatMap::const_iterator it = m_stats.begin();
+	   it != m_stats.end();
+	   ++it) {
+	list->give(it->first,scx::ScriptInt::new_ref(it->second));
+      }
+      return new scx::ScriptRef(list);
+    }
+
+    StatMap::const_iterator it = m_stats.find(name);
+    if (it != m_stats.end()) {
+      return scx::ScriptInt::new_ref(it->second);
+    }
   }
 
-  // Properties
-  
-  if ("connections" == name) {
-    return new scx::ArgInt(m_stats[Connections]);
-  }
-  if ("input" == name) {
-    return new scx::ArgInt(m_stats[BytesInput]);
-  }
-  if ("output" == name) {
-    return new scx::ArgInt(m_stats[BytesOutput]);
-  }
-  
-  return SCXBASE ArgObjectInterface::arg_lookup(name);
+  return scx::ScriptObject::script_op(auth,ref,op,right);
 }
 
 //=============================================================================
-scx::Arg* StatChannel::arg_method(
-  const scx::Auth& auth,
-  const std::string& name,
-  scx::Arg* args
-)
+scx::ScriptRef* StatChannel::script_method(const scx::ScriptAuth& auth,
+					   const scx::ScriptRef& ref,
+					   const std::string& name,
+					   const scx::ScriptRef* args)
 {
-  if (!auth.admin()) return new scx::ArgError("Not permitted");
+  if (!auth.admin()) return scx::ScriptError::new_ref("Not permitted");
 
-  if ("reset" == name) {
-    reset();
+  if ("clear" == name) {
+    clear();
+    return 0;
   }
   
-  return SCXBASE ArgObjectInterface::arg_method(auth,name,args);
+  return scx::ScriptObject::script_method(auth,ref,name,args);
 }

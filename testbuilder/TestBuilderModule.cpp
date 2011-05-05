@@ -2,7 +2,7 @@
 
 Test Builder Module
 
-Copyright (c) 2000-2006 Andrew Wedgbury <wedge@sconemad.com>
+Copyright (c) 2000-2011 Andrew Wedgbury <wedge@sconemad.com>
 
 This program is free software; you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -21,17 +21,17 @@ Free Software Foundation, Inc.,
 
 
 #include "TestBuilderModule.h"
-#include "TestBuilderControlStream.h"
 #include "BuildProfile.h"
 #include "Build.h"
 #include "BuildStep.h"
 
 #include "sconex/ModuleInterface.h"
 #include "sconex/Module.h"
-#include "sconex/Arg.h"
 #include "sconex/Stream.h"
+#include "sconex/ScriptTypes.h"
 #include "sconex/Date.h"
 #include "sconex/FileDir.h"
+#include "sconex/File.h"
 
 SCONESERVER_MODULE(TestBuilderModule);
 
@@ -68,19 +68,6 @@ TestBuilderModule::~TestBuilderModule()
 std::string TestBuilderModule::info() const
 {
   return "Test Builder";
-}
-
-//=========================================================================
-bool TestBuilderModule::connect(
-  scx::Descriptor* endpoint,
-  scx::ArgList* args
-)
-{
-  TestBuilderControlStream* s = new TestBuilderControlStream(*this);
-  s->add_module_ref(ref());
-  
-  endpoint->add_stream(s);
-  return true;
 }
 
 //=============================================================================
@@ -144,286 +131,172 @@ void* TestBuilderModule::run()
 }
 
 //=============================================================================
-scx::Arg* TestBuilderModule::arg_lookup(const std::string& name)
+scx::ScriptRef* TestBuilderModule::script_op(const scx::ScriptAuth& auth,
+					     const scx::ScriptRef& ref,
+					     const scx::ScriptOp& op,
+					     const scx::ScriptRef* right)
 {
-  // Methods
+  if (scx::ScriptOp::Lookup == op.type()) {
+    std::string name = right->object()->get_string();
 
-  if ("add" == name ||
-      "remove" == name ||
-      "submit_build" == name ||
-      "abort_build" == name ||
-      "remove_build" == name ||
-      "set_dir" == name ||
-      "set_max_running" == name ||
-      "set_build_user" == name ||
-      "add_source_method" == name ||
-      "load_profiles" == name ||
-      "save_profiles" == name ||
-      "start" == name ||
-      "stop" == name) {
-    return new_method(name);
-  }      
+    // Methods
+    if ("add" == name ||
+	"remove" == name ||
+	"submit_build" == name ||
+	"abort_build" == name ||
+	"remove_build" == name ||
+	"set_dir" == name ||
+	"set_max_running" == name ||
+	"set_build_user" == name ||
+	"add_source_method" == name ||
+	"load_profiles" == name ||
+	"save_profiles" == name ||
+	"start" == name ||
+	"stop" == name) {
+      return new scx::ScriptMethodRef(ref,name);
+    }      
 
-  // Properties
-  
-  if ("max_running" == name) {
-    return new scx::ArgInt(m_max_running);
-  }
-
-  if ("source_methods" == name) {
-    scx::ArgList* l1 = new scx::ArgList();
-    for (SourceMethodMap::const_iterator it = m_source_methods.begin();
-	 it != m_source_methods.end();
-	 it++) {
-      scx::ArgList* l2 = new scx::ArgList();
-      l2->give( new scx::ArgString(it->first) );
-      l2->give( new scx::ArgString(it->second) );
-      l1->give(l2);
+    // Properties
+    if ("max_running" == name) return scx::ScriptInt::new_ref(m_max_running);
+    if ("source_methods" == name) return get_source_methods();
+    if ("profiles" == name) return get_profiles();
+    if ("builds" == name) return get_builds();
+    if ("buildstats" == name) return get_buildstats();
+    
+    // Sub-objects
+    ProfileMap::const_iterator it = m_profiles.find(name);
+    if (it != m_profiles.end()) {
+      return it->second->ref_copy(ref.reftype());
     }
-    return l1;
-  }
-
-  if ("profiles" == name) {
-    scx::ArgList* l1 = new scx::ArgList();
-    for (ProfileMap::const_iterator it = m_profiles.begin();
-	 it != m_profiles.end();
-	 it++) {
-      l1->give( new scx::ArgString(it->first) );
-    }
-    return l1;
-  }
-
-  if ("builds" == name) {
-    m_builds_mutex.lock();
-    std::ostringstream oss;
-    for (BuildList::reverse_iterator it = m_builds.rbegin();
-	 it != m_builds.rend();
-	 it++) {
-      Build* build = (*it);
-      oss << build->get_id() << " "
-          << build->get_profile() << " "
-          << Build::get_state_str(build->get_state()) << "\n";
-    }
-    m_builds_mutex.unlock();
-    return new scx::ArgString(oss.str());
-  }
-
-  if ("buildstats" == name) {
-    m_builds_mutex.lock();
-    scx::ArgList* l1 = new scx::ArgList();
-    for (BuildList::reverse_iterator it = m_builds.rbegin();
-	 it != m_builds.rend();
-	 it++) {
-      Build* build = (*it);
-      
-      scx::ArgList* l2 = new scx::ArgList();
-      l2->give( new scx::ArgString(build->get_profile()) );
-      l2->give( new scx::ArgString(build->get_id()) );
-      l2->give( new scx::ArgString(Build::get_state_str(build->get_state())) );
-
-      scx::ArgList* l3 = new scx::ArgList();
-      for (Build::StepList::const_iterator it_s =
-             build->get_steps().begin();
-           it_s != build->get_steps().end();
-           it_s++) {
-        BuildStep* step = (*it_s);
-        scx::ArgList* l4 = new scx::ArgList();
-        Build::State state = step->get_state();
-        l4->give( new scx::ArgString(step->get_name()) );
-
-        if (state == Build::Unstarted) {
-          l4->give( new scx::ArgString("") );
-        } else {
-          l4->give( new scx::ArgString(step->get_start_time().code()) );
-        }
-
-        if (state == Build::Unstarted || state == Build::Aborted) {
-          l4->give( new scx::ArgString("") );
-        } else if (state == Build::Running) {
-          scx::Time t = scx::Date::now() - step->get_start_time();
-          l4->give( new scx::ArgString(t.string() + "+") );
-        } else {
-          scx::Time t = step->get_finish_time() - step->get_start_time();
-          l4->give( new scx::ArgString(t.string()) );
-        }
-
-        l4->give( new scx::ArgString(Build::get_state_str(state)) );
-        l3->give(l4);
-      }
-      l2->give(l3);
-      l1->give(l2);
-    }
-    m_builds_mutex.unlock();
-    return l1;
   }
   
-  // Sub-objects
-  
-  ProfileMap::const_iterator it = m_profiles.find(name);
-  if (it != m_profiles.end()) {
-    return new scx::ArgObject(it->second);
-  }
-  
-  return SCXBASE Module::arg_lookup(name);
+  return scx::Module::script_op(auth,ref,op,right);
 }
 
 //=============================================================================
-scx::Arg* TestBuilderModule::arg_method(
-  const scx::Auth& auth,
-  const std::string& name,
-  scx::Arg* args
-)
+scx::ScriptRef* TestBuilderModule::script_method(const scx::ScriptAuth& auth,
+						 const scx::ScriptRef& ref,
+						 const std::string& name,
+						 const scx::ScriptRef* args)
 {
-  scx::ArgList* l = dynamic_cast<scx::ArgList*>(args);
+  //  scx::ScriptList* l = dynamic_cast<scx::ScriptList*>(args);
   
-  if (!auth.trusted()) return new scx::ArgError("Not permitted");
+  if (!auth.trusted()) return scx::ScriptError::new_ref("Not permitted");
 
   if ("add" == name) {
-    const scx::ArgString* a_name =
-      dynamic_cast<const scx::ArgString*>(l->get(0));
-    if (!a_name) {
-      return new scx::ArgError("testbuilder::add() Name must be specified");
-    }
+    const scx::ScriptString* a_name =
+      scx::get_method_arg<scx::ScriptString>(args,0,"name");
+    if (!a_name) return scx::ScriptError::new_ref("Profile name must be specified");
     std::string s_name = a_name->get_string();
 
-    if (!add_profile(s_name)) {
-      return new scx::ArgError("testbuilder::add() Profile '" + s_name +
-                               "' already exists");
-    }
-    return 0;
+    if (!add_profile(s_name))
+      return scx::ScriptError::new_ref("Profile '" + s_name + "' already exists");
+
+    return new scx::ScriptRef(lookup_profile(s_name));
   }
   
   if ("remove" == name) {
-    const scx::ArgString* a_name =
-      dynamic_cast<const scx::ArgString*>(l->get(0));
-    if (!a_name) {
-      return new scx::ArgError("testbuilder::remove() Name must be specified");
-    }
+    const scx::ScriptString* a_name =
+      scx::get_method_arg<scx::ScriptString>(args,0,"name");
+    if (!a_name)
+      return scx::ScriptError::new_ref("Profile name must be specified");
     std::string s_name = a_name->get_string();
 
-    if (!remove_profile(s_name)) {
-      return new scx::ArgError("testbuilder::remove() Profile '" + s_name +
-                               "' does not exist");
-    }
+    if (!remove_profile(s_name))
+      return scx::ScriptError::new_ref("Profile '" + s_name + "' does not exist");
     return 0;
   }
   
   if ("submit_build" == name) {
-    const scx::ArgString* a_profile =
-      dynamic_cast<const scx::ArgString*>(l->get(0));
-    if (!a_profile) {
-      return new scx::ArgError("testbuilder::submit() "
-                               "Profile must be specified");
-    }
+    const scx::ScriptString* a_profile =
+      scx::get_method_arg<scx::ScriptString>(args,0,"profile");
+    if (!a_profile)
+      return scx::ScriptError::new_ref("Profile must be specified");
     std::string s_profile = a_profile->get_string();
     std::string id = submit_build(s_profile);
-    if (id.empty()) {
-      return new scx::ArgError("testbuilder::submit() "
-                               "Could not submit build");
-    }
-    return new scx::ArgString(id);
+    if (id.empty())
+      return scx::ScriptError::new_ref("Could not submit build");
+    return scx::ScriptString::new_ref(id);
   }
 
   if ("abort_build" == name) {
-    const scx::ArgString* a_build =
-      dynamic_cast<const scx::ArgString*>(l->get(0));
-    if (!a_build) {
-      return new scx::ArgError("testbuilder::abort_build() "
-                               "Build ID must be specified");
-    }
+    const scx::ScriptString* a_build =
+      scx::get_method_arg<scx::ScriptString>(args,0,"build");
+    if (!a_build)
+      return scx::ScriptError::new_ref("Build ID must be specified");
     std::string s_id = a_build->get_string();
-    if (!abort_build(s_id)) {
-      return new scx::ArgError("testbuilder::abort_build() "
-                               "Could not abort build");
-    }
+    if (!abort_build(s_id))
+      return scx::ScriptError::new_ref("Could not abort build");
     return 0;
   }
 
   if ("remove_build" == name) {
-    const scx::ArgString* a_build =
-      dynamic_cast<const scx::ArgString*>(l->get(0));
-    if (!a_build) {
-      return new scx::ArgError("testbuilder::remove_build() "
-                               "Build ID must be specified");
-    }
+    const scx::ScriptString* a_build =
+      scx::get_method_arg<scx::ScriptString>(args,0,"build");
+    if (!a_build)
+      return scx::ScriptError::new_ref("Build ID must be specified");
     std::string s_id = a_build->get_string();
-    if (!remove_build(s_id)) {
-      return new scx::ArgError("testbuilder::remove_build() "
-                               "Could not remove build");
-    }
+    if (!remove_build(s_id))
+      return scx::ScriptError::new_ref("Could not remove build");
     return 0;
   }
 
   if ("set_dir" == name) {
-    const scx::ArgString* a_dir =
-      dynamic_cast<const scx::ArgString*>(l->get(0));
-    if (!a_dir) {
-      return new scx::ArgError("testbuilder::set_dir() "
-                               "Directory must be specified");
-    }
+    const scx::ScriptString* a_dir =
+      scx::get_method_arg<scx::ScriptString>(args,0,"value");
+    if (!a_dir)
+      return scx::ScriptError::new_ref("Directory must be specified");
     m_dir = a_dir->get_string();
     return 0;
   }
 
   if ("set_max_running" == name) {
-    const scx::ArgInt* a_max = dynamic_cast<const scx::ArgInt*>(l->get(0));
-    if (!a_max) {
-      return new scx::ArgError("testbuilder::set_max_running() "
-                               "Value must be specified");
-    }
+    const scx::ScriptInt* a_max = 
+      scx::get_method_arg<scx::ScriptInt>(args,0,"value");
+    if (!a_max)
+      return scx::ScriptError::new_ref("Value must be specified");
     int i_max = a_max->get_int();
-    if (i_max <=0) {
-      return new scx::ArgError("testbuilder::set_max_running() "
-                               "Value must be >= 0");
-    }
+    if (i_max <=0)
+      return scx::ScriptError::new_ref("Value must be >= 0");
     m_max_running = i_max;
     return 0;
   }
 
   if ("set_build_user" == name) {
-    const scx::ArgString* a_user = dynamic_cast<const scx::ArgString*>(l->get(0));
-    if (!a_user) {
-      return new scx::ArgError("testbuilder::set_build_user() "
-                               "Username must be specified");
-    }
+    const scx::ScriptString* a_user = 
+      scx::get_method_arg<scx::ScriptString>(args,0,"value");
+    if (!a_user)
+      return scx::ScriptError::new_ref("Username must be specified");
     m_build_user = scx::User(a_user->get_string());
 
     return 0;
   }
 
   if ("add_source_method" == name) {
-    const scx::ArgString* a_name =
-      dynamic_cast<const scx::ArgString*>(l->get(0));
-    if (!a_name) {
-      return new scx::ArgError("testbuilder::add_source_method() "
-                               "Name must be specified");
-    }
+    const scx::ScriptString* a_name =
+      scx::get_method_arg<scx::ScriptString>(args,0,"method");
+    if (!a_name)
+      return scx::ScriptError::new_ref("Name must be specified");
     std::string s_name = a_name->get_string();
 
-    const scx::ArgString* a_desc =
-      dynamic_cast<const scx::ArgString*>(l->get(1));
-    if (!a_desc) {
-      return new scx::ArgError("testbuilder::add_source_method() "
-                               "Description must be specified");
-    }
-    
+    const scx::ScriptString* a_desc =
+      scx::get_method_arg<scx::ScriptString>(args,1,"description");
+    if (!a_desc)
+      return scx::ScriptError::new_ref("Description must be specified");
     m_source_methods[s_name] = a_desc->get_string();
     return 0;
   }
 
   if ("load_profiles" == name) {
     scx::FilePath path = m_dir + "profiles.conf";
-    if (!load_config_file(path)) {
-      return new scx::ArgError("load_profiles() Error occured");
-    }
+    if (!load_config_file(path))
+      return scx::ScriptError::new_ref("Error loading profiles");
     return 0;
   }
   
   if ("save_profiles" == name) {
-    if (!save_profiles()) {
-      return new scx::ArgError("testbuilder::save_profiles() "
-                               "Error saving profiles");
-    }
+    if (!save_profiles())
+      return scx::ScriptError::new_ref("Error saving profiles");
     return 0;
   }
 
@@ -437,19 +310,17 @@ scx::Arg* TestBuilderModule::arg_method(
     return 0;
   }
   
-  return SCXBASE Module::arg_method(auth,name,args);
+  return scx::Module::script_method(auth,ref,name,args);
 }
 
 //=============================================================================
-BuildProfile* TestBuilderModule::lookup_profile(
-  const std::string& name
-)
+BuildProfile* TestBuilderModule::lookup_profile(const std::string& name)
 {
   ProfileMap::const_iterator it = m_profiles.find(name);
   if (it == m_profiles.end()) {
     return 0;
   }
-  return it->second;
+  return it->second->object();
 }
 
 //=============================================================================
@@ -472,7 +343,7 @@ std::string TestBuilderModule::submit_build(const std::string& profile)
     return "";
   }
   
-  BuildProfile* profile_obj = it->second;
+  BuildProfile* profile_obj = it->second->object();
   Build* build = profile_obj->create_build(m_dir);
   
   if (!build) {
@@ -530,7 +401,8 @@ bool TestBuilderModule::add_profile(const std::string& profile)
     return false;
   }
    
-  m_profiles[profile] = new BuildProfile(*this,profile);
+  m_profiles[profile] = 
+    new BuildProfile::Ref(new BuildProfile(*this,profile));
   return true;
 }
 
@@ -559,8 +431,113 @@ bool TestBuilderModule::save_profiles()
   for (ProfileMap::const_iterator it = m_profiles.begin();
        it != m_profiles.end();
        it++) {
-    BuildProfile* profile = it->second;
+    BuildProfile* profile = it->second->object();
     profile->save(file);
   }
   return true;
+}
+
+//=============================================================================
+scx::ScriptRef* TestBuilderModule::get_profiles()
+{
+  scx::ScriptList::Ref* l1 = 
+    new scx::ScriptList::Ref(new scx::ScriptList());
+  for (ProfileMap::const_iterator it = m_profiles.begin();
+       it != m_profiles.end();
+       it++) {
+    l1->object()->give( scx::ScriptString::new_ref(it->first) );
+  }
+  return l1;
+}
+
+//=============================================================================
+scx::ScriptRef* TestBuilderModule::get_source_methods()
+{
+  scx::ScriptList::Ref* l1 = 
+    new scx::ScriptList::Ref(new scx::ScriptList());
+  for (SourceMethodMap::const_iterator it = m_source_methods.begin();
+       it != m_source_methods.end();
+       it++) {
+    scx::ScriptList::Ref* l2 = 
+      new scx::ScriptList::Ref(new scx::ScriptList());
+    l2->object()->give( scx::ScriptString::new_ref(it->first) );
+    l2->object()->give( scx::ScriptString::new_ref(it->second) );
+    l1->object()->give(l2);
+  }
+  return l1;
+}
+
+//=============================================================================
+scx::ScriptRef* TestBuilderModule::get_builds()
+{
+  m_builds_mutex.lock();
+  std::ostringstream oss;
+  for (BuildList::reverse_iterator it = m_builds.rbegin();
+       it != m_builds.rend();
+       it++) {
+    Build* build = (*it);
+    oss << build->get_id() << " "
+	<< build->get_profile() << " "
+	<< Build::get_state_str(build->get_state()) << "\n";
+  }
+  m_builds_mutex.unlock();
+  return scx::ScriptString::new_ref(oss.str());
+}
+
+//=============================================================================
+scx::ScriptRef* TestBuilderModule::get_buildstats()
+{
+  m_builds_mutex.lock();
+  scx::ScriptList::Ref* l1 = 
+    new scx::ScriptList::Ref(new scx::ScriptList());
+  for (BuildList::reverse_iterator it = m_builds.rbegin();
+       it != m_builds.rend();
+       it++) {
+    Build* build = (*it);
+    
+    scx::ScriptList::Ref* l2 = 
+      new scx::ScriptList::Ref(new scx::ScriptList());
+    l2->object()->give( scx::ScriptString::new_ref(build->get_profile()) );
+    l2->object()->give( scx::ScriptString::new_ref(build->get_id()) );
+    l2->object()->give( scx::ScriptString::new_ref(
+      Build::get_state_str(build->get_state())) );
+    
+    scx::ScriptList::Ref* l3 = 
+      new scx::ScriptList::Ref(new scx::ScriptList());
+    for (Build::StepList::const_iterator it_s =
+	   build->get_steps().begin();
+	 it_s != build->get_steps().end();
+	 it_s++) {
+      BuildStep* step = (*it_s);
+      scx::ScriptList::Ref* l4 = 
+	new scx::ScriptList::Ref(new scx::ScriptList());
+      Build::State state = step->get_state();
+      l4->object()->give( scx::ScriptString::new_ref(step->get_name()) );
+      
+      if (state == Build::Unstarted) {
+	l4->object()->give( scx::ScriptString::new_ref("") );
+      } else {
+	l4->object()->give( 
+	  scx::ScriptString::new_ref(step->get_start_time().code()) );
+      }
+      
+      if (state == Build::Unstarted || state == Build::Aborted) {
+	l4->object()->give( scx::ScriptString::new_ref("") );
+      } else if (state == Build::Running) {
+	scx::Time t = scx::Date::now() - step->get_start_time();
+	l4->object()->give( scx::ScriptString::new_ref(t.string() + "+") );
+      } else {
+	scx::Time t = step->get_finish_time() - step->get_start_time();
+	l4->object()->give( scx::ScriptString::new_ref(t.string()) );
+      }
+      
+      l4->object()->give( 
+	scx::ScriptString::new_ref(Build::get_state_str(state)) );
+      l3->object()->give(l4);
+    }
+    l2->object()->give(l3);
+    l1->object()->give(l2);
+  }
+  m_builds_mutex.unlock();
+  return l1;
 }

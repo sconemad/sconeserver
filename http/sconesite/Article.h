@@ -2,7 +2,7 @@
 
 Sconesite Article
 
-Copyright (c) 2000-2009 Andrew Wedgbury <wedge@sconemad.com>
+Copyright (c) 2000-2011 Andrew Wedgbury <wedge@sconemad.com>
 
 This program is free software; you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -22,22 +22,24 @@ Free Software Foundation, Inc.,
 #ifndef sconesiteArticle_h
 #define sconesiteArticle_h
 
-#include "XMLDoc.h"
-
+#include "sconex/ScriptBase.h"
 #include "sconex/Stream.h"
 #include "sconex/FilePath.h"
-#include "sconex/Arg.h"
-#include "sconex/ArgStore.h"
+#include "ArticleBody.h"
 
 class SconesiteModule;
 class Profile;
 class Article;
 
-// Sort predicates:
+//=========================================================================
+// Sort predicates
+//
 bool ArticleSortDate(const Article* a, const Article* b);
 bool ArticleSortName(const Article* a, const Article* b);
 
 //=========================================================================
+// ArticleMetaSorter - A functor predicate to sort articles using metadata
+//
 class ArticleMetaSorter {
 public:
   ArticleMetaSorter(const std::string& meta, bool reverse);
@@ -48,39 +50,16 @@ private:
   bool m_reverse;
 };
 
-
 //=========================================================================
-class XMLArticleBody : public XMLDoc {
-
-public:
-  XMLArticleBody(const std::string& name,
-                 const scx::FilePath& path);
-
-  virtual ~XMLArticleBody();
-
-  virtual const ArticleHeading& get_headings() const;
-  
-protected:
-
-  virtual void handle_open();
-  virtual void handle_close();
-
-  void scan_headings(xmlNode* start,int& index);
-
-  ArticleHeading m_headings;
-  
-};
-
-
-//=========================================================================
-class Article : public scx::ArgObjectInterface {
-
+// Article - A SconeSite article, consisting of metadata and a body
+//
+class Article : public scx::ScriptObject {
 public:
 
-  Article(Profile& profile,
-          const std::string& name,
-          const scx::FilePath& path,
-          Article* parent);
+  Article(Profile& profile, 
+	  int id, 
+	  int parent_id,
+	  const std::string& link);
   
   virtual ~Article();
 
@@ -88,46 +67,48 @@ public:
   const scx::FilePath& get_root() const;
   scx::FilePath get_filepath() const;
 
-  bool allow_access(Context& context);
-  bool allow_upload(Context& context);
-  
   bool process(Context& context);
-  
-  scx::Arg* get_meta(const std::string& name,bool recurse=false) const;
+
+  // Metadata
+  bool set_meta(const std::string& name,
+		scx::ScriptRef* value);
+
+  scx::ScriptRef* get_meta(const std::string& name,
+			   bool recurse=false) const;
+
   const ArticleHeading& get_headings() const;
   std::string get_href_path() const;
   
   // Sub-articles
   void refresh(const scx::Date& purge_time);
 
-  Article* lookup_article(const std::string& name);
-  Article* find_article(const std::string& name,std::string& extra_path);
-  void get_articles(std::list<Article*>& articles, bool recurse=false);
+  // ScriptObject methods
+  virtual std::string get_string() const;
 
-  Article* create_article(const std::string& name);
-  bool remove_article(const std::string& name);
-  
-  // ArgObject interface
-  virtual std::string name() const;
-  virtual scx::Arg* arg_resolve(const std::string& name);
-  virtual scx::Arg* arg_lookup(const std::string& name);
-  virtual scx::Arg* arg_method(const scx::Auth& auth,const std::string& name,scx::Arg* args);
+  virtual scx::ScriptRef* script_op(const scx::ScriptAuth& auth,
+				    const scx::ScriptRef& ref,
+				    const scx::ScriptOp& op,
+				    const scx::ScriptRef* right=0);
+
+  virtual scx::ScriptRef* script_method(const scx::ScriptAuth& auth,
+					const scx::ScriptRef& ref,
+					const std::string& name,
+					const scx::ScriptRef* args);
+
+  typedef scx::ScriptRefTo<Article> Ref;
 
 protected:
 
-  bool evaluate_rule(Context& context, const std::string& meta);
+  Profile& m_profile;
+
+  int m_id;
+  int m_parent_id;
+  std::string m_link;
 
   std::string m_name;
   scx::FilePath m_root;
 
-  Profile& m_profile;
-
-  scx::ArgStore m_metastore;
-
-  Article* m_parent;
-  std::list<Article*> m_articles;
-
-  ArticleBody* m_body;
+  ArticleBody::Ref* m_body;
   
 };
 

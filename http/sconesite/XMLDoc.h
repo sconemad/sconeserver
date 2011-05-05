@@ -26,7 +26,6 @@ Free Software Foundation, Inc.,
 
 #include "sconex/FilePath.h"
 #include "sconex/Date.h"
-#include "sconex/ArgObject.h"
 #include "sconex/Mutex.h"
 
 #include <libxml/parser.h>
@@ -40,8 +39,10 @@ bool XMLAttr_bool(XMLAttrs& attrs, const std::string& value, bool def=false);
 class Context;
 
 //=========================================================================
+// XMLDoc - An article body implementation for XML-based documents, using
+// the libxml2 parser.
+//
 class XMLDoc : public ArticleBody {
-
 public:
 
   XMLDoc(const std::string& name,
@@ -61,14 +62,18 @@ public:
 
   void parse_error(const std::string& msg);
 
-  virtual bool purge(const scx::Date& purge_time);
   // Unload the article if it hasn't been accessed since purge_time
+  virtual bool purge(const scx::Date& purge_time);
   
-  // ArgObject interface
-  virtual std::string name() const;
-  virtual scx::Arg* arg_resolve(const std::string& name);
-  virtual scx::Arg* arg_lookup(const std::string& name);
-  virtual scx::Arg* arg_method(const scx::Auth& auth,const std::string& name,scx::Arg* args);
+  // ScriptObject methods
+  virtual std::string get_string() const;
+
+  virtual scx::ScriptRef* script_op(const scx::ScriptAuth& auth,
+				    const scx::ScriptRef& ref,
+				    const scx::ScriptOp& op,
+				    const scx::ScriptRef* right=0);
+
+  typedef scx::ScriptRefTo<XMLDoc> Ref;
 
   static void get_node_text(std::string& txt, xmlNode* node);
 

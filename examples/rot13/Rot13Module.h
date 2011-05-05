@@ -6,14 +6,16 @@ Warning: The "encryption" provided by this module should not be considered
 secure by any means. Its purpose is to demonstrate the basic principles for
 creating modules that modify data streams within the SconeServer framework.
 
-Copyright (c) 2000-2005 Andrew Wedgbury <wedge@sconemad.com> */
+Copyright (c) 2000-2011 Andrew Wedgbury <wedge@sconemad.com> */
 
 #include "sconex/Module.h"
+#include "sconex/Stream.h"
 
 //=============================================================================
-// Our module class, which must be derived from scx::Module
-class Rot13Module : public scx::Module {
-
+// Rot13Module - our module class, which must be derived from scx::Module
+//
+class Rot13Module : public scx::Module,
+                    public scx::Provider<scx::Stream> {
 public:
 
   Rot13Module();
@@ -21,12 +23,9 @@ public:
   virtual ~Rot13Module();
 
   virtual std::string info() const;
-  
-  virtual int init();
 
-  virtual bool connect(
-    scx::Descriptor* endpoint,
-    scx::ArgList* args
-  );
-
+  // Provider<scx::Stream> method
+  virtual void provide(const std::string& type,
+		       const scx::ScriptRef* args,
+		       scx::Stream*& object);
 };

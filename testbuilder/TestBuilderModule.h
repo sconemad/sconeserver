@@ -2,7 +2,7 @@
 
 Test Builder Module
 
-Copyright (c) 2000-2006 Andrew Wedgbury <wedge@sconemad.com>
+Copyright (c) 2000-2011 Andrew Wedgbury <wedge@sconemad.com>
 
 This program is free software; you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -22,86 +22,98 @@ Free Software Foundation, Inc.,
 #ifndef testbuilderModule_h
 #define testbuilderModule_h
 
+#include "BuildProfile.h"
+
 #include "sconex/Module.h"
 #include "sconex/Thread.h"
 #include "sconex/Mutex.h"
 #include "sconex/User.h"
 
-class BuildProfile;
 class Build;
 
-//#########################################################################
-class TestBuilderModule : public scx::Module, public scx::Thread {
-
+//=========================================================================
+// TestBuilderModule - A sconeserver-based build and test system
+//
+class TestBuilderModule : public scx::Module, 
+                          public scx::Thread {
 public:
 
   TestBuilderModule();
   virtual ~TestBuilderModule();
 
   virtual std::string info() const;
-  
-  virtual bool connect(
-    scx::Descriptor* endpoint,
-    scx::ArgList* args
-  );
 
+  // Thread methods  
   virtual void* run();
   
-  virtual scx::Arg* arg_lookup(const std::string& name);
-  virtual scx::Arg* arg_method(const scx::Auth& auth,const std::string& name,scx::Arg* args);
+  // ScriptObject methods  
+  virtual scx::ScriptRef* script_op(const scx::ScriptAuth& auth,
+				    const scx::ScriptRef& ref,
+				    const scx::ScriptOp& op,
+				    const scx::ScriptRef* right=0);
+
+  virtual scx::ScriptRef* script_method(const scx::ScriptAuth& auth,
+					const scx::ScriptRef& ref,
+					const std::string& name,
+					const scx::ScriptRef* args);
 
   BuildProfile* lookup_profile(const std::string& name);
 
-  const scx::FilePath& get_dir() const;
-  // Get the testbuilder directory
+  typedef scx::ScriptRefTo<TestBuilderModule> Ref;
 
-  const scx::User& get_build_user() const;
+  // Get the testbuilder directory
+  const scx::FilePath& get_dir() const;
+
   // Get the user to run builds as
+  const scx::User& get_build_user() const;
   
-  std::string submit_build(const std::string& profile);
   // Submit a new build using the specified profile
   // Returns the created build ID
+  std::string submit_build(const std::string& profile);
 
-  bool abort_build(const std::string& id);
   // Abort build specified by id
+  bool abort_build(const std::string& id);
 
-  bool remove_build(const std::string& id);
   // Remove build specified by id
+  bool remove_build(const std::string& id);
   
+  // Add/remove a profile
   bool add_profile(const std::string& profile);
   bool remove_profile(const std::string& profile);
-  // Add/remove a profile
 
-  bool save_profiles();
   // Save profiles into a file
+  bool save_profiles();
   
-protected:
-  
+  scx::ScriptRef* get_profiles();
+  scx::ScriptRef* get_source_methods();
+  scx::ScriptRef* get_builds();
+  scx::ScriptRef* get_buildstats();
+
 private:
 
-  typedef std::map<std::string,BuildProfile*> ProfileMap;
-  ProfileMap m_profiles;
   // Test build profiles
+  typedef std::map<std::string,BuildProfile::Ref*> ProfileMap;
+  ProfileMap m_profiles;
 
+  // Source methods
   typedef std::map<std::string,std::string> SourceMethodMap;
   SourceMethodMap m_source_methods;
-  // Source methods
   
+  // Test builds
   typedef std::list<Build*> BuildList;
   BuildList m_builds;
-  // Test builds
   
-  scx::Mutex m_builds_mutex;
   // Mutex for accessing build array
+  scx::Mutex m_builds_mutex;
 
-  scx::FilePath m_dir;
   // Root directory for test builds
+  scx::FilePath m_dir;
 
-  scx::User m_build_user;
   // User to run builds as
+  scx::User m_build_user;
 
-  int m_max_running;
   // Maximum number of running builds allowed
+  int m_max_running;
   
 };
 

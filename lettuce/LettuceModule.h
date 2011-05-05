@@ -2,7 +2,7 @@
 
 Lettuce module
 
-Copyright (c) 2000-2008 Andrew Wedgbury <wedge@sconemad.com>
+Copyright (c) 2000-2011 Andrew Wedgbury <wedge@sconemad.com>
 
 This program is free software; you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -23,10 +23,11 @@ Free Software Foundation, Inc.,
 #define lettuceModule_h
 
 #include "sconex/Module.h"
-
+#include "sconex/Stream.h"
 
 //=========================================================================
-class LettuceModule : public scx::Module {
+class LettuceModule : public scx::Module,
+                      public scx::Provider<scx::Stream> {
 public:
 
   LettuceModule();
@@ -34,16 +35,11 @@ public:
 
   virtual std::string info() const;
 
-  virtual int init();
-  
-  virtual bool connect(
-    scx::Descriptor* endpoint,
-    scx::ArgList* args
-  );
-
-protected:
-
-private:
+  // Provider<scx::Stream> method
+  virtual void provide(const std::string& type,
+		       const scx::ScriptRef* args,
+		       scx::Stream*& object);
 
 };
+
 #endif

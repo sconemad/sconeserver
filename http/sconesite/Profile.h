@@ -24,15 +24,19 @@ Free Software Foundation, Inc.,
 
 #include "sconex/Stream.h"
 #include "sconex/FilePath.h"
-#include "sconex/ArgObject.h"
+#include "sconex/ScriptBase.h"
+#include "sconex/Database.h"
+
+#include "Article.h"
+#include "Template.h"
 
 class SconesiteModule;
-class Article;
-class Template;
 
 //=========================================================================
-class Profile : public scx::ArgObjectInterface {
-
+// Profile - A site profile for Sconesite, provides access to the templates
+// and articles associated with this site.
+//
+class Profile : public scx::ScriptObject {
 public:
 
   Profile(SconesiteModule& module,
@@ -46,26 +50,71 @@ public:
   SconesiteModule& get_module();
   scx::FilePath& get_path();
 
-  Article* get_index();
-  
+  // Find an article by id or name
+  // the article is loaded into the cache if it is not already cached
+  Article* lookup_article(int id);
+  Article* lookup_article(const std::string& href, std::string& extra);
+
+  // Create an article with the specified parent
+  // name is used for the path component from parent
+  Article* create_article(int pid, const std::string name);
+
+  // Remove the specified article and any associated data
+  bool remove_article(int id);
+
+  // Find a template by name
   Template* lookup_template(const std::string& name);
 
-  // ArgObject interface
-  virtual std::string name() const;
-  virtual scx::Arg* arg_resolve(const std::string& name);
-  virtual scx::Arg* arg_lookup(const std::string& name);
-  virtual scx::Arg* arg_method(const scx::Auth& auth,const std::string& name,scx::Arg* args);
-  
-private:
+  // ScriptObject methods
+  virtual std::string get_string() const;
 
+  virtual scx::ScriptRef* script_op(const scx::ScriptAuth& auth,
+				    const scx::ScriptRef& ref,
+				    const scx::ScriptOp& op,
+				    const scx::ScriptRef* right=0);
+
+  virtual scx::ScriptRef* script_method(const scx::ScriptAuth& auth,
+					const scx::ScriptRef& ref,
+					const std::string& name,
+					const scx::ScriptRef* args);
+
+  typedef scx::ScriptRefTo<Profile> Ref;
+
+protected:  
+
+  friend class Article;
+
+  // Article metadata
+  bool set_meta(int id,
+		const std::string& property,
+		scx::ScriptRef* value);
+
+  scx::ScriptRef* get_meta(int id,
+			   const std::string& property) const;
+
+  Article* load_article(int id,
+			int pid,
+			const std::string& link);
+private:
+  
   SconesiteModule& m_module;
 
   std::string m_name;
   scx::FilePath m_path;
 
-  Article* m_index;
-  
-  std::list<Template*> m_templates;
+  scx::Database::Ref* m_db;
+
+  // Caches loaded articles, accessed by article ID
+  typedef HASH_TYPE<int,Article::Ref*> ArticleMap;
+  ArticleMap m_articles;
+
+  // Caches article link to ID mappings
+  typedef HASH_TYPE<std::string,int> ArticleLinkMap;
+  ArticleLinkMap m_article_links;
+
+  // Templates
+  typedef HASH_TYPE<std::string,Template::Ref*> TemplateMap;
+  TemplateMap m_templates;
 
   scx::Time m_purge_threshold;
   

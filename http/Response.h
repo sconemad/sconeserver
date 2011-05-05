@@ -1,8 +1,8 @@
 /* SconeServer (http://www.sconemad.com)
 
-http Response
+HTTP Response
 
-Copyright (c) 2000-2009 Andrew Wedgbury <wedge@sconemad.com>
+Copyright (c) 2000-2011 Andrew Wedgbury <wedge@sconemad.com>
 
 This program is free software; you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -24,14 +24,15 @@ Free Software Foundation, Inc.,
 
 #include "http/http.h"
 #include "http/Status.h"
-#include "sconex/ArgObject.h"
+#include "sconex/ScriptBase.h"
 #include "sconex/VersionTag.h"
 #include "sconex/MimeHeader.h"
 namespace http {
 
 //=============================================================================
-class HTTP_API Response : public scx::ArgObjectInterface {
-
+// Resposne - Represents a response message from an HTTP server.
+//
+class HTTP_API Response : public scx::ScriptObject {
 public:
 
   Response();
@@ -51,10 +52,21 @@ public:
   bool parse_response(const std::string& str);
   bool parse_header(const std::string& str);
   std::string build_header_string();
-  
-  // ArgObject interface
-  virtual scx::Arg* arg_lookup(const std::string& name);
-  virtual scx::Arg* arg_method(const scx::Auth& auth,const std::string& name,scx::Arg* args);
+ 
+   // ScriptObject methods
+  virtual std::string get_string() const;
+
+  virtual scx::ScriptRef* script_op(const scx::ScriptAuth& auth,
+				    const scx::ScriptRef& ref,
+				    const scx::ScriptOp& op,
+				    const scx::ScriptRef* right=0);
+
+  virtual scx::ScriptRef* script_method(const scx::ScriptAuth& auth,
+					const scx::ScriptRef& ref,
+					const std::string& name,
+					const scx::ScriptRef* args);
+
+  typedef scx::ScriptRefTo<Response> Ref;
   
 private:
 

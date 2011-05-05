@@ -2,7 +2,7 @@
 
 http Document root
 
-Copyright (c) 2000-2006 Andrew Wedgbury <wedge@sconemad.com>
+Copyright (c) 2000-2011 Andrew Wedgbury <wedge@sconemad.com>
 
 This program is free software; you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -29,43 +29,46 @@ Free Software Foundation, Inc.,
 #include "sconex/Base64.h"
 #include "sconex/utils.h"
 #include "sconex/Date.h"
+#include "sconex/FileStat.h"
 namespace http {
 
 
 //=========================================================================
-ModuleMap::ModuleMap(
+StreamMap::StreamMap(
   HTTPModule& module,
-  const std::string& name,
-  scx::ArgList* args
+  const std::string& type,
+  scx::ScriptRef* args
 ) : m_module(module),
-    m_name(name),
+    m_type(type),
     m_args(args)
 {
 
 }
   
 //=========================================================================
-ModuleMap::~ModuleMap()
+StreamMap::~StreamMap()
 {
   delete m_args;
 }
 
 //=========================================================================
-const std::string& ModuleMap::get_name() const
+const std::string& StreamMap::get_type() const
 {
-  return m_name;
+  return m_type;
 }
   
 //=========================================================================
-bool ModuleMap::connect_module(scx::Descriptor* d)
+bool StreamMap::connect(scx::Descriptor* d)
 {
-  scx::ModuleRef ref = m_module.get_module(m_name.c_str());
-  if (!ref.valid()) {
+  scx::Stream* stream = scx::Stream::create_new(m_type,m_args);
+  if (!stream) {
+    DEBUG_LOG("Failed to create stream of type " << m_type <<
+	      " args " << m_args->object()->get_string());
     return false;
   }
 
-  // Connect module
-  return ref.module()->connect(d,m_args);
+  d->add_stream(stream);
+  return true;
 }
 
 
@@ -80,13 +83,15 @@ DocRoot::DocRoot(
     m_host(host),
     m_profile(profile),
     m_path(path),
-    m_params("")
+    m_params(new scx::ScriptMap())
 {
+  m_parent = &host;
+
   // A bit of a hack really, but set up default module mappings so it will
   // do something sensible if there is no host config file present.
-  m_extn_mods["."] = new ModuleMap(m_module,"dirindex",0);
-  m_extn_mods["!"] = new ModuleMap(m_module,"errorpage",0);
-  m_extn_mods["*"] = new ModuleMap(m_module,"getfile",0);
+  m_extn_mods["."] = new StreamMap(m_module,"dirindex",0);
+  m_extn_mods["!"] = new StreamMap(m_module,"errorpage",0);
+  m_extn_mods["*"] = new StreamMap(m_module,"getfile",0);
 }
 
 //=========================================================================
@@ -102,12 +107,14 @@ DocRoot::~DocRoot()
 }
 
 //=========================================================================
-bool DocRoot::connect_request(scx::Descriptor* endpoint, Request& request, Response& response)
+bool DocRoot::connect_request(scx::Descriptor* endpoint,
+			      Request& request,
+			      Response& response)
 {
-  ModuleMap* modmap = 0;
+  StreamMap* strmap = 0;
 
   if (response.get_status().code() != http::Status::Ok) {
-    modmap = lookup_extn_mod("!");
+    strmap = lookup_extn_map("!");
     
   } else {
     const scx::Uri& uri = request.get_uri();
@@ -133,10 +140,10 @@ bool DocRoot::connect_request(scx::Descriptor* endpoint, Request& request, Respo
     request.set_path(path);
 
     std::string pathinfo;
-    modmap = lookup_path_mod(uripath,pathinfo);
-    if (modmap) {
+    strmap = lookup_path_map(uripath,pathinfo);
+    if (strmap) {
       // Path mapped module
-      log("Using path mapping, pathinfo='" + pathinfo + "'",scx::Logger::Info);
+      // log("Using path mapping, pathinfo='" + pathinfo + "'",scx::Logger::Info);
       request.set_path_info(pathinfo);
     } else {
       // Normal file mapping
@@ -145,9 +152,9 @@ bool DocRoot::connect_request(scx::Descriptor* endpoint, Request& request, Respo
         response.set_status(http::Status::NotFound);
         return false;
       } else if (stat.is_dir()) {
-        modmap = lookup_extn_mod(".");
+        strmap = lookup_extn_map(".");
       } else {
-        modmap = lookup_extn_mod(uripath);
+        strmap = lookup_extn_map(uripath);
       }
     }
 
@@ -168,9 +175,9 @@ bool DocRoot::connect_request(scx::Descriptor* endpoint, Request& request, Respo
       }
     }
 
-    const scx::Arg* a_auto_session = get_param("auto_session");
-    bool b_auto_session = (a_auto_session && a_auto_session->get_int());
-    delete a_auto_session;
+    const scx::ScriptRef* a_auto_session = get_param("auto_session");
+    bool b_auto_session = 
+      (a_auto_session && a_auto_session->object()->get_int());
 
     // Lookup the session
     Session* s = m_module.get_sessions().lookup_session(scxid);
@@ -181,7 +188,6 @@ bool DocRoot::connect_request(scx::Descriptor* endpoint, Request& request, Respo
     } else {
       if (!scxid.empty()) {
 	// Timed-out session
-	
       }
       
       // Create new session if auto_session enabled
@@ -202,16 +208,16 @@ bool DocRoot::connect_request(scx::Descriptor* endpoint, Request& request, Respo
     }
   }
 
-  // Check we have a module map
-  if (modmap == 0) {
-    log("No module map found to handle request",scx::Logger::Error);
+  // Check we have a stream map
+  if (strmap == 0) {
+    log("No stream map found to handle request",scx::Logger::Error);
     response.set_status(http::Status::ServiceUnavailable);
     return false;
   }
 
-  // Connect the module
-  if (!modmap->connect_module(endpoint)) {
-    log("Failed to connect module to handle request",scx::Logger::Error);
+  // Connect the stream
+  if (!strmap->connect(endpoint)) {
+    log("Failed to connect stream to handle request",scx::Logger::Error);
     response.set_status(http::Status::ServiceUnavailable);
     return false;
   }
@@ -221,7 +227,7 @@ bool DocRoot::connect_request(scx::Descriptor* endpoint, Request& request, Respo
 }
 
 //=========================================================================
-ModuleMap* DocRoot::lookup_extn_mod(const std::string& name) const
+StreamMap* DocRoot::lookup_extn_map(const std::string& name) const
 {
   int bailout=100;
   std::string::size_type idot;
@@ -250,12 +256,13 @@ ModuleMap* DocRoot::lookup_extn_mod(const std::string& name) const
     }
     
   }
-  DEBUG_LOG("lookup_extn_mod() Pattern match bailout");
+  DEBUG_LOG("lookup_extn_map() Pattern match bailout");
   return 0; // Bailed out
 }
 
 //=========================================================================
-ModuleMap* DocRoot::lookup_path_mod(const std::string& name, std::string& pathinfo) const
+StreamMap* DocRoot::lookup_path_map(const std::string& name,
+				    std::string& pathinfo) const
 {
   std::string key="/"+name;
   pathinfo = "";
@@ -293,150 +300,141 @@ const std::string DocRoot::get_profile() const
 }
 
 //=============================================================================
-const scx::Arg* DocRoot::get_param(const std::string& name) const
+const scx::ScriptRef* DocRoot::get_param(const std::string& name) const
 {
-  DocRoot* uc = const_cast<DocRoot*>(this);
-  return uc->m_params.arg_lookup(name);
+  return m_params.object()->lookup(name);
 }
 
 //=============================================================================
-void DocRoot::set_param(const std::string& name, scx::Arg* value)
+void DocRoot::set_param(const std::string& name, scx::ScriptRef* value)
 {
-  scx::ArgList l;
-  l.give(new scx::ArgString(name));
-  l.give(value);
-  m_params.arg_method(scx::Auth::Trusted,"set",&l);
+  m_params.object()->give(name,value);
 }
 
 //=========================================================================
-std::string DocRoot::name() const
+std::string DocRoot::get_string() const
 {
   return get_profile();
 }
 
 //=============================================================================
-scx::Arg* DocRoot::arg_resolve(const std::string& name)
+scx::ScriptRef* DocRoot::script_op(const scx::ScriptAuth& auth,
+				   const scx::ScriptRef& ref,
+				   const scx::ScriptOp& op,
+				   const scx::ScriptRef* right)
 {
-  scx::Arg* a = arg_lookup(name);
-  if (BAD_ARG(a)) {
-    delete a;
-    a = m_host.arg_resolve(name);
-  }
-  return a;
-}
+  if (op.type() == scx::ScriptOp::Lookup) {
+    const std::string name = right->object()->get_string();
+    
+    // Methods
+    if ("map" == name ||
+	"map_path" == name ||
+	"add_realm" == name ||
+	"map_realm" == name) {
+      return new scx::ScriptMethodRef(ref,name);
+    }
 
-//=============================================================================
-scx::Arg* DocRoot::arg_lookup(const std::string& name)
-{
-  // Methods
-  if ("map" == name ||
-      "map_path" == name ||
-      "add_realm" == name ||
-      "map_realm" == name) {
-    return new_method(name);
+    // Sub-objects
+    if ("profile" == name) return scx::ScriptString::new_ref(m_profile);
+    if ("path" == name) return scx::ScriptString::new_ref(m_path.path());
+    if ("params" == name) return m_params.ref_copy(ref.reftype());
   }
-
-  // Sub-objects
-  if ("profile" == name) return new scx::ArgString(m_profile);
-  if ("path" == name) return new scx::ArgString(m_path.path());
-  if ("params" == name) return new scx::ArgObject(&m_params);
   
-  return SCXBASE ArgObjectInterface::arg_lookup(name);
+  return scx::ScriptObject::script_op(auth,ref,op,right);
 }
 
 //=============================================================================
-scx::Arg* DocRoot::arg_method(
-  const scx::Auth& auth,
-  const std::string& name,
-  scx::Arg* args
-)
+scx::ScriptRef* DocRoot::script_method(const scx::ScriptAuth& auth,
+				       const scx::ScriptRef& ref,
+				       const std::string& name,
+				       const scx::ScriptRef* args)
 {
-  scx::ArgList* l = dynamic_cast<scx::ArgList*>(args);
-
-  if (!auth.admin()) return new scx::ArgError("Not permitted");
+  if (!auth.admin()) return scx::ScriptError::new_ref("Not permitted");
 
   if ("map" == name) {
-    const scx::ArgString* a_pattern =
-      dynamic_cast<const scx::ArgString*>(l->get(0));
+    const scx::ScriptString* a_pattern =
+      scx::get_method_arg<scx::ScriptString>(args,0,"pattern");
     if (!a_pattern) {
-      return new scx::ArgError("map() No pattern specified");
+      return scx::ScriptError::new_ref("map() No pattern specified");
     }
     std::string s_pattern = a_pattern->get_string();
 
-    const scx::ArgString* a_module =
-      dynamic_cast<const scx::ArgString*>(l->get(1));
-    if (!a_module) {
-      return new scx::ArgError("map() No module specified");
+    const scx::ScriptString* a_stream =
+      scx::get_method_arg<scx::ScriptString>(args,1,"stream");
+    if (!a_stream) {
+      return scx::ScriptError::new_ref("No stream type specified");
     }
-    std::string s_module = a_module->get_string();
+    std::string s_stream = a_stream->get_string();
 
     // Transfer the remaining arguments to a new list, to be stored with
     // the module map.
     std::string logargs;
-    scx::ArgList* ml = new scx::ArgList();
-    while (l->size() > 2) {
-      scx::Arg* a = l->take(2);
-      DEBUG_ASSERT(a!=0,"add() NULL argument in list");
-      ml->give(a);
+    scx::ScriptList::Ref* ml = new scx::ScriptList::Ref(new scx::ScriptList());
+    int pos=2;
+    const scx::ScriptRef* arg = 0;
+    while (0 != (arg = scx::get_method_arg_ref(args,pos++))) {
+      ml->object()->give(arg->ref_copy());
       if (!logargs.empty()) logargs += ",";
-      logargs += a->get_string();
+      logargs += arg->object()->get_string();
     }
     
-    log("Mapping pattern '" + s_pattern + "' to module " + s_module + "(" + logargs + ")");
+    log("Mapping pattern '" + s_pattern + 
+	"' to stream type " + s_stream + "(" + logargs + ")");
     
-    ModuleMap* modmap = new ModuleMap(m_module,s_module,ml);
-    m_extn_mods[s_pattern] = modmap;
+    StreamMap* strmap = new StreamMap(m_module,s_stream,ml);
+    m_extn_mods[s_pattern] = strmap;
 
     return 0;
   }
 
   if ("map_path" == name) {
-    const scx::ArgString* a_pattern =
-      dynamic_cast<const scx::ArgString*>(l->get(0));
+    const scx::ScriptString* a_pattern =
+      scx::get_method_arg<scx::ScriptString>(args,0,"pattern");
     if (!a_pattern) {
-      return new scx::ArgError("map_path() No pattern specified");
+      return scx::ScriptError::new_ref("No pattern specified");
     }
     std::string s_pattern = a_pattern->get_string();
 
-    const scx::ArgString* a_module =
-      dynamic_cast<const scx::ArgString*>(l->get(1));
-    if (!a_module) {
-      return new scx::ArgError("map_path() No module specified");
+    const scx::ScriptString* a_stream =
+      scx::get_method_arg<scx::ScriptString>(args,1,"stream");
+    if (!a_stream) {
+      return scx::ScriptError::new_ref("No stream type specified");
     }
-    std::string s_module = a_module->get_string();
+    std::string s_stream = a_stream->get_string();
 
     // Transfer the remaining arguments to a new list, to be stored with
     // the module map.
     std::string logargs;
-    scx::ArgList* ml = new scx::ArgList();
-    while (l->size() > 2) {
-      scx::Arg* a = l->take(2);
-      DEBUG_ASSERT(a!=0,"add() NULL argument in list");
-      ml->give(a);
+    scx::ScriptList::Ref* ml = new scx::ScriptList::Ref(new scx::ScriptList());
+    int pos=2;
+    const scx::ScriptRef* arg = 0;
+    while (0 != (arg = scx::get_method_arg_ref(args,pos++))) {
+      ml->object()->give(arg->ref_copy());
       if (!logargs.empty()) logargs += ",";
-      logargs += a->get_string();
+      logargs += arg->object()->get_string();
     }
     
-    log("Mapping path '" + s_pattern + "' to module " + s_module + "(" + logargs + ")");
-
-    ModuleMap* modmap = new ModuleMap(m_module,s_module,ml);
-    m_path_mods[s_pattern] = modmap;
+    log("Mapping path '" + s_pattern + 
+	"' to stream type " + s_stream + "(" + logargs + ")");
+    
+    StreamMap* strmap = new StreamMap(m_module,s_stream,ml);
+    m_path_mods[s_pattern] = strmap;
 
     return 0;
   }
 
   if ("map_realm" == name) {
-    const scx::ArgString* a_pattern =
-      dynamic_cast<const scx::ArgString*>(l->get(0));
+    const scx::ScriptString* a_pattern =
+      scx::get_method_arg<scx::ScriptString>(args,0,"pattern");
     if (!a_pattern) {
-      return new scx::ArgError("map_realm() No pattern specified");
+      return scx::ScriptError::new_ref("map_realm() No pattern specified");
     }
     std::string s_pattern = a_pattern->get_string();
 
-    const scx::ArgString* a_realm =
-      dynamic_cast<const scx::ArgString*>(l->get(1));
+    const scx::ScriptString* a_realm =
+      scx::get_method_arg<scx::ScriptString>(args,1,"realm");
     if (!a_realm) {
-      return new scx::ArgError("map_realm() No realm specified");
+      return scx::ScriptError::new_ref("map_realm() No realm specified");
     }
     std::string s_realm = a_realm->get_string();
 
@@ -446,7 +444,7 @@ scx::Arg* DocRoot::arg_method(
     return 0;
   }
 
-  return SCXBASE ArgObjectInterface::arg_method(auth,name,args);
+  return scx::ScriptObject::script_method(auth,ref,name,args);
 }
 
 //=============================================================================
@@ -485,10 +483,12 @@ bool DocRoot::check_auth(Request& request, Response& response)
       }
     }
     if (realm->authorised(user,pass)) {
-      log("Auth passed for realm '" + realm_name + "' user='" + user + "'",scx::Logger::Info);
+      log("Auth passed for realm '" + realm_name + 
+	  "' user='" + user + "'",scx::Logger::Info);
       request.set_auth_user(user);
     } else {
-      log("Auth failed for realm '" + realm_name + "' user='" + user + "'",scx::Logger::Info);
+      log("Auth failed for realm '" + realm_name + 
+	  "' user='" + user + "'",scx::Logger::Info);
       response.set_header("WWW-AUTHENTICATE","Basic realm=\"" + realm_name + "\"");
       return false;
     }

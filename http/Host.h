@@ -23,19 +23,26 @@ Free Software Foundation, Inc.,
 #define httpHost_h
 
 #include "http/http.h"
-#include "sconex/ArgObject.h"
+#include "http/DocRoot.h"
+#include "sconex/ScriptBase.h"
+#include "sconex/FilePath.h"
+
+namespace scx { class Descriptor; }
+
 namespace http {
 
 class HTTPModule;
 class HostMapper;
 class Request;
 class Response;
-class DocRoot;
   
 //=============================================================================
-class HTTP_API Host : public scx::ArgObjectInterface {
+// Host - An HTTP host configuration
+//
+class HTTP_API Host : public scx::ScriptObject {
 public:
 
+  // Create a host with id and dir
   Host(
     HTTPModule& module,
     HostMapper& mapper,
@@ -43,13 +50,15 @@ public:
     const std::string hostname,
     const scx::FilePath& dir
   );
-  // Create a host with id and dir
 
   virtual ~Host();
 
   int init();
 
-  bool connect_request(scx::Descriptor* endpoint, Request& request, Response& response);
+  // Process an incoming connection request
+  bool connect_request(scx::Descriptor* endpoint,
+		       Request& request,
+		       Response& response);
   
   const std::string get_id() const;
   const std::string get_hostname() const;
@@ -57,10 +66,20 @@ public:
 
   DocRoot* get_docroot(const std::string& profile);
 
-  virtual std::string name() const;
-  virtual scx::Arg* arg_lookup(const std::string& name);
-  virtual scx::Arg* arg_resolve(const std::string& name);
-  virtual scx::Arg* arg_method(const scx::Auth& auth,const std::string& name,scx::Arg* args);
+  // ScriptObject methods
+  virtual std::string get_string() const;
+
+  virtual scx::ScriptRef* script_op(const scx::ScriptAuth& auth,
+				    const scx::ScriptRef& ref,
+				    const scx::ScriptOp& op,
+				    const scx::ScriptRef* right=0);
+  
+  virtual scx::ScriptRef* script_method(const scx::ScriptAuth& auth,
+					const scx::ScriptRef& ref,
+					const std::string& name,
+					const scx::ScriptRef* args);
+
+  typedef scx::ScriptRefTo<Host> Ref;
   
 protected:
 
@@ -72,7 +91,7 @@ private:
   std::string m_hostname;
   scx::FilePath m_dir;
 
-  typedef std::map<std::string,DocRoot*> DocRootMap;
+  typedef std::map<std::string,DocRoot::Ref*> DocRootMap;
   DocRootMap m_docroots;
 
 };

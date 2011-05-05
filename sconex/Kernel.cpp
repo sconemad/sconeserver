@@ -21,27 +21,24 @@ Free Software Foundation, Inc.,
 
 #include "sconex/Kernel.h"
 #include "sconex/ConfigStream.h"
+#include "sconex/ScriptEngine.h"
 #include "sconex/TermBuffer.h"
 #include "sconex/Console.h"
 #include "sconex/Logger.h"
 #include "sconex/Debug.h"
 #include "sconex/User.h"
-#include "sconex/VersionTag.h"
-#include "sconex/Uri.h"
-#include "sconex/MimeType.h"
-#include "sconex/RegExp.h"
 
 namespace scx {
 
-Kernel* Kernel::s_kernel = 0;
+ScriptRefTo<Kernel>* Kernel::s_kernel = 0;
   
 //=============================================================================
 Kernel* Kernel::get()
 {
   if (!s_kernel) {
-    s_kernel = new Kernel();
+    s_kernel = new ScriptRefTo<Kernel>( new Kernel() );
   }
-  return s_kernel;
+  return s_kernel->object();
 }
 
 //=============================================================================
@@ -115,7 +112,9 @@ void Kernel::connect_config_console()
 {
   Console* c = new Console();
   c->add_stream( new TermBuffer("term") );
-  c->add_stream( new ConfigStream(ref(),true) );
+  c->add_stream( new ConfigStream(new ScriptRef(this),true) );
+  //  c->add_stream( new ScriptEngineExec(ScriptAuth::Admin,
+  //  				      new ScriptRef(this)) );
   connect(c,0);
 }
 
@@ -127,7 +126,7 @@ void Kernel::set_logger(Logger* logger)
 }
 
 //=============================================================================
-bool Kernel::connect(Descriptor* d,ArgList* args)
+bool Kernel::connect(Descriptor* d,ScriptRef* args)
 {
   return (0 != add_job(new DescriptorJob(d)));
 }
@@ -148,95 +147,84 @@ bool Kernel::end_job(JobID jobid)
 }
 
 //=============================================================================
-Arg* Kernel::arg_lookup(const std::string& name)
+ScriptRef* Kernel::script_op(const ScriptAuth& auth,
+			     const ScriptRef& ref,
+			     const ScriptOp& op,
+			     const ScriptRef* right)
 {
-  // Methods
+  if (ScriptOp::Lookup == op.type()) {
+    std::string name = right->object()->get_string();
 
-  if ("restart" == name ||
-      "shutdown" == name ||
-      "set_user" == name ||
-      "set_thread_pool" == name ||
-      "set_latency" == name ||
-      "enable_jobs" == name ||
-      "defined" == name ||
-      "ref" == name ||
-      "constref" == name) {
-    return new_method(name);
-  }      
+    // Methods
+    if ("restart" == name ||
+	"shutdown" == name ||
+	"set_user" == name ||
+	"set_thread_pool" == name ||
+	"set_latency" == name ||
+	"enable_jobs" == name) {
+      return new ScriptMethodRef(ref,name);
+    }      
 
-  // Constructors for sconex Arg classes
-
-  if ("String" == name ||
-      "Int" == name ||
-      "Real" == name ||
-      "Error" == name ||
-      "Version" == name ||
-      "Date" == name ||
-      "Time" == name ||
-      "TimeZone" == name ||
-      "Uri" == name ||
-      "MimeType" == name ||
-      "RegExp" == name) {
-    return new_method(name);
+    // Properties
+    if ("sconeserver" == name) 
+      return ref.ref_copy();
+    if ("jobs" == name) 
+      return ScriptString::new_ref(m_spinner.describe());
+    if ("root" == name) 
+      return ScriptInt::new_ref(geteuid() == 0);
+    if ("thread_pool" == name) 
+      return ScriptInt::new_ref(m_spinner.get_num_threads());
+    if ("latency" == name) 
+      return ScriptInt::new_ref(m_spinner.get_latency());
+    if ("system_nodename" == name) 
+      return ScriptString::new_ref(get_system_nodename());
+    if ("system_version" == name) 
+      return ScriptString::new_ref(get_system_version());
+    if ("system_hardware" == name) 
+      return ScriptString::new_ref(get_system_hardware());
   }
-
-  // Properties
-
-  if ("sconeserver" == name) return new ArgModule(ref());
-  if ("jobs" == name) return new scx::ArgString(m_spinner.describe());
-  if ("root" == name) return new scx::ArgInt(geteuid() == 0);
-  if ("thread_pool" == name) return new scx::ArgInt(m_spinner.get_num_threads());
-  if ("latency" == name) return new scx::ArgInt(m_spinner.get_latency());
-  if ("system_nodename" == name) return new scx::ArgString(get_system_nodename());
-  if ("system_version" == name) return new scx::ArgString(get_system_version());
-  if ("system_hardware" == name) return new scx::ArgString(get_system_hardware());
   
-  return Module::arg_lookup(name);
+  return Module::script_op(auth,ref,op,right);
 }
 
 //=============================================================================
-Arg* Kernel::arg_method(
-  const Auth& auth, 
-  const std::string& name,
-  Arg* args
-)
+ScriptRef* Kernel::script_method(const ScriptAuth& auth,
+				 const ScriptRef& ref,
+				 const std::string& name,
+				 const ScriptRef* args)
 {
-  scx::ArgList* l = dynamic_cast<scx::ArgList*>(args);
-
   if ("restart" == name) {
-    if (!auth.admin()) return new ArgError("Not permitted");
+    if (!auth.admin()) return ScriptError::new_ref("Not permitted");
     log("Restart requested via command");
     m_state = Restart;
     return 0;
   }
 
   if ("shutdown" == name) {
-    if (!auth.admin()) return new ArgError("Not permitted");
+    if (!auth.admin()) return ScriptError::new_ref("Not permitted");
     log("Shutdown requested via command");
     m_state = Shutdown;
     return 0;
   }
 
   if ("set_user" == name) {
-    if (!auth.admin()) return new ArgError("Not permitted");
+    if (!auth.admin()) return ScriptError::new_ref("Not permitted");
     User user;
-    const scx::ArgString* a_name =
-      dynamic_cast<const scx::ArgString*>(l->get(0));
-    const scx::ArgInt* a_uid =
-      dynamic_cast<const scx::ArgInt*>(l->get(0));
+    const ScriptString* a_name = get_method_arg<ScriptString>(args,0,"name");
+    const ScriptInt* a_uid = get_method_arg<ScriptInt>(args,0,"id");
 
     if (a_name) {
       if (!user.set_user_name(a_name->get_string())) {
-        return new ArgError("set_user() Unknown username '" +
+        return ScriptError::new_ref("set_user() Unknown username '" +
                             a_name->get_string() + "'");
       }
     } else if (a_uid) {
       if (!user.set_user_id(a_uid->get_int())) {
-        return new ArgError("set_user() Unknown user id '" +
+        return ScriptError::new_ref("set_user() Unknown user id '" +
                             a_uid->get_string() + "'");
       }
     } else {
-      return new ArgError("set_user() Invalid argument");
+      return ScriptError::new_ref("set_user() Invalid argument");
     }
 
     std::ostringstream oss;
@@ -245,22 +233,19 @@ Arg* Kernel::arg_method(
     log(oss.str());
 
     if (!user.set_effective()) {
-      return new ArgError("set_user() Unable to set user/group ids");
+      return ScriptError::new_ref("set_user() Unable to set user/group ids");
     }
     return 0;
   }
 
   if ("set_thread_pool" == name) {
-    if (!auth.admin()) return new ArgError("Not permitted");
-    const scx::ArgInt* a_threads =
-      dynamic_cast<const scx::ArgInt*>(l->get(0));
-    if (!a_threads) {
-      return new ArgError("set_thread_pool() Must specify number of threads");
-    }
+    if (!auth.admin()) return ScriptError::new_ref("Not permitted");
+    const ScriptInt* a_threads = get_method_arg<ScriptInt>(args,0,"threads");
+    if (!a_threads) 
+      return ScriptError::new_ref("set_thread_pool() Must specify number of threads");
     int n_threads = a_threads->get_int();
-    if (n_threads < 0) {
-      return new ArgError("set_thread_pool() Must specify >= 0 threads");
-    }
+    if (n_threads < 0)
+      return ScriptError::new_ref("set_thread_pool() Must specify >= 0 threads");
 
     std::ostringstream oss;
     oss << "Setting thread pool to " << n_threads
@@ -272,15 +257,14 @@ Arg* Kernel::arg_method(
   }
 
   if ("set_latency" == name) {
-    if (!auth.admin()) return new ArgError("Not permitted");
-    const scx::ArgInt* a_latency = dynamic_cast<const scx::ArgInt*>(l->get(0));
-    if (!a_latency) {
-      return new ArgError("set_latency() Must specify latency time");
-    }
+    if (!auth.admin()) return ScriptError::new_ref("Not permitted");
+    const ScriptInt* a_latency = get_method_arg<ScriptInt>(args,0,"latency");
+    if (!a_latency)
+      return ScriptError::new_ref("set_latency() Must specify latency time");
+
     int n_latency = a_latency->get_int();
-    if (n_latency < 0) {
-      return new ArgError("set_latency() Latency must be >= 0");
-    }
+    if (n_latency < 0)
+      return ScriptError::new_ref("set_latency() Latency must be >= 0");
 
     std::ostringstream oss;
     oss << "Setting latency to " << n_latency;
@@ -291,9 +275,11 @@ Arg* Kernel::arg_method(
   }
 
   if ("enable_jobs" == name) {
-    if (!auth.admin()) return new ArgError("Not permitted");
-    const scx::ArgInt* a_enable = dynamic_cast<const scx::ArgInt*>(l->get(0));
-    if (!a_enable) return new ArgError("enable_jobs() Enable flag not specified");
+    if (!auth.admin()) return ScriptError::new_ref("Not permitted");
+    const ScriptInt* a_enable = get_method_arg<ScriptInt>(args,0,"enable");
+    if (!a_enable) 
+      return ScriptError::new_ref("enable_jobs() Enable flag not specified");
+
     if (a_enable->get_int()) {
       log("Enabling non-descriptor jobs");
       m_spinner.enable_jobs(true);
@@ -304,57 +290,7 @@ Arg* Kernel::arg_method(
     return 0;
   }
 
-  Arg* a = l->get(0);
-
-  if ("defined" == name) {
-    return new ArgInt(!BAD_ARG(a));
-  }
-
-  if ("ref" == name) {
-    if (a) return a->ref_copy(Arg::Ref);
-    return 0;
-  }
-
-  if ("constref" == name) {
-    if (a) return a->ref_copy(Arg::ConstRef);
-    return 0;
-  }
-  
-  if ("String" == name) {
-    return new ArgString(a ? a->get_string() : "");
-  }
-  if ("Int" == name) {
-    return new ArgInt(a ? a->get_int() : 0);
-  }
-  if ("Real" == name) {
-    return new ArgReal(a ? (double)a->get_int() : 0.0);
-  }
-  if ("Error" == name) {
-    return new ArgError(a ? a->get_string() : "unknown");
-  }
-  if ("Version" == name) {
-    return new VersionTag(args);
-  }
-  if ("Date" == name) {
-    return new Date(args);
-  }
-  if ("Time" == name) {
-    return new Time(args);
-  }
-  if ("TimeZone" == name) {
-    return new TimeZone(args);
-  }
-  if ("Uri" == name) {
-    return new Uri(args);
-  }
-  if ("MimeType" == name) {
-    return new MimeType(args);
-  }
-  if ("RegExp" == name) {
-    return new RegExp(args);
-  }
-
-  return Module::arg_method(auth,name,args);
+  return Module::script_method(auth,ref,name,args);
 }
 
 //=============================================================================

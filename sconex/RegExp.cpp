@@ -20,27 +20,25 @@ Free Software Foundation, Inc.,
 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA */
 
 #include "sconex/RegExp.h"
+#include "sconex/ScriptTypes.h"
 namespace scx {
 
 //=============================================================================
 RegExp::RegExp(
   const std::string& pattern
-) : m_pattern(0),
-    m_pcre(0)
+) : m_pcre(0)
 {
   DEBUG_COUNT_CONSTRUCTOR(RegExp);
-  from_string(*m_pattern);
+  from_string(m_pattern);
 }
 
 //=============================================================================
-RegExp::RegExp(Arg* args)
-  : m_pattern(0),
-    m_pcre(0)
+RegExp::RegExp(const ScriptRef* args)
+  : m_pcre(0)
 {
   DEBUG_COUNT_CONSTRUCTOR(RegExp);
-  ArgList* l = dynamic_cast<ArgList*>(args);
 
-  const ArgString* str = dynamic_cast<const ArgString*>(l->get(0));
+  const ScriptString* str = get_method_arg<ScriptString>(args,0,"pattern");
   if (str) {
     // Set from string
     from_string(str->get_string());
@@ -50,8 +48,8 @@ RegExp::RegExp(Arg* args)
 
 //=============================================================================
 RegExp::RegExp(const RegExp& c)
-  : Arg(c),
-    m_pattern(new std::string(*c.m_pattern)),
+  : ScriptObject(c),
+    m_pattern(c.m_pattern),
     m_pcre(c.m_pcre)
 {
   if (m_pcre) {
@@ -61,42 +59,24 @@ RegExp::RegExp(const RegExp& c)
 }
 
 //=============================================================================
-RegExp::RegExp(RefType ref, RegExp& c)
-  : Arg(ref,c),
-    m_pattern(c.m_pattern),
-    m_pcre(c.m_pcre)
-{
-  DEBUG_COUNT_CONSTRUCTOR(RegExp);
-}
-
-//=============================================================================
 RegExp::~RegExp()
 {
-  if (last_ref()) {
-    delete m_pattern;
-    if (m_pcre && 0 == ::pcre_refcount(m_pcre,-1)) {
-      ::pcre_free(m_pcre);
-    }
+  if (m_pcre && 0 == ::pcre_refcount(m_pcre,-1)) {
+    ::pcre_free(m_pcre);
   }
   DEBUG_COUNT_DESTRUCTOR(RegExp);
 }
 
 //=============================================================================
-Arg* RegExp::new_copy() const
+ScriptObject* RegExp::new_copy() const
 {
   return new RegExp(*this);
 }
 
 //=============================================================================
-Arg* RegExp::ref_copy(RefType ref)
-{
-  return new RegExp(ref,*this);
-}
-
-//=============================================================================
 std::string RegExp::get_string() const
 {
-  return *m_pattern;
+  return m_pattern;
 }
 
 //=============================================================================
@@ -106,75 +86,84 @@ int RegExp::get_int() const
 }
 
 //=============================================================================
-Arg* RegExp::op(const Auth& auth, OpType optype, const std::string& opname, Arg* right)
+ScriptRef* RegExp::script_op(const ScriptAuth& auth,
+			     const ScriptRef& ref,
+			     const ScriptOp& op,
+			     const ScriptRef* right)
 {
-  if (is_method_call(optype,opname)) {
-
-    ArgList* l = dynamic_cast<ArgList*>(right);
-    
-    if ("match" == m_method) {
-      Arg* a_string = l->get(0);
-      if (!a_string) return new ArgError("No string specified");
-      if (!m_pcre) return new ArgError("Invalid RegExp pattern");
-
-      int ovector[30];
-      std::string subject = a_string->get_string();
-      int ret = ::pcre_exec(
-        m_pcre,
-        0,
-        subject.c_str(),
-        subject.length(),
-        0,
-        0,
-        ovector,
-        30
-      );
-
-      ArgList* list = new ArgList();
-      if (ret > 0) {
-	for (int i=0; i<ret; ++i) {
-	  int o = (i*2);
-	  std::string str(subject,ovector[o],ovector[o+1]-ovector[o]);
-	  list->give(new ArgString(str));
-	}
-      }
-      return list;
-    }
-
-  } else if (optype == Arg::Binary) {
-
-    RegExp* rv = dynamic_cast<RegExp*>(right);
-    if (rv) {
-      if ("=="==opname) { // Equality
-        return new ArgInt(*this == *rv);
-
-      } else if ("!="==opname) { // Inequality
-        return new ArgInt(*this != *rv);
-        
+  if (right) { // binary ops
+    const RegExp* rv = dynamic_cast<const RegExp*>(right->object());
+    if (rv) { // RegExp x RegExp ops
+      switch (op.type()) {
+      case ScriptOp::Equality:
+        return ScriptInt::new_ref(*this == *rv);
+      case ScriptOp::Inequality:
+        return ScriptInt::new_ref(*this != *rv);
+      default: break;
       }
     }
     
-    if ("." == opname) { // Scope resolution
-      std::string name = right->get_string();
-      if (name == "pattern") return new ArgString(*m_pattern);
+    if (ScriptOp::Lookup == op.type()) {
+      std::string name = right->object()->get_string();
+      if (name == "pattern") return ScriptString::new_ref(m_pattern);
 
-      if (name == "match") return new_method(name);
+      if (name == "match") 
+	return new ScriptMethodRef(ref,name);
     }
   }
   
-  return Arg::op(auth,optype,opname,right);
+  return ScriptObject::script_op(auth,ref,op,right);
+}
+
+//=============================================================================
+ScriptRef* RegExp::script_method(const ScriptAuth& auth,
+				 const ScriptRef& ref,
+				 const std::string& name,
+				 const ScriptRef* args)
+{
+  if ("match" == name) {
+    if (!m_pcre) return ScriptError::new_ref("Invalid RegExp pattern");
+
+    const ScriptString* a_string = 
+      get_method_arg<ScriptString>(args,0,"string");
+    if (!a_string) return ScriptError::new_ref("No string specified");
+    
+    int ovector[30];
+    std::string subject = a_string->get_string();
+    int ret = ::pcre_exec(m_pcre,
+			  0,
+			  subject.c_str(),
+			  subject.length(),
+			  0,
+			  0,
+			  ovector,
+			  30);
+    
+    ScriptList* list = new ScriptList();
+    ScriptRef* list_ref = new ScriptRef(list);
+    if (ret > 0) {
+      for (int i=0; i<ret; ++i) {
+	int o = (i*2);
+	std::string str(subject,ovector[o],ovector[o+1]-ovector[o]);
+	list->give(ScriptString::new_ref(str));
+      }
+    }
+    return list_ref;
+  }
+
+  return ScriptObject::script_method(auth,ref,name,args);
 }
 
 //=============================================================================
 bool RegExp::operator==(const RegExp& v) const
 {
-  return (*m_pattern == *v.m_pattern);
+  return (m_pattern == v.m_pattern);
 }
 
 //=============================================================================
 bool RegExp::operator!=(const RegExp& v) const
 {
-  return (*m_pattern != *v.m_pattern);
+  return (m_pattern != v.m_pattern);
 }
 
 //=============================================================================
@@ -191,7 +180,7 @@ void RegExp::from_string(const std::string& str)
   );
   if (m_pcre) {
     ::pcre_refcount(m_pcre,+1);
-    m_pattern = new std::string(str);
+    m_pattern = str;
   }
 }
 

@@ -24,6 +24,7 @@ Free Software Foundation, Inc.,
 #include "sconex/DatagramChannel.h"
 #include "sconex/SocketAddress.h"
 #include "sconex/Stream.h"
+#include "sconex/ScriptTypes.h"
 
 //=========================================================================
 LettuceBuffer::LettuceBuffer(
@@ -137,9 +138,9 @@ LettuceBuffer::Type LettuceBuffer::get_type()
 }
 
 //=========================================================================
-scx::Arg* LettuceBuffer::new_arg()
+scx::ScriptObject* LettuceBuffer::new_obj()
 {
-  scx::Arg* a = 0;
+  scx::ScriptObject* a = 0;
 
   switch (m_type) {
 
@@ -153,7 +154,7 @@ scx::Arg* LettuceBuffer::new_arg()
           case 1:
             {
               unsigned char b = m_buffer[0];
-              a = new scx::ArgInt(b);
+              a = new scx::ScriptInt(b);
             }
             break;
             
@@ -161,7 +162,7 @@ scx::Arg* LettuceBuffer::new_arg()
             {
               unsigned short int w;
               memcpy(&w,m_buffer,2);
-              a = new scx::ArgInt(w);
+              a = new scx::ScriptInt(w);
             }
             break;
             
@@ -169,7 +170,7 @@ scx::Arg* LettuceBuffer::new_arg()
             {
               unsigned int l;
               memcpy(&l,m_buffer,4);
-              a = new scx::ArgInt(l);
+              a = new scx::ScriptInt(l);
             }
             break;
         }
@@ -178,7 +179,7 @@ scx::Arg* LettuceBuffer::new_arg()
       
     case LettuceBufferString:
       m_buffer[m_size] = '\0';
-      a = new scx::ArgString(m_buffer);
+      a = new scx::ScriptString(m_buffer);
       break;
       
     case LettuceBufferBinary:
@@ -225,12 +226,12 @@ scx::Condition LettuceCommandStream::event(scx::Stream::Event e)
 
     LettuceBuffer name_buffer;
     c = name_buffer.read(*this);
-    scx::Arg* a_name = name_buffer.new_arg();
-    scx::ArgInt* a_int_name = dynamic_cast<scx::ArgInt*>(a_name);
+    scx::ScriptObject* a_name = name_buffer.new_obj();
+    scx::ScriptInt* a_int_name = dynamic_cast<scx::ScriptInt*>(a_name);
     
     LettuceBuffer data_buffer;
     c = data_buffer.read(*this);
-    scx::Arg* a_data = data_buffer.new_arg();
+    scx::ScriptObject* a_data = data_buffer.new_obj();
 
     const scx::DatagramChannel* sock =
       dynamic_cast<const scx::DatagramChannel*>(&endpoint());

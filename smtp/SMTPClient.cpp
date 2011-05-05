@@ -2,7 +2,7 @@
 
 SMTP Client
 
-Copyright (c) 2000-2010 Andrew Wedgbury <wedge@sconemad.com>
+Copyright (c) 2000-2011 Andrew Wedgbury <wedge@sconemad.com>
 
 This program is free software; you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -28,6 +28,7 @@ Free Software Foundation, Inc.,
 #include "sconex/Date.h"
 #include "sconex/StreamSocket.h"
 #include "sconex/StreamDebugger.h"
+#include "sconex/ScriptTypes.h"
 namespace smtp {
 
 //=============================================================================
@@ -106,149 +107,72 @@ void MessageHeader::get_all_rcpts(std::vector<std::string>& rcpts) const
   
   
 //=============================================================================
-Client::Client(SMTPModule& module, const scx::ArgList* args)
+SMTPClient::SMTPClient(SMTPModule& module, 
+		       const scx::ScriptRef* args)
   : m_module(module),
-    m_header(new MessageHeader()),
-    m_mutex(0),
-    m_complete(0),
-    m_result(new Result(Unknown)),
-    m_result_str(new std::string())
+    m_result(Unknown)
 {
-  DEBUG_COUNT_CONSTRUCTOR(SMTPClient);
+  DEBUG_COUNT_CONSTRUCTOR(SMTPSMTPClient);
 
-  const scx::ArgString* a_subject = dynamic_cast<const scx::ArgString*>(args->get(0));
-  if (a_subject) m_header->m_subject = a_subject->get_string();
+  const scx::ScriptString* a_subject = 
+    scx::get_method_arg<scx::ScriptString>(args,0,"subject");
+  if (a_subject) 
+    m_header.m_subject = a_subject->get_string();
 
-  const scx::ArgString* a_from = dynamic_cast<const scx::ArgString*>(args->get(1));
-  if (a_from) m_header->m_from = a_from->get_string();
+  const scx::ScriptString* a_from = 
+    scx::get_method_arg<scx::ScriptString>(args,1,"from");
+  if (a_from) 
+    m_header.m_from = a_from->get_string();
 
-  const scx::ArgString* a_to_rcpt = dynamic_cast<const scx::ArgString*>(args->get(2));
-  if (a_to_rcpt) m_header->m_to_rcpts.push_back(a_to_rcpt->get_string());
+  const scx::ScriptString* a_to_rcpt = 
+    scx::get_method_arg<scx::ScriptString>(args,2,"to");
+  if (a_to_rcpt) 
+    m_header.m_to_rcpts.push_back(a_to_rcpt->get_string());
 }
 
 //=============================================================================
-Client::Client(const Client& c)
-  : Arg(c),
-    m_module(c.m_module),
-    m_header(new MessageHeader(*c.m_header)),
-    m_mutex(0),
-    m_complete(0),
-    m_result(new Result(*c.m_result)),
-    m_result_str(new std::string(*c.m_result_str))
-{
-  DEBUG_COUNT_CONSTRUCTOR(SMTPClient);
-}
-
-//=============================================================================
-Client::Client(RefType ref, Client& c)
-  : Arg(ref,c),
+SMTPClient::SMTPClient(const SMTPClient& c)
+  : ScriptObject(c),
     m_module(c.m_module),
     m_header(c.m_header),
-    m_mutex(c.m_mutex),
-    m_complete(c.m_complete),
     m_result(c.m_result),
     m_result_str(c.m_result_str)
 {
-  DEBUG_COUNT_CONSTRUCTOR(SMTPClient);
-  
+  DEBUG_COUNT_CONSTRUCTOR(SMTPSMTPClient);
 }
 
 //=============================================================================
-Client::~Client()
+SMTPClient::~SMTPClient()
 {
-  if (last_ref()) {
-    delete m_header;
-    delete m_result;
-    delete m_result_str;
-  }
-  DEBUG_COUNT_DESTRUCTOR(SMTPClient);
+  DEBUG_COUNT_DESTRUCTOR(SMTPSMTPClient);
 }
 
 //=============================================================================
-scx::Arg* Client::new_copy() const
+scx::ScriptObject* SMTPClient::new_copy() const
 {
-  return new Client(*this);
+  return new SMTPClient(*this);
 }
 
 //=============================================================================
-scx::Arg* Client::ref_copy(RefType ref)
+std::string SMTPClient::get_string() const
 {
-  return new Client(ref,*this);
-}
-
-//=============================================================================
-std::string Client::get_string() const
-{
-  return m_header->m_subject;
+  return m_header.m_subject;
 }
   
 //=============================================================================
-int Client::get_int() const
+int SMTPClient::get_int() const
 {
-  return (*m_result == Success);
+  return (m_result == Success);
 }
 
 //=============================================================================
-scx::Arg* Client::op(const scx::Auth& auth,scx::Arg::OpType optype, const std::string& opname, scx::Arg* right)
-{
-  if (is_method_call(optype,opname)) {
-    
-    scx::ArgList* l = dynamic_cast<scx::ArgList*>(right);
-
-    if ("send" == m_method) {
-      std::string data;
-      const scx::Arg* adata = l->get(0);
-      if (adata) data = adata->get_string();
-      
-      return send(data);
-    }
-
-    if ("add_recipient" == m_method) {
-      const scx::ArgString* a_rcpt = dynamic_cast<const scx::ArgString*>(l->get(0));
-      if (!a_rcpt) return new scx::ArgError("add_recipient() Must specify recipient");
-      m_header->m_to_rcpts.push_back(a_rcpt->get_string());
-      return 0;
-    }
-
-    if ("add_cc_recipient" == m_method) {
-      const scx::ArgString* a_rcpt = dynamic_cast<const scx::ArgString*>(l->get(0));
-      if (!a_rcpt) return new scx::ArgError("add_cc_recipient() Must specify recipient");
-      m_header->m_cc_rcpts.push_back(a_rcpt->get_string());
-      return 0;
-    }
-
-    if ("add_bcc_recipient" == m_method) {
-      const scx::ArgString* a_rcpt = dynamic_cast<const scx::ArgString*>(l->get(0));
-      if (!a_rcpt) return new scx::ArgError("add_bcc_recipient() Must specify recipient");
-      m_header->m_bcc_rcpts.push_back(a_rcpt->get_string());
-      return 0;
-    }
-    
-  } else if (scx::Arg::Binary == optype) {
-
-    if ("." == opname) {
-      std::string name = right->get_string();
-
-      if (name == "result") return new scx::ArgString(*m_result_str);
-      
-      if (name == "send" ||
-          name == "add_recipient" ||
-          name == "add_cc_recipient" ||
-          name == "add_bcc_recipient") return new_method(name);
-    }
-    
-  }
-  return SCXBASE Arg::op(auth,optype,opname,right);
-}
-
-//=============================================================================
-scx::Arg* Client::send(const std::string& message)
+scx::ScriptRef* SMTPClient::send(const std::string& message)
 {
   scx::StreamSocket* sock = m_module.new_server_connection();
 
   if (!sock) {
-    DEBUG_LOG("No mail server specified");
-    return new scx::ArgError("Configuration error");
+    // Could not create the socket
+    return scx::ScriptError::new_ref("Configuration error");
   }
   
   // Set idle timeout
@@ -258,73 +182,137 @@ scx::Arg* Client::send(const std::string& message)
   sock->add_stream(new scx::StreamDebugger("smtp-client"));
   
   // Add client stream
-  ClientStream* cs = new ClientStream(m_module,this);
+  SMTPClientStream* cs = new SMTPClientStream(m_module,this);
+  cs->add_module_ref(&m_module);
   sock->add_stream(cs);
   
-  if (!cs->set_message(*m_header,message)) {
+  if (!cs->set_message(m_header,message)) {
     // Something is badly wrong with the message,
     // don't attempt to send it
     delete sock;
-    *m_result_str = "Missing sender or recipient";
-    return new scx::ArgInt(0);
+    m_result_str = "Missing sender or recipient";
+    return scx::ScriptError::new_ref(m_result_str);
   }    
 
-  *m_result = Client::Unknown;
+  m_result = SMTPClient::Unknown;
   
-  // Create completion event and mutex
-  m_mutex = new scx::Mutex();
-  m_complete = new scx::ConditionEvent();
-  m_mutex->lock();
+  // Lock mutex
+  m_mutex.lock();
   
   // Give to the kernel for async processing
   if (!scx::Kernel::get()->connect(sock,0)) {
-    m_mutex->unlock();
+    m_mutex.unlock();
     delete sock;
     DEBUG_LOG("System failure");
-    return new scx::ArgError("System failure");
+    return scx::ScriptError::new_ref("System failure");
   }
   
   // Now wait for the completion signal
-  m_complete->wait(*m_mutex);
+  m_complete.wait(m_mutex);
   
   // Clean up
-  m_mutex->unlock();
-  delete m_mutex; m_mutex = 0;
-  delete m_complete; m_complete = 0;
+  m_mutex.unlock();
 
   // Log result
-  if (*m_result != Success) {
-    m_module.log("SMTP session completed with error:" + (*m_result_str),scx::Logger::Error);
+  if (m_result != Success) {
+    m_module.log("SMTP session completed with error:" + m_result_str,
+		 scx::Logger::Error);
   } else {
-    m_module.log("SMTP session completed succesfully: " + (*m_result_str));
+    m_module.log("SMTP session completed succesfully: " + m_result_str);
   }
   
-  return new scx::ArgInt(*m_result == Success); 
+  return scx::ScriptInt::new_ref(m_result == Success); 
 }
 
 //=============================================================================
-void Client::event_complete(Result result,const std::string& result_str)
+void SMTPClient::event_complete(Result result,
+				const std::string& result_str)
 {
-  if (m_mutex) {
-    m_mutex->lock();
+  m_mutex.lock();
+  
+  m_result = result;
+  m_result_str = result_str;
+  m_complete.signal();
     
-    *m_result = result;
-    *m_result_str = result_str;
-    m_complete->signal();
-    
-    m_mutex->unlock();
-  }
+  m_mutex.unlock();
 }
 
+//=============================================================================
+scx::ScriptRef* SMTPClient::script_op(const scx::ScriptAuth& auth,
+				      const scx::ScriptRef& ref,
+				      const scx::ScriptOp& op,
+				      const scx::ScriptRef* right)
+{
+  if (op.type() == scx::ScriptOp::Lookup) {
+    const std::string name = right->object()->get_string();
+
+    // Methods
+    if (name == "send" ||
+	name == "add_recipient" ||
+	name == "add_cc_recipient" ||
+	name == "add_bcc_recipient") {
+      return new scx::ScriptMethodRef(ref,name);
+    }
+
+    // Properties
+    if (name == "result") 
+      return scx::ScriptString::new_ref(m_result_str);
+  }
+
+  return scx::ScriptObject::script_op(auth,ref,op,right);
+}
 
 //=============================================================================
-ClientStream::ClientStream(
-  SMTPModule& module,
-  Client* client
-) : scx::LineBuffer("smtp:client",1024),
+scx::ScriptRef* SMTPClient::script_method(const scx::ScriptAuth& auth,
+					  const scx::ScriptRef& ref,
+					  const std::string& name,
+					  const scx::ScriptRef* args)
+{
+  if ("send" == name) {
+    const scx::ScriptObject* a_data = 
+      scx::get_method_arg<scx::ScriptObject>(args,0,"data");
+    std::string data = (a_data ? a_data->get_string() : "");
+    
+    return send(data);
+  }
+  
+  if ("add_recipient" == name) {
+    const scx::ScriptString* a_rcpt = 
+      scx::get_method_arg<scx::ScriptString>(args,0,"address");
+    if (!a_rcpt) 
+      return scx::ScriptError::new_ref("Must specify recipient");
+    m_header.m_to_rcpts.push_back(a_rcpt->get_string());
+    return 0;
+  }
+  
+  if ("add_cc_recipient" == name) {
+    const scx::ScriptString* a_rcpt = 
+      scx::get_method_arg<scx::ScriptString>(args,0,"address");
+    if (!a_rcpt) 
+      return scx::ScriptError::new_ref("Must specify recipient");
+    m_header.m_cc_rcpts.push_back(a_rcpt->get_string());
+    return 0;
+  }
+  
+  if ("add_bcc_recipient" == name) {
+    const scx::ScriptString* a_rcpt = 
+      scx::get_method_arg<scx::ScriptString>(args,0,"address");
+    if (!a_rcpt) 
+      return scx::ScriptError::new_ref("Must specify recipient");
+    m_header.m_bcc_rcpts.push_back(a_rcpt->get_string());
+    return 0;
+  }
+
+  return scx::ScriptObject::script_method(auth,ref,name,args);
+}
+
+//=============================================================================
+SMTPClientStream::SMTPClientStream(SMTPModule& module,
+				   SMTPClient* client)
+  : scx::LineBuffer("smtp:client",1024),
     m_module(module),
     m_client(client),
-    m_result(Client::Unknown),
+    m_result(SMTPClient::Unknown),
     m_seq(Start),
     m_rcpt_seq(0),
     m_buffer(0)
@@ -333,23 +321,21 @@ ClientStream::ClientStream(
 }
 
 //=============================================================================
-ClientStream::~ClientStream()
+SMTPClientStream::~SMTPClientStream()
 {
   if (m_seq != End && m_buffer != 0) {
     // If we're being deleted during a session,
     // inform client of a connection error
-    m_client->event_complete(Client::Failure,"Network error");
+    m_client->event_complete(SMTPClient::Failure,"Network error");
   }
   delete m_buffer;
 }
 
 //=============================================================================
-bool ClientStream::set_message(
-  const MessageHeader& header,
-  const std::string& message
-)
+bool SMTPClientStream::set_message(const MessageHeader& header,
+				   const std::string& message)
 {
-  DEBUG_ASSERT(m_seq == Start,"SMTP Client already running");
+  DEBUG_ASSERT(m_seq == Start,"SMTP SMTPClient already running");
   
   std::string hdr_string = header.get_string();
   std::string end_string = CRLF "." CRLF;
@@ -395,7 +381,7 @@ bool ClientStream::set_message(
 }
 
 //=============================================================================
-scx::Condition ClientStream::event(scx::Stream::Event e)
+scx::Condition SMTPClientStream::event(scx::Stream::Event e)
 {
   scx::Condition c = scx::Ok;
   int na = 0;
@@ -417,7 +403,7 @@ scx::Condition ClientStream::event(scx::Stream::Event e)
       if (c != scx::Ok) return c;
       if (code != 220) {
         m_seq = SendQuit;
-        m_result = Client::Failure;
+        m_result = SMTPClient::Failure;
         m_result_str = line;
       } else {
         m_seq = SendHelo;
@@ -434,7 +420,7 @@ scx::Condition ClientStream::event(scx::Stream::Event e)
       if (c != scx::Ok) return c;
       if (code != 250) {
         m_seq = SendQuit;
-        m_result = Client::Failure;
+        m_result = SMTPClient::Failure;
         m_result_str = line;
       } else {
         m_seq = SendFrom;
@@ -451,7 +437,7 @@ scx::Condition ClientStream::event(scx::Stream::Event e)
       if (c != scx::Ok) return c;
       if (code != 250) {
         m_seq = SendQuit;
-        m_result = Client::Failure;
+        m_result = SMTPClient::Failure;
         m_result_str = line;
       } else {
         m_seq = SendRcpt;
@@ -472,7 +458,7 @@ scx::Condition ClientStream::event(scx::Stream::Event e)
       if (c != scx::Ok) return c;
       if (code != 250 && code != 251) {
         m_seq = SendQuit;
-        m_result = Client::Failure;
+        m_result = SMTPClient::Failure;
         m_result_str = line;
       } else if (++m_rcpt_seq < m_rcpts.size()) {
         // Another recipient
@@ -493,7 +479,7 @@ scx::Condition ClientStream::event(scx::Stream::Event e)
       if (c != scx::Ok) return c;
       if (code != 354) {
         m_seq = SendQuit;
-        m_result = Client::Failure;
+        m_result = SMTPClient::Failure;
         m_result_str = line;
       } else {
         m_seq = SendBody;
@@ -519,10 +505,10 @@ scx::Condition ClientStream::event(scx::Stream::Event e)
       m_result_str = line;
       if (code != 250) {
         m_seq = SendQuit;
-        m_result = Client::Failure;
+        m_result = SMTPClient::Failure;
       } else {
         m_seq = SendQuit;
-        m_result = Client::Success;
+        m_result = SMTPClient::Success;
       }
       break;
       
@@ -535,7 +521,7 @@ scx::Condition ClientStream::event(scx::Stream::Event e)
       c = read_smtp_resp(code,line);
       if (c != scx::Ok) return c;
       if (code >= 400) {
-        m_result = Client::Failure;
+        m_result = SMTPClient::Failure;
         m_result_str = line;
       }
       m_seq = End;
@@ -551,13 +537,13 @@ scx::Condition ClientStream::event(scx::Stream::Event e)
 }
 
 //=============================================================================
-std::string ClientStream::stream_status() const
+std::string SMTPClientStream::stream_status() const
 {
   return scx::StreamTokenizer::stream_status();
 }
 
 //=============================================================================
-void ClientStream::setup_state()
+void SMTPClientStream::setup_state()
 {
   // Enable read/write events according to state
   switch (m_seq) {
@@ -591,7 +577,7 @@ void ClientStream::setup_state()
 }
 
 //=============================================================================
-  scx::Condition ClientStream::read_smtp_resp(int& code,std::string& line)
+  scx::Condition SMTPClientStream::read_smtp_resp(int& code,std::string& line)
 {
   code = 0;
   scx::Condition c = tokenize(line);
@@ -605,7 +591,7 @@ void ClientStream::setup_state()
 }
   
 //=============================================================================
-std::string ClientStream::format_email_address(const std::string& str)
+std::string SMTPClientStream::format_email_address(const std::string& str)
 {
   std::string::size_type start = str.find_first_of("<");
   if (start == std::string::npos) {

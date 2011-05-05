@@ -2,7 +2,7 @@
 
 Error Page module
 
-Copyright (c) 2000-2005 Andrew Wedgbury <wedge@sconemad.com>
+Copyright (c) 2000-2011 Andrew Wedgbury <wedge@sconemad.com>
 
 This program is free software; you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -112,7 +112,8 @@ public:
 
 protected:
 
-  void log(const std::string message,scx::Logger::Level level = scx::Logger::Info)
+  void log(const std::string message,
+	   scx::Logger::Level level = scx::Logger::Info)
   {
     http::MessageStream* msg = GET_HTTP_MESSAGE();
     if (msg) {
@@ -258,7 +259,8 @@ private:
 
 
 //=========================================================================
-class ErrorPageModule : public scx::Module {
+class ErrorPageModule : public scx::Module,
+			public scx::Provider<scx::Stream> {
 public:
 
   ErrorPageModule();
@@ -268,10 +270,10 @@ public:
 
   virtual int init();
   
-  virtual bool connect(
-    scx::Descriptor* endpoint,
-    scx::ArgList* args
-  );
+  // Provider<Stream> method
+  virtual void provide(const std::string& type,
+		       const scx::ScriptRef* args,
+		       scx::Stream*& object);
 
 protected:
 
@@ -285,13 +287,13 @@ SCONESERVER_MODULE(ErrorPageModule);
 ErrorPageModule::ErrorPageModule(
 ) : scx::Module("http:errorpage",scx::version())
 {
-
+  scx::Stream::register_stream("errorpage",this);
 }
 
 //=========================================================================
 ErrorPageModule::~ErrorPageModule()
 {
-
+  scx::Stream::unregister_stream("errorpage",this);
 }
 
 //=========================================================================
@@ -307,14 +309,10 @@ int ErrorPageModule::init()
 }
 
 //=========================================================================
-bool ErrorPageModule::connect(
-  scx::Descriptor* endpoint,
-  scx::ArgList* args
-)
+void ErrorPageModule::provide(const std::string& type,
+			      const scx::ScriptRef* args,
+			      scx::Stream*& object)
 {
-  ErrorPageStream* s = new ErrorPageStream(*this);
-  s->add_module_ref(ref());
-  
-  endpoint->add_stream(s);
-  return true;
+  object = new ErrorPageStream(*this);
+  object->add_module_ref(this);
 }

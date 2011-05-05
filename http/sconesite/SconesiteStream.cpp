@@ -2,7 +2,7 @@
 
 Sconesite Stream
 
-Copyright (c) 2000-2009 Andrew Wedgbury <wedge@sconemad.com>
+Copyright (c) 2000-2011 Andrew Wedgbury <wedge@sconemad.com>
 
 This program is free software; you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -26,7 +26,6 @@ Free Software Foundation, Inc.,
 #include "Profile.h"
 #include "Template.h"
 #include "RenderMarkup.h"
-#include "ArgFile.h"
 
 #include "http/HTTPModule.h"
 #include "http/Request.h"
@@ -41,10 +40,13 @@ Free Software Foundation, Inc.,
 #include "sconex/StreamSocket.h"
 #include "sconex/Kernel.h"
 #include "sconex/StreamDebugger.h"
+#include "sconex/FilePath.h"
 
 //=========================================================================
+// ParamReaderStream - Stream for reading parameters in mime headers
+// TODO: probably should live in http
+//
 class ParamReaderStream : public scx::Stream {
-
 public:
 
   ParamReaderStream(const std::string& name, http::Request& request)
@@ -89,7 +91,7 @@ protected:
 //=========================================================================
 SconesiteStream::SconesiteStream(
   SconesiteModule& module,
-  Profile* profile
+  Profile& profile
 ) : http::ResponseStream("sconesite"),
     m_module(module),
     m_profile(profile),
@@ -111,13 +113,13 @@ std::string SconesiteStream::stream_status() const
 {
   std::ostringstream oss;
   oss << http::ResponseStream::stream_status()
-      << " prf:" << m_profile->name()
+      << " prf:" << m_profile.get_string()
       << " art:" << (m_article ? m_article->get_href_path() : "NULL");
   return oss.str();
 }
 
 //=========================================================================
-void SconesiteStream::log(const std::string message,scx::Logger::Level level)
+void SconesiteStream::log(const std::string message, scx::Logger::Level level)
 {
   http::MessageStream* msg = GET_HTTP_MESSAGE();
   if (msg) {
@@ -144,7 +146,8 @@ scx::Condition SconesiteStream::event(scx::Stream::Event e)
     }
 
     // Lookup the article and get remaining file path
-    m_article = m_profile->get_index()->find_article(pathinfo,m_file);
+    //    m_article = m_profile.get_index()->find_article(pathinfo,m_file);
+    m_article = m_profile.lookup_article(pathinfo,m_file);
 
     // Check article exists
     if (!m_article) {
@@ -154,9 +157,15 @@ scx::Condition SconesiteStream::event(scx::Stream::Event e)
     }
 
     // Create context for rendering article
-    m_context = new RenderMarkupContext(*m_profile,*this,endpoint(),req,resp);
-    m_context->set_article(m_article);
+    RenderMarkupContext* rmc = new RenderMarkupContext(m_profile,
+						       *this,
+						       endpoint(),
+						       req,
+						       resp);
+    m_context = new RenderMarkupContext::Ref(rmc);
+    rmc->set_article(m_article);
 
+    /*
     // Check access is allowed
     if (!m_article->allow_access(*m_context)) {
       resp.set_status(http::Status::Unauthorized);
@@ -164,6 +173,7 @@ scx::Condition SconesiteStream::event(scx::Stream::Event e)
         return scx::Close;
       }
     }
+    */
     
     if (m_file.empty()) {
       // Article request, check if we need to redirect to correct the path
@@ -181,6 +191,7 @@ scx::Condition SconesiteStream::event(scx::Stream::Event e)
       // File request, update the path in the request
       scx::FilePath path = m_article->get_root() + m_file;
       req.set_path(path);
+      log("File request for '" + path.path() + "'");
       
       if (!scx::FileStat(path).is_file()) {
         resp.set_status(http::Status::NotFound);
@@ -206,7 +217,8 @@ scx::Condition SconesiteStream::start_section(const scx::MimeHeaderTable& header
   http::Response& resp = msg->get_response();
   const http::Session* session = req.get_session();
 
-  if (m_article->allow_upload(*m_context)) {
+  //  if (m_article->allow_upload(*m_context)) {
+  if (true) {
 
     std::string name;
     scx::MimeHeader disp = headers.get_parsed("Content-Disposition");
@@ -229,12 +241,13 @@ scx::Condition SconesiteStream::start_section(const scx::MimeHeaderTable& header
       std::string filename = m_module.name() + "-" + session->get_id() + "-" + name;
       path += filename;
       //      STREAM_DEBUG_LOG("Streaming section to file '" << path.path() << "'");
-      req.set_param(name,new ArgFile(path,fname));
+      req.set_param(name,
+		    new scx::ScriptRef(new scx::ScriptFile(path,fname)));
       
       scx::File* file = new scx::File();
       if (file->open(path.path(),
-                     scx::File::Write | scx::File::Create | scx::File::Truncate,
-                     00660) == scx::Ok) {
+            scx::File::Write | scx::File::Create | scx::File::Truncate,
+            00660) == scx::Ok) {
         //	endpoint().add_stream(new scx::StreamDebugger("https-file"));
 	scx::StreamTransfer* xfer = new scx::StreamTransfer(&endpoint());
 	file->add_stream(xfer);
@@ -275,11 +288,11 @@ scx::Condition SconesiteStream::send_response()
     // Request for a file
     
     // Connect the getfile module and relinquish
-    scx::ModuleRef getfile = msg->get_module().get_module("getfile");
-    if (getfile.valid()) {
-      log("Article '" + m_article->name() + "' sending '" + pathinfo + "' with getfile"); 
-      scx::ArgList args;
-      getfile.module()->connect(&endpoint(),0);
+    scx::Stream* getfile = scx::Stream::create_new("getfile",0);
+    if (getfile) {
+      log("Article '" + m_article->get_string() + "' sending '" + pathinfo + 
+	  "' with getfile"); 
+      endpoint().add_stream(getfile);
       return scx::End;
     }
     // Something went wrong
@@ -288,25 +301,35 @@ scx::Condition SconesiteStream::send_response()
     
   } else {
     // Request for the article itself
-    log("Sending article '" + m_article->name() + "'");
+    log("Sending article '" + m_article->get_string() + "'");
   }
   
   // Set the endpoint blocking, saving previous state
   bool prev_block = endpoint().set_blocking(true);
   
   // Find the template to use
-  Template* tpl = m_profile->lookup_template("default");
+  Template* tpl = m_profile.lookup_template("default");
+
+  scx::Date start_time = scx::Date::now();
 
   // Render the page
   try {
     if (!tpl) {
-      m_context->handle_error("No template");
+      m_context->object()->handle_error("No template");
     } else {
-      tpl->process(*m_context);
+      tpl->process(*m_context->object());
     }
   } catch (...) {
     DEBUG_LOG("EXCEPTION caught in SconesiteStream");
   }
+
+  //---
+  scx::Time elapsed = scx::Date::now() - start_time;
+  std::ostringstream oss;
+  oss << "--- Article rendered in " << elapsed.to_microseconds() << " us ---";
+  log(oss.str());
+  write(oss.str());
+  //---
 
   // Restore endpoint blocking state and reset timeout
   endpoint().set_blocking(prev_block);

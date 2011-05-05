@@ -1,8 +1,8 @@
 /* SconeServer (http://www.sconemad.com)
 
-http Response
+HTTP Response
 
-Copyright (c) 2000-2009 Andrew Wedgbury <wedge@sconemad.com>
+Copyright (c) 2000-2011 Andrew Wedgbury <wedge@sconemad.com>
 
 This program is free software; you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -22,10 +22,10 @@ Free Software Foundation, Inc.,
 
 #include "http/Response.h"
 
-#include "sconex/ModuleRef.h"
 #include "sconex/StreamSocket.h"
 #include "sconex/File.h"
 #include "sconex/Module.h"
+#include "sconex/ScriptTypes.h"
 namespace http {
 
 //===========================================================================
@@ -160,56 +160,77 @@ bool Response::parse_header(const std::string& str)
 std::string Response::build_header_string()
 {
   std::string str = "HTTP/" + m_version.get_string() + " " + 
-    m_status.string() + CRLF +
-    m_headers.get_all() + CRLF;
-
+                    m_status.string() + CRLF +
+                   m_headers.get_all() + CRLF;
   return str;
 }
 
 //=========================================================================
-scx::Arg* Response::arg_lookup(const std::string& name)
+std::string Response::get_string() const
 {
-  // Methods
-  if ("set_header" == name ||
-      "set_status" == name) {
-    return new_method(name);
-  }
-  
-  if (name == "version") return m_version.new_copy();
-  if (name == "status") return new scx::ArgString(m_status.string());
-  if (name == "statuscode") return new scx::ArgInt(m_status.code());
-
-  return SCXBASE ArgObjectInterface::arg_lookup(name);
+  return "Response";
 }
 
 //=========================================================================
-scx::Arg* Response::arg_method(const scx::Auth& auth,const std::string& name,scx::Arg* args)
+scx::ScriptRef* Response::script_op(const scx::ScriptAuth& auth,
+				    const scx::ScriptRef& ref,
+				    const scx::ScriptOp& op,
+				    const scx::ScriptRef* right)
 {
-  scx::ArgList* l = dynamic_cast<scx::ArgList*>(args);
+  if (op.type() == scx::ScriptOp::Lookup) {
+    const std::string name = right->object()->get_string();
 
+    // Methods
+    if ("set_header" == name ||
+	"set_status" == name) {
+      return new scx::ScriptMethodRef(ref,name);
+    }
+    
+    if (name == "version") 
+      return new scx::ScriptRef(m_version.new_copy());
+    if (name == "status") return scx::ScriptString::new_ref(m_status.string());
+    if (name == "statuscode") return scx::ScriptInt::new_ref(m_status.code());
+  }
+
+  return scx::ScriptObject::script_op(auth,ref,op,right);
+}
+
+//=========================================================================
+scx::ScriptRef* Response::script_method(const scx::ScriptAuth& auth,
+					const scx::ScriptRef& ref,
+					const std::string& name,
+					const scx::ScriptRef* args)
+{
   if (name == "set_header") {
-    const scx::ArgString* a_header =  dynamic_cast<const scx::ArgString*>(l->get(0));
-    if (!a_header) return new scx::ArgError("set_header() No name specified");
+    const scx::ScriptString* a_header = 
+      scx::get_method_arg<scx::ScriptString>(args,0,"name");
+    if (!a_header) 
+      return scx::ScriptError::new_ref("set_header() No name specified");
 
-    const scx::ArgString* a_value = dynamic_cast<const scx::ArgString*>(l->get(1));
-    if (!a_value) return new scx::ArgError("set_header() No value specified");
+    const scx::ScriptString* a_value = 
+      scx::get_method_arg<scx::ScriptString>(args,1,"value");
+    if (!a_value) 
+      return scx::ScriptError::new_ref("set_header() No value specified");
 
     set_header(a_header->get_string(),a_value->get_string());
     return 0;
   }
 
   if (name == "set_status") {
-    const scx::ArgInt* i_status =  dynamic_cast<const scx::ArgInt*>(l->get(0));
-    if (!i_status) return new scx::ArgError("set_status() No status code specified");
+    const scx::ScriptInt* i_status = 
+      scx::get_method_arg<scx::ScriptInt>(args,0,"status");
+    if (!i_status) 
+      return scx::ScriptError::new_ref("set_status() No status specified");
 
     Status status((Status::Code)i_status->get_int());
-    if (!status.valid()) return new scx::ArgError("set_status() Invalid status code specified");
+    if (!status.valid()) 
+      return scx::ScriptError::new_ref("set_status() Invalid status code");
 
     set_status(status);
     return 0;
   }
 
-  return SCXBASE ArgObjectInterface::arg_method(auth,name,args);
+  return scx::ScriptObject::script_method(auth,ref,name,args);
 }
 
 };

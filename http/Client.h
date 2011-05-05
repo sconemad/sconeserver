@@ -2,7 +2,7 @@
 
 HTTP Client
 
-Copyright (c) 2000-2010 Andrew Wedgbury <wedge@sconemad.com>
+Copyright (c) 2000-2011 Andrew Wedgbury <wedge@sconemad.com>
 
 This program is free software; you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -26,7 +26,7 @@ Free Software Foundation, Inc.,
 #include "http/Request.h"
 #include "http/Response.h"
 
-#include "sconex/Arg.h"
+#include "sconex/ScriptBase.h"
 #include "sconex/LineBuffer.h"
 #include "sconex/Uri.h"
 #include "sconex/Mutex.h"
@@ -35,24 +35,34 @@ namespace http {
 class ClientStream;
 
 //=============================================================================
-class HTTP_API Client : public scx::Arg {
-
+class HTTP_API Client : public scx::ScriptObject {
 public:
 
   Client(HTTPModule& module,
          const std::string& method,
          const scx::Uri& url);
   Client(const Client& c);
-  Client(RefType ref, Client& c);
   virtual ~Client();
-  virtual scx::Arg* new_copy() const;
-  virtual scx::Arg* ref_copy(RefType ref);
+
+  // ScriptObject methods
+  virtual scx::ScriptObject* new_copy() const;
 
   virtual std::string get_string() const;
   virtual int get_int() const;
 
-  virtual scx::Arg* op(const scx::Auth& auth,scx::Arg::OpType optype, const std::string& opname, scx::Arg* right);
+  virtual scx::ScriptRef* script_op(const scx::ScriptAuth& auth,
+				    const scx::ScriptRef& ref,
+				    const scx::ScriptOp& op,
+				    const scx::ScriptRef* right=0);
 
+  virtual scx::ScriptRef* script_method(const scx::ScriptAuth& auth,
+					const scx::ScriptRef& ref,
+					const std::string& name,
+					const scx::ScriptRef* args);
+
+  typedef scx::ScriptRefTo<Client> Ref;
+
+  // Client methods
   bool run(const std::string& request_data = "");
 
   const Response& get_response() const;
@@ -64,13 +74,13 @@ private:
 
   HTTPModule& m_module;
 
-  Request* m_request;
-  Response* m_response;
-  std::string* m_response_data;
+  Request::Ref m_request;
+  Response::Ref m_response;
+  std::string m_response_data;
 
-  scx::Mutex* m_mutex;
-  scx::ConditionEvent* m_complete;
-  bool* m_error;
+  scx::Mutex m_mutex;
+  scx::ConditionEvent m_complete;
+  bool m_error;
 };
 
 //=============================================================================

@@ -2,7 +2,7 @@
 
 Test Build Profile
 
-Copyright (c) 2000-2006 Andrew Wedgbury <wedge@sconemad.com>
+Copyright (c) 2000-2011 Andrew Wedgbury <wedge@sconemad.com>
 
 This program is free software; you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -24,11 +24,11 @@ Free Software Foundation, Inc.,
 #include "Build.h"
 #include "BuildStep.h"
 
+#include "sconex/ScriptTypes.h"
+
 //=========================================================================
-BuildProfile::BuildProfile(
-  TestBuilderModule& module,
-  const std::string& name
-) : m_module(module),
+BuildProfile::BuildProfile(TestBuilderModule& module, const std::string& name)
+  : m_module(module),
     m_name(name)
 {
   
@@ -41,55 +41,58 @@ BuildProfile::~BuildProfile()
 }
 
 //=============================================================================
-std::string BuildProfile::name() const
+std::string BuildProfile::get_string() const
 {
   return std::string("PROFILE:") + m_name;
 }
 
 //=============================================================================
-scx::Arg* BuildProfile::arg_lookup(
-  const std::string& name
-)
+scx::ScriptRef* BuildProfile::script_op(const scx::ScriptAuth& auth,
+					const scx::ScriptRef& ref,
+					const scx::ScriptOp& op,
+					const scx::ScriptRef* right)
 {
-  // Methods
+  if (scx::ScriptOp::Lookup == op.type()) {
+    const std::string name = right->object()->get_string();
 
-  if ("set_source_method" == name ||
-      "set_source_uri" == name ||
-      "set_configure_command" == name ||
-      "set_make_targets" == name) {
-    return new_method(name);
+    // Methods
+    
+    if ("set_source_method" == name ||
+	"set_source_uri" == name ||
+	"set_configure_command" == name ||
+	"set_make_targets" == name) {
+      return new scx::ScriptMethodRef(ref,name);
+    }
+    
+    // Properties
+    
+    if ("source_method" == name) {
+      return scx::ScriptString::new_ref(m_source_method);
+    }
+    if ("source_uri" == name) {
+      return scx::ScriptString::new_ref(m_source_uri);
+    }
+    if ("configure_command" == name) {
+      return scx::ScriptString::new_ref(m_configure_command);
+    }
+    if ("make_targets" == name) {
+      return scx::ScriptString::new_ref(get_make_targets());
+    }
   }
-
-  // Properties
   
-  if ("source_method" == name) {
-    return new scx::ArgString(m_source_method);
-  }
-  if ("source_uri" == name) {
-    return new scx::ArgString(m_source_uri);
-  }
-  if ("configure_command" == name) {
-    return new scx::ArgString(m_configure_command);
-  }
-  if ("make_targets" == name) {
-    return new scx::ArgString(get_make_targets());
-  }
-  
-  return SCXBASE ArgObjectInterface::arg_lookup(name);
+  return scx::ScriptObject::script_op(auth,ref,op,right);
 }
 
 //=============================================================================
-scx::Arg* BuildProfile::arg_method(
-  const scx::Auth& auth,
-  const std::string& name,
-  scx::Arg* args
-)
+scx::ScriptRef* BuildProfile::script_method(const scx::ScriptAuth& auth,
+					    const scx::ScriptRef& ref,
+					    const std::string& name,
+					    const scx::ScriptRef* args)
 {
-  scx::ArgList* l = dynamic_cast<scx::ArgList*>(args);
+  if (!auth.trusted()) return scx::ScriptError::new_ref("Not permitted");
 
-  if (!auth.trusted()) return new scx::ArgError("Not permitted");
-
-  const scx::Arg* value = l->get(0);
+  const scx::ScriptString* value = 
+    scx::get_method_arg<scx::ScriptString>(args,0,"value");
   if (value) {
     if ("set_source_method" == name) {
       m_source_method = value->get_string();
@@ -109,7 +112,7 @@ scx::Arg* BuildProfile::arg_method(
     }
   }
   
-  return SCXBASE ArgObjectInterface::arg_method(auth,name,args);
+  return scx::ScriptObject::script_method(auth,ref,name,args);
 }
 
 //=============================================================================

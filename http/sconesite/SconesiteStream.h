@@ -2,7 +2,7 @@
 
 Sconesite Stream
 
-Copyright (c) 2000-2009 Andrew Wedgbury <wedge@sconemad.com>
+Copyright (c) 2000-2011 Andrew Wedgbury <wedge@sconemad.com>
 
 This program is free software; you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -22,12 +22,12 @@ Free Software Foundation, Inc.,
 #ifndef sconesiteStream_h
 #define sconesiteStream_h
 
+#include "RenderMarkup.h"
 #include "sconex/Stream.h"
 #include "http/ResponseStream.h"
 
 class Profile;
 class Article;
-class RenderMarkupContext;
 
 //=========================================================================
 class SconesiteStream : public http::ResponseStream {
@@ -36,14 +36,15 @@ public:
 
   SconesiteStream(
     SconesiteModule& module,
-    Profile* profile
+    Profile& profile
   );
   
   ~SconesiteStream();
 
   virtual std::string stream_status() const;
   
-  void log(const std::string message,scx::Logger::Level level = scx::Logger::Info);
+  void log(const std::string message,
+	   scx::Logger::Level level = scx::Logger::Info);
 
 protected:
 
@@ -55,13 +56,14 @@ private:
   
   SconesiteModule& m_module;
 
-  Profile* m_profile;
+  Profile& m_profile;
   Article* m_article;
 
   bool m_accept;
-  RenderMarkupContext* m_context;
+  RenderMarkupContext::Ref* m_context;
   std::string m_file;
-  
+
+  long int m_start_time;
 };
 
 #endif

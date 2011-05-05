@@ -1,8 +1,8 @@
 /* SconeServer (http://www.sconemad.com)
 
-http Session
+HTTP Sessions
 
-Copyright (c) 2000-2009 Andrew Wedgbury <wedge@sconemad.com>
+Copyright (c) 2000-2011 Andrew Wedgbury <wedge@sconemad.com>
 
 This program is free software; you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -23,46 +23,21 @@ Free Software Foundation, Inc.,
 #define httpSession_h
 
 #include "http/http.h"
-#include "sconex/ArgObject.h"
-#include "sconex/ArgStore.h"
+#include "sconex/ScriptBase.h"
+#include "sconex/ScriptTypes.h"
 #include "sconex/Job.h"
 namespace http {
 
-class Session;
 class HTTPModule;
 
-//=============================================================================
-class HTTP_API SessionManager : public scx::ArgObjectInterface {
-public:
-
-  SessionManager(HTTPModule& module);
-
-  virtual ~SessionManager();
-
-  Session* lookup_session(const std::string& id);
-  Session* new_session();
-
-  int check_sessions();
-
-  virtual scx::Arg* arg_lookup(const std::string& name);
-  virtual scx::Arg* arg_resolve(const std::string& name);
-  virtual scx::Arg* arg_method(const scx::Auth& auth,const std::string& name,scx::Arg* args);
-
- private:
-  
-  HTTPModule& m_module;
-  scx::Mutex m_mutex;
-
-  typedef HASH_TYPE<std::string,Session*> SessionMap;
-  SessionMap m_sessions;
-  scx::JobID m_job;
-
-};
- 
 const scx::Time DEFAULT_SESSION_TIMEOUT = scx::Time(60 * 60);
 
 //=============================================================================
-class HTTP_API Session : public scx::ArgStore {
+// Session - Holds information about a user's interaction with a web site 
+// from a particular client. Used to maintain state across (otherwise 
+// stateless) HTTP protocol interactions.
+//
+class HTTP_API Session : public scx::ScriptMap {
 public:
 
   Session(
@@ -80,10 +55,20 @@ public:
 
   bool allow_upload() const;
   
-  virtual std::string name() const;
-  virtual scx::Arg* arg_lookup(const std::string& name);
-  virtual scx::Arg* arg_resolve(const std::string& name);
-  virtual scx::Arg* arg_method(const scx::Auth& auth,const std::string& name,scx::Arg* args);
+  // ScriptObject methods
+  virtual std::string get_string() const;
+
+  virtual scx::ScriptRef* script_op(const scx::ScriptAuth& auth,
+				    const scx::ScriptRef& ref,
+				    const scx::ScriptOp& op,
+				    const scx::ScriptRef* right=0);
+
+  virtual scx::ScriptRef* script_method(const scx::ScriptAuth& auth,
+					const scx::ScriptRef& ref,
+					const std::string& name,
+					const scx::ScriptRef* args);
+
+  typedef scx::ScriptRefTo<Session> Ref;
   
 protected:
 
@@ -98,5 +83,48 @@ private:
 
 };
 
+//=============================================================================
+// SessionManager - Maintains a list of active HTTP sessions
+//
+class HTTP_API SessionManager : public scx::ScriptObject {
+public:
+
+  SessionManager(HTTPModule& module);
+
+  virtual ~SessionManager();
+
+  // Lookup an existing session by ID
+  Session* lookup_session(const std::string& id);
+
+  // Create a new session
+  Session* new_session();
+
+  // Check through sessions, removing any that have timed-out
+  int check_sessions();
+
+  // ScriptObject methods
+  virtual scx::ScriptRef* script_op(const scx::ScriptAuth& auth,
+				    const scx::ScriptRef& ref,
+				    const scx::ScriptOp& op,
+				    const scx::ScriptRef* right=0);
+
+  virtual scx::ScriptRef* script_method(const scx::ScriptAuth& auth,
+					const scx::ScriptRef& ref,
+					const std::string& name,
+					const scx::ScriptRef* args);
+
+  typedef scx::ScriptRefTo<SessionManager> Ref;
+
+ private:
+  
+  HTTPModule& m_module;
+  scx::Mutex m_mutex;
+
+  typedef HASH_TYPE<std::string,Session::Ref*> SessionMap;
+  SessionMap m_sessions;
+  scx::JobID m_job;
+
+};
+ 
 };
 #endif

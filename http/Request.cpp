@@ -23,7 +23,6 @@ Free Software Foundation, Inc.,
 #include "http/Request.h"
 #include "http/Session.h"
 
-#include "sconex/ModuleRef.h"
 #include "sconex/StreamSocket.h"
 #include "sconex/File.h"
 #include "sconex/Module.h"
@@ -35,7 +34,8 @@ Request::Request(const std::string& profile, const std::string& id)
     m_profile(profile),
     m_id(id),
     m_docroot(0),
-    m_session(0)
+    m_session(0),
+    m_params(new scx::ScriptMap())
 {
   
 }
@@ -223,19 +223,22 @@ const DocRoot* Request::get_docroot() const
 //=============================================================================
 void Request::set_session(Session* session)
 {
-  m_session = session;
+  delete m_session;
+  m_session = new Session::Ref(session);
 }
 
 //=============================================================================
 const Session* Request::get_session() const
 {
-  return m_session;
+  if (m_session) return m_session->object();
+  return 0;
 }
 
 //=============================================================================
 Session* Request::get_session()
 {
-  return m_session;
+  if (m_session) return m_session->object();
+  return 0;
 }
 
 //=============================================================================
@@ -275,9 +278,9 @@ const std::string& Request::get_path_info() const
 }
 
 //=============================================================================
-void Request::set_param(const std::string& name, scx::Arg* value)
+void Request::set_param(const std::string& name, scx::ScriptRef* value)
 {
-  m_params.give(name,value);
+  m_params.object()->give(name,value);
 }
 
 //=============================================================================
@@ -287,78 +290,93 @@ void Request::set_param(const std::string& name, const std::string& value)
   std::string::size_type ip = name.find(int_pattern);
   if (ip == 0) {
     int i_value = atoi(value.c_str());
-    set_param(name,new scx::ArgInt(i_value));
+    set_param(name,scx::ScriptInt::new_ref(i_value));
               
   } else {
-    set_param(name,new scx::ArgString(value));
+    set_param(name,scx::ScriptString::new_ref(value));
   }
 }
 
 //=============================================================================
 std::string Request::get_param(const std::string& name) const
 {
-  const scx::Arg* a = m_params.lookup(name);
-  if (a == 0) {
+  const scx::ScriptRef* par = m_params.object()->lookup(name);
+  if (par == 0) {
     return "";
   }
-  return a->get_string();
+  return par->object()->get_string();
 }
 
 //=============================================================================
 bool Request::is_param(const std::string& name) const
 {
-  return (m_params.lookup(name) != 0);
+  return (m_params.object()->lookup(name) != 0);
 }
 
 //=========================================================================
 std::string Request::build_header_string()
 {
-  std::string str =
-    m_method + " " + m_uri.get_string() + " HTTP/" + m_version.get_string() + CRLF +
-    m_headers.get_all() + CRLF;
-  
+  std::string str = m_method + " " + m_uri.get_string() + 
+                    " HTTP/" + m_version.get_string() + CRLF +
+                    m_headers.get_all() + CRLF;
   return str;
 }
 
 //=========================================================================
-scx::Arg* Request::arg_lookup(const std::string& name)
+std::string Request::get_string() const
 {
-  // Methods
-  if ("get_header" == name) {
-    return new_method(name);
-  }
-  
-  if (name == "auth") return new scx::ArgInt(m_auth_user != "");
-  if (name == "user") return new scx::ArgString(m_auth_user);
-  if (name == "method") return new scx::ArgString(m_method);
-  if (name == "uri") return m_uri.new_copy();
-  if (name == "version") return m_version.new_copy();
-  if (name == "profile") return new scx::ArgString(m_profile);
-  if (name == "id") return new scx::ArgString(m_id);
-  if (name == "params") return m_params.new_copy();
-  if (name == "session" && m_session) return new scx::ArgObject(m_session);
-
-  return SCXBASE ArgObjectInterface::arg_lookup(name);
+  return "Request";
 }
 
 //=========================================================================
-scx::Arg* Request::arg_method(const scx::Auth& auth,const std::string& name,scx::Arg* args)
+scx::ScriptRef* Request::script_op(const scx::ScriptAuth& auth,
+				   const scx::ScriptRef& ref,
+				   const scx::ScriptOp& op,
+				   const scx::ScriptRef* right)
 {
-  scx::ArgList* l = dynamic_cast<scx::ArgList*>(args);
-
-  if (name == "get_header") {
-    const scx::ArgString* a_header =  dynamic_cast<const scx::ArgString*>(l->get(0));
-    if (!a_header) return new scx::ArgError("set_header() No name specified");
-
-    std::string value = m_headers.get(a_header->get_string());
-    if (value.empty()) {
-      return 0;
+  if (op.type() == scx::ScriptOp::Lookup) {
+    const std::string name = right->object()->get_string();
+    
+    // Methods
+    if ("get_header" == name) {
+      return new scx::ScriptMethodRef(ref,name);
     }
-
-    return new scx::ArgString(value);
+  
+    if (name == "auth") return scx::ScriptInt::new_ref(m_auth_user != "");
+    if (name == "user") return scx::ScriptString::new_ref(m_auth_user);
+    if (name == "method") return scx::ScriptString::new_ref(m_method);
+    if (name == "uri") return new scx::ScriptRef(m_uri.new_copy());
+    if (name == "version") return new scx::ScriptRef(m_version.new_copy());
+    if (name == "profile") return scx::ScriptString::new_ref(m_profile);
+    if (name == "id") return scx::ScriptString::new_ref(m_id);
+    if (name == "params") 
+      return m_params.ref_copy(ref.reftype());
+    if (name == "session" && m_session) 
+      return m_session->ref_copy(ref.reftype());
   }
 
-  return SCXBASE ArgObjectInterface::arg_method(auth,name,args);
+  return scx::ScriptObject::script_op(auth,ref,op,right);
+}
+
+//=========================================================================
+scx::ScriptRef* Request::script_method(const scx::ScriptAuth& auth,
+				       const scx::ScriptRef& ref,
+				       const std::string& name,
+				       const scx::ScriptRef* args)
+{
+  if (name == "get_header") {
+    const scx::ScriptString* a_header = 
+      scx::get_method_arg<scx::ScriptString>(args,0,"name");
+    if (!a_header) 
+      return scx::ScriptError::new_ref("get_header() No name specified");
+
+    std::string value = m_headers.get(a_header->get_string());
+    if (value.empty()) return 0;
+
+    return scx::ScriptString::new_ref(value);
+  }
+
+  return scx::ScriptObject::script_method(auth,ref,name,args);
 }
 
 };

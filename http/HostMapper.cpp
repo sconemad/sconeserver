@@ -2,7 +2,7 @@
 
 HTTP Host mapper
 
-Copyright (c) 2000-2004 Andrew Wedgbury <wedge@sconemad.com>
+Copyright (c) 2000-2011 Andrew Wedgbury <wedge@sconemad.com>
 
 This program is free software; you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -25,13 +25,15 @@ Free Software Foundation, Inc.,
 #include "http/HTTPModule.h"
 #include "http/Request.h"
 #include "http/Response.h"
+#include "sconex/ScriptTypes.h"
+#include "sconex/Descriptor.h"
 namespace http {
 
 //=========================================================================
 HostMapper::HostMapper(HTTPModule& module)
   : m_module(module)
 {
-
+  m_parent = &module;
 }
 
 //=========================================================================
@@ -45,23 +47,25 @@ HostMapper::~HostMapper()
 }
 
 //=============================================================================
-bool HostMapper::connect_request(scx::Descriptor* endpoint, Request& request, Response& response)
+bool HostMapper::connect_request(scx::Descriptor* endpoint,
+				 Request& request,
+				 Response& response)
 {
   const scx::Uri& uri = request.get_uri();
-  const std::string& host = uri.get_host();
+  const std::string& hostname = uri.get_host();
   std::string mapped_host;
   bool redirect = false;
   
-  if (lookup(m_redirects,host,mapped_host)) {
+  if (lookup(m_redirects,hostname,mapped_host)) {
     // Redirect
     redirect = true;
 
-  } else if (lookup(m_aliases,host,mapped_host)) {
+  } else if (lookup(m_aliases,hostname,mapped_host)) {
     // Alias map
 
   } else {
     // This is bad, user should have setup a default host
-    m_module.log("Unknown host '" + uri.get_host() + "'",scx::Logger::Error);
+    m_module.log("Unknown host '" + hostname + "'",scx::Logger::Error);
     response.set_status(http::Status::NotFound);
     response.set_header("Content-Type","text/html");
     endpoint->write("<html><head></head><body><h1>Host not found</h1></body></html>");
@@ -70,19 +74,21 @@ bool HostMapper::connect_request(scx::Descriptor* endpoint, Request& request, Re
 
   HostMap::const_iterator it = m_hosts.find(mapped_host);
   if (it == m_hosts.end()) {
-    log(std::string("Lookup failure: '") + host + "' maps to unknown host '" + mapped_host + "'");
+    log(std::string("Lookup failure: '") + hostname + 
+	"' maps to unknown host '" + mapped_host + "'");
     response.set_status(http::Status::NotFound);
     response.set_header("Content-Type","text/html");
     endpoint->write("<html><head></head><body><h1>Host not found</h1></body></html>");
     return false;
   }
-  Host* h = it->second;
+  Host* host = it->second->object();
 
   if (redirect) {
     // Redirect to host's uri
     scx::Uri new_uri = uri;
-    new_uri.set_host(h->get_hostname());
-    log("Host redirect '" + uri.get_string() + "' to '" + new_uri.get_string() + "'"); 
+    new_uri.set_host(host->get_hostname());
+    log("Host redirect '" + uri.get_string() + 
+	"' to '" + new_uri.get_string() + "'"); 
     
     response.set_status(http::Status::Found);
     response.set_header("Content-Type","text/html");
@@ -91,136 +97,128 @@ bool HostMapper::connect_request(scx::Descriptor* endpoint, Request& request, Re
     return false;
   }
   
-  request.set_host(h);
-  return h->connect_request(endpoint,request,response);
+  request.set_host(host);
+  return host->connect_request(endpoint,request,response);
 }
 
 //=============================================================================
-scx::Arg* HostMapper::arg_lookup(
-  const std::string& name
-)
+scx::ScriptRef* HostMapper::script_op(const scx::ScriptAuth& auth,
+				      const scx::ScriptRef& ref,
+				      const scx::ScriptOp& op,
+				      const scx::ScriptRef* right)
 {
-  // Methods
+  if (op.type() == scx::ScriptOp::Lookup) {
+    const std::string name = right->object()->get_string();
   
-  if ("add" == name ||
-      "remove" == name ||
-      "alias" == name ||
-      "redirect" == name) {
-    return new_method(name);
-  }
-
-  // Properties
-  
-  if ("list" == name) {
-    scx::ArgList* list = new scx::ArgList();
-    for (HostMap::const_iterator it = m_hosts.begin();
-	 it != m_hosts.end();
-	 ++it) {
-      Host* host = it->second;
-      list->give(new scx::ArgObject(host));
+    // Methods
+    if ("add" == name ||
+	"remove" == name ||
+	"alias" == name ||
+	"redirect" == name) {
+      return new scx::ScriptMethodRef(ref,name);
     }
-    return list;
-  }
 
-  if ("aliases" == name) {
-    scx::ArgMap* map = new scx::ArgMap();
-    for (HostNameMap::const_iterator it = m_aliases.begin();
-	 it != m_aliases.end();
-	 ++it) {
-      map->give(it->first,new scx::ArgString(it->second));
+    // Properties
+    
+    if ("list" == name) {
+      scx::ScriptList* list = new scx::ScriptList();
+      scx::ScriptRef* list_ref = new scx::ScriptRef(list);
+      for (HostMap::const_iterator it = m_hosts.begin();
+	   it != m_hosts.end();
+	   ++it) {
+	Host::Ref* hostref = it->second;
+	list->give(hostref->ref_copy(ref.reftype()));
+      }
+      return list_ref;
     }
-    return map;
-  }
-
-  if ("redirects" == name) {
-    scx::ArgMap* map = new scx::ArgMap();
-    for (HostNameMap::const_iterator it = m_redirects.begin();
-	 it != m_redirects.end();
-	 ++it) {
-      map->give(it->first,new scx::ArgString(it->second));
+    
+    if ("aliases" == name) {
+      scx::ScriptMap* map = new scx::ScriptMap();
+      scx::ScriptRef* map_ref = new scx::ScriptRef(map);
+      for (HostNameMap::const_iterator it = m_aliases.begin();
+	   it != m_aliases.end();
+	   ++it) {
+	map->give(it->first,scx::ScriptString::new_ref(it->second));
+      }
+      return map_ref;
     }
-    return map;
+    
+    if ("redirects" == name) {
+      scx::ScriptMap* map = new scx::ScriptMap();
+      scx::ScriptRef* map_ref = new scx::ScriptRef(map);
+      for (HostNameMap::const_iterator it = m_redirects.begin();
+	   it != m_redirects.end();
+	   ++it) {
+	map->give(it->first,scx::ScriptString::new_ref(it->second));
+      }
+      return map_ref;
+    }
+    
+    // Sub-objects
+    HostMap::const_iterator it = m_hosts.find(name);
+    if (it != m_hosts.end()) {
+      Host::Ref* hostref = it->second;
+      return hostref->ref_copy(ref.reftype());
+    }      
   }
 
-  // Sub-objects
-
-  HostMap::const_iterator it = m_hosts.find(name);
-  if (it != m_hosts.end()) {
-    Host* h = it->second;
-    return new scx::ArgObject(h);
-  }      
-
-  return ArgObjectInterface::arg_lookup(name);
+  return scx::ScriptObject::script_op(auth,ref,op,right);
 }
 
 //=============================================================================
-scx::Arg* HostMapper::arg_resolve(const std::string& name)
+scx::ScriptRef* HostMapper::script_method(const scx::ScriptAuth& auth,
+					  const scx::ScriptRef& ref,
+					  const std::string& name,
+					  const scx::ScriptRef* args)
 {
-  scx::Arg* a = arg_lookup(name);
-  if (BAD_ARG(a)) {
-    delete a;
-    a = m_module.arg_resolve(name);
-  }
-  return a;
-}
-
-//=============================================================================
-scx::Arg* HostMapper::arg_method(
-  const scx::Auth& auth,
-  const std::string& name,
-  scx::Arg* args
-)
-{
-  scx::ArgList* l = dynamic_cast<scx::ArgList*>(args);
-
-  if (!auth.admin()) return new scx::ArgError("Not permitted");
+  if (!auth.admin()) return scx::ScriptError::new_ref("Not permitted");
 
   if ("add" == name) {
-    const scx::ArgString* a_id =
-      dynamic_cast<const scx::ArgString*>(l->get(0));
+    const scx::ScriptString* a_id =
+      scx::get_method_arg<scx::ScriptString>(args,0,"id");
     if (!a_id) {
-      return new scx::ArgError("add() No host ID specified");
+      return scx::ScriptError::new_ref("add() No host ID specified");
     }
     std::string s_id = a_id->get_string();
 
-    const scx::ArgString* a_hostname =
-      dynamic_cast<const scx::ArgString*>(l->get(1));
+    const scx::ScriptString* a_hostname =
+      scx::get_method_arg<scx::ScriptString>(args,1,"hostname");
     if (!a_hostname) {
-      return new scx::ArgError("add() No hostname specified");
+      return scx::ScriptError::new_ref("add() No hostname specified");
     }
     std::string s_hostname = a_hostname->get_string();
     
-    const scx::ArgString* a_path =
-      dynamic_cast<const scx::ArgString*>(l->get(2));
+    const scx::ScriptString* a_path =
+      scx::get_method_arg<scx::ScriptString>(args,2,"path");
     if (!a_path) {
-      return new scx::ArgError("add() No path specified");
+      return scx::ScriptError::new_ref("add() No path specified");
     }
-
+    
     HostMap::const_iterator it = m_hosts.find(s_id);
     if (it != m_hosts.end()) {
-      return new scx::ArgError("add() Host with this ID already exists");
+      return scx::ScriptError::new_ref("add() Host with this ID already exists");
     }
         
     log("Adding {HOST:" + s_id + "} hostname '" + s_hostname + "' path '" + a_path->get_string() + "'");
     scx::FilePath path = m_module.get_conf_path() + a_path->get_string();
-    Host* host = new Host(m_module,*this,s_id,s_hostname,path.path());
+    Host* host = new Host(m_module, *this, s_id, s_hostname, path.path());
     host->init();
-    m_hosts[s_id] = host;
+    m_hosts[s_id] = new Host::Ref(host);
     m_aliases[s_hostname] = s_id;
-    return 0;
+    return new Host::Ref(host);
   }
 
   if ("remove" == name) {
-    const scx::ArgString* a_host =
-      dynamic_cast<const scx::ArgString*>(l->get(0));
+    const scx::ScriptString* a_host =
+      scx::get_method_arg<scx::ScriptString>(args,0,"id");
     if (!a_host) {
-      return new scx::ArgError("remove() No name specified");
+      return scx::ScriptError::new_ref("remove() No host id specified");
     }
     std::string s_hostname = a_host->get_string();
 
     HostMap::iterator it = m_hosts.find(s_hostname);
     if (it == m_hosts.end()) {
-      return new scx::ArgError("remove() Host not found");
+      return scx::ScriptError::new_ref("remove() Host not found");
     }
     
     log("Removing host '" + s_hostname + "'");
@@ -230,17 +228,17 @@ scx::Arg* HostMapper::arg_method(
   }
   
   if ("alias" == name) {
-    const scx::ArgString* a_pattern =
-      dynamic_cast<const scx::ArgString*>(l->get(0));
+    const scx::ScriptString* a_pattern =
+      scx::get_method_arg<scx::ScriptString>(args,0,"pattern");
     if (!a_pattern) {
-      return new scx::ArgError("map() No pattern specified");
+      return scx::ScriptError::new_ref("map() No pattern specified");
     }
     std::string s_pattern = a_pattern->get_string();
     
-    const scx::ArgString* a_target =
-      dynamic_cast<const scx::ArgString*>(l->get(1));
+    const scx::ScriptString* a_target =
+      scx::get_method_arg<scx::ScriptString>(args,1,"target");
     if (!a_target) {
-      return new scx::ArgError("map() No target specified");
+      return scx::ScriptError::new_ref("map() No target specified");
     }
     std::string s_target = a_target->get_string();
 
@@ -250,17 +248,17 @@ scx::Arg* HostMapper::arg_method(
   }
 
   if ("redirect" == name) {
-    const scx::ArgString* a_pattern =
-      dynamic_cast<const scx::ArgString*>(l->get(0));
+    const scx::ScriptString* a_pattern =
+      scx::get_method_arg<scx::ScriptString>(args,0,"pattern");
     if (!a_pattern) {
-      return new scx::ArgError("redirect() No pattern specified");
+      return scx::ScriptError::new_ref("redirect() No pattern specified");
     }
     std::string s_pattern = a_pattern->get_string();
     
-    const scx::ArgString* a_target =
-      dynamic_cast<const scx::ArgString*>(l->get(1));
+    const scx::ScriptString* a_target =
+      scx::get_method_arg<scx::ScriptString>(args,1,"target");
     if (!a_target) {
-      return new scx::ArgError("redirect() No target specified");
+      return scx::ScriptError::new_ref("redirect() No target specified");
     }
     std::string s_target = a_target->get_string();
 
@@ -269,11 +267,13 @@ scx::Arg* HostMapper::arg_method(
     return 0;
   }
     
-  return ArgObjectInterface::arg_method(auth,name,args);
+  return scx::ScriptObject::script_method(auth,ref,name,args);
 }
 
 //=============================================================================
-bool HostMapper::lookup(const HostNameMap& map, const std::string& pattern, std::string& result)
+bool HostMapper::lookup(const HostNameMap& map,
+			const std::string& pattern,
+			std::string& result)
 {
   int bailout = 100;
   std::string::size_type idot;

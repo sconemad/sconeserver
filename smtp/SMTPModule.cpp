@@ -22,10 +22,11 @@ Free Software Foundation, Inc.,
 #include "smtp/SMTPModule.h"
 #include "smtp/SMTPClient.h"
 
-#include "sconex/Arg.h"
+#include "sconex/ScriptTypes.h"
 #include "sconex/Logger.h"
 #include "sconex/ModuleInterface.h"
 #include "sconex/Process.h"
+#include "sconex/ScriptExpr.h"
 
 namespace smtp {
 
@@ -36,13 +37,14 @@ SMTPModule::SMTPModule()
   : SCXBASE Module("smtp",scx::version()),
     m_server(0)
 {
-
+  scx::ScriptExpr::register_type("SMTPClient",this);
 }
 
 //=========================================================================
 SMTPModule::~SMTPModule()
 {
-  
+  scx::ScriptExpr::unregister_type("SMTPClient",this);
+  delete m_server;
 }
 
 //=========================================================================
@@ -60,65 +62,11 @@ int SMTPModule::init()
 //=========================================================================
 void SMTPModule::close()
 {
-  if (m_server) {
-    delete m_server;
-    m_server = 0;
-  }
+
 }
   
-//=========================================================================
-bool SMTPModule::connect(
-  scx::Descriptor* endpoint,
-  scx::ArgList* args
-)
-{
-  return false;
-}
-
 //=============================================================================
-scx::Arg* SMTPModule::arg_lookup(const std::string& name)
-{
-  // Methods
-  
-  if ("Client" == name ||
-      "set_server" == name) {
-    return new_method(name);
-  }
-
-  // Properties
-  if ("server" == name) {
-    if (!m_server) return 0;
-    return m_server->ref_copy(scx::Arg::ConstRef);
-  }
-
-  return SCXBASE Module::arg_lookup(name);
-}
-
-//=============================================================================
-scx::Arg* SMTPModule::arg_method(
-  const scx::Auth& auth,
-  const std::string& name,
-  scx::Arg* args
-)
-{
-  scx::ArgList* l = dynamic_cast<scx::ArgList*>(args);
-
-  if ("Client" == name) {
-    return new Client(*this,l);
-  }
-
-  if ("set_server" == name) {
-    scx::Arg* new_server = l->take(0);
-    delete m_server;
-    m_server = new_server;
-    return 0;
-  }
-
-  return SCXBASE Module::arg_method(auth,name,args);
-}
-
-//=============================================================================
-const scx::Arg* SMTPModule::get_server() const
+const scx::ScriptRef* SMTPModule::get_server() const
 {
   return m_server;
 }
@@ -126,8 +74,20 @@ const scx::Arg* SMTPModule::get_server() const
 //=============================================================================
 scx::StreamSocket* SMTPModule::new_server_connection()
 {
-  const scx::SocketAddress* server_addr = dynamic_cast<const scx::SocketAddress*>(m_server);
-  const scx::ArgString* server_str = dynamic_cast<const scx::ArgString*>(m_server);
+  if (!m_server) {
+    DEBUG_LOG("Mail server not configured");
+    return 0;
+  }
+
+  // The server can be:
+  // - A socket address, in which case we connect via a socket and return it.
+  // - A string, in which case we launch the specified process and return a 
+  //   pipe to it.
+  const scx::SocketAddress* server_addr = 
+    dynamic_cast<const scx::SocketAddress*>(m_server->object());
+
+  const scx::ScriptString* server_str = 
+    dynamic_cast<const scx::ScriptString*>(m_server->object());
 
   if (server_addr) {
     // Server is specifed with a socket address
@@ -141,7 +101,7 @@ scx::StreamSocket* SMTPModule::new_server_connection()
       return false;
     }
     return sock;
-
+    
   } else if (server_str) {
     // Server is specified by a local process
     scx::Process* proc = new scx::Process();
@@ -161,4 +121,60 @@ scx::StreamSocket* SMTPModule::new_server_connection()
   return 0;
 }
   
+//=============================================================================
+scx::ScriptRef* SMTPModule::script_op(const scx::ScriptAuth& auth,
+				      const scx::ScriptRef& ref,
+				      const scx::ScriptOp& op,
+				      const scx::ScriptRef* right)
+{
+  if (op.type() == scx::ScriptOp::Lookup) {
+    const std::string name = right->object()->get_string();
+
+    // Methods
+    if ("Client" == name ||
+	"set_server" == name) {
+      return new scx::ScriptMethodRef(ref,name);
+    }
+    
+    // Properties
+    if ("server" == name) {
+      if (!m_server) return 0;
+      return m_server->ref_copy(scx::ScriptRef::ConstRef);
+    }
+  }
+
+  return scx::Module::script_op(auth,ref,op,right);
+}
+
+//=============================================================================
+scx::ScriptRef* SMTPModule::script_method(const scx::ScriptAuth& auth,
+					  const scx::ScriptRef& ref,
+					  const std::string& name,
+					  const scx::ScriptRef* args)
+{
+  if ("Client" == name) {
+    scx::ScriptObject* object = 0;
+    provide("SMTPClient",args,object);
+    return new scx::ScriptRef(object);
+  }
+
+  if ("set_server" == name) {
+    const scx::ScriptRef* new_server = 
+      scx::get_method_arg_ref(args,0,"value");
+    delete m_server;
+    m_server = new_server->new_copy();
+    return 0;
+  }
+
+  return scx::Module::script_method(auth,ref,name,args);
+}
+
+//=============================================================================
+void SMTPModule::provide(const std::string& type,
+			 const scx::ScriptRef* args,
+			 scx::ScriptObject*& object)
+{
+  object = new SMTPClient(*this,args);
+}
+
 };

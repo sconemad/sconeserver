@@ -61,6 +61,7 @@ scx::Condition ConnectionStream::event(scx::Stream::Event e)
   switch (e) {
     
     case scx::Stream::Opening: { // OPENING
+      endpoint().set_timeout(scx::Time(m_module.get_idle_timeout()));
       m_num_connection = (++connection_count);
     } break;
 
@@ -183,13 +184,13 @@ bool ConnectionStream::process_request(Request*& request)
 
   // Create and add the message stream
   MessageStream* msg = new MessageStream(m_module,*this,request);
-  msg->add_module_ref(m_module.ref());
+  msg->add_module_ref(&m_module);
   endpoint().add_stream(msg);
 
   if (!request->get_header("Range").empty()) {
     // Request specifies a byte range - add a partial response stream
     PartialResponseStream* pss = new PartialResponseStream(m_module);
-    pss->add_module_ref(m_module.ref());
+    pss->add_module_ref(&m_module);
     endpoint().add_stream(pss);
   }
 

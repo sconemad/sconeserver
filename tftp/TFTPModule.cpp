@@ -27,7 +27,7 @@ Free Software Foundation, Inc.,
 #include "TFTPProfile.h"
 
 #include "sconex/ModuleInterface.h"
-#include "sconex/Arg.h"
+#include "sconex/ScriptTypes.h"
 
 SCONESERVER_MODULE(TFTPModule);
 
@@ -35,12 +35,14 @@ SCONESERVER_MODULE(TFTPModule);
 TFTPModule::TFTPModule()
   : scx::Module("tftp",scx::version())
 {
-
+  scx::Stream::register_stream("tftp",this);
 }
 
 //=========================================================================
 TFTPModule::~TFTPModule()
 {  
+  scx::Stream::unregister_stream("tftp",this);
+
   for (ProfileMap::const_iterator it = m_profiles.begin();
        it != m_profiles.end();
        it++) {
@@ -61,112 +63,117 @@ int TFTPModule::init()
 }
 
 //=========================================================================
-bool TFTPModule::connect(
-  scx::Descriptor* endpoint,
-  scx::ArgList* args
-)
-{
-  const scx::ArgString* channel =
-    dynamic_cast<const scx::ArgString*>(args->get(0));
-  if (!channel) {
-    log("No TFTP profile specified, aborting connection");
-    return false;
-  }
-
-  TFTPStream* s = new TFTPStream(*this,channel->get_string());
-  s->add_module_ref(ref());
-  
-  endpoint->add_stream(s);
-  return true;
-}
-
-//=========================================================================
 TFTPProfile* TFTPModule::find_profile(const std::string& name)
 {
   ProfileMap::const_iterator it = m_profiles.find(name);
   
   if (it != m_profiles.end()) {
-    return it->second;
+    return it->second->object();
   }
   
   return 0;
 }
 
 //=============================================================================
-scx::Arg* TFTPModule::arg_lookup(const std::string& name)
+scx::ScriptRef* TFTPModule::script_op(const scx::ScriptAuth& auth,
+				       const scx::ScriptRef& ref,
+				       const scx::ScriptOp& op,
+				       const scx::ScriptRef* right)
 {
-  // Methods
+  if (op.type() == scx::ScriptOp::Lookup) {
+    const std::string name = right->object()->get_string();
 
-  if ("add" == name ||
-      "remove" == name) {
-    return new_method(name);
-  }      
+    // Methods
+    if ("add" == name ||
+	"remove" == name) {
+      return new scx::ScriptMethodRef(ref,name);
+    }      
 
-  // Properties
-  
-  if ("list" == name) {
-    std::ostringstream oss;
-    for (ProfileMap::const_iterator it = m_profiles.begin();
-	 it != m_profiles.end();
-	 ++it) {
-      oss << (*it).first << "\n";
+    // Properties
+    if ("list" == name) {
+      scx::ScriptList* list = new scx::ScriptList();
+      for (ProfileMap::const_iterator it = m_profiles.begin();
+	   it != m_profiles.end();
+	   ++it) {
+	list->give(scx::ScriptString::new_ref((*it).first));
+      }
+      return new scx::ScriptRef(list);
     }
-    return new scx::ArgString(oss.str());
+
+    // Sub-objects
+    TFTPProfile* profile = find_profile(name);
+    if (profile) {
+      return new scx::ScriptRef(profile,ref.reftype());
+    }
   }
 
-  // Sub-objects
-  
-  TFTPProfile* profile = find_profile(name);
-  if (profile) {
-    return new scx::ArgObject(profile);
-  }
-  
-  return SCXBASE Module::arg_lookup(name);
+  return scx::Module::script_op(auth,ref,op,right);
 }
 
 //=============================================================================
-scx::Arg* TFTPModule::arg_method(
-  const scx::Auth& auth,
-  const std::string& name,
-  scx::Arg* args
-)
+scx::ScriptRef* TFTPModule::script_method(const scx::ScriptAuth& auth,
+					  const scx::ScriptRef& ref,
+					  const std::string& name,
+					  const scx::ScriptRef* args)
 {
-  scx::ArgList* l = dynamic_cast<scx::ArgList*>(args);
-  
-  if (!auth.admin()) return new scx::ArgError("Not permitted");
+  if (!auth.admin()) return scx::ScriptError::new_ref("Not permitted");
 
   if ("add" == name) {
-    const scx::ArgString* a_name = dynamic_cast<const scx::ArgString*>(l->get(0));
-    if (!a_name) return new scx::ArgError("tftp::add() Name must be specified");
+    const scx::ScriptString* a_name = 
+      scx::get_method_arg<scx::ScriptString>(args,0,"name");
+    if (!a_name) 
+      return scx::ScriptError::new_ref("Name must be specified");
     std::string s_name = a_name->get_string();
 
-    const scx::ArgString* a_path = dynamic_cast<const scx::ArgString*>(l->get(1));
-    if (!a_path) return new scx::ArgError("tftp::add() Path must be specified");
+    const scx::ScriptString* a_path = 
+      scx::get_method_arg<scx::ScriptString>(args,1,"path");
+    if (!a_path) 
+      return scx::ScriptError::new_ref("Path must be specified");
     scx::FilePath p_path = scx::FilePath(a_path->get_string());
 
     // Check profile doesn't already exist
-    if (find_profile(s_name)) {
-      return new scx::ArgError("tftp::add() Profile '" + s_name + "' already exists");
-    }
+    if (find_profile(s_name))
+      return scx::ScriptError::new_ref("Profile '" + s_name + 
+				       "' already exists");
 
-    m_profiles[s_name] = new TFTPProfile(*this,s_name,p_path);
-    return 0;
+    TFTPProfile* profile = new TFTPProfile(*this,s_name,p_path);
+    m_profiles[s_name] = new TFTPProfile::Ref(profile);
+    return new TFTPProfile::Ref(profile);
   }
   
   if ("remove" == name) {
-    const scx::ArgString* a_name =
-      dynamic_cast<const scx::ArgString*>(l->get(0));
-    if (!a_name) return new scx::ArgError("tftp::remove() Name must be specified");
+    const scx::ScriptString* a_name = 
+      scx::get_method_arg<scx::ScriptString>(args,0,"name");
+    if (!a_name) 
+      return scx::ScriptError::new_ref("Name must be specified");
     std::string s_name = a_name->get_string();
 
     // Remove profile
-    TFTPProfile* profile = find_profile(s_name);
-    if (!profile) return new scx::ArgError("tftp::remove() Profile '" + s_name + "' does not exist");
-      
-    delete profile;
-    m_profiles.erase(s_name);
+    ProfileMap::iterator it = m_profiles.find(s_name);
+    if (it == m_profiles.end())
+      return scx::ScriptError::new_ref("Profile '" + s_name + 
+				       "' does not exist");
+    delete it->second;
+    m_profiles.erase(it);
     return 0;
   }
 
-  return SCXBASE Module::arg_method(auth,name,args);
+  return scx::Module::script_method(auth,ref,name,args);
 }
+
+//=========================================================================
+void TFTPModule::provide(const std::string& type,
+			 const scx::ScriptRef* args,
+			 scx::Stream*& object)
+{
+  const scx::ScriptString* profile =
+    scx::get_method_arg<scx::ScriptString>(args,0,"profile");
+  if (!profile) {
+    log("No TFTP profile specified, aborting connection");
+    return;
+  }
+
+  object = new TFTPStream(*this,profile->get_string());
+  object->add_module_ref(this);
+}
+

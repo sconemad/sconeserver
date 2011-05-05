@@ -2,7 +2,7 @@
 
 SSL connection module
 
-Copyright (c) 2000-2004 Andrew Wedgbury <wedge@sconemad.com>
+Copyright (c) 2000-2011 Andrew Wedgbury <wedge@sconemad.com>
 
 This program is free software; you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -22,14 +22,16 @@ Free Software Foundation, Inc.,
 #ifndef sslModule_h
 #define sslModule_h
 
+#include "SSLChannel.h"
 #include "sconex/Module.h"
 #include "sconex/Descriptor.h"
-
-class SSLChannel;
+#include "sconex/Stream.h"
 
 //=============================================================================
-class SSLModule : public scx::Module {
-
+// SSLModule - A module providing Secure Socket Layer encryption streams
+//
+class SSLModule : public scx::Module,
+                  public scx::Provider<scx::Stream> {
 public:
 
   SSLModule();
@@ -39,21 +41,29 @@ public:
 
   virtual int init();
 
-  virtual bool connect(
-    scx::Descriptor* endpoint,
-    scx::ArgList* args
-  );
-
   SSLChannel* find_channel(const std::string& name);
   
-  virtual scx::Arg* arg_lookup(const std::string& name);
-  virtual scx::Arg* arg_method(const scx::Auth& auth,const std::string& name,scx::Arg* args);
+  virtual scx::ScriptRef* script_op(const scx::ScriptAuth& auth,
+				    const scx::ScriptRef& ref,
+				    const scx::ScriptOp& op,
+				    const scx::ScriptRef* right=0);
+
+  virtual scx::ScriptRef* script_method(const scx::ScriptAuth& auth,
+					const scx::ScriptRef& ref,
+					const std::string& name,
+					const scx::ScriptRef* args);
+
+  virtual void provide(const std::string& type,
+		       const scx::ScriptRef* args,
+		       scx::Stream*& object);
+
+  typedef scx::ScriptRefTo<SSLModule> Ref;
   
 protected:
 
 private:
 
-  typedef std::map<std::string,SSLChannel*> ChannelMap;
+  typedef std::map<std::string,SSLChannel::Ref*> ChannelMap;
   ChannelMap m_channels;
   
 };

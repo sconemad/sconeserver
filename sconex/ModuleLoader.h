@@ -23,12 +23,13 @@ Free Software Foundation, Inc.,
 #define scxModuleLoader_h
 
 #include "sconex/sconex.h"
-#include "sconex/ModuleRef.h"
 #include "sconex/FilePath.h"
+#include "sconex/Module.h"
 #include "sconex/Mutex.h"
 namespace scx {
 
 class Logger;
+class ScriptRef;
 
 //=============================================================================
 class SCONEX_API ModuleLoader {
@@ -48,7 +49,7 @@ public:
   
   FilePath get_path() const;
   
-  ModuleRef ref();
+  Module::Ref get_module();
 
   bool is_loaded() const;
 
@@ -64,7 +65,7 @@ protected:
   FilePath m_config_path;
   bool m_autoload_config;
 
-  Module* m_module;
+  Module::Ref* m_module;
 
   Mutex m_mutex;
 

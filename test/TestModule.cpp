@@ -2,7 +2,7 @@
 
 Test module
 
-Copyright (c) 2000-2005 Andrew Wedgbury <wedge@sconemad.com>
+Copyright (c) 2000-2011 Andrew Wedgbury <wedge@sconemad.com>
 
 This program is free software; you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -23,7 +23,7 @@ Free Software Foundation, Inc.,
 
 #include "sconex/ModuleInterface.h"
 #include "sconex/Module.h"
-#include "sconex/Arg.h"
+#include "sconex/ScriptTypes.h"
 #include "sconex/FilePath.h"
 #include "sconex/FileDir.h"
 #include "sconex/FileStat.h"
@@ -52,72 +52,76 @@ std::string TestModule::info() const
 }
 
 //=============================================================================
-scx::Arg* TestModule::arg_lookup(const std::string& name)
+scx::ScriptRef* TestModule::script_op(const scx::ScriptAuth& auth,
+				      const scx::ScriptRef& ref,
+				      const scx::ScriptOp& op,
+				      const scx::ScriptRef* right)
 {
-  // Methods
-  if ("filedir" == name ||
-      "db" == name) {
-    return new_method(name);
-  }      
+  if (scx::ScriptOp::Lookup == op.type()) {
+    const std::string name = right->object()->get_string();
 
-  if ("counts" == name) {
-    // Output instance counters
-    std::ostringstream oss;
+    // Methods
+    if ("filedir" == name ||
+	"db" == name) {
+      return new scx::ScriptMethodRef(ref,name);
+    }      
+    
+    if ("counts" == name) {
+      // Output instance counters
+      std::ostringstream oss;
 #ifdef _DEBUG
-    static scx::Debug::InstanceCounterMap prev_counters;
-
-    oss << "Instance counts:\n"
-        << "CLASS NAME                        TOTAL  CURRENT    DELTA   ALLOCS\n";
-    scx::Debug::InstanceCounterMap counters;
-    scx::Debug::get()->get_counters(counters);
-    scx::Debug::InstanceCounterMap::iterator it = counters.begin();
-    while (it != counters.end()) {
-      const std::string& class_name = it->first;
-      scx::DebugInstanceCounter& counter = it->second;
-      int stat_max = counter.get_max();
-      int stat_num = counter.get_num();
-      int stat_delta = stat_num - prev_counters[class_name].get_num();
-
-      oss << std::setw(30) << class_name << " "
-          << std::setw(8) << stat_max << " "
-          << std::setw(8) << stat_num << " "
-          << std::setw(8) << stat_delta << " | "
-	  << counter.get_deltas() << "\n";
+      static scx::Debug::InstanceCounterMap prev_counters;
       
-      it++;
-    }
-    prev_counters = counters;
-    scx::Debug::get()->reset_counters();
+      oss << "Instance counts:\n"
+	  << "CLASS NAME                        TOTAL  CURRENT    DELTA   ALLOCS\n";
+      scx::Debug::InstanceCounterMap counters;
+      scx::Debug::get()->get_counters(counters);
+      scx::Debug::InstanceCounterMap::iterator it = counters.begin();
+      while (it != counters.end()) {
+	const std::string& class_name = it->first;
+	scx::DebugInstanceCounter& counter = it->second;
+	int stat_max = counter.get_max();
+	int stat_num = counter.get_num();
+	int stat_delta = stat_num - prev_counters[class_name].get_num();
+	
+	oss << std::setw(30) << class_name << " "
+	    << std::setw(8) << stat_max << " "
+	    << std::setw(8) << stat_num << " "
+	    << std::setw(8) << stat_delta << " | "
+	    << counter.get_deltas() << "\n";
+	
+	it++;
+      }
+      prev_counters = counters;
+      scx::Debug::get()->reset_counters();
 #else
-    oss << "Instance counts are only available in debug builds\n";
+      oss << "Instance counts are only available in debug builds\n";
 #endif
-    return new scx::ArgString(oss.str());
+      return scx::ScriptString::new_ref(oss.str());
+    }
   }
-  
-  return SCXBASE Module::arg_lookup(name);
+
+  return scx::Module::script_op(auth,ref,op,right);
 }
 
 //=============================================================================
-scx::Arg* TestModule::arg_method(
-  const scx::Auth& auth,
-  const std::string& name,
-  scx::Arg* args
-)
+scx::ScriptRef* TestModule::script_method(const scx::ScriptAuth& auth,
+					  const scx::ScriptRef& ref,
+					  const std::string& name,
+					  const scx::ScriptRef* args)
 {
-  scx::ArgList* l = dynamic_cast<scx::ArgList*>(args);
+  const scx::ScriptList* argl = 
+    dynamic_cast<const scx::ScriptList*>(args->object());
   
   if ("filedir" == name) {
     // Test for filedir
-    const scx::ArgString* a_arg1 =
-      dynamic_cast<const scx::ArgString*>(l->get(0));
-    if (!a_arg1) {
-      return new scx::ArgError("test::run() File name must be specified");
-    }
-    std::string str1 = a_arg1->get_string();
-
+    const scx::ScriptString* path =
+      scx::get_method_arg<scx::ScriptString>(args,0,"path");
+    if (!path)
+      return scx::ScriptError::new_ref("test::run() File name must be specified");
     std::ostringstream oss;
     oss << "Listing:\n";
-    scx::FileDir dir(str1);
+    scx::FileDir dir(path->get_string());
     while (dir.next()) {
       oss << dir.path().path();
       if (dir.stat().is_dir()) {
@@ -127,21 +131,15 @@ scx::Arg* TestModule::arg_method(
       }
       oss << "\n";
     }
-    return new scx::ArgString(oss.str());
-    
+    return scx::ScriptString::new_ref(oss.str());
   }
 
   if ("db" == name) {
-    const scx::Arg* a_type = l->get(0);
-    if (!a_type) return 0;
-
-    const scx::Arg* a_args = l->get(1);
-    const scx::ArgMap* a_args_map = dynamic_cast<const scx::ArgMap*>(a_args);
-    
-    scx::Database* db = scx::Database::create_new(a_type->get_string(),*a_args_map);
-    
-    return new scx::ArgObject(db);
+    const scx::ScriptString* type = 
+      scx::get_method_arg<scx::ScriptString>(args,0,"type");
+    if (!type) return 0;
+    return scx::Database::open(type->get_string(),argl->get(1));
   }
   
-  return SCXBASE Module::arg_method(auth,name,args);
+  return scx::Module::script_method(auth,ref,name,args);
 }

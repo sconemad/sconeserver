@@ -2,7 +2,7 @@
 
 Sconesite Article Body
 
-Copyright (c) 2000-2010 Andrew Wedgbury <wedge@sconemad.com>
+Copyright (c) 2000-2011 Andrew Wedgbury <wedge@sconemad.com>
 
 This program is free software; you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -24,45 +24,15 @@ Free Software Foundation, Inc.,
 
 #include "sconex/FilePath.h"
 #include "sconex/Date.h"
-#include "sconex/ArgObject.h"
+#include "sconex/ScriptBase.h"
+#include "ArticleHeading.h"
 
 class Context;
 
 //=========================================================================
-class ArticleHeading {
-public:
-  ArticleHeading(int level, const std::string& name, int index);
-  ~ArticleHeading();
-
-  int level() const;
-  const std::string& name() const;
-  int index() const;
-  
-  void clear();
-  void add(int level, const std::string& name, int index);
-
-  const ArticleHeading* lookup_index(int index) const;
-  std::string lookup_anchor(int index) const;
-  std::string lookup_section(int index) const;
-  scx::Arg* get_arg(
-    const std::string& anchor_prefix = "",
-    const std::string& section_prefix = ""
-  ) const;
-
-private:
-  
-  int m_level;
-  std::string m_name;
-  int m_index;
-  
-  typedef std::vector<ArticleHeading*> ArticleHeadingList;
-  ArticleHeadingList m_subs;
-};
-
-
-//=========================================================================
-class ArticleBody : public scx::ArgObjectInterface {
-
+// ArticleBody - Sconesite article body interface
+//
+class ArticleBody : public scx::ScriptObject {
 public:
   
   virtual const std::string& get_name() const =0;
@@ -74,6 +44,8 @@ public:
   virtual bool purge(const scx::Date& purge_time) =0;
 
   virtual const ArticleHeading& get_headings() const =0;
+
+  typedef scx::ScriptRefTo<ArticleBody> Ref;
   
 };
 

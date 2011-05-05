@@ -46,6 +46,7 @@ MessageStream::MessageStream(
     m_module(module),
     m_httpstream(httpstream),
     m_request(request),
+    m_response(new Response()),
     m_error_response(false),
     m_bytes_read(0),
     m_bytes_readable(-1),
@@ -57,17 +58,17 @@ MessageStream::MessageStream(
     m_finished(false)
 {
   // Set HTTP version to match request
-  m_response.set_version(request->get_version());
+  m_response.object()->set_version(request->get_version());
 
   // Add standard headers
-  m_response.set_header("Server","SconeServer/" + scx::version().get_string());
-  m_response.set_header("Date",scx::Date::now().string());
+  m_response.object()->set_header("Server",
+    "SconeServer/" + scx::version().get_string());
+  m_response.object()->set_header("Date",scx::Date::now().string());
 }
 
 //=============================================================================
 MessageStream::~MessageStream()
 {
-  delete m_request;
   delete m_buffer;
 }
 
@@ -80,7 +81,8 @@ scx::Condition MessageStream::event(scx::Stream::Event e)
       if (m_bytes_readable < 0) {
         m_bytes_readable = 0;
         // See how much should be read for this message
-        const std::string& clength = m_request->get_header("Content-Length");
+        const std::string& clength = 
+	  m_request.object()->get_header("Content-Length");
         if (!clength.empty()) {
           m_bytes_readable = atoi(clength.c_str());
         }
@@ -117,7 +119,7 @@ scx::Condition MessageStream::event(scx::Stream::Event e)
         Stream::write(oss.str());
         
       } else {
-        std::string slen = m_response.get_header("Content-Length");
+        std::string slen = m_response.object()->get_header("Content-Length");
         if (!slen.empty()) {
           int len = atoi(slen.c_str());
           DEBUG_ASSERT(m_bytes_written==len,"event(Closing) Incomplete message");
@@ -214,7 +216,7 @@ scx::Condition MessageStream::write(const void* buffer,int n,int& na)
 std::string MessageStream::stream_status() const
 {
   std::ostringstream oss;
-  oss << m_response.get_status().code();
+  oss << m_response.object()->get_status().code();
   if (m_headers_sent) oss << " HDRS";
   if (m_write_chunked) {
     oss << " chunk-rem:" << m_write_remaining;
@@ -241,25 +243,25 @@ HTTPModule& MessageStream::get_module()
 //=============================================================================
 void MessageStream::log(const std::string& message,scx::Logger::Level level)
 {
-  m_module.log(m_request->get_id() + " " + message,level);
+  m_module.log(m_request.object()->get_id() + " " + message,level);
 }
 
 //=============================================================================
 const Request& MessageStream::get_request() const
 {
-  return *m_request;
+  return *m_request.object();
 }
 
 //=============================================================================
 Response& MessageStream::get_response()
 {
-  return m_response;
+  return *m_response.object();
 }
 
 //=============================================================================
 bool MessageStream::connect_request_module(bool error)
 {
-  const scx::Uri& uri = m_request->get_uri();
+  const scx::Uri& uri = m_request.object()->get_uri();
   
   // Log request  
   const scx::StreamSocket* sock =
@@ -267,14 +269,16 @@ bool MessageStream::connect_request_module(bool error)
   const scx::SocketAddress* addr = sock->get_remote_addr();
 
   if (!error) {
-    log(addr->get_string() + " " + m_request->get_method() + " " + uri.get_string());
+    log(addr->get_string() + " " + m_request.object()->get_method() + " " + 
+	uri.get_string());
 
-    const std::string& referer = m_request->get_header("Referer");
+    const std::string& referer = m_request.object()->get_header("Referer");
     if (!referer.empty()) {
       log("Referer: " + referer);
     }
     
-    const std::string& useragent = m_request->get_header("User-Agent");
+    const std::string& useragent = 
+      m_request.object()->get_header("User-Agent");
     if (!useragent.empty()) {
       log("User-Agent: " + useragent);
     }
@@ -282,7 +286,9 @@ bool MessageStream::connect_request_module(bool error)
 
   // Pass through to host mapper for connection to appropriate host object
   HostMapper& mapper = m_module.get_hosts();
-  return mapper.connect_request(&endpoint(),*m_request,m_response);
+  return mapper.connect_request(&endpoint(),
+				*m_request.object(),
+				*m_response.object());
 }
   
 //=============================================================================
@@ -290,15 +296,18 @@ bool MessageStream::build_header()
 {
   // Should a persistant connection be used?
   // Used by default for HTTP versions greater than 1.0
-  bool persist = (m_response.get_version() > scx::VersionTag(1,0));
+  bool persist = (m_response.object()->get_version() > scx::VersionTag(1,0));
   if (persist) {
-    // Check if either the request or response have specified Connection: close,
-    // if so then respect this and switch off persistant connection.
-    std::string req_con = m_request->get_header("Connection"); scx::strlow(req_con);
-    std::string resp_con = m_response.get_header("Connection"); scx::strlow(resp_con);
+    // Check if either the request or response have specified 
+    // Connection: close, if so then respect this and switch off persistant 
+    // connections.
+    std::string req_con = 
+      m_request.object()->get_header("Connection"); scx::strlow(req_con);
+    std::string resp_con = 
+      m_response.object()->get_header("Connection"); scx::strlow(resp_con);
     if (req_con == "close") {
       // Copy to response
-      m_response.set_header("Connection","close");
+      m_response.object()->set_header("Connection","close");
       persist = false;
     } else if (resp_con == "close") {
       persist = false;
@@ -306,25 +315,25 @@ bool MessageStream::build_header()
   }
 
   // Can a body be sent with this response type
-  const Status& status = m_response.get_status();
+  const Status& status = m_response.object()->get_status();
   bool body = (status.code() >= 200 &&
 	       status.code() != 204 &&
 	       status.code() != 304);
   
   if (body) {
     // Do we know the content length
-    if (m_response.get_header("Content-Length").empty()) {
+    if (m_response.object()->get_header("Content-Length").empty()) {
       if (persist) {
 	// Use chunked encoding
 	m_write_chunked = true;
 	m_write_remaining = -1;
-	m_response.set_header("Transfer-Encoding","chunked");
-	m_response.remove_header("Connection");
+	m_response.object()->set_header("Transfer-Encoding","chunked");
+	m_response.object()->remove_header("Connection");
       }
     }
 
   } else {
-    m_response.remove_header("Content-Length");
+    m_response.object()->remove_header("Content-Length");
 
   }
   
@@ -332,7 +341,7 @@ bool MessageStream::build_header()
   m_httpstream.set_persist(persist);
 
   // Build the response header and place in buffer
-  std::string str = m_response.build_header_string();
+  std::string str = m_response.object()->build_header_string();
   m_buffer = new scx::Buffer(str.length());
   m_buffer->push_string(str);
 

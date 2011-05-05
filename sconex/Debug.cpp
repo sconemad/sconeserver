@@ -165,12 +165,11 @@ void Debug::count_constuctor(const std::string& class_name, void* addr)
   m_mutex->lock();
 
   // Place breakpoints for particular instance construction
-  /*
-  if (class_name == "ArgInt") {
-      if (m_inst_counts[class_name].get_max() == 238) DEBUG_BREAKPOINT;
-  }
-  */
 
+  if (class_name == "ScriptRef") {
+    //    if (m_inst_counts[class_name].get_max() == 469) DEBUG_BREAKPOINT;
+  }
+  
   m_inst_counts[class_name].count_constructor(addr);
   m_mutex->unlock();
 #endif

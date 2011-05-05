@@ -2,7 +2,7 @@
 
 HTTP Host mapper
 
-Copyright (c) 2000-2004 Andrew Wedgbury <wedge@sconemad.com>
+Copyright (c) 2000-2011 Andrew Wedgbury <wedge@sconemad.com>
 
 This program is free software; you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -23,37 +23,56 @@ Free Software Foundation, Inc.,
 #define httpHostMapper_h
 
 #include "http/http.h"
-#include "sconex/ArgObject.h"
+#include "http/Host.h"
+#include "sconex/ScriptBase.h"
+namespace scx { class Descriptor; };
+
 namespace http {
 
-class Host;
 class HTTPModule;
 class Request;
 class Response;
 
 //=============================================================================
-class HTTP_API HostMapper : public scx::ArgObjectInterface {
+// HostMapper - Maps host names to host configurations defined on the server
+//
+class HTTP_API HostMapper : public scx::ScriptObject {
 public:
 
   HostMapper(HTTPModule& module);
   virtual ~HostMapper();
   
-  bool connect_request(scx::Descriptor* endpoint, Request& request, Response& response);
+  // Process an incoming connection request
+  bool connect_request(scx::Descriptor* endpoint,
+		       Request& request,
+		       Response& response);
 
-  virtual scx::Arg* arg_lookup(const std::string& name);
-  virtual scx::Arg* arg_resolve(const std::string& name);
-  virtual scx::Arg* arg_method(const scx::Auth& auth,const std::string& name,scx::Arg* args);
+  // ScriptObject methods
+  virtual scx::ScriptRef* script_op(const scx::ScriptAuth& auth,
+				    const scx::ScriptRef& ref,
+				    const scx::ScriptOp& op,
+				    const scx::ScriptRef* right=0);
+  
+  virtual scx::ScriptRef* script_method(const scx::ScriptAuth& auth,
+					const scx::ScriptRef& ref,
+					const std::string& name,
+					const scx::ScriptRef* args);
 
+  typedef scx::ScriptRefTo<HostMapper> Ref;
+  
 protected:
 
   typedef HASH_TYPE<std::string,std::string> HostNameMap;
-  bool lookup(const HostNameMap& map, const std::string& pattern, std::string& result);
+
+  bool lookup(const HostNameMap& map,
+	      const std::string& pattern,
+	      std::string& result);
   
 private:
 
   HTTPModule& m_module;
 
-  typedef std::map<std::string,Host*> HostMap;
+  typedef std::map<std::string,Host::Ref*> HostMap;
   HostMap m_hosts;
 
   HostNameMap m_aliases;

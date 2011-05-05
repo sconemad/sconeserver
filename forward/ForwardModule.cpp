@@ -2,7 +2,7 @@
 
 Connection forwarding moduile
 
-Copyright (c) 2000-2007 Andrew Wedgbury <wedge@sconemad.com>
+Copyright (c) 2000-2011 Andrew Wedgbury <wedge@sconemad.com>
 
 This program is free software; you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -24,7 +24,7 @@ Free Software Foundation, Inc.,
 
 #include "sconex/ModuleInterface.h"
 #include "sconex/Module.h"
-#include "sconex/Arg.h"
+#include "sconex/ScriptTypes.h"
 #include "sconex/StreamSocket.h"
 #include "sconex/StreamTransfer.h"
 #include "sconex/Kernel.h"
@@ -32,79 +32,93 @@ Free Software Foundation, Inc.,
 SCONESERVER_MODULE(ForwardModule);
 
 //=========================================================================
-ForwardModule::ForwardModule(
-)
+class ForwardStream : public scx::StreamTransfer {
+public:
+  ForwardStream(const scx::SocketAddress* dest)
+    : scx::StreamTransfer(0),
+      m_connected(false),
+      m_dest((scx::SocketAddress*)dest->new_copy())
+  {
+    set_close_when_finished(true);
+  };
+
+  virtual ~ForwardStream()
+  {
+    delete m_dest;
+  };
+
+  virtual scx::Condition event(scx::Stream::Event e)
+  {
+    if (!m_connected && e == scx::Stream::Opening) {
+      
+      scx::StreamSocket* sock = new scx::StreamSocket();
+
+      // Connect the socket
+      scx::Condition err = sock->connect(m_dest);
+      
+      if (err != scx::Ok && err != scx::Wait) {
+	delete sock;
+	DEBUG_LOG("Unable to connect to " << m_dest->get_string());
+	return err;
+      }
+
+      // Hook up the transfer source
+      sock->add_stream(m_manager->get_source());
+  
+      // Create sconeserver --> dest transfer stream
+      scx::StreamTransfer* xfer2 = new scx::StreamTransfer(&endpoint());
+      sock->add_stream(xfer2);
+      
+      // Add socket to kernel
+      scx::Kernel::get()->connect(sock,0);
+  
+      m_connected = true;
+    }
+
+    if (m_connected)
+      return scx::StreamTransfer::event(e);
+
+    return scx::Wait;
+  }
+
+private:
+
+  bool m_connected;
+  scx::SocketAddress* m_dest;
+
+};
+
+
+//=========================================================================
+ForwardModule::ForwardModule()
   : scx::Module("forward",scx::version())
 {
-
+  scx::Stream::register_stream("forward",this);
 }
 
 //=========================================================================
 ForwardModule::~ForwardModule()
 {
-
+  scx::Stream::unregister_stream("forward",this);
 }
 
 //=========================================================================
 std::string ForwardModule::info() const
 {
-  return "Connection forwarding\n";
+  return "Connection forwarding";
 }
 
 //=========================================================================
-bool ForwardModule::connect(
-  scx::Descriptor* endpoint,
-  scx::ArgList* args
-)
+void ForwardModule::provide(const std::string& type,
+			    const scx::ScriptRef* args,
+			    scx::Stream*& object)
 {
   const scx::SocketAddress* sa =
-    dynamic_cast<const scx::SocketAddress*>(args->get(0));
+    scx::get_method_arg<scx::SocketAddress>(args,0,"address");
   if (!sa) {
-    return new scx::ArgError("ForwardModule::connect() Address must be specified");
+    DEBUG_LOG("Address must be specified");
+    return;
   }
 
-  scx::StreamSocket* sock = new scx::StreamSocket();
-
-  // Connect the socket
-  scx::Condition err = sock->connect(sa);
-
-  if (err != scx::Ok) {
-    delete sock;
-    return false;
-  }
-  
-  // Create sconeserver <-- program transfer stream
-  scx::StreamTransfer* xfer = new scx::StreamTransfer(sock);
-  xfer->set_close_when_finished(true);
-  endpoint->add_stream(xfer);
-  
-  scx::StreamTransfer* xfer2 =
-    new scx::StreamTransfer(endpoint);
-  sock->add_stream(xfer2);
-  
-  // Add socket to kernel table
-  scx::Kernel::get()->connect(sock,0);
-  
-  return true;
+  object = new ForwardStream(sa);
 }
-
-//=============================================================================
-scx::Arg* ForwardModule::arg_lookup(const std::string& name)
-{
-  // Methods
-
-  return SCXBASE Module::arg_lookup(name);
-}
-
-//=============================================================================
-scx::Arg* ForwardModule::arg_method(
-  const scx::Auth& auth,
-  const std::string& name,
-  scx::Arg* args
-)
-{
-  scx::ArgList* l = dynamic_cast<scx::ArgList*>(args);
-
-  return SCXBASE Module::arg_method(auth,name,args);
-}
-

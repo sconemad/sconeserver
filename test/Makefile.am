@@ -13,15 +13,26 @@ TestModule.h
 
 test_la_LDFLAGS = -module -avoid-version
 
-check_PROGRAMS = argtest
-argtest_SOURCES = \
-ArgTest.cpp
-argtest_LDADD = $(top_builddir)/sconex/libsconex.la
 
-TESTS = runargtests.sh
+check_PROGRAMS = scones
+
+scones_SOURCES = \
+scones.cpp
+
+scones_LDADD = $(top_builddir)/sconex/libsconex.la
+
+
+TESTS = runscripttests.sh
+
 
 EXTRA_DIST = \
-arg/forloop.test \
+sconescript/forloop.test \
+sconescript/list.test \
+sconescript/ops.test \
+sconescript/regexp.test \
+sconescript/short.test \
+sconescript/sub.test \
+sconescript/var.test \
 site/html/index.html \
 site/html/favicon.ico \
 site/html/echo.pl \

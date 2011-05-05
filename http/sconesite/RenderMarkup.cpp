@@ -1,8 +1,8 @@
 /* SconeServer (http://www.sconemad.com)
 
-Markup renderer
+Context for rendering XML based documents
 
-Copyright (c) 2000-2009 Andrew Wedgbury <wedge@sconemad.com>
+Copyright (c) 2000-2011 Andrew Wedgbury <wedge@sconemad.com>
 
 This program is free software; you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -19,7 +19,6 @@ along with this program (see the file COPYING); if not, write to the
 Free Software Foundation, Inc.,
 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA */
 
-
 #include "RenderMarkup.h"
 #include "Profile.h"
 #include "Article.h"
@@ -31,10 +30,11 @@ Free Software Foundation, Inc.,
 #include "sconex/StreamTransfer.h"
 #include "sconex/Date.h"
 #include "sconex/Kernel.h"
+#include "sconex/File.h"
 #include "sconex/FileDir.h"
-#include "sconex/ArgProc.h"
+#include "sconex/ScriptEngine.h"
+#include "sconex/ScriptExpr.h"
 #include "sconex/MemFile.h"
-#include "sconex/ArgScript.h"
 #include "sconex/Socket.h"
 #include "sconex/StreamSocket.h"
 #include "sconex/utils.h"
@@ -54,23 +54,26 @@ RenderMarkupContext::RenderMarkupContext(
 ) : m_profile(profile),
     m_stream(stream),
     m_output(output),
-    m_request(request),
-    m_response(response),
+    m_request(new http::Request::Ref(&request)),
+    m_response(new http::Response::Ref(&response)),
     m_article(0),
     m_auto_number(false),
     m_inhibit(false)
 {
-
+  m_parent = &m_profile; // used to be module?
 }
 
 //=========================================================================
 RenderMarkupContext::~RenderMarkupContext()
 {
-  for (ArgStatementGroupList::iterator it = m_old_groups.begin();
+  for (StatementGroupList::iterator it = m_old_groups.begin();
        it != m_old_groups.end();
        ++it) {
     delete *it;
   }
+  delete m_article;
+  delete m_request;
+  delete m_response;
 }
 
 //=========================================================================
@@ -82,28 +85,28 @@ Profile& RenderMarkupContext::get_profile()
 //=========================================================================
 const http::Request& RenderMarkupContext::get_request() const
 {
-  return m_request;
+  return *(m_request->object());
 }
 
 //=========================================================================
 void RenderMarkupContext::set_article(Article* article)
 {
-  m_article = article;
+  delete m_article;
+  m_article = new Article::Ref(article);
 }
 
 //=========================================================================
 const Article* RenderMarkupContext::get_article() const
 {
-  return m_article;
+  if (m_article) return m_article->object();
+  return 0;
 }
 
 //=========================================================================
-bool RenderMarkupContext::handle_start(
-  const std::string& name,
-  XMLAttrs& attrs,
-  bool empty,
-  void* data
-)
+bool RenderMarkupContext::handle_start(const std::string& name,
+				       XMLAttrs& attrs,
+				       bool empty,
+				       void* data)
 {
   bool descend = false;
   std::string pre;
@@ -118,11 +121,11 @@ bool RenderMarkupContext::handle_start(
 
   } else if (name == "if") {
     std::string condition = attrs["condition"];
-    scx::ArgObject ctx(this);
-    scx::ArgProc proc(scx::Auth::Untrusted,&ctx);
-    scx::Arg* arg = proc.evaluate(condition);
-    bool result = (arg && arg->get_int() != 0);
-    delete arg;
+    scx::ScriptRef ctx(this);
+    scx::ScriptExpr proc(scx::ScriptAuth::Untrusted,&ctx);
+    scx::ScriptRef* ret = proc.evaluate(condition);
+    bool result = (ret && ret->object()->get_int() != 0);
+    delete ret;
     return result;
 
   } else if (name == "section") {
@@ -145,7 +148,8 @@ bool RenderMarkupContext::handle_start(
       if (link.find(":") == std::string::npos) {
         if (link[0] != '/') {
           // Expand relative hrefs into full paths so they work anywhere
-          attrs[link_attr] = m_base_url + "/" + m_article->get_href_path() + link;
+          attrs[link_attr] = m_base_url + "/" + 
+	    m_article->object()->get_href_path() + link;
         } else {
 	  attrs[link_attr] = m_base_url + link;
 	}
@@ -166,12 +170,14 @@ bool RenderMarkupContext::handle_start(
         const ArticleHeading* h = (const ArticleHeading*)(data);
         if (h) {
           int index = h->index();
-          std::string anchor = m_article->get_headings().lookup_anchor(index);
+          std::string anchor = 
+	    m_article->object()->get_headings().lookup_anchor(index);
           if (m_auto_number) {
-            std::string href = "/" + m_article->get_href_path() + "#" + anchor;
+            std::string href = "/" + m_article->object()->get_href_path() + 
+	                       "#" + anchor;
             pre += "<span class='section'><a href='" +
               href + "' title='Link to this section'>" +
-              m_article->get_headings().lookup_section(index) +
+              m_article->object()->get_headings().lookup_section(index) +
               ".</a></span> ";
           }
           
@@ -205,11 +211,9 @@ bool RenderMarkupContext::handle_start(
 }
 
 //=========================================================================
-bool RenderMarkupContext::handle_end(
-  const std::string& name,
-  XMLAttrs& attrs,
-  void* data
-)
+bool RenderMarkupContext::handle_end(const std::string& name,
+				     XMLAttrs& attrs,
+				     void* data)
 {
   bool repeat = false;
 
@@ -239,42 +243,44 @@ bool RenderMarkupContext::handle_end(
 }
 
 //=========================================================================
-void RenderMarkupContext::handle_process(const std::string& name, const char* data)
+void RenderMarkupContext::handle_process(const std::string& name,
+					 const char* data)
 {
   if (m_inhibit) return;
     
-  scx::Auth auth(scx::Auth::Untrusted);
+  scx::ScriptAuth auth(scx::ScriptAuth::Untrusted);
   XMLDoc* doc = get_current_doc();
   const std::type_info& ti = typeid(*doc);
   if (ti == typeid(Template)) {
     // Trust templates
-    auth = scx::Auth(scx::Auth::Trusted);
+    auth = scx::ScriptAuth(scx::ScriptAuth::Trusted);
   }
 
   if (name == "scxp") { // Sconescript evaluate and print
     // Create root statement using our environment
-    scx::ArgStatementGroup root(&m_scx_env);
-    root.set_parent(this);
-    scx::ArgObject ctx(&root);
-    scx::ArgProc proc(auth,&ctx);
-    scx::Arg* arg = 0;
+    scx::ScriptStatementGroup::Ref root(
+      new scx::ScriptStatementGroup(&m_scx_env));
+    root.object()->set_parent(this);
+    scx::ScriptExpr proc(auth,&root);
+    scx::ScriptRef* result = 0;
     try {
-      arg = proc.evaluate(data);
-      if (arg) {
-	std::string str = arg->get_string();
+      result = proc.evaluate(data);
+      if (result) {
+	std::string str = result->object()->get_string();
 	if (!str.empty()) {
 	  m_output.write(str);
 	}
       }
     } catch (...) {
-      delete arg;
-      log("EXCEPTION in RenderMarkup::handle_process(scxp)",scx::Logger::Error);
+      delete result;
+      log("EXCEPTION in RenderMarkup::handle_process(scxp)",
+	  scx::Logger::Error);
       throw;
     }
-    delete arg;
+    delete result;
 
   } else if (name == "scx") { // Sconescript
-    scx::Arg* ret = 0;
+    scx::ScriptRef* ret = 0;
     try {
       int len = strlen(data);
       scx::MemFileBuffer fbuf(len);
@@ -282,12 +288,14 @@ void RenderMarkupContext::handle_process(const std::string& name, const char* da
       scx::MemFile mfile(&fbuf);
 
       // Create root statement using our environment
-      scx::ArgStatementGroup* root = new scx::ArgStatementGroup(&m_scx_env);
+      scx::ScriptStatement::Ref* root = 
+	new scx::ScriptStatement::Ref(
+          new scx::ScriptStatementGroup(&m_scx_env));
       m_old_groups.push_back(root);
-      root->set_parent(this);
+      root->object()->set_parent(this);
       
       // Create a script parser
-      scx::ArgScript* script = new scx::ArgScript(root);
+      scx::ScriptEngine* script = new scx::ScriptEngine(root);
       mfile.add_stream(script);
 
       // Parse statements
@@ -295,9 +303,9 @@ void RenderMarkupContext::handle_process(const std::string& name, const char* da
         std::ostringstream oss;
         oss << "Script ";
 	switch (script->get_error_type()) {
-  	  case scx::ArgScript::Tokenization: oss << "tokenization"; break;
-	  case scx::ArgScript::Syntax: oss << "syntax"; break;
-	  case scx::ArgScript::Underflow: oss << "underflow"; break;
+  	  case scx::ScriptEngine::Tokenization: oss << "tokenization"; break;
+	  case scx::ScriptEngine::Syntax: oss << "syntax"; break;
+	  case scx::ScriptEngine::Underflow: oss << "underflow"; break;
 	  default: oss << "unknown"; break;
 	}
         oss << " error on line " << script->get_error_line() << ":\n" << data;
@@ -305,18 +313,22 @@ void RenderMarkupContext::handle_process(const std::string& name, const char* da
       }
 
       // Run statements
-      scx::ArgProc proc(auth);
-      ret = root->execute(proc);
-      if (ret && BAD_ARG(ret)) {
+      scx::ScriptExpr proc(auth);
+      ret = root->object()->execute(proc);
+      if (ret && BAD_SCRIPTREF(ret)) {
         std::ostringstream oss;
-        oss << "Script execution returned " << ret->get_string() << "\n" << data;
+        oss << "Script execution returned " 
+	    << ret->object()->get_string() << "\n" 
+	    << data;
         log(oss.str(),scx::Logger::Error);
       }
       delete ret;
+      ((scx::ScriptStatementGroup*)root->object())->clear();
 
     } catch (...) { 
       delete ret;
-      log("EXCEPTION in RenderMarkup::handle_process(scx)",scx::Logger::Error); 
+      log("EXCEPTION in RenderMarkup::handle_process(scx)",
+	  scx::Logger::Error); 
       throw; 
     }
   }
@@ -337,7 +349,7 @@ void RenderMarkupContext::handle_text(const char* text)
 //=========================================================================
 void RenderMarkupContext::handle_comment(const char* text)
 {
-  // m_output.write(text);
+  // m_output.write(text); // Is this supposed to be funny?
 }
 
 //=========================================================================
@@ -352,87 +364,89 @@ void RenderMarkupContext::handle_error(const std::string& msg)
 }
 
 //=========================================================================
-scx::Arg* RenderMarkupContext::arg_resolve(const std::string& name)
+scx::ScriptRef* RenderMarkupContext::script_op(const scx::ScriptAuth& auth,
+					       const scx::ScriptRef& ref,
+					       const scx::ScriptOp& op,
+					       const scx::ScriptRef* right)
 {
-  scx::Arg* a = arg_lookup(name);
-  if (BAD_ARG(a)) {
-    delete a;
-    a = m_profile.get_module().arg_resolve(name);
+  if (op.type() == scx::ScriptOp::Lookup) {
+    const std::string name = right->object()->get_string();
+
+    // Methods
+    if ("print" == name ||
+	"print_esc" == name ||
+	"print_json" == name ||
+	"escape" == name ||
+	"get_articles" == name ||
+	"process_article" == name ||
+	"edit_article" == name ||
+	"template" == name ||
+	"get_files" == name ||
+	"abort" == name) {
+      return new scx::ScriptMethodRef(ref,name);
+    }
+
+    // Sub-objects
+
+    if ("request" == name) 
+      return m_request->ref_copy(ref.reftype());
+
+    if ("response" == name) 
+      return m_response->ref_copy(ref.reftype());
+
+    if ("session" == name)
+      return new scx::ScriptRef(m_request->object()->get_session());
+
+    if ("local_addr" == name) {
+      scx::Socket* socket = dynamic_cast<scx::Socket*>(&m_output);
+      if (!socket) return 0;
+      return new scx::ScriptRef(socket->get_local_addr()->new_copy());
+    }
+
+    if ("remote_addr" == name) {
+      //NOTE: At the moment this is only ever likely to be a StreamSocket,
+      // but this may change in the future, who knows?
+      scx::StreamSocket* socket = dynamic_cast<scx::StreamSocket*>(&m_output);
+      if (!socket) return 0;
+      return new scx::ScriptRef(socket->get_remote_addr()->new_copy());
+    }
+
+    if ("realms" == name) { // for convenience access to http.realms
+      scx::Module::Ref http = scx::Kernel::get()->get_module("http");
+      DEBUG_ASSERT(http.valid(),"http module should be loaded");
+      scx::ScriptList::Ref largs(new scx::ScriptList());
+      largs.object()->give(scx::ScriptString::new_ref("realms"));
+      scx::ScriptRef* realms = 
+	http.script_op(auth,scx::ScriptOp::Lookup,&largs);
+      return realms;
+    }
+    
+    if ("article" == name) {
+      if (!m_article)
+	return scx::ScriptError::new_ref("No article");
+      return m_article->ref_copy(ref.reftype());
+    }
+
+    if ("profile" == name) 
+      return new scx::ScriptRef(&m_profile);
   }
-  return a;
+
+  return scx::ScriptObject::script_op(auth,ref,op,right);
 }
 
 //=========================================================================
-scx::Arg* RenderMarkupContext::arg_lookup(const std::string& name)
+scx::ScriptRef* RenderMarkupContext::script_method(const scx::ScriptAuth& auth,
+						   const scx::ScriptRef& ref,
+						   const std::string& name,
+						   const scx::ScriptRef* args)
 {
-  // Methods
-  if ("print" == name ||
-      "print_esc" == name ||
-      "print_json" == name ||
-      "escape" == name ||
-      "get_articles" == name ||
-      "process_article" == name ||
-      "edit_article" == name ||
-      "template" == name ||
-      "get_files" == name ||
-      "abort" == name) {
-    return new_method(name);
-  }
-
-  // Sub-objects
-  if ("request" == name) return new scx::ArgObject(&m_request);
-  if ("response" == name) return new scx::ArgObject(&m_response);
-  if ("session" == name) {
-    if (m_request.get_session()) {
-      return new scx::ArgObject(m_request.get_session());
-    } else {
-      return new scx::ArgError("No session");
-    }
-  }
-  if ("local_addr" == name) {
-    scx::Socket* socket = dynamic_cast<scx::Socket*>(&m_output);
-    if (socket) {
-      return socket->get_local_addr()->new_copy();
-    }
-    return 0;
-  }
-  if ("remote_addr" == name) {
-    //NOTE: At the moment this is only ever likely to be a StreamSocket,
-    // but this may change in the future, who knows?
-    scx::StreamSocket* socket = dynamic_cast<scx::StreamSocket*>(&m_output);
-    if (socket) {
-      return socket->get_remote_addr()->new_copy();
-    }
-    return 0;
-  }
-  if ("realms" == name) {
-    scx::ModuleRef http = scx::Kernel::get()->get_module("http");
-    if (http.valid()) return http.module()->arg_lookup("realms");
-  }
-
-  // Article dependent sub-objects
-  if ("article" == name) {
-    if (m_article) {
-      return new scx::ArgObject(m_article);
-    } else {
-      return new scx::ArgError("No article");
-    }
-  }
-  if ("root" == name) return new scx::ArgObject(m_profile.get_index());
-  if ("profile" == name) return new scx::ArgObject(&m_profile);
-
-  return Context::arg_lookup(name);
-}
-
-//=========================================================================
-scx::Arg* RenderMarkupContext::arg_method(const scx::Auth& auth,const std::string& name,scx::Arg* args)
-{
-  scx::ArgList* l = dynamic_cast<scx::ArgList*>(args);
+  const scx::ScriptList* argsl = 
+    dynamic_cast<const scx::ScriptList*>(args->object());
 
   if (name == "print") {
-    int n = l->size();
+    int n = argsl->size();
     for (int i=0; i<n; ++i) {
-      std::string str = l->get(i)->get_string();
+      std::string str = argsl->get(i)->object()->get_string();
       if (str.size() > 0) {
         m_output.write(str);
       }
@@ -441,9 +455,9 @@ scx::Arg* RenderMarkupContext::arg_method(const scx::Auth& auth,const std::strin
   }
 
   if (name == "print_esc") {
-    int n = l->size();
+    int n = argsl->size();
     for (int i=0; i<n; ++i) {
-      std::string str = l->get(i)->get_string();
+      std::string str = argsl->get(i)->object()->get_string();
       if (str.size() > 0) {
         m_output.write(scx::escape_html(str));
       }
@@ -452,33 +466,37 @@ scx::Arg* RenderMarkupContext::arg_method(const scx::Auth& auth,const std::strin
   }
   
   if (name == "print_json") {
-    scx::ArgStore::store_arg(m_output,l->get(0));
+    const scx::ScriptObject* value = 
+      scx::get_method_arg<scx::ScriptObject>(args,0,"value");
+    if (value) value->serialize(m_output);
     return 0;
   }
 
   if (name == "escape") {
-    scx::Arg* a_str = l->get(0);
-    if (!a_str) {
-      return new scx::ArgString("");
-    }
-    return new scx::ArgString(scx::escape_html(a_str->get_string()));
+    const scx::ScriptString* value = 
+      scx::get_method_arg<scx::ScriptString>(args,0,"value");
+    if (!value)
+      return scx::ScriptString::new_ref(scx::escape_html(value->get_string()));
+    return scx::ScriptString::new_ref("");
   }
 
   if (name == "process_article") {
-    if (!auth.trusted()) return new scx::ArgError("Not permitted");
+    if (!auth.trusted()) return scx::ScriptError::new_ref("Not permitted");
 
-    Article* art = m_article;
-    scx::Arg* a_art = l->get(0);
+    Article::Ref* art = 0;
+    const Article* a_art = scx::get_method_arg<Article>(args,0,"article");
     if (a_art) {
-      scx::ArgObject* a_obj = dynamic_cast<scx::ArgObject*>(a_art);
-      if (a_obj) {
-        art = dynamic_cast<Article*>(a_obj->get_object());
-      }
+      // Use the specififed article
+      art = new Article::Ref( const_cast<Article*>(a_art) );
+    } else if (m_article) {
+      // Otherwise use the current article
+      art = m_article->ref_copy(ref.reftype());
+    } else {
+      return scx::ScriptError::new_ref("No article to process");
     }
-    if (!art) return new scx::ArgError("No article to process");
 
     // Save current state and setup to process new article
-    Article* orig_art = m_article; 
+    Article::Ref* orig_art = m_article; 
     std::string orig_section = m_section; 
     bool orig_inhibit = m_inhibit; 
     bool orig_auto_number = m_auto_number;
@@ -488,16 +506,19 @@ scx::Arg* RenderMarkupContext::arg_method(const scx::Auth& auth,const std::strin
     m_article = art;
     m_section = "";
     m_base_url = "";
-    scx::ArgMap* opts = dynamic_cast<scx::ArgMap*>(l->get(1));
+    const scx::ScriptMap* opts = 
+      scx::get_method_arg<scx::ScriptMap>(args,1,"opts");
     if (opts) {
-      scx::Arg* opt = 0;
-      if (opt = opts->lookup("section")) m_section = opt->get_string();
-      if (opt = opts->lookup("base_url")) m_base_url = opt->get_string();
+      const scx::ScriptRef* opt = 0;
+      if ((opt = opts->lookup("section"))) 
+	m_section = opt->object()->get_string();
+      if ((opt = opts->lookup("base_url"))) 
+	m_base_url = opt->object()->get_string();
     }
     m_inhibit = (!m_section.empty());
 
     // Process the article
-    art->process(*this);
+    art->object()->process(*this);
 
     // Restore previous state
     m_article = orig_art;
@@ -505,15 +526,19 @@ scx::Arg* RenderMarkupContext::arg_method(const scx::Auth& auth,const std::strin
     m_inhibit = orig_inhibit;
     m_auto_number = orig_auto_number;
     m_base_url = orig_base_url;
+
+    delete art;
     return 0;
   }
 
   if (name == "edit_article") {
-    if (!auth.trusted()) return new scx::ArgError("Not permitted");
+    // This sends the source of the article, for editing
+    if (!auth.trusted()) return scx::ScriptError::new_ref("Not permitted");
 
     if (m_article) {
       scx::File* file = new scx::File();
-      if (scx::Ok == file->open(m_article->get_filepath(),scx::File::Read)) {
+      if (scx::Ok == file->open(m_article->object()->get_filepath(),
+				scx::File::Read)) {
         char buffer[1024];
 	int na = 0;
         while (scx::Ok == file->read(buffer,1000,na)) {
@@ -527,33 +552,35 @@ scx::Arg* RenderMarkupContext::arg_method(const scx::Auth& auth,const std::strin
   }
 
   if (name == "template") {
-    if (!auth.trusted()) return new scx::ArgError("Not permitted");
+    if (!auth.trusted()) return scx::ScriptError::new_ref("Not permitted");
 
-    const scx::ArgString* a_tpl = dynamic_cast<const scx::ArgString*>(l->get(0));
+    const scx::ScriptString* a_tpl = 
+      scx::get_method_arg<scx::ScriptString>(args,0,"name");
     if (!a_tpl) {
-      return new scx::ArgError("Template name not specified");
+      return scx::ScriptError::new_ref("Template name not specified");
     }
     Template* tpl = m_profile.lookup_template(a_tpl->get_string());
     if (!tpl) {
-      return new scx::ArgError("Unknown template");
+      return scx::ScriptError::new_ref("Unknown template");
     }
     tpl->process(*this);
     return 0;
   }
 
   if (name == "abort") {
-    if (!auth.trusted()) return new scx::ArgError("Not permitted");
+    if (!auth.trusted()) return scx::ScriptError::new_ref("Not permitted");
 
     //    m_output.close();
     throw std::exception();
     return 0;
   }
 
-  return Context::arg_method(auth,name,args);
+  return scx::ScriptObject::script_method(auth,ref,name,args);
 }
 
 //=========================================================================
-void RenderMarkupContext::log(const std::string message,scx::Logger::Level level)
+void RenderMarkupContext::log(const std::string message,
+			      scx::Logger::Level level)
 {
   m_stream.log(message,level);
 }

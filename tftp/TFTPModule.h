@@ -2,7 +2,7 @@
 
 Trivial File Transfer Protocol (TFTP) module
 
-Copyright (c) 2000-2007 Andrew Wedgbury <wedge@sconemad.com>
+Copyright (c) 2000-2011 Andrew Wedgbury <wedge@sconemad.com>
 
 This program is free software; you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -22,14 +22,15 @@ Free Software Foundation, Inc.,
 #ifndef tftpModule_h
 #define tftpModule_h
 
+#include "TFTPProfile.h"
 #include "sconex/Module.h"
-#include "sconex/Descriptor.h"
-
-class TFTPProfile;
+#include "sconex/Stream.h"
 
 //=============================================================================
-class TFTPModule : public scx::Module {
-
+// TFTPModule - Trivial File Transfer Protocol module
+//
+class TFTPModule : public scx::Module,
+                   public scx::Provider<scx::Stream> {
 public:
 
   TFTPModule();
@@ -39,21 +40,29 @@ public:
 
   virtual int init();
 
-  virtual bool connect(
-    scx::Descriptor* endpoint,
-    scx::ArgList* args
-  );
-
   TFTPProfile* find_profile(const std::string& name);
   
-  virtual scx::Arg* arg_lookup(const std::string& name);
-  virtual scx::Arg* arg_method(const scx::Auth& auth,const std::string& name,scx::Arg* args);
-  
+  // ScriptObject methods  
+  virtual scx::ScriptRef* script_op(const scx::ScriptAuth& auth,
+				    const scx::ScriptRef& ref,
+				    const scx::ScriptOp& op,
+				    const scx::ScriptRef* right=0);
+
+  virtual scx::ScriptRef* script_method(const scx::ScriptAuth& auth,
+					const scx::ScriptRef& ref,
+					const std::string& name,
+					const scx::ScriptRef* args);
+
+  // Provider<scx::Stream> method
+  virtual void provide(const std::string& type,
+		       const scx::ScriptRef* args,
+		       scx::Stream*& object);
+
 protected:
 
 private:
 
-  typedef std::map<std::string,TFTPProfile*> ProfileMap;
+  typedef std::map<std::string,TFTPProfile::Ref*> ProfileMap;
   ProfileMap m_profiles;
   
 };

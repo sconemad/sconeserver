@@ -2,7 +2,7 @@
 
 HTTP Client
 
-Copyright (c) 2000-2010 Andrew Wedgbury <wedge@sconemad.com>
+Copyright (c) 2000-2011 Andrew Wedgbury <wedge@sconemad.com>
 
 This program is free software; you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -29,6 +29,7 @@ Free Software Foundation, Inc.,
 #include "sconex/utils.h"
 #include "sconex/StreamSocket.h"
 #include "sconex/Kernel.h"
+#include "sconex/ScriptTypes.h"
 namespace http {
 
 //=============================================================================
@@ -38,113 +39,86 @@ Client::Client(HTTPModule& module,
   : m_module(module),
     m_request(new Request("client","")),
     m_response(new Response()),
-    m_response_data(new std::string()),
-    m_mutex(new scx::Mutex()),
-    m_complete(new scx::ConditionEvent()),
-    m_error(new bool(false))
+    m_error(false)
 {
   DEBUG_COUNT_CONSTRUCTOR(HTTPClient);
-  m_request->set_method(method);
-  m_request->set_uri(url);
+  m_request.object()->set_method(method);
+  m_request.object()->set_uri(url);
 }
 
 //=============================================================================
 Client::Client(const Client& c)
-  : Arg(c),
-    m_module(c.m_module),
-    m_request(new Request(*c.m_request)),
-    m_response(new Response(*c.m_response)),
-    m_response_data(new std::string(*c.m_response_data)),
-    m_mutex(new scx::Mutex()),
-    m_complete(new scx::ConditionEvent()),
-    m_error(new bool(*c.m_error))
-{
-  DEBUG_COUNT_CONSTRUCTOR(HTTPClient);
-}
-
-//=============================================================================
-Client::Client(RefType ref, Client& c)
-  : Arg(ref,c),
+  : ScriptObject(c),
     m_module(c.m_module),
     m_request(c.m_request),
     m_response(c.m_response),
     m_response_data(c.m_response_data),
-    m_mutex(c.m_mutex),
-    m_complete(c.m_complete),
     m_error(c.m_error)
 {
   DEBUG_COUNT_CONSTRUCTOR(HTTPClient);
-  
 }
 
 //=============================================================================
 Client::~Client()
 {
-  if (last_ref()) {
-    delete m_request;
-    delete m_response;
-    delete m_response_data;
-    delete m_mutex;
-    delete m_complete;
-    delete m_error;
-  }
   DEBUG_COUNT_DESTRUCTOR(HTTPClient);
 }
 
 //=============================================================================
-scx::Arg* Client::new_copy() const
+scx::ScriptObject* Client::new_copy() const
 {
   return new Client(*this);
 }
 
 //=============================================================================
-scx::Arg* Client::ref_copy(RefType ref)
-{
-  return new Client(ref,*this);
-}
-
-//=============================================================================
 std::string Client::get_string() const
 {
-  return m_request->get_method() + " " + m_request->get_uri().get_string();
+  return m_request.object()->get_method() + " " + 
+         m_request.object()->get_uri().get_string();
 }
   
 //=============================================================================
 int Client::get_int() const
 {
-  return !(*m_error);
+  return !m_error;
 }
 
 //=============================================================================
-scx::Arg* Client::op(const scx::Auth& auth,scx::Arg::OpType optype, const std::string& opname, scx::Arg* right)
+scx::ScriptRef* Client::script_op(const scx::ScriptAuth& auth,
+				  const scx::ScriptRef& ref,
+				  const scx::ScriptOp& op,
+				  const scx::ScriptRef* right)
 {
-  if (is_method_call(optype,opname)) {
-    
-    scx::ArgList* l = dynamic_cast<scx::ArgList*>(right);
+  if (op.type() == scx::ScriptOp::Lookup) {
+    const std::string name = right->object()->get_string();
 
-    if ("run" == m_method) {
-      std::string data;
-      const scx::Arg* adata = l->get(0);
-      if (adata) data = adata->get_string();
-      
-      bool success = run(data);
-      return new scx::ArgInt(success);
-    }
-    
-  } else if (scx::Arg::Binary == optype) {
+    if (name == "run") 
+      return new scx::ScriptMethodRef(ref,name);
 
-    if ("." == opname) {
-      std::string name = right->get_string();
-      
-      if (name == "request") return new scx::ArgObject(m_request);
-      if (name == "response") return new scx::ArgObject(m_response);
-      if (name == "data") return new scx::ArgString(*m_response_data);
-      
-      if (name == "run") return new_method(name);
-    }
+    if (name == "request") return m_request.ref_copy(ref.reftype());
+    if (name == "response") return m_response.ref_copy(ref.reftype());
+    if (name == "data") return scx::ScriptString::new_ref(m_response_data);
+  }    
+
+  return scx::ScriptObject::script_op(auth,ref,op,right);
+}
+
+//=============================================================================
+scx::ScriptRef* Client::script_method(const scx::ScriptAuth& auth,
+				      const scx::ScriptRef& ref,
+				      const std::string& name,
+				      const scx::ScriptRef* args)
+{
+  if ("run" == name) {
+    const scx::ScriptObject* a_data = 
+      scx::get_method_arg<scx::ScriptObject>(args,0,"data");
+    std::string data = (a_data ? a_data->get_string() : "");
     
+    bool success = run(data);
+    return scx::ScriptInt::new_ref(success);
   }
-  return SCXBASE Arg::op(auth,optype,opname,right);
+
+  return scx::ScriptObject::script_method(auth,ref,name,args);
 }
 
 //=============================================================================
@@ -157,22 +131,24 @@ bool Client::run(const std::string& request_data)
     proxy = true;
   } else {
     // Connect direct to host given in uri
-    addr_url = m_request->get_uri();
+    addr_url = m_request.object()->get_uri();
   }
   
-  // Lookup the router.ip module and use to create an IP4 socket address
+  // Lookup the ip module and use to create an IP4 socket address
   scx::SocketAddress* addr = 0;    
-  scx::ModuleRef router = scx::Kernel::get()->get_module("router");
-  if (router.valid()) {
-    scx::ModuleRef ip = router.module()->get_module("ip");
-    if (ip.valid()) {
-      scx::ArgList args;
-      args.give( new scx::ArgString(addr_url.get_host()) );
-      args.give( new scx::ArgInt(addr_url.get_port()) );
-      scx::Arg* ret = ip.module()->arg_method(scx::Auth::Trusted,"addr",&args);
-      addr = dynamic_cast<scx::SocketAddress*>(ret);
-    }
+  scx::Module::Ref ip = scx::Kernel::get()->get_module("ip");
+  if (!ip.valid()) {
+    DEBUG_LOG("IP address support not available");
+    return false;
   }
+
+  scx::ScriptList::Ref args(new scx::ScriptList());
+  args.object()->give( scx::ScriptString::new_ref(addr_url.get_host()) );
+  args.object()->give( scx::ScriptInt::new_ref(addr_url.get_port()) );
+  scx::ScriptMethodRef addr_method(ip,"addr");
+  scx::ScriptRef* addr_ref = addr_method.call(scx::ScriptAuth::Trusted,&args);
+  addr = (addr_ref ? 
+	  dynamic_cast<scx::SocketAddress*>(addr_ref->object()) : 0);
 
   if (addr == 0) {
     DEBUG_LOG("Unable to create socket address");
@@ -186,48 +162,43 @@ bool Client::run(const std::string& request_data)
   sock->set_timeout(scx::Time(m_module.get_idle_timeout()));
   
   // Is this a secure http connection?
-  if (m_request->get_uri().get_scheme() == "https") {
+  if (m_request.object()->get_uri().get_scheme() == "https") {
     
     // If a proxy is in use, add a connect stream to setup the tunnel
     if (proxy) {
-      sock->add_stream( new ProxyConnectStream(m_module,*m_request) );
+      sock->add_stream( new ProxyConnectStream(m_module,*m_request.object()) );
     }
     
-    // Find the ssl module, if available
-    scx::ModuleRef ssl = scx::Kernel::get()->get_module("ssl");
-    if (!ssl.valid()) {
-      delete sock;
-      delete addr;
-      DEBUG_LOG("SSL support unavailable");
-      return false;
-    }
-
     // Connect an SSL stream to this socket
-    scx::ArgList args;
-    args.give( new scx::ArgString("client") );
-    if (!ssl.module()->connect(sock,&args)) {
+    scx::ScriptList::Ref args(new scx::ScriptList());
+    args.object()->give( scx::ScriptString::new_ref("client") );
+    scx::Stream* ssl = scx::Stream::create_new("ssl",&args);
+    if (!ssl) {
       delete sock;
-      delete addr;
-      DEBUG_LOG("SSL failure");
+      delete addr_ref;
+      DEBUG_LOG("SSL support unavailable or not configured");
       return false;
     }
+    sock->add_stream(ssl);
   }
 
   // Add client stream
   ClientStream* cs = new ClientStream(m_module,this,
-				      *m_request,request_data,
-				      *m_response,*m_response_data);
+				      *m_request.object(),
+				      request_data,
+				      *m_response.object(),
+				      m_response_data);
   sock->add_stream(cs);
 
   // Start the socket connection
   scx::Condition err = sock->connect(addr);
   if (err != scx::Ok && err != scx::Wait) {
     delete sock;
-    delete addr;
+    delete addr_ref;
     DEBUG_LOG("Unable to initiate connection");
     return false;
   }
-  delete addr;
+  delete addr_ref;
 
   // Give to the kernel for async processing
   if (!scx::Kernel::get()->connect(sock,0)) {
@@ -237,34 +208,34 @@ bool Client::run(const std::string& request_data)
   }
 
   // Now wait for the completion signal
-  m_mutex->lock();
-  m_complete->wait(*m_mutex);
-  m_mutex->unlock();
+  m_mutex.lock();
+  m_complete.wait(m_mutex);
+  m_mutex.unlock();
 
-  return !(*m_error);
+  return !m_error;
 }
 
 //=============================================================================
 const Response& Client::get_response() const
 {
-  return *m_response;
+  return *m_response.object();
 }
 
 //=============================================================================
 const std::string& Client::get_response_data() const
 {
-  return *m_response_data;
+  return m_response_data;
 }
 
 //=============================================================================
 void Client::event_complete(bool error)
 {
-  m_mutex->lock();
+  m_mutex.lock();
 
-  *m_error = error;
-  m_complete->signal();
+  m_error = error;
+  m_complete.signal();
 
-  m_mutex->unlock();
+  m_mutex.unlock();
 }
 
 
@@ -305,6 +276,7 @@ scx::Condition ClientStream::event(scx::Stream::Event e)
   switch (e) {
     
     case scx::Stream::Writeable: { // WRITEABLE
+      std::cerr << "W " << m_seq << "\n";
 
       if (m_seq == Send) {
         int na = 0;
@@ -330,6 +302,7 @@ scx::Condition ClientStream::event(scx::Stream::Event e)
     } break;
 
     case scx::Stream::Readable: { // READABLE
+      std::cerr << "R " << m_seq << "\n";
       std::string line;
 
       if (m_seq == RecieveResponse) {

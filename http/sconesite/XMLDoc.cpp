@@ -28,6 +28,7 @@ Free Software Foundation, Inc.,
 #include "sconex/Date.h"
 #include "sconex/FileStat.h"
 #include "sconex/utils.h"
+#include "sconex/ScriptTypes.h"
 
 scx::Mutex* XMLDoc::m_clients_mutex = 0;
 
@@ -168,40 +169,36 @@ bool XMLDoc::purge(const scx::Date& purge_time)
 }
 
 //=========================================================================
-std::string XMLDoc::name() const
+std::string XMLDoc::get_string() const
 {
   return m_name;
 }
 
 //=========================================================================
-scx::Arg* XMLDoc::arg_resolve(const std::string& name)
+scx::ScriptRef* XMLDoc::script_op(const scx::ScriptAuth& auth,
+				  const scx::ScriptRef& ref,
+				  const scx::ScriptOp& op,
+				  const scx::ScriptRef* right)
 {
-  return SCXBASE ArgObjectInterface::arg_resolve(name);
-}
+  if (op.type() == scx::ScriptOp::Lookup) {
+    const std::string name = right->object()->get_string();
 
-//=========================================================================
-scx::Arg* XMLDoc::arg_lookup(const std::string& name)
-{
-  // Methods
-  if ("test" == name) {
-    return new_method(name);
+    // Methods
+    if ("test" == name) {
+      return new scx::ScriptMethodRef(ref,name);
+    }
+
+    // Sub-objects
+    if ("name" == name) {
+      return scx::ScriptString::new_ref(m_name);
+    }
+
+    if ("modtime" == name) {
+      return new scx::ScriptRef(m_modtime.new_copy());
+    }
   }
 
-  // Sub-objects
-  if ("name" == name) {
-    return new scx::ArgString(m_name);
-  }
-  if ("modtime" == name) {
-    return m_modtime.new_copy();
-  }
-
-  return SCXBASE ArgObjectInterface::arg_lookup(name);
-}
-
-//=========================================================================
-scx::Arg* XMLDoc::arg_method(const scx::Auth& auth,const std::string& name,scx::Arg* args)
-{
-  return SCXBASE ArgObjectInterface::arg_method(auth,name,args);
+  return scx::ScriptObject::script_op(auth,ref,op,right);
 }
 
 //=========================================================================

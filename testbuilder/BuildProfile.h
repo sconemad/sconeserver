@@ -2,7 +2,7 @@
 
 Test Build Profile
 
-Copyright (c) 2000-2006 Andrew Wedgbury <wedge@sconemad.com>
+Copyright (c) 2000-2011 Andrew Wedgbury <wedge@sconemad.com>
 
 This program is free software; you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -22,29 +22,35 @@ Free Software Foundation, Inc.,
 #ifndef testbuilderBuildProfile_h
 #define testbuilderBuildProfile_h
 
-#include "TestBuilderModule.h"
-
 #include "sconex/Stream.h"
 #include "sconex/Module.h"
-#include "sconex/ArgObject.h"
+#include "sconex/ScriptBase.h"
 
 class Build;
+class TestBuilderModule;
 
-//#########################################################################
-class BuildProfile : public scx::ArgObjectInterface {
-
+//=========================================================================
+class BuildProfile : public scx::ScriptObject {
 public:
 
-  BuildProfile(
-    TestBuilderModule& module,
-    const std::string& name
-  );
+  BuildProfile(TestBuilderModule& module, const std::string& name);
 
   ~BuildProfile();
 
-  virtual std::string name() const;
-  virtual scx::Arg* arg_lookup(const std::string& name);
-  virtual scx::Arg* arg_method(const scx::Auth& auth,const std::string& name,scx::Arg* args);
+  // ScriptObject methods
+  virtual std::string get_string() const;
+
+  virtual scx::ScriptRef* script_op(const scx::ScriptAuth& auth,
+				    const scx::ScriptRef& ref,
+				    const scx::ScriptOp& op,
+				    const scx::ScriptRef* right=0);
+
+  virtual scx::ScriptRef* script_method(const scx::ScriptAuth& auth,
+					const scx::ScriptRef& ref,
+					const std::string& name,
+					const scx::ScriptRef* args);
+
+  typedef scx::ScriptRefTo<BuildProfile> Ref;
 
   const std::string& get_name() const;
   // Get profile name (cannot be set once constructed)

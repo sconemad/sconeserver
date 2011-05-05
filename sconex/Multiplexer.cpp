@@ -203,9 +203,10 @@ int Multiplexer::spin()
 
   } else {
 
-    timeval tv;
-    gettimeofday(&tv,0);
-    long ts = (tv.tv_sec*1000000) + tv.tv_usec;
+    //    timeval tv;
+    //    gettimeofday(&tv,0);
+    //    long ts = (tv.tv_sec*1000000) + tv.tv_usec;
+    Date start = Date::now();
     
     // Select succeeded, decode events and allocate jobs
     for (it = m_jobs.begin(); it != m_jobs.end(); ++it) {
@@ -235,10 +236,12 @@ int Multiplexer::spin()
       }
     }
 
-    gettimeofday(&tv,0);
-    long te = (tv.tv_sec*1000000) + tv.tv_usec;
+    //    gettimeofday(&tv,0);
+    //    long te = (tv.tv_sec*1000000) + tv.tv_usec;
+    Time elapsed = Date::now() - start;
 
-    m_job_waits_acc += (te-ts);
+    //    m_job_waits_acc += (te-ts);
+    m_job_waits_acc += elapsed.to_microseconds();
     
     if (++m_loops == 1000) {
       m_job_waits = m_job_waits_acc / m_jobs_run;

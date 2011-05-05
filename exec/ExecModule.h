@@ -2,7 +2,7 @@
 
 External program execution Module
 
-Copyright (c) 2000-2006 Andrew Wedgbury <wedge@sconemad.com>
+Copyright (c) 2000-2011 Andrew Wedgbury <wedge@sconemad.com>
 
 This program is free software; you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -23,31 +23,38 @@ Free Software Foundation, Inc.,
 #define execModule_h
 
 #include "sconex/Module.h"
+#include "sconex/Stream.h"
 #include "sconex/User.h"
 
-//#########################################################################
-class ExecModule : public scx::Module {
-
+//=========================================================================
+class ExecModule : public scx::Module,
+                   public scx::Provider<scx::Stream> {
 public:
 
   ExecModule();
   virtual ~ExecModule();
 
   virtual std::string info() const;
+
+  // ScriptObject methods  
+  virtual scx::ScriptRef* script_op(const scx::ScriptAuth& auth,
+				    const scx::ScriptRef& ref,
+				    const scx::ScriptOp& op,
+				    const scx::ScriptRef* right=0);
+
+  virtual scx::ScriptRef* script_method(const scx::ScriptAuth& auth,
+					const scx::ScriptRef& ref,
+					const std::string& name,
+					const scx::ScriptRef* args);
+
+  // Provider<scx::Stream> method
+  virtual void provide(const std::string& type,
+		       const scx::ScriptRef* args,
+		       scx::Stream*& object);
   
-  virtual bool connect(
-    scx::Descriptor* endpoint,
-    scx::ArgList* args
-  );
-
-  virtual scx::Arg* arg_lookup(const std::string& name);
-  virtual scx::Arg* arg_method(const scx::Auth& auth,const std::string& name,scx::Arg* args);
-
-  const scx::User& get_exec_user() const;
   // Get the user to exec as
+  const scx::User& get_exec_user() const;
   
-protected:
-
 private:
 
   scx::User m_exec_user;

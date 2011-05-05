@@ -1,8 +1,8 @@
 /* SconeServer (http://www.sconemad.com)
 
-http Session
+HTTP Sessions
 
-Copyright (c) 2000-2009 Andrew Wedgbury <wedge@sconemad.com>
+Copyright (c) 2000-2011 Andrew Wedgbury <wedge@sconemad.com>
 
 This program is free software; you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -31,6 +31,9 @@ class SessionManager;
 #define SESSION_JOB_TIMEOUT 30
 
 //=========================================================================
+// SessionCleanupJob - A periodic job which causes the session manager to
+// check for timed-out sessions on a regular basis.
+//
 class SessionCleanupJob : public scx::PeriodicJob {
 
 public:
@@ -52,143 +55,19 @@ protected:
   SessionManager& m_manager;
 };
 
-//=========================================================================
-SessionManager::SessionManager(HTTPModule& module)
-  : m_module(module)
-{
-#ifndef DISABLE_JOBS
-  m_job = scx::Kernel::get()->add_job(new SessionCleanupJob(*this,scx::Time(SESSION_JOB_TIMEOUT)));
-#endif
-}
-
-//=========================================================================
-SessionManager::~SessionManager()
-{
-#ifndef DISABLE_JOBS
-  scx::Kernel::get()->end_job(m_job);
-#endif
-
-  for (SessionMap::iterator it = m_sessions.begin();
-       it != m_sessions.end();
-       ++it) {
-    Session* session = it->second;
-    delete session;
-  }
-}
-
-//=========================================================================
-Session* SessionManager::lookup_session(const std::string& id)
-{
-  check_sessions();
-
-  scx::MutexLocker locker(m_mutex);
-  SessionMap::iterator it = m_sessions.find(id);
-  if (it != m_sessions.end()) {
-    return it->second;
-  }
-  return 0;
-}
-
-//=========================================================================
-Session* SessionManager::new_session()
-{
-  check_sessions();
-
-  Session* s = new Session(m_module);
-
-  scx::MutexLocker locker(m_mutex);
-  m_sessions[s->get_id()] = s;
-  return s;
-}
-
-//=========================================================================
-int SessionManager::check_sessions()
-{
-  scx::MutexLocker locker(m_mutex);
-
-  int n=0;
-  for (SessionMap::iterator it = m_sessions.begin(); 
-       it != m_sessions.end(); ) {
-    Session* session = it->second;
-    if (!session->valid() && session->get_num_refs() == 0) {
-      log("Removing session " + session->get_id() + " due to timeout");
-      delete session;
-      m_sessions.erase(it++);
-      ++n;
-    } else {
-      ++it;
-    }
-  }
-  return n;
-}
-
-//=============================================================================
-scx::Arg* SessionManager::arg_lookup(
-  const std::string& name
-)
-{
-  // Methods
-  
-  if ("check" == name) {
-    return new_method(name);
-  }
-
-  // Properties
-
-  if ("list" == name) {
-    scx::ArgList* list = new scx::ArgList();
-    scx::MutexLocker locker(m_mutex);
-    for (SessionMap::const_iterator it = m_sessions.begin();
-	 it != m_sessions.end();
-	 ++it) {
-      list->give(new scx::ArgObject(it->second));
-    }
-    return list;
-  }
-  
-  return ArgObjectInterface::arg_lookup(name);
-}
-
-//=============================================================================
-scx::Arg* SessionManager::arg_resolve(const std::string& name)
-{
-  scx::Arg* a = arg_lookup(name);
-  if (BAD_ARG(a)) {
-    delete a;
-    a = m_module.arg_resolve(name);
-  }
-  return a;
-}
-
-//=============================================================================
-scx::Arg* SessionManager::arg_method(
-  const scx::Auth& auth,
-  const std::string& name,
-  scx::Arg* args
-)
-{
-  //  scx::ArgList* l = dynamic_cast<scx::ArgList*>(args);
-
-  if ("check" == name) {
-    check_sessions();
-    return 0;
-  }
-
-  return ArgObjectInterface::arg_method(auth,name,args);
-}
-
-
 unsigned long long int Session::m_next_id = 0;
 
 //=========================================================================
 Session::Session(
   HTTPModule& module,
   const std::string& id
-) : scx::ArgStore(""),
-    m_module(module),
+) : m_module(module),
     m_id(id)
 {
   DEBUG_COUNT_CONSTRUCTOR(Session);
+
+  m_parent = &m_module;
+
   if (m_next_id == 0) {
     // Seed the id counter with a big random-ish value.
     for (int i=0; i<100; ++i) {
@@ -196,6 +75,7 @@ Session::Session(
       m_next_id *= rand();
     }
   }
+
   if (id.empty()) {
     // Create a new session ID
     std::ostringstream oss;
@@ -206,6 +86,7 @@ Session::Session(
     oss << std::setw(16) << std::setfill('0') << std::hex << (m_next_id++);
     m_id = oss.str();
   }
+
   reset_timeout();
 }
 
@@ -242,55 +123,171 @@ bool Session::valid() const
 //=========================================================================
 bool Session::allow_upload() const
 {
-  Session* uc = const_cast<Session*>(this);
-
-  const scx::Arg* a = uc->arg_lookup("allow_upload");
-  return (a && a->get_int());
+  const scx::ScriptRef* a = lookup("allow_upload");
+  return (a && a->object()->get_int());
 }
 
 //=========================================================================
-std::string Session::name() const
+std::string Session::get_string() const
 {
   return get_id();
 }
 
 //=============================================================================
-scx::Arg* Session::arg_lookup(
-  const std::string& name
-)
+scx::ScriptRef* Session::script_op(const scx::ScriptAuth& auth,
+				   const scx::ScriptRef& ref,
+				   const scx::ScriptOp& op,
+				   const scx::ScriptRef* right)
 {
-  if ("id" == name) return new scx::ArgString(m_id);
+  if (op.type() == scx::ScriptOp::Lookup) {
+    const std::string name = right->object()->get_string();
 
-  return SCXBASE ArgStore::arg_lookup(name);
-}
+    // Methods
+    if ("reset" == name) {
+      return new scx::ScriptMethodRef(ref,name);
+    }
+    
+    // Properties
+    if ("id" == name) return scx::ScriptString::new_ref(m_id);
 
-//=============================================================================
-scx::Arg* Session::arg_resolve(const std::string& name)
-{
-  scx::Arg* a = arg_lookup(name);
-  if (BAD_ARG(a)) {
-    delete a;
-    a = m_module.arg_resolve(name);
   }
-  return a;
+    
+  return scx::ScriptMap::script_op(auth,ref,op,right);
 }
 
 //=============================================================================
-scx::Arg* Session::arg_method(
-  const scx::Auth& auth,
-  const std::string& name,
-  scx::Arg* args
-)
+scx::ScriptRef* Session::script_method(const scx::ScriptAuth& auth,
+				       const scx::ScriptRef& ref,
+				       const std::string& name,
+				       const scx::ScriptRef* args)
 {
-  //  scx::ArgList* l = dynamic_cast<scx::ArgList*>(args);
-
   if ("reset" == name) {
     m_timeout = scx::Date(0);
-    // Let ArgStore do its reset stuff too
-    return SCXBASE ArgStore::arg_method(auth,name,args);
+    clear();
+    return 0;
   }
 
-  return SCXBASE ArgStore::arg_method(auth,name,args);
+  return scx::ScriptMap::script_method(auth,ref,name,args);
+}
+
+
+//=========================================================================
+SessionManager::SessionManager(HTTPModule& module)
+  : m_module(module)
+{
+  m_parent = &m_module;
+
+#ifndef DISABLE_JOBS
+  m_job = scx::Kernel::get()->add_job(
+    new SessionCleanupJob(*this,scx::Time(SESSION_JOB_TIMEOUT)));
+#endif
+}
+
+//=========================================================================
+SessionManager::~SessionManager()
+{
+#ifndef DISABLE_JOBS
+  scx::Kernel::get()->end_job(m_job);
+#endif
+
+  for (SessionMap::iterator it = m_sessions.begin();
+       it != m_sessions.end();
+       ++it) {
+    Session::Ref* session = it->second;
+    delete session;
+  }
+}
+
+//=========================================================================
+Session* SessionManager::lookup_session(const std::string& id)
+{
+  check_sessions();
+
+  scx::MutexLocker locker(m_mutex);
+  SessionMap::iterator it = m_sessions.find(id);
+  if (it != m_sessions.end()) {
+    return it->second->object();
+  }
+  return 0;
+}
+
+//=========================================================================
+Session* SessionManager::new_session()
+{
+  check_sessions();
+
+  Session* session = new Session(m_module);
+
+  scx::MutexLocker locker(m_mutex);
+  m_sessions[session->get_id()] = new Session::Ref(session);
+  return session;
+}
+
+//=========================================================================
+int SessionManager::check_sessions()
+{
+  scx::MutexLocker locker(m_mutex);
+
+  int n=0;
+  for (SessionMap::iterator it = m_sessions.begin(); 
+       it != m_sessions.end(); ) {
+    Session* session = it->second->object();
+    if (!session->valid() && session->num_refs() == 1) {
+      log("Removing session " + session->get_id() + " due to timeout");
+      delete session;
+      m_sessions.erase(it++);
+      ++n;
+    } else {
+      ++it;
+    }
+  }
+  return n;
+}
+
+//=============================================================================
+scx::ScriptRef* SessionManager::script_op(const scx::ScriptAuth& auth,
+					  const scx::ScriptRef& ref,
+					  const scx::ScriptOp& op,
+					  const scx::ScriptRef* right)
+{
+  if (op.type() == scx::ScriptOp::Lookup) {
+    const std::string name = right->object()->get_string();
+
+    // Methods
+    if ("check" == name) {
+      return new scx::ScriptMethodRef(ref,name);
+    }
+    
+    // Properties
+    if ("list" == name) {
+      scx::ScriptList* list = new scx::ScriptList();
+      scx::ScriptRef* list_ref = new scx::ScriptRef(list);
+      scx::MutexLocker locker(m_mutex);
+      for (SessionMap::const_iterator it = m_sessions.begin();
+	   it != m_sessions.end();
+	   ++it) {
+	Session::Ref* session_ref = it->second;
+	list->give(session_ref->ref_copy(ref.reftype()));
+      }
+      return list_ref;
+    }
+  }
+  
+  return scx::ScriptObject::script_op(auth,ref,op,right);
+}
+
+//=============================================================================
+scx::ScriptRef* SessionManager::script_method(const scx::ScriptAuth& auth,
+					      const scx::ScriptRef& ref,
+					      const std::string& name,
+					      const scx::ScriptRef* args)
+{
+  if ("check" == name) {
+    check_sessions();
+    return 0;
+  }
+
+  return scx::ScriptObject::script_method(auth,ref,name,args);
 }
 
 };

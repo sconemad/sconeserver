@@ -2,7 +2,7 @@
 
 External program execution Module
 
-Copyright (c) 2000-2006 Andrew Wedgbury <wedge@sconemad.com>
+Copyright (c) 2000-2011 Andrew Wedgbury <wedge@sconemad.com>
 
 This program is free software; you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -24,17 +24,18 @@ Free Software Foundation, Inc.,
 
 #include "sconex/ModuleInterface.h"
 #include "sconex/Module.h"
-#include "sconex/Arg.h"
+#include "sconex/ScriptTypes.h"
 #include "sconex/Process.h"
 
 SCONESERVER_MODULE(ExecModule);
 
 //=========================================================================
-ExecModule::ExecModule(
-)
+ExecModule::ExecModule()
   : scx::Module("exec",scx::version()),
     m_exec_user(scx::User::current())
 {
+  scx::Stream::register_stream("exec",this);
+
   // Default to "nobody" if running as root
   if (m_exec_user.get_user_id() == 0) {
     if (!m_exec_user.set_user_name("nobody")) {
@@ -46,7 +47,7 @@ ExecModule::ExecModule(
 //=========================================================================
 ExecModule::~ExecModule()
 {
-
+  scx::Stream::unregister_stream("exec",this);
 }
 
 //=========================================================================
@@ -55,64 +56,39 @@ std::string ExecModule::info() const
   return "External program execution and http CGI";
 }
 
-//=========================================================================
-bool ExecModule::connect(
-  scx::Descriptor* endpoint,
-  scx::ArgList* args
-)
-{
-  const int max_args = 64;
-  if (args->size() >= max_args) {
-    log("Too many arguments to exec call",scx::Logger::Error);
-    return false;
-  }
-
-  int i;
-  scx::ArgList* eargs = new scx::ArgList();
-  for (i=0; i<args->size(); ++i) {
-    const scx::Arg* cur = args->get(i);
-    eargs->give(cur->new_copy());
-  }
-
-  ExecStream* s = new ExecStream(*this,eargs);
-  s->add_module_ref(ref());
-
-  endpoint->add_stream(s);
-  return true;
-}
-
 //=============================================================================
-scx::Arg* ExecModule::arg_lookup(const std::string& name)
+scx::ScriptRef* ExecModule::script_op(const scx::ScriptAuth& auth,
+				      const scx::ScriptRef& ref,
+				      const scx::ScriptOp& op,
+				      const scx::ScriptRef* right)
 {
-  // Methods
+  if (scx::ScriptOp::Lookup == op.type()) {
+    std::string name = right->object()->get_string();
 
-  if ("set_exec_user" == name ||
-      "exec" == name ||
-      "system" == name) {
-    return new_method(name);
-  }      
-
-  return SCXBASE Module::arg_lookup(name);
-}
-
-//=============================================================================
-scx::Arg* ExecModule::arg_method(
-  const scx::Auth& auth,
-  const std::string& name,
-  scx::Arg* args
-)
-{
-  scx::ArgList* l = dynamic_cast<scx::ArgList*>(args);
-
-  if ("set_exec_user" == name) {
-    if (!auth.admin()) return new scx::ArgError("Not permitted");
-
-    const scx::ArgString* a_user =
-      dynamic_cast<const scx::ArgString*>(l->get(0));
-    if (!a_user) {
-      return new scx::ArgError("exec::set_exec_user() "
-                               "Username must be specified");
+    // Methods
+    if ("set_exec_user" == name ||
+	"exec" == name ||
+	"system" == name) {
+      return new scx::ScriptMethodRef(ref,name);
     }
+  }
+
+  return scx::Module::script_op(auth,ref,op,right);
+}
+
+//=============================================================================
+scx::ScriptRef* ExecModule::script_method(const scx::ScriptAuth& auth,
+					  const scx::ScriptRef& ref,
+					  const std::string& name,
+					  const scx::ScriptRef* args)
+{
+  if ("set_exec_user" == name) {
+    if (!auth.admin()) return scx::ScriptError::new_ref("Not permitted");
+
+    const scx::ScriptString* a_user =
+      scx::get_method_arg<scx::ScriptString>(args,0,"value");
+    if (!a_user)
+      return scx::ScriptError::new_ref("Username must be specified");
     m_exec_user = scx::User(a_user->get_string());
 
     return 0;
@@ -120,23 +96,29 @@ scx::Arg* ExecModule::arg_method(
 
   if ("exec" == name ||
       "system" == name) {
-    if (!auth.trusted()) return new scx::ArgError("Not permitted");
+    if (!auth.trusted()) return scx::ScriptError::new_ref("Not permitted");
 
-    const scx::ArgString* a_prog = dynamic_cast<const scx::ArgString*>(l->get(0));
-    if (!a_prog) return new scx::ArgError("No program name specified");
+    const scx::ScriptList* argl = 
+      dynamic_cast<const scx::ScriptList*>(args->object());
+
+    const scx::ScriptString* a_prog = 
+      dynamic_cast<const scx::ScriptString*>(argl->get(0));
+
+    if (!a_prog) 
+      return scx::ScriptError::new_ref("No program name specified");
 
     scx::Process process(a_prog->get_string());
 
     // Set arguments
-    for (int i=0; i<l->size(); ++i) {
-      process.add_arg( l->get(i)->get_string() );
+    for (int i=0; i<argl->size(); ++i) {
+      process.add_arg( argl->get(i)->object()->get_string() );
     }
     
     process.set_user(m_exec_user);
     
     // Launch the process
     if (!process.launch()) {
-      return new scx::ArgError("Failed to launch process");
+      return scx::ScriptError::new_ref("Failed to launch process");
     }
 
     if ("system" == name) {
@@ -145,13 +127,13 @@ scx::Arg* ExecModule::arg_method(
       while (!process.get_exitcode(code)) {
         usleep(1000); // SPIN
       }
-      return new scx::ArgInt(code);
+      return scx::ScriptInt::new_ref(code);
     }
 
     return 0;
   }
   
-  return SCXBASE Module::arg_method(auth,name,args);
+  return scx::Module::script_method(auth,ref,name,args);
 }
 
 //=============================================================================
@@ -159,3 +141,30 @@ const scx::User& ExecModule::get_exec_user() const
 {
   return m_exec_user;
 }
+
+//=========================================================================
+void ExecModule::provide(const std::string& type,
+			 const scx::ScriptRef* args,
+			 scx::Stream*& object)
+{
+  const scx::ScriptList* argl = 
+    dynamic_cast<const scx::ScriptList*>(args->object());
+
+  const int max_args = 64;
+  if (argl->size() >= max_args) {
+    log("Too many arguments to exec call",scx::Logger::Error);
+    return;
+  }
+
+  int i;
+  scx::ScriptList* eargs = new scx::ScriptList();
+  for (i=0; i<argl->size(); ++i) {
+    const scx::ScriptRef* cur = argl->get(i);
+    eargs->give(cur->ref_copy());
+  }
+
+  // Create the exec stream
+  object = new ExecStream(*this,eargs);
+  object->add_module_ref(this);
+}
+

@@ -2,7 +2,7 @@
 
 HTTP Directory index module
 
-Copyright (c) 2000-2005 Andrew Wedgbury <wedge@sconemad.com>
+Copyright (c) 2000-2011 Andrew Wedgbury <wedge@sconemad.com>
 
 This program is free software; you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -33,7 +33,6 @@ Free Software Foundation, Inc.,
 
 //=========================================================================
 class DirIndexStream : public http::ResponseStream {
-
 public:
 
   DirIndexStream(
@@ -52,7 +51,8 @@ public:
   
 protected:
 
-  void log(const std::string message,scx::Logger::Level level = scx::Logger::Info)
+  void log(const std::string message,
+	   scx::Logger::Level level = scx::Logger::Info)
   {
     http::MessageStream* msg = GET_HTTP_MESSAGE();
     if (msg) {
@@ -79,10 +79,10 @@ protected:
     scx::FileStat stat(path);
   
     if (stat.is_dir()) {
-      const scx::Arg* a_default_page = docroot->get_param("default_page");
-      std::string s_default_page =
-        (BAD_ARG(a_default_page) ? "index.html" : a_default_page->get_string());
-      delete a_default_page;
+      const scx::ScriptRef* a_default_page = docroot->get_param("default_page");
+      std::string s_default_page = (BAD_SCRIPTREF(a_default_page) ? 
+				    "index.html" : 
+				    a_default_page->object()->get_string());
       
       std::string url = uri.get_string();
       std::string uripath = uri.get_path();
@@ -112,9 +112,10 @@ protected:
       }
 
 
-      const scx::Arg* a_allow_list = docroot->get_param("allow_list");
-      bool allow_list = (a_allow_list ? a_allow_list->get_int() : false);
-      delete a_allow_list;
+      const scx::ScriptRef* a_allow_list = docroot->get_param("allow_list");
+      bool allow_list = (a_allow_list ? 
+			 a_allow_list->object()->get_int() : 
+			 false);
       
       if (allow_list) {
         // Send directory listing if allowed
@@ -169,7 +170,8 @@ private:
 
 
 //=========================================================================
-class DirIndexModule : public scx::Module {
+class DirIndexModule : public scx::Module,
+		       public scx::Provider<scx::Stream> {
 public:
 
   DirIndexModule();
@@ -179,10 +181,10 @@ public:
 
   virtual int init();
   
-  virtual bool connect(
-    scx::Descriptor* endpoint,
-    scx::ArgList* args
-  );
+  // Provider<Stream> method
+  virtual void provide(const std::string& type,
+		       const scx::ScriptRef* args,
+		       scx::Stream*& object);
 
 protected:
 
@@ -196,13 +198,13 @@ SCONESERVER_MODULE(DirIndexModule);
 DirIndexModule::DirIndexModule(
 ) : scx::Module("http:dirindex",scx::version())
 {
-
+  scx::Stream::register_stream("dirindex",this);
 }
 
 //=========================================================================
 DirIndexModule::~DirIndexModule()
 {
-
+  scx::Stream::unregister_stream("dirindex",this);
 }
 
 //=========================================================================
@@ -218,14 +220,10 @@ int DirIndexModule::init()
 }
 
 //=========================================================================
-bool DirIndexModule::connect(
-  scx::Descriptor* endpoint,
-  scx::ArgList* args
-)
+void DirIndexModule::provide(const std::string& type,
+			     const scx::ScriptRef* args,
+			     scx::Stream*& object)
 {
-  DirIndexStream* s = new DirIndexStream(*this);
-  s->add_module_ref(ref());
-  
-  endpoint->add_stream(s);
-  return true;
+  object = new DirIndexStream(*this);
+  object->add_module_ref(this);
 }

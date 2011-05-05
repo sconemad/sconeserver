@@ -2,7 +2,7 @@
 
 Statistics Channel
 
-Copyright (c) 2000-2004 Andrew Wedgbury <wedge@sconemad.com>
+Copyright (c) 2000-2011 Andrew Wedgbury <wedge@sconemad.com>
 
 This program is free software; you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -24,31 +24,40 @@ Free Software Foundation, Inc.,
 
 #include "sconex/Stream.h"
 #include "sconex/Module.h"
-#include "sconex/ArgObject.h"
+#include "sconex/ScriptBase.h"
 
-//#########################################################################
-class StatChannel : public scx::ArgObjectInterface {
-
+//=============================================================================
+// StatChannel - A statistic-collection channel
+//
+class StatChannel : public scx::ScriptObject {
 public:
 
-  StatChannel(
-    const std::string& name
-  );
-
+  StatChannel(const std::string& name);
   ~StatChannel();
 
-  enum StatType { Connections=0, BytesInput, BytesOutput, Max };
-  
-  void add_stats(
-    StatType type,
-    long count
-  );
+  // Increment the named stat type by value
+  void inc_stat(const std::string& type, long value);
 
-  void reset();
+  // Get the named stat value
+  long get_stat(const std::string& type) const;
+
+  // Clear stats
+  void clear();
   
-  virtual std::string name() const;
-  virtual scx::Arg* arg_lookup(const std::string& name);
-  virtual scx::Arg* arg_method(const scx::Auth& auth,const std::string& name,scx::Arg* args);
+  // ScriptObject methods
+  virtual std::string get_string() const;
+
+  virtual scx::ScriptRef* script_op(const scx::ScriptAuth& auth,
+				    const scx::ScriptRef& ref,
+				    const scx::ScriptOp& op,
+				    const scx::ScriptRef* right=0);
+
+  virtual scx::ScriptRef* script_method(const scx::ScriptAuth& auth,
+					const scx::ScriptRef& ref,
+					const std::string& name,
+					const scx::ScriptRef* args);
+
+  typedef scx::ScriptRefTo<StatChannel> Ref;
 
 protected:
 
@@ -56,7 +65,8 @@ private:
 
   std::string m_name;
 
-  long m_stats[Max];
+  typedef HASH_TYPE<std::string,long> StatMap;
+  StatMap m_stats;
   
 };
 

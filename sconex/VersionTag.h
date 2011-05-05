@@ -2,7 +2,7 @@
 
 Version tag "major.minor.sub" form
 
-Copyright (c) 2000-2004 Andrew Wedgbury <wedge@sconemad.com>
+Copyright (c) 2000-2011 Andrew Wedgbury <wedge@sconemad.com>
 
 This program is free software; you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -23,11 +23,11 @@ Free Software Foundation, Inc.,
 #define scxVersionTag_h
 
 #include "sconex/sconex.h"
-#include "sconex/Arg.h"
+#include "sconex/ScriptBase.h"
 namespace scx {
 
 //===========================================================================
-class SCONEX_API VersionTag : public Arg {
+class SCONEX_API VersionTag : public ScriptObject {
 
 public:
 
@@ -38,15 +38,13 @@ public:
     const std::string& extra = ""
   );  
   VersionTag(const std::string& str);
-  VersionTag(Arg* args);
+  VersionTag(const ScriptRef* args);
 
   VersionTag(const VersionTag& c);
-  VersionTag(RefType ref, VersionTag& c);
   virtual ~VersionTag();
   
-  Arg* new_copy() const;
-  Arg* ref_copy(RefType ref);
-
+  virtual ScriptObject* new_copy() const;
+  
   int get_major() const;
   int get_minor() const;
   int get_sub() const;
@@ -55,7 +53,10 @@ public:
   virtual std::string get_string() const;
   virtual int get_int() const;
   
-  virtual Arg* op(const Auth& auth, OpType optype, const std::string& opname, Arg* right);
+  virtual ScriptRef* script_op(const ScriptAuth& auth,
+			       const ScriptRef& ref,
+			       const ScriptOp& op,
+			       const ScriptRef* right=0);
   
   VersionTag& operator=(const VersionTag& v);
 
@@ -70,10 +71,10 @@ protected:
   
   void from_string(const std::string& str);
   
-  int* m_major;
-  int* m_minor;
-  int* m_sub;
-  std::string* m_extra;
+  int m_major;
+  int m_minor;
+  int m_sub;
+  std::string m_extra;
 };
 
 };

@@ -49,8 +49,8 @@ public:
   virtual void close(); 
   virtual int fd();
 
-  const SocketAddress* get_remote_addr() const;
   // Get the remote address
+  const SocketAddress* get_remote_addr() const;
   
 protected:
 

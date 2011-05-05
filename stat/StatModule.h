@@ -2,7 +2,7 @@
 
 Statistics Module
 
-Copyright (c) 2000-2004 Andrew Wedgbury <wedge@sconemad.com>
+Copyright (c) 2000-2011 Andrew Wedgbury <wedge@sconemad.com>
 
 This program is free software; you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -23,15 +23,13 @@ Free Software Foundation, Inc.,
 #define statModule_h
 
 #include "sconex/Module.h"
-#include "sconex/Thread.h"
-
 #include "stat/StatChannel.h"
 
 class StatModule;
 
-//#########################################################################
-class StatModule : public scx::Module {
-
+//=============================================================================
+class StatModule : public scx::Module,
+                   public scx::Provider<scx::Stream> {
 public:
 
   StatModule();
@@ -39,31 +37,33 @@ public:
 
   virtual std::string info() const;
   
-  virtual bool connect(
-    scx::Descriptor* endpoint,
-    scx::ArgList* args
-  );
-
-  void add_stats(
-    const std::string& channel,
-    StatChannel::StatType type,
-    long count
-  );
-
   StatChannel* find_channel(const std::string& name);
   StatChannel* add_channel(const std::string& name);
   bool remove_channel(const std::string& name);
   
-  virtual scx::Arg* arg_lookup(const std::string& name);
-  virtual scx::Arg* arg_method(const scx::Auth& auth,const std::string& name,scx::Arg* args);
+  // ScriptObject methods  
+  virtual scx::ScriptRef* script_op(const scx::ScriptAuth& auth,
+				    const scx::ScriptRef& ref,
+				    const scx::ScriptOp& op,
+				    const scx::ScriptRef* right=0);
+
+  virtual scx::ScriptRef* script_method(const scx::ScriptAuth& auth,
+					const scx::ScriptRef& ref,
+					const std::string& name,
+					const scx::ScriptRef* args);
+
+  // Provider<scx::Stream> method
+  virtual void provide(const std::string& type,
+		       const scx::ScriptRef* args,
+		       scx::Stream*& object);
 
 protected:
   
 private:
 
-  typedef HASH_TYPE<std::string,StatChannel*> ChannelMap;
+  // Statistics channels
+  typedef HASH_TYPE<std::string,StatChannel::Ref*> ChannelMap;
   ChannelMap m_channels;
-  // Stat channels
   
 };
 

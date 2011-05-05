@@ -28,25 +28,18 @@ Free Software Foundation, Inc.,
 #include "sconex/FilePath.h"
 namespace scx {
 
-class ArgObject;
+class ScriptRef;
   
 //=============================================================================
 class SCONEX_API ConfigFile {
 
 public:
 
-  ConfigFile(
-    const FilePath& filename
-  );
-  // Construct with a file name
-  
+  ConfigFile(const FilePath& filename);
   ~ConfigFile();
-  // Destructor
 
-  bool load(
-    ArgObject* ctx
-  );
   // Execute configuration commands from this file in specified context
+  bool load(ScriptRef* ctx);
 
 protected:
 

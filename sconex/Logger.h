@@ -23,9 +23,10 @@ Free Software Foundation, Inc.,
 #define scxLogger_h
 
 #include "sconex/sconex.h"
-#include "sconex/File.h"
-#include "sconex/Mutex.h"
 namespace scx {
+
+class File;
+class Mutex;
 
 //=============================================================================
 class SCONEX_API Logger {
@@ -47,8 +48,8 @@ public:
 
 protected:
 
-  File m_file;
-  Mutex m_mutex;
+  File* m_file;
+  Mutex* m_mutex;
 
 private:
 	

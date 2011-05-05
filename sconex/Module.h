@@ -1,8 +1,8 @@
 /* SconeServer (http://www.sconemad.com)
 
-SconeX module
+Module
 
-Copyright (c) 2000-2004 Andrew Wedgbury <wedge@sconemad.com>
+Copyright (c) 2000-2011 Andrew Wedgbury <wedge@sconemad.com>
 
 This program is free software; you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -23,23 +23,22 @@ Free Software Foundation, Inc.,
 #define scxModule_h
 
 #include "sconex/sconex.h"
-#include "sconex/ModuleRef.h"
 #include "sconex/VersionTag.h"
-#include "sconex/Arg.h"
-#include "sconex/ArgObject.h"
+#include "sconex/ScriptBase.h"
 #include "sconex/FilePath.h"
 #include "sconex/Date.h"
+#include "sconex/Logger.h"
 
 namespace scx {
 
 class ModuleLoader;
-class Logger;
 class Descriptor;
 
 //=============================================================================
-class SCONEX_API Module : public ArgObjectInterface {
-
+class SCONEX_API Module : public ScriptObject {
 public:
+
+  typedef ScriptRefTo<Module> Ref;
 
   Module(
     const std::string& name,
@@ -48,62 +47,61 @@ public:
 
   virtual ~Module();
 
+  // Access module information
   const VersionTag& version() const;
   virtual std::string name() const;
   virtual std::string copyright() const;
   virtual std::string info() const =0;
-  // Access module information
 
-  virtual int init();
   // Initialize the module
+  virtual int init();
 
-  virtual void close();
   // Close the module
+  virtual void close();
   
-  ModuleRef ref();
   // Get a reference to ourself
+  ScriptRef* ref();
 
-  ModuleRef get_module(const std::string& name);
   // Get sub-module
+  Module::Ref get_module(const std::string& name);
 
-  void set_autoload_config(bool onoff);
   // Automatically load config or not
+  void set_autoload_config(bool onoff);
   
+  // Set/get path for sub-modules
   void set_mod_path(const FilePath& path);
   FilePath get_mod_path() const;
-  // Set/get path for sub-modules
 
+  // Set/get path for configuration files
   void set_conf_path(const FilePath& path);
   FilePath get_conf_path() const;
-  // Set/get path for configuration files
 
+  // Set/get path for variable files  
   void set_var_path(const FilePath& path);
   FilePath get_var_path() const;
-  // Set/get path for variable files  
   
+  // Log message with module name
   virtual void log(
     const std::string& message,
     Logger::Level level = Logger::Info
   );
-  // Log message with module name
   
+  // Set logger to use
   void log_string(const std::string& str,Logger::Level level);
   virtual void set_logger(Logger* logger);
-  // Set logger to use
 
-  virtual bool connect(
-    Descriptor* endpoint,
-    ArgList* args
-  );
-  //
-  // Use this module on the specified endpoint with the specified argument
-  //
-  // RETURNS: true  - ok, module used
-  //          false - failed
-  //
+  // ScriptObject interface:
+  virtual std::string get_string() const;
+
+  virtual ScriptRef* script_op(const ScriptAuth& auth,
+			       const ScriptRef& ref,
+			       const ScriptOp& op,
+			       const ScriptRef* right);
   
-  virtual Arg* arg_lookup(const std::string& name);
-  virtual Arg* arg_method(const Auth& auth, const std::string& name,Arg* args);
+  virtual ScriptRef* script_method(const ScriptAuth& auth,
+				   const ScriptRef& ref,
+				   const std::string& name,
+				   const ScriptRef* args);
 
 protected:
 
@@ -115,57 +113,42 @@ protected:
   
 private:
 
+  // Parent module (ModuleLoader can set this)
   void set_parent(Module* parent);
   friend class ModuleLoader;
   friend class ModuleLoaderDLL;
-  // Parent module (ModuleLoader can set this)
 
-  std::string m_name;
   // Module name
+  std::string m_name;
 
-  VersionTag m_version;
   // Module version
+  VersionTag m_version;
   
-  Date m_loadtime;
   // Load time
+  Date m_loadtime;
   
-  std::list<ModuleLoader*> m_modules;
   // Sub modules
+  std::list<ModuleLoader*> m_modules;
 
-  bool m_autoload_config;
   // Automatically load config
+  bool m_autoload_config;
   
-  FilePath m_mod_path;
   // Path to locate sub-modules
+  FilePath m_mod_path;
 
+  // Path to configuration files
   FilePath m_conf_path;
   std::string m_conf_file;
-  // Path to configuration files
 
-  FilePath m_var_path;
   // Path to variable files
+  FilePath m_var_path;
   
-  Module* m_parent;
   // Parent module
+  Module* m_parent_module;
   
-  Logger* m_logger;
   // Logger instance
+  Logger* m_logger;
 
-};
-
-
-//=============================================================================
-class SCONEX_API ArgModule : public ArgObject {
-
-public:
-  
-  ArgModule(ModuleRef ref);
-  virtual ~ArgModule();
-
-protected:
-
-  ModuleRef m_ref;
-  
 };
 
 };

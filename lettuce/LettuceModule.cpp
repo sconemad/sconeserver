@@ -2,7 +2,7 @@
 
 Lettuce module
 
-Copyright (c) 2000-2008 Andrew Wedgbury <wedge@sconemad.com>
+Copyright (c) 2000-2011 Andrew Wedgbury <wedge@sconemad.com>
 
 This program is free software; you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -24,7 +24,7 @@ Free Software Foundation, Inc.,
 #include "LettuceMediaStream.h"
 
 #include "sconex/ModuleInterface.h"
-#include "sconex/Arg.h"
+#include "sconex/ScriptTypes.h"
 
 SCONESERVER_MODULE(LettuceModule);
 
@@ -32,13 +32,15 @@ SCONESERVER_MODULE(LettuceModule);
 LettuceModule::LettuceModule(
 ) : scx::Module("lettuce",scx::version())
 {
-
+  scx::Stream::register_stream("lettuce-command",this);
+  scx::Stream::register_stream("lettuce-media",this);
 }
 
 //=========================================================================
 LettuceModule::~LettuceModule()
 {
-
+  scx::Stream::unregister_stream("lettuce-command",this);
+  scx::Stream::unregister_stream("lettuce-media",this);
 }
 
 //=========================================================================
@@ -49,39 +51,17 @@ std::string LettuceModule::info() const
 }
 
 //=========================================================================
-int LettuceModule::init()
+void LettuceModule::provide(const std::string& type,
+			    const scx::ScriptRef* args,
+			    scx::Stream*& object)
 {
-  return Module::init();
-}
+  if (type == "lettuce-command") {
+    object = new LettuceCommandStream(*this);
+    object->add_module_ref(this);
 
-//=========================================================================
-bool LettuceModule::connect(
-  scx::Descriptor* endpoint,
-  scx::ArgList* args
-)
-{
-  const scx::ArgString* a_service =
-    dynamic_cast<const scx::ArgString*>(args->get(0));
-  std::string service;
-  if (a_service) {
-    service = a_service->get_string();
-  }
-
-  if ("stream" == service) {
-    LettuceMediaStream* s = new LettuceMediaStream(*this);
-    s->add_module_ref(ref());
-    endpoint->set_timeout(scx::Time(60));
-    endpoint->add_stream(s);
-    return true;
-
-  } else {
-    LettuceCommandStream* s = new LettuceCommandStream(*this);
-    s->add_module_ref(ref());
-    endpoint->set_timeout(scx::Time(60));
-    endpoint->add_stream(s);
-    return true;
+  } else if (type == "lettuce-media") {
+    object = new LettuceMediaStream(*this);
+    object->add_module_ref(this);
 
   }
-
-  return false;
 }

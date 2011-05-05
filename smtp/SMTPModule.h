@@ -26,11 +26,14 @@ Free Software Foundation, Inc.,
 #include "sconex/Descriptor.h"
 #include "sconex/Uri.h"
 #include "sconex/StreamSocket.h"
+#include "sconex/ScriptBase.h"
 
 namespace smtp {
 
 //=============================================================================
-class SMTPModule : public scx::Module {
+class SMTPModule : public scx::Module,
+                   public scx::Provider<scx::ScriptObject> {
+
 public:
 
   SMTPModule();
@@ -41,23 +44,31 @@ public:
   virtual int init();
   virtual void close();
   
-  virtual bool connect(
-    scx::Descriptor* endpoint,
-    scx::ArgList* args
-  );
-
-  virtual scx::Arg* arg_lookup(const std::string& name);
-  virtual scx::Arg* arg_method(const scx::Auth& auth,const std::string& name,scx::Arg* args);
-  
-  const scx::Arg* get_server() const;
+  const scx::ScriptRef* get_server() const;
 
   scx::StreamSocket* new_server_connection();
+
+  // ScriptObject methods
+  virtual scx::ScriptRef* script_op(const scx::ScriptAuth& auth,
+				    const scx::ScriptRef& ref,
+				    const scx::ScriptOp& op,
+				    const scx::ScriptRef* right=0);
+
+  virtual scx::ScriptRef* script_method(const scx::ScriptAuth& auth,
+					const scx::ScriptRef& ref,
+					const std::string& name,
+					const scx::ScriptRef* args);
+
+  // Provider<ScriptObject> method
+  virtual void provide(const std::string& type,
+		       const scx::ScriptRef* args,
+		       scx::ScriptObject*& object);
 
 protected:
 
 private:
 
-  scx::Arg* m_server;
+  scx::ScriptRef* m_server;
   
 };
 

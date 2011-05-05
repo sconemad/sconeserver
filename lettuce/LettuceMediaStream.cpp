@@ -92,7 +92,9 @@ scx::Condition LettuceMediaStream::next_track()
 scx::Condition LettuceMediaStream::event(scx::Stream::Event e) 
 {
   if (e == scx::Stream::Opening) {
-      
+
+    endpoint().set_timeout(scx::Time(60));
+
     m_pls_file = new scx::File();
     if (m_pls_file->open(PLS_PATH,scx::File::Read) != scx::Ok) {
       m_module.log("Cannot open playlist '" PLS_PATH "'"); 

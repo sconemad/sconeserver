@@ -24,28 +24,29 @@ Free Software Foundation, Inc.,
 
 #include "sconex/Stream.h"
 #include "sconex/Module.h"
-#include "sconex/ArgObject.h"
+#include "sconex/ScriptBase.h"
 
 class TFTPModule;
 
-//#########################################################################
-class TFTPProfile : public scx::ArgObjectInterface {
-
+//=============================================================================
+// TFTPProfile - A TFTP site profile, essentially defines a root directory
+// from which to serve files via TFTP.
+//
+class TFTPProfile : public scx::ScriptObject {
 public:
 
-  TFTPProfile(
-    TFTPModule& mod,
-    const std::string& name,
-    const scx::FilePath& path
-  );
+  TFTPProfile(TFTPModule& mod,
+	      const std::string& name,
+	      const scx::FilePath& path);
 
   ~TFTPProfile();
 
   const scx::FilePath& get_path() const;
 
-  virtual std::string name() const;
-  virtual scx::Arg* arg_lookup(const std::string& name);
-  virtual scx::Arg* arg_method(const scx::Auth& auth,const std::string& name,scx::Arg* args);
+  // ScriptObject methods  
+  virtual std::string get_string() const;
+
+  typedef scx::ScriptRefTo<TFTPProfile> Ref;
 
 protected:
 

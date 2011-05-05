@@ -21,8 +21,7 @@ Free Software Foundation, Inc.,
 
 #include "sconex/ConfigFile.h"
 #include "sconex/File.h"
-#include "sconex/ArgObject.h"
-#include "sconex/ArgScript.h"
+#include "sconex/ScriptEngine.h"
 #include "sconex/FilePath.h"
 #include "sconex/FileStat.h"
 
@@ -44,17 +43,16 @@ ConfigFile::~ConfigFile()
 }
 
 //=============================================================================
-bool ConfigFile::load(
-  ArgObject* ctx
-)
+bool ConfigFile::load(ScriptRef* ctx)
 {
-  ctx->log("LOAD " + m_filename.path());
+  //  ctx->log("LOAD " + m_filename.path());
   File conf;
   conf.open(m_filename,File::Read);
-  ArgScript* script = new ArgScriptExec(Auth::Admin,ctx);
+  ScriptEngine* script = new ScriptEngineExec(ScriptAuth::Admin,
+					      ctx->ref_copy());
   conf.add_stream(script);
   script->event(Stream::Readable);
-  ctx->log("DONE " + m_filename.path());
+  //  ctx->log("DONE " + m_filename.path());
 
   return true;
 }

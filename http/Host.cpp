@@ -43,7 +43,7 @@ Host::Host(
     m_hostname(hostname),
     m_dir(dir)
 {
-
+  m_parent = &mapper;
 }
 
 //=========================================================================
@@ -60,13 +60,15 @@ Host::~Host()
 int Host::init()
 {
   scx::ConfigFile config(m_dir + "host.conf");
-  scx::ArgObject* ctx = new scx::ArgObject(this);
+  scx::ScriptRef* ctx = new scx::ScriptRef(this);
   int err = config.load(ctx);
   return err;
 }
 
 //=========================================================================
-bool Host::connect_request(scx::Descriptor* endpoint, Request& request, Response& response)
+bool Host::connect_request(scx::Descriptor* endpoint,
+			   Request& request,
+			   Response& response)
 {
   std::string profile = request.get_profile();
   DocRoot* docroot = get_docroot(profile);
@@ -106,117 +108,113 @@ DocRoot* Host::get_docroot(const std::string& profile)
 {
   DocRootMap::const_iterator it = m_docroots.find(profile);
   if (it != m_docroots.end()) {
-    return it->second;
+    return it->second->object();
   }
 
   return 0;
 }
 
 //=========================================================================
-std::string Host::name() const
+std::string Host::get_string() const
 {
   return get_id();
 }
 
 //=============================================================================
-scx::Arg* Host::arg_lookup(
-  const std::string& name
-)
+scx::ScriptRef* Host::script_op(const scx::ScriptAuth& auth,
+				const scx::ScriptRef& ref,
+				const scx::ScriptOp& op,
+				const scx::ScriptRef* right)
 {
-  // Methods
-  
-  if ("add" == name ||
-      "remove" == name) {
-    return new_method(name);
-  }
+  if (op.type() == scx::ScriptOp::Lookup) {
+    const std::string name = right->object()->get_string();
 
-  // Properties
-
-  if ("id" == name) return new scx::ArgString(m_id);
-  if ("hostname" == name) return new scx::ArgString(m_hostname);
-  if ("path" == name) return new scx::ArgString(m_dir.path());
-  
-  if ("docroots" == name) {
-    scx::ArgList* list = new scx::ArgList();
-    for (DocRootMap::const_iterator it = m_docroots.begin();
-         it != m_docroots.end();
-         ++it) {
-      DocRoot* docroot = it->second;
-      list->give(new scx::ArgObject(docroot));
+    // Methods
+    if ("add" == name ||
+	"remove" == name) {
+      return new scx::ScriptMethodRef(ref,name);
     }
-    return list;
+
+    // Properties
+    
+    if ("id" == name) 
+      return scx::ScriptString::new_ref(m_id);
+  
+    if ("hostname" == name) 
+      return scx::ScriptString::new_ref(m_hostname);
+    
+    if ("path" == name) 
+      return scx::ScriptString::new_ref(m_dir.path());
+    
+    if ("docroots" == name) {
+      scx::ScriptList* list = new scx::ScriptList();
+      scx::ScriptRef* list_ref = new scx::ScriptRef(list);
+      for (DocRootMap::const_iterator it = m_docroots.begin();
+	   it != m_docroots.end();
+	   ++it) {
+	DocRoot::Ref* docroot = it->second;
+	list->give(docroot->ref_copy(ref.reftype()));
+      }
+      return list_ref;
+    }
+
+    // Sub-objects
+    
+    DocRootMap::const_iterator it = m_docroots.find(name);
+    if (it != m_docroots.end()) {
+      DocRoot::Ref* r = it->second;
+      return r->ref_copy(ref.reftype());
+    }      
   }
 
-  // Sub-objects
-
-  DocRootMap::const_iterator it = m_docroots.find(name);
-  if (it != m_docroots.end()) {
-    DocRoot* r = it->second;
-    return new scx::ArgObject(r);
-  }      
-
-  return ArgObjectInterface::arg_lookup(name);
+  return scx::ScriptObject::script_op(auth,ref,op,right);
 }
 
 //=============================================================================
-scx::Arg* Host::arg_resolve(const std::string& name)
+scx::ScriptRef* Host::script_method(const scx::ScriptAuth& auth,
+				    const scx::ScriptRef& ref,
+				    const std::string& name,
+				    const scx::ScriptRef* args)
 {
-  scx::Arg* a = arg_lookup(name);
-  if (BAD_ARG(a)) {
-    delete a;
-    a = m_mapper.arg_resolve(name);
-  }
-  return a;
-}
-
-//=============================================================================
-scx::Arg* Host::arg_method(
-  const scx::Auth& auth,
-  const std::string& name,
-  scx::Arg* args
-)
-{
-  scx::ArgList* l = dynamic_cast<scx::ArgList*>(args);
-
-  if (!auth.admin()) return new scx::ArgError("Not permitted");
+  if (!auth.admin()) return scx::ScriptError::new_ref("Not permitted");
 
   if ("add" == name) {
-    const scx::ArgString* a_profile =
-      dynamic_cast<const scx::ArgString*>(l->get(0));
+    const scx::ScriptString* a_profile =
+      scx::get_method_arg<scx::ScriptString>(args,0,"name");
     if (!a_profile) {
-      return new scx::ArgError("add() No profile name specified");
+      return scx::ScriptError::new_ref("add() No profile name specified");
     }
     std::string s_profile = a_profile->get_string();
     
-    const scx::ArgString* a_path =
-      dynamic_cast<const scx::ArgString*>(l->get(1));
+    const scx::ScriptString* a_path =
+      scx::get_method_arg<scx::ScriptString>(args,1,"path");
     if (!a_path) {
-      return new scx::ArgError("add() No path specified");
+      return scx::ScriptError::new_ref("add() No path specified");
     }
 
     DocRootMap::const_iterator it = m_docroots.find(s_profile);
     if (it != m_docroots.end()) {
-      return new scx::ArgError("add() Profile already exists");
+      return scx::ScriptError::new_ref("add() Profile already exists");
     }
         
     scx::FilePath path = m_dir + a_path->get_string();
-    log("Adding profile '" + s_profile + "' dir '" +
-        path.path() + "'");
-    m_docroots[s_profile] = new DocRoot(m_module,*this,s_profile,path.path());
-    return 0;
+    log("Adding profile '" + s_profile + "' dir '" + path.path() + "'");
+    DocRoot* profile = new DocRoot(m_module,*this,s_profile,path.path());
+    m_docroots[s_profile] = new DocRoot::Ref(profile);
+    return new DocRoot::Ref(profile);
   }
 
   if ("remove" == name) {
-    const scx::ArgString* a_profile =
-      dynamic_cast<const scx::ArgString*>(l->get(0));
+    const scx::ScriptString* a_profile =
+      scx::get_method_arg<scx::ScriptString>(args,0,"name");
     if (!a_profile) {
-      return new scx::ArgError("remove() No profile name specified");
+      return scx::ScriptError::new_ref("remove() No profile name specified");
     }
     std::string s_profile = a_profile->get_string();
 
     DocRootMap::iterator it = m_docroots.find(s_profile);
     if (it == m_docroots.end()) {
-      return new scx::ArgError("remove() Profile not found");
+      return scx::ScriptError::new_ref("remove() Profile not found");
     }
         
     log("Removing profile '" + s_profile + "'");
@@ -225,7 +223,7 @@ scx::Arg* Host::arg_method(
     return 0;
   }
     
-  return ArgObjectInterface::arg_method(auth,name,args);
+  return scx::ScriptObject::script_method(auth,ref,name,args);
 }
 
 };

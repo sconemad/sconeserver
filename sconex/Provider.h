@@ -1,6 +1,6 @@
 /* SconeServer (http://www.sconemad.com)
 
-Service provider API
+Provider API templates
 
 Copyright (c) 2000-2011 Andrew Wedgbury <wedge@sconemad.com>
 
@@ -23,30 +23,51 @@ Free Software Foundation, Inc.,
 #define scxProvider_h
 
 #include "sconex/sconex.h"
-#include "sconex/Arg.h"
+#include "sconex/utils.h"
+#include "sconex/ScriptBase.h"
 
+// Uncomment to enable debug info
+//#define Provider_DEBUG_LOG(m) DEBUG_LOG(type_name(typeid(*this))+"::"+m)
+
+#ifndef Provider_DEBUG_LOG
+#  define Provider_DEBUG_LOG(m)
+#endif
+  
 namespace scx {
 
+class ScriptRef;
+
 //=============================================================================
+// Provider - A class which can provide an implementation of a class T.
+//
 template<class T> class Provider {
 public:
 
-  virtual T* create_new(const ArgMap& args) = 0;
+  // This method should return a new instance of class T in object, using
+  // the specified arguments as required. The type parameter can be used to 
+  // distinguish between different types if more than one was registered
+  // using the same provider.
+  //
+  virtual void provide(const std::string& type,
+		       const ScriptRef* args,
+		       T*& object) = 0;
   
 };
   
 //=============================================================================
+// ProviderScheme - A factory class which manages providers of class T.
+//
 template<class T> class SCONEX_API ProviderScheme {
 public:
-  
+
   typedef Provider<T> ProviderType;
   typedef std::map<std::string, ProviderType*> ProviderMap;
   
-  T* create_new(const std::string& type, const ArgMap& args);
+  T* provide(const std::string& type, const ScriptRef* args);
   
   void register_provider(const std::string& type, ProviderType* factory);
   
-  void unregister_provider(const std::string& type);
+  void unregister_provider(const std::string& type, ProviderType* factory);
 
 protected:
 
@@ -55,17 +76,22 @@ protected:
 };
 
 //=============================================================================
-template<class T> T* ProviderScheme<T>::create_new(
+template<class T> T* ProviderScheme<T>::provide(
   const std::string& type,
-  const ArgMap& args
+  const ScriptRef* args
 )
 {
   typename ProviderMap::iterator it = m_providers.find(type);
+  Provider_DEBUG_LOG("provide("+type+","+
+		     (args ? args->object()->get_string() : "NULL") +")");
 
   if (it == m_providers.end()) {
     return 0;
   }
-  return it->second->create_new(args);
+
+  T* object = 0;
+  it->second->provide(type,args,object);
+  return object;
 }
 
 //=============================================================================
@@ -74,17 +100,28 @@ template<class T> void ProviderScheme<T>::register_provider(
   Provider<T>* factory
 )
 {
-  m_providers[type] = factory;
+  Provider_DEBUG_LOG("register_provider("+type+")");
+  typename ProviderMap::iterator it = m_providers.find(type);
+  if (it != m_providers.end()) {
+    DEBUG_LOG("Type '"+type+"' already has a registered provider");
+  } else {
+    m_providers[type] = factory;
+  }
 }
 
 //=============================================================================
 template<class T> void ProviderScheme<T>::unregister_provider(
-  const std::string& type
-)
+  const std::string& type,
+  ProviderType* factory)
 {
+  Provider_DEBUG_LOG("unregister_provider("+type+")");
   typename ProviderMap::iterator it = m_providers.find(type);
   if (it != m_providers.end()) {
-    m_providers.erase(it);
+    if (it->second != factory) {
+      DEBUG_LOG("Type '"+type+"' provider does not match already registered");
+    } else {
+      m_providers.erase(it);
+    }
   }
 }
 

@@ -2,7 +2,7 @@
 
 sconex Datagram Multiplexer
 
-Copyright (c) 2000-2004 Andrew Wedgbury <wedge@sconemad.com>
+Copyright (c) 2000-2011 Andrew Wedgbury <wedge@sconemad.com>
 
 This program is free software; you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -22,17 +22,13 @@ Free Software Foundation, Inc.,
 #include "sconex/DatagramMultiplexer.h"
 #include "sconex/DatagramSocket.h"
 #include "sconex/DatagramChannel.h"
+#include "sconex/ScriptTypes.h"
 #include "sconex/Kernel.h"
 namespace scx {
  
 //=============================================================================
-DatagramMultiplexer::DatagramMultiplexer(
-  Module& router, 
-  const std::string& chain
-)
-  : Stream("datagram_mplex"),
-    m_router(router),
-    m_chain(chain)
+DatagramMultiplexer::DatagramMultiplexer()
+  : Stream("datagram_mplex")
 {
   enable_event(Stream::Readable,true);
 }
@@ -64,17 +60,12 @@ scx::Condition DatagramMultiplexer::event(scx::Stream::Event e)
     } else {
       // New channel
       channel = new DatagramChannel(*sock,*this,sa);
-      scx::ArgList* args = new scx::ArgList();
-      args->give(new scx::ArgString(m_chain));
-
-      if (m_router.connect(channel,args)) {
+      if (channel_open(channel)) {
 	m_channels[sa->get_string()] = channel;
-	scx::Kernel::get()->connect(channel,args);
+	scx::Kernel::get()->connect(channel,0);
       } else {
 	delete channel;
       }
-
-      delete args;
     }
     
     channel->recv_datagram(buffer,na);
@@ -82,7 +73,19 @@ scx::Condition DatagramMultiplexer::event(scx::Stream::Event e)
   
   return scx::Ok;
 }
-  
+
+//=============================================================================
+bool DatagramMultiplexer::channel_open(DatagramChannel* channel)
+{
+  return true;
+}
+
+//=============================================================================
+void DatagramMultiplexer::channel_close(DatagramChannel* channel)
+{
+
+}
+
 //=============================================================================
 std::string DatagramMultiplexer::stream_status() const
 {
@@ -92,8 +95,11 @@ std::string DatagramMultiplexer::stream_status() const
 }
 
 //=============================================================================
-void DatagramMultiplexer::notify_close(const std::string& addr_remote)
+void DatagramMultiplexer::notify_channel_closing(DatagramChannel* channel)
 {
+  channel_close(channel);
+
+  const std::string addr_remote = channel->get_remote_addr()->get_string();
   DatagramChannelMap::iterator iter = m_channels.find(addr_remote);
   if (iter!=m_channels.end()) {
     m_channels.erase(iter);

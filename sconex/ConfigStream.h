@@ -2,9 +2,7 @@
 
 Configuration stream
 
-Reads lines from a stream, evaluating them as SconeScript expressions.
-
-Copyright (c) 2000-2006 Andrew Wedgbury <wedge@sconemad.com>
+Copyright (c) 2000-2011 Andrew Wedgbury <wedge@sconemad.com>
 
 This program is free software; you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -27,33 +25,38 @@ Free Software Foundation, Inc.,
 #include "Module.h"
 #include "Descriptor.h"
 #include "LineBuffer.h"
-#include "ArgProc.h"
+#include "ScriptExpr.h"
 
 namespace scx {
 
-class ArgMod;
-
 //=============================================================================
+// Reads lines from a stream, evaluating them as SconeScript expressions.
+//
 class SCONEX_API ConfigStream : public LineBuffer {
 public:
 
-  ConfigStream(
-    ModuleRef root_ref,
-    bool shutdown_on_exit = false
-  );
+  ConfigStream(ScriptRef* ctx, bool shutdown_on_exit = false);
   
   virtual ~ConfigStream();
 
   virtual Condition event(Stream::Event e);
 
-  bool write_arg(const Arg* arg, int indent=0);
+  bool write_object(const ScriptRef* object, int indent=0);
 
 private:
 
-  ArgProc m_proc;
-  ArgModule* m_argmod;
+  ScriptExpr m_proc;
+  ScriptRef* m_ctx;
   bool m_shutdown_on_exit;
-  
+
+  enum OutputMode {
+    None = 0,
+    Formatted,
+    Serialized
+  };
+
+  OutputMode m_output_mode;
+
 };
 
 };

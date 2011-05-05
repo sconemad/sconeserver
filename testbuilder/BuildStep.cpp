@@ -233,7 +233,7 @@ bool BuildStep::launch()
 
   m_process_mutex.lock();
   m_process_stream = new BuildProcessStream(m_module,this);
-  m_process_stream->add_module_ref(m_module.ref());
+  m_process_stream->add_module_ref(&m_module);
   process->add_stream(m_process_stream);
   
   scx::StreamTransfer* xfer = new scx::StreamTransfer(process);

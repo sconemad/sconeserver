@@ -25,6 +25,7 @@ Free Software Foundation, Inc.,
 #include "sconex/FilePath.h"
 #include "sconex/LineBuffer.h"
 #include "sconex/Process.h"
+#include "sconex/File.h"
 
 const char TESTBUILDER_STAT_FILE[] = "testbuilder.stat";
 

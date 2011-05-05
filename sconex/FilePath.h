@@ -23,13 +23,13 @@ Free Software Foundation, Inc.,
 #define scxFilePath_h
 
 #include "sconex/sconex.h"
+#include "sconex/ScriptBase.h"
 namespace scx {
 
 class User;
   
 //=============================================================================
 class SCONEX_API FilePath {
-
 public:
 
   FilePath(const std::string& path = "");
@@ -66,6 +66,36 @@ private:
 
 };
 
+//=============================================================================
+class ScriptFile : public scx::ScriptObject {
+public:
+
+  ScriptFile(const FilePath& path, const std::string& filename);
+  ScriptFile(const ScriptFile& c);
+  virtual ~ScriptFile();
+
+  const FilePath& get_path() const;
+  const std::string& get_filename() const;
+  
+  // ScriptObject methods
+  virtual ScriptObject* new_copy() const;
+
+  virtual std::string get_string() const;
+  virtual int get_int() const;
+
+  virtual ScriptRef* script_op(const ScriptAuth& auth,
+			       const ScriptRef& ref,
+			       const ScriptOp& op,
+			       const ScriptRef* right=0);
+
+  typedef scx::ScriptRefTo<ScriptFile> Ref;
+
+protected:
+
+  FilePath m_path;
+  std::string m_filename;
+
+};
 
 };
 #endif

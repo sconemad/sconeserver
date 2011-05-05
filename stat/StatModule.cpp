@@ -21,27 +21,27 @@ Free Software Foundation, Inc.,
 
 
 #include "StatModule.h"
-#include "StatChannel.h"
 #include "StatStream.h"
 
 #include "sconex/ModuleInterface.h"
 #include "sconex/Module.h"
-#include "sconex/Arg.h"
+#include "sconex/ScriptTypes.h"
 #include "sconex/Stream.h"
 
 SCONESERVER_MODULE(StatModule);
 
 //=========================================================================
-StatModule::StatModule(
-)
+StatModule::StatModule()
   : scx::Module("stat",scx::version())
 {
-
+  scx::Stream::register_stream("stat",this);
 }
 
 //=========================================================================
 StatModule::~StatModule()
 {
+  scx::Stream::unregister_stream("stat",this);
+
   for (ChannelMap::iterator it = m_channels.begin();
        it != m_channels.end();
        ++it) {
@@ -56,48 +56,11 @@ std::string StatModule::info() const
 }
 
 //=========================================================================
-bool StatModule::connect(
-  scx::Descriptor* endpoint,
-  scx::ArgList* args
-)
-{
-  const scx::ArgString* channel =
-    dynamic_cast<const scx::ArgString*>(args->get(0));
-  if (!channel) {
-    log("No channel specified, stat counter not deployed");
-    return true;
-  }
-
-  StatStream* s = new StatStream(*this,channel->get_string());
-  s->add_module_ref(ref());
-  
-  endpoint->add_stream(s);
-  return true;
-}
-
-//=========================================================================
-void StatModule::add_stats(
-  const std::string& channel,
-  StatChannel::StatType type,
-  long count
-)
-{
-  StatChannel* c = find_channel(channel);
-  if (!c) {
-    // Automatically add new channels when referenced
-    c = add_channel(channel);
-  }
-  if (c) {
-    c->add_stats(type,count);
-  }
-}
-
-//=========================================================================
 StatChannel* StatModule::find_channel(const std::string& name)
 {
   ChannelMap::const_iterator it = m_channels.find(name);
   if (it != m_channels.end()) {
-    return (*it).second;
+    return it->second->object();
   }
   
   return 0;
@@ -106,21 +69,23 @@ StatChannel* StatModule::find_channel(const std::string& name)
 //=========================================================================
 StatChannel* StatModule::add_channel(const std::string& name)
 {
-  if (m_channels.count(name) == 0) {
-    m_channels[name] = new StatChannel(name);
+  StatChannel* channel = find_channel(name);
+
+  if (!channel) {
+    channel = new StatChannel(name);
+    m_channels[name] = new StatChannel::Ref(channel);
   }
   
-  return m_channels[name];
+  return channel;
 }
 
 //=========================================================================
 bool StatModule::remove_channel(const std::string& name)
 {
-  StatChannel* channel = find_channel(name);
-
-  if (channel) {
-    delete channel;
-    m_channels.erase(name);
+  ChannelMap::iterator it = m_channels.find(name);
+  if (it != m_channels.end()) {
+    delete it->second;
+    m_channels.erase(it);
     return true;
   }
 
@@ -128,109 +93,150 @@ bool StatModule::remove_channel(const std::string& name)
 }
 
 //=============================================================================
-scx::Arg* StatModule::arg_lookup(const std::string& name)
+scx::ScriptRef* StatModule::script_op(const scx::ScriptAuth& auth,
+				      const scx::ScriptRef& ref,
+				      const scx::ScriptOp& op,
+				      const scx::ScriptRef* right)
 {
-  // Methods
+  if (op.type() == scx::ScriptOp::Lookup) {
+    const std::string name = right->object()->get_string();
+    
+    // Methods
+    if ("add" == name ||
+	"remove" == name ||
+	"print" == name) {
+      return new scx::ScriptMethodRef(ref,name);
+    }      
 
-  if ("add" == name ||
-      "remove" == name) {
-    return new_method(name);
-  }      
-
-  // Properties
-  
-  if ("channels" == name) {
-    scx::ArgList* list = new scx::ArgList();
-    for (ChannelMap::const_iterator it = m_channels.begin();
-	 it != m_channels.end();
-	 ++it) {
-      list->give(new scx::ArgObject(it->second));
+    // Properties
+    if ("channels" == name) {
+      scx::ScriptList* list = new scx::ScriptList();
+      for (ChannelMap::const_iterator it = m_channels.begin();
+	   it != m_channels.end();
+	   ++it) {
+	list->give(it->second->ref_copy(ref.reftype()));
+      }
+      return new scx::ScriptRef(list);
     }
-    return list;
+    
+    // Sub-objects
+    
+    StatChannel* channel = find_channel(name);
+    if (channel)
+      return new scx::ScriptRef(channel);
   }
-
-  if ("print" == name) {
-    std::ostringstream oss;
-    oss << "\n";
-    for (ChannelMap::const_iterator it = m_channels.begin();
-	 it != m_channels.end();
-	 ++it) {
-
-      StatChannel* channel = (*it).second;
-      scx::Arg* connections = channel->arg_lookup("connections");
-      scx::Arg* input = channel->arg_lookup("input");
-      scx::Arg* output = channel->arg_lookup("output");
-
-      oss << (*it).first << ": "
-          << connections->get_string() << " connections, "
-          << input->get_string() << " bytes in, "
-          << output->get_string() << " bytes out\n";
-
-      delete connections;
-      delete input;
-      delete output;
-    }
-    return new scx::ArgString(oss.str());
-  }
-
-  // Sub-objects
-  
-  StatChannel* channel = find_channel(name);
-  if (channel) {
-    return new scx::ArgObject(channel);
-  }
-  
-  return SCXBASE Module::arg_lookup(name);
+    
+  return scx::Module::script_op(auth,ref,op,right);
 }
 
 //=============================================================================
-scx::Arg* StatModule::arg_method(
-  const scx::Auth& auth,
-  const std::string& name,
-  scx::Arg* args
-)
+scx::ScriptRef* StatModule::script_method(const scx::ScriptAuth& auth,
+					  const scx::ScriptRef& ref,
+					  const std::string& name,
+					  const scx::ScriptRef* args)
 {
-  scx::ArgList* l = dynamic_cast<scx::ArgList*>(args);
-  
-  if (!auth.admin()) return new scx::ArgError("Not permitted");
+  if (!auth.admin()) return scx::ScriptError::new_ref("Not permitted");
 
   if ("add" == name) {
-    std::string s_name;
-    const scx::ArgString* a_name =
-      dynamic_cast<const scx::ArgString*>(l->get(0));
-    if (a_name) {
-      s_name = a_name->get_string();
-    } else {
-      return new scx::ArgError("stat::add() Name must be specified");
-    }
+    const scx::ScriptString* a_name =
+      scx::get_method_arg<scx::ScriptString>(args,0,"name");
+    if (!a_name) 
+      return scx::ScriptError::new_ref("Name must be specified");
+    std::string s_name = a_name->get_string();
 
     // Check channel doesn't already exist
-    if (find_channel(s_name)) {
-      return new scx::ArgError("stat::add() Channel '" + s_name +
-                               "' already exists");
-    }
-   
-    add_channel(s_name);
-    return 0;
+    if (find_channel(s_name))
+      return scx::ScriptError::new_ref("Channel '" + s_name + 
+				       "' already exists");
+
+    // Add the channel
+    StatChannel* channel = add_channel(s_name);
+    return new scx::ScriptRef(channel);
   }
   
   if ("remove" == name) {
-    std::string s_name;
-    const scx::ArgString* a_name =
-      dynamic_cast<const scx::ArgString*>(l->get(0));
-    if (a_name) {
-      s_name = a_name->get_string();
-    } else {
-      return new scx::ArgError("stat::remove() Name must be specified");
-    }
+    const scx::ScriptString* a_name =
+      scx::get_method_arg<scx::ScriptString>(args,0,"name");
+    if (!a_name) 
+      return scx::ScriptError::new_ref("Name must be specified");
+    std::string s_name = a_name->get_string();
 
     // Remove channel
-      if (!remove_channel(s_name)) {
-      return new scx::ArgError("stat::remove() Channel '" + s_name +
-                               "' does not exist");
+    if (!remove_channel(s_name)) {
+      return scx::ScriptError::new_ref("Channel '" + s_name +
+				       "' does not exist");
     }
     return 0;
   }
 
-  return SCXBASE Module::arg_method(auth,name,args);
+  if ("print" == name) {
+    const scx::ScriptList* argl =
+      dynamic_cast<const scx::ScriptList*>(args->object());
+    scx::ScriptList default_argl;
+    if (!argl || argl->size() == 0) {
+      // Use these types as default if none were given
+      default_argl.give(scx::ScriptString::new_ref("conn"));
+      default_argl.give(scx::ScriptString::new_ref("in"));
+      default_argl.give(scx::ScriptString::new_ref("out"));
+      argl = &default_argl;
+    }
+
+    int wc = 14;
+    int ws = 8;
+    std::ostringstream oss;
+    // Heading
+    oss << "\n" 
+	<< std::right
+	<< std::setw(wc) 
+	<< "CHANNEL" << " | ";
+    for (int i=0; i<argl->size(); ++i) {
+      const scx::ScriptRef* type = argl->get(i);
+      oss << std::left
+	  << std::setw(ws) 
+	  << type->object()->get_string() << " ";
+    }
+    oss << "\n";
+
+    // Stats
+    for (ChannelMap::const_iterator it = m_channels.begin();
+	 it != m_channels.end();
+	 ++it) {
+      
+      StatChannel* channel = (*it).second->object();
+      oss << std::right
+	  << std::setw(wc)
+	  << (*it).first << " | ";
+      for (int i=0; i<argl->size(); ++i) {
+	const scx::ScriptRef* type = argl->get(i);
+	long stat = channel->get_stat(type->object()->get_string());
+	oss << std::left
+	    << std::setw(ws)
+	    << stat << " ";
+      }
+      oss << "\n";
+    }
+    return scx::ScriptString::new_ref(oss.str());
+  }
+    
+  return scx::Module::script_method(auth,ref,name,args);
 }
+
+//=========================================================================
+void StatModule::provide(const std::string& type,
+			 const scx::ScriptRef* args,
+			 scx::Stream*& object)
+{
+  const scx::ScriptString* s_channel =
+    scx::get_method_arg<scx::ScriptString>(args,0,"channel");
+  if (!s_channel) {
+    log("No channel specified, stat counter not deployed");
+    return;
+  }
+
+  // Make sure there is a channel
+  StatChannel* channel = add_channel(s_channel->get_string());
+
+  object = new StatStream(*this,channel);
+  object->add_module_ref(this);
+}
+

@@ -47,7 +47,7 @@ const char ALPHANUM[] =
 TestBuilderControlStream::TestBuilderControlStream(
   TestBuilderModule& module
 ) : http::ResponseStream("testbuilder::control"),
-    m_module(module)
+    m_module(&module)
 {
 
 }
@@ -117,9 +117,9 @@ scx::Condition TestBuilderControlStream::send(http::MessageStream& msg)
     if (profile.empty() ||
         profile.find_first_not_of(ALPHANUM) != std::string::npos ||
         profile.find_first_not_of(ALPHA) == 0 ||
-        !m_module.add_profile(profile)) {
+        !m_module.object()->add_profile(profile)) {
       alert_title = "Error creating profile";
-      if (m_module.lookup_profile(profile)) {
+      if (m_module.object()->lookup_profile(profile)) {
         alert =
           "<p>"
           "A profile named \"" + profile + "\" already exists."
@@ -142,17 +142,17 @@ scx::Condition TestBuilderControlStream::send(http::MessageStream& msg)
   // Save profile (or submit build)
   if (req.is_param("save_profile") ||
       req.is_param("start_build")) {
-    BuildProfile* profile_obj = m_module.lookup_profile(profile);
+    BuildProfile* profile_obj = m_module.object()->lookup_profile(profile);
     profile_obj->set_source_method(req.get_param("source_method"));
     profile_obj->set_source_uri(req.get_param("source_uri"));
     profile_obj->set_configure_command(req.get_param("configure_command"));
     profile_obj->set_make_targets(req.get_param("make_targets"));
-    m_module.save_profiles();
+    m_module.object()->save_profiles();
   }
   
   // Remove profile
   if (req.is_param("remove_profile")) {
-    if (m_module.remove_profile(profile)) {
+    if (m_module.object()->remove_profile(profile)) {
       alert_title = "Profile removed";
       alert =
         "<p>"
@@ -166,12 +166,12 @@ scx::Condition TestBuilderControlStream::send(http::MessageStream& msg)
         "The profile \"" + profile + "\" could not be removed."
         "</p>\n";
     }
-    m_module.save_profiles();
+    m_module.object()->save_profiles();
   }
   
   // Start build
   if (req.is_param("start_build")) {
-    build = m_module.submit_build(profile);
+    build = m_module.object()->submit_build(profile);
     if (!build.empty()) {
       alert_title = "Build submitted";
       alert =
@@ -196,7 +196,7 @@ scx::Condition TestBuilderControlStream::send(http::MessageStream& msg)
 
   // Abort build
   if (req.is_param("abort_build")) {    
-    if (m_module.abort_build(build)) {
+    if (m_module.object()->abort_build(build)) {
       alert_title = "Build aborted";
       alert =
         "<p>"
@@ -216,7 +216,7 @@ scx::Condition TestBuilderControlStream::send(http::MessageStream& msg)
 
   // Remove build
   if (req.is_param("remove_build")) {    
-    if (m_module.remove_build(build)) {
+    if (m_module.object()->remove_build(build)) {
       alert_title = "Build removed";
       alert =
         "<p>"
@@ -267,7 +267,7 @@ scx::Condition TestBuilderControlStream::send(http::MessageStream& msg)
   
 
   // Get a dump of the current build information
-  scx::Arg* buildstats = m_module.arg_lookup("buildstats");
+  scx::ScriptRef* buildstats = m_module.object()->get_buildstats();
   
   // Do side section
   write("<div id='side'>\n");
@@ -300,11 +300,13 @@ scx::Condition TestBuilderControlStream::send(http::MessageStream& msg)
           "<ul>\n");
     
     // Get profiles from module
-    scx::Arg* a1 = m_module.arg_lookup("profiles");
-    scx::ArgList* l1 = dynamic_cast<scx::ArgList*>(a1);
+    scx::ScriptRef* a1 = m_module.object()->get_profiles();
+    scx::ScriptList* l1 = dynamic_cast<scx::ScriptList*>(a1->object());
     for (int i1=0; i1<l1->size(); ++i1) {
-      std::string cur_profile = l1->get(i1)->get_string();
-      write(html_navlink(cur_profile,profile,base + "?profile=" + cur_profile));
+      std::string cur_profile = l1->get(i1)->object()->get_string();
+      write(html_navlink(cur_profile,
+			 profile,
+			 base + "?profile=" + cur_profile));
     }
     delete a1;
     write("</ul>\n");
@@ -331,12 +333,13 @@ scx::Condition TestBuilderControlStream::send(http::MessageStream& msg)
     write("<h2>Builds</h2>\n"
           "<ul>\n");
     
-    l1 = dynamic_cast<scx::ArgList*>(buildstats);
+    l1 = dynamic_cast<scx::ScriptList*>(buildstats->object());
     for (int i1=0; i1<l1->size(); ++i1) {
-      const scx::Arg* a2 = l1->get(i1);
-      const scx::ArgList* l2 = dynamic_cast<const scx::ArgList*>(a2);
-      std::string cur_build = l2->get(1)->get_string();
-      std::string state = l2->get(2)->get_string();
+      const scx::ScriptRef* a2 = l1->get(i1);
+      const scx::ScriptList* l2 = 
+	dynamic_cast<const scx::ScriptList*>(a2->object());
+      std::string cur_build = l2->get(1)->object()->get_string();
+      std::string state = l2->get(2)->object()->get_string();
       write(html_navlink(cur_build,build,base + "?build=" + cur_build,state));
     }        
     write("</ul>\n");
@@ -360,7 +363,7 @@ scx::Condition TestBuilderControlStream::send(http::MessageStream& msg)
     // Display profile
     if (!profile.empty()) {
 
-      BuildProfile* profile_obj = m_module.lookup_profile(profile);
+      BuildProfile* profile_obj = m_module.object()->lookup_profile(profile);
       if (profile_obj) {
       
         write("<div class='box'>\n"
@@ -376,13 +379,14 @@ scx::Condition TestBuilderControlStream::send(http::MessageStream& msg)
               "<td>\n"
               "<select name='source_method'>\n");
         
-        scx::Arg* a1 = m_module.arg_lookup("source_methods");
-        scx::ArgList* l1 = dynamic_cast<scx::ArgList*>(a1);
+        scx::ScriptRef* a1 = m_module.object()->get_source_methods();
+        scx::ScriptList* l1 = dynamic_cast<scx::ScriptList*>(a1->object());
         for (int i1=0; i1<l1->size(); ++i1) {
-          const scx::Arg* a2 = l1->get(i1);
-          const scx::ArgList* l2 = dynamic_cast<const scx::ArgList*>(a2);
-          std::string name = l2->get(0)->get_string();
-          std::string desc = l2->get(1)->get_string();
+          const scx::ScriptRef* a2 = l1->get(i1);
+          const scx::ScriptList* l2 = 
+	    dynamic_cast<const scx::ScriptList*>(a2->object());
+          std::string name = l2->get(0)->object()->get_string();
+          std::string desc = l2->get(1)->object()->get_string();
           write(html_option(desc,name,source_method));
         }
         delete a1;
@@ -429,28 +433,30 @@ scx::Condition TestBuilderControlStream::send(http::MessageStream& msg)
     }
     
     // Builds
-    scx::ArgList* l1 = dynamic_cast<scx::ArgList*>(buildstats);
+    scx::ScriptList* l1 = 
+      dynamic_cast<scx::ScriptList*>(buildstats->object());
     int disp = 0;
     
     for (int i1=0; i1<l1->size(); ++i1) {
       
-      const scx::Arg* a2 = l1->get(i1);
-      const scx::ArgList* l2 = dynamic_cast<const scx::ArgList*>(a2);
+      const scx::ScriptRef* a2 = l1->get(i1);
+      const scx::ScriptList* l2 = 
+	dynamic_cast<const scx::ScriptList*>(a2->object());
       
-      std::string build_profile = l2->get(0)->get_string();
+      std::string build_profile = l2->get(0)->object()->get_string();
       if (!profile.empty() && profile != build_profile) {
         // If there is a profile selected, then only display builds
         // for this profile
         continue;
       }
       
-      std::string id = l2->get(1)->get_string();
+      std::string id = l2->get(1)->object()->get_string();
       if (!build.empty() && build != id) {
         // If there is a build selected, then only display this build
         continue;
       }
       
-      std::string state = l2->get(2)->get_string();
+      std::string state = l2->get(2)->object()->get_string();
       if (!showbuilds.empty() && showbuilds != state) {
         // If there is a build selected, then only display this build
         continue;
@@ -471,17 +477,19 @@ scx::Condition TestBuilderControlStream::send(http::MessageStream& msg)
       write("<table cellspacing='0px' class='steps'>\n"
             "<tr> <th>Step</th> <th>Start time</th> "
             "<th>Duration</th> <th>State</th> <th>Logs</th> </tr>\n");
-      const scx::Arg* a3 = l2->get(3);
-      const scx::ArgList* l3 = dynamic_cast<const scx::ArgList*>(a3);
+      const scx::ScriptRef* a3 = l2->get(3);
+      const scx::ScriptList* l3 = 
+	dynamic_cast<const scx::ScriptList*>(a3->object());
       for (int i3=0; i3<l3->size(); ++i3) {
         
-        const scx::Arg* a4 = l3->get(i3);
-        const scx::ArgList* l4 = dynamic_cast<const scx::ArgList*>(a4);
+        const scx::ScriptRef* a4 = l3->get(i3);
+        const scx::ScriptList* l4 = 
+	  dynamic_cast<const scx::ScriptList*>(a4->object());
         
-        std::string step_name = l4->get(0)->get_string();
-        std::string step_start = l4->get(1)->get_string();
-        std::string step_duration = l4->get(2)->get_string();
-        std::string step_state = l4->get(3)->get_string();
+        std::string step_name = l4->get(0)->object()->get_string();
+        std::string step_start = l4->get(1)->object()->get_string();
+        std::string step_duration = l4->get(2)->object()->get_string();
+        std::string step_state = l4->get(3)->object()->get_string();
         std::string log_link;
         if (step_state != "UNSTARTED") {
           log_link =

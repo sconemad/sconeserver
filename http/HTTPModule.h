@@ -2,7 +2,7 @@
 
 HTTP (HyperText Transfer Protocol) Module
 
-Copyright (c) 2000-2004 Andrew Wedgbury <wedge@sconemad.com>
+Copyright (c) 2000-2011 Andrew Wedgbury <wedge@sconemad.com>
 
 This program is free software; you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -29,14 +29,16 @@ Free Software Foundation, Inc.,
 #include "sconex/Module.h"
 #include "sconex/Descriptor.h"
 #include "sconex/Uri.h"
+#include "sconex/Stream.h"
 
 namespace http {
 
-class HostMapper;
-class HTTPModule;
-  
 //=============================================================================
-class HTTP_API HTTPModule : public scx::Module {
+// HTTPModule - Implements a HyperText Transfer Protocol client and server.
+//
+class HTTP_API HTTPModule : public scx::Module,
+                            public scx::Provider<scx::Stream>,
+                            public scx::Provider<scx::ScriptObject> {
 public:
 
   HTTPModule();
@@ -46,11 +48,6 @@ public:
 
   virtual int init();
 
-  virtual bool connect(
-    scx::Descriptor* endpoint,
-    scx::ArgList* args
-  );
-
   HostMapper& get_hosts();
   AuthRealmManager& get_realms();
   SessionManager& get_sessions();
@@ -59,16 +56,34 @@ public:
 
   const scx::Uri& get_client_proxy() const;
 
-  virtual scx::Arg* arg_lookup(const std::string& name);
-  virtual scx::Arg* arg_method(const scx::Auth& auth,const std::string& name,scx::Arg* args);
+  // ScriptObject methods
+  virtual scx::ScriptRef* script_op(const scx::ScriptAuth& auth,
+				    const scx::ScriptRef& ref,
+				    const scx::ScriptOp& op,
+				    const scx::ScriptRef* right=0);
+
+  virtual scx::ScriptRef* script_method(const scx::ScriptAuth& auth,
+					const scx::ScriptRef& ref,
+					const std::string& name,
+					const scx::ScriptRef* args);
+
+  // Provider<Stream> method
+  virtual void provide(const std::string& type,
+		       const scx::ScriptRef* args,
+		       scx::Stream*& object);
+
+  // Provider<ScriptObject> method
+  virtual void provide(const std::string& type,
+		       const scx::ScriptRef* args,
+		       scx::ScriptObject*& object);
   
 protected:
 
 private:
 
-  HostMapper m_hosts;
-  AuthRealmManager m_realms;
-  SessionManager m_sessions;
+  HostMapper::Ref m_hosts;
+  AuthRealmManager::Ref m_realms;
+  SessionManager::Ref m_sessions;
 
   unsigned int m_idle_timeout;
   scx::Uri m_client_proxy;

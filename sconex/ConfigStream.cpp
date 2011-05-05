@@ -2,7 +2,7 @@
 
 Sconex Configuration stream
 
-Copyright (c) 2000-2005 Andrew Wedgbury <wedge@sconemad.com>
+Copyright (c) 2000-2011 Andrew Wedgbury <wedge@sconemad.com>
 
 This program is free software; you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -20,30 +20,31 @@ Free Software Foundation, Inc.,
 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA */
 
 #include "sconex/ConfigStream.h"
+#include "sconex/ScriptTypes.h"
 #include "sconex/sconex.h"
-#include "sconex/ArgProc.h"
 #include "sconex/utils.h"
 
 namespace scx {
 
 //=========================================================================
 ConfigStream::ConfigStream(
-  ModuleRef root_ref,
+  ScriptRef* ctx,
   bool shutdown_on_exit
 )
   : LineBuffer("config"),
-    m_proc(Auth::Admin),
-    m_shutdown_on_exit(shutdown_on_exit)
+    m_proc(ScriptAuth::Admin),
+    m_ctx(ctx),
+    m_shutdown_on_exit(shutdown_on_exit),
+    m_output_mode(Formatted)
 {
-  m_argmod = new ArgModule(root_ref);
-  m_proc.set_ctx(m_argmod);
+  m_proc.set_ctx(m_ctx);
   enable_event(Stream::Readable,true);
 }
 
 //=========================================================================
 ConfigStream::~ConfigStream()
 {
-  delete m_argmod;
+  delete m_ctx;
 }
 
 //=========================================================================
@@ -71,13 +72,37 @@ Condition ConfigStream::event(Stream::Event e)
 	if (buffer == "exit") {
 	  return Close;
 	}
+
+	if (buffer == "output none") {
+	  m_output_mode = None;
+	  continue;
+	}
+	if (buffer == "output formatted") {
+	  m_output_mode = Formatted;
+	  continue;
+	}
+	if (buffer == "output serialized") {
+	  m_output_mode = Serialized;
+	  continue;
+	}
 	
-	Arg* result = 0;
+	ScriptRef* result = 0;
 	try {
 	  result = m_proc.evaluate(buffer);
-	  write_arg(result);
-	  write("\n");
+	  switch (m_output_mode) {
+	  case None: 
+	    break;
+	  case Formatted: 
+	    write_object(result); 
+	    write("\n"); 
+	    break;
+	  case Serialized: 
+	    if (result) result->object()->serialize(*this); 
+	    write("\n"); 
+	    break;
+	  }
 	} catch (...) {
+	  write("EXCEPTION!\n");
 	}
 	delete result;
       }
@@ -94,32 +119,34 @@ Condition ConfigStream::event(Stream::Event e)
 #define WRITE_INDENT(in) {for (int i=0; i<(in); ++i) write("  ");}
 
 //=============================================================================
-bool ConfigStream::write_arg(const Arg* arg, int indent)
+bool ConfigStream::write_object(const ScriptRef* ref, int indent)
 {
-  if (arg == 0) {
+  if (ref == 0) {
     write("NULL");
     return true;
   }
+  const ScriptMethodRef* mref = dynamic_cast<const ScriptMethodRef*>(ref);
 
-  const std::type_info& ti = typeid(*arg);
+  const ScriptObject* object = ref->object();
+  const std::type_info& ti = typeid(*object);
   
-  write("(" + type_name(ti) + ") ");
+  write("(" + type_name(ti) + (mref ? " method":"") + ") ");
 
-  if (typeid(ArgList) == ti) {
-    const ArgList* l = dynamic_cast<const ArgList*>(arg);
+  if (typeid(ScriptList) == ti) {
+    const ScriptList* l = dynamic_cast<const ScriptList*>(object);
     write("[\n");
     int max = l->size();
     for (int i=0; i<max; ++i) {
       WRITE_INDENT(indent+1);
-      write_arg(l->get(i),indent+1);
+      write_object(l->get(i),indent+1);
       if (i != max-1) write(",");
       write("\n");
     }
     WRITE_INDENT(indent);
     write("]");
 
-  } else if (typeid(ArgMap) == ti) {
-    const ArgMap* m = dynamic_cast<const ArgMap*>(arg);
+  } else if (typeid(ScriptMap) == ti) {
+    const ScriptMap* m = dynamic_cast<const ScriptMap*>(object);
     write("{\n");
     std::vector<std::string> keys;
     m->keys(keys);
@@ -129,7 +156,7 @@ bool ConfigStream::write_arg(const Arg* arg, int indent)
       WRITE_INDENT(indent+1);
       std::string key = *it;
       write("\"" + key + "\": ");
-      write_arg(m->lookup(key),indent+1);
+      write_object(m->lookup(key),indent+1);
       if (it != keys.end()-1) write(",");
       write("\n");
     }
@@ -137,7 +164,15 @@ bool ConfigStream::write_arg(const Arg* arg, int indent)
     write("}");
 
   } else {
-    write(arg->get_string());
+    write(object->get_string());
+  }
+
+  if (mref) {
+    write("::" + mref->method());
+  }
+
+  if (ref->is_const()) {
+    write(" [const]");
   }
 
   return true;

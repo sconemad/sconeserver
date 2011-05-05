@@ -1,8 +1,8 @@
 /* SconeServer (http://www.sconemad.com)
 
-SSL Channel (wraps an OpenSSL context)
+SSL Channel
 
-Copyright (c) 2000-2004 Andrew Wedgbury <wedge@sconemad.com>
+Copyright (c) 2000-2011 Andrew Wedgbury <wedge@sconemad.com>
 
 This program is free software; you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -24,31 +24,41 @@ Free Software Foundation, Inc.,
 
 #include "sconex/Stream.h"
 #include "sconex/Module.h"
-#include "sconex/ArgObject.h"
+#include "sconex/ScriptBase.h"
 
 #include <openssl/crypto.h>
 #include <openssl/ssl.h>
 
 class SSLModule;
 
-//#########################################################################
-class SSLChannel : public scx::ArgObjectInterface {
-
+//=========================================================================
+// SSLChannel - A wrapper for an OpenSSL context
+//
+class SSLChannel : public scx::ScriptObject {
 public:
 
-  SSLChannel(
-    SSLModule& mod,
-    const std::string& name,
-    bool client
-  );
+  SSLChannel(SSLModule& mod,
+	     const std::string& name,
+	     bool client);
 
   ~SSLChannel();
 
   SSL* new_ssl();
   
-  virtual std::string name() const;
-  virtual scx::Arg* arg_lookup(const std::string& name);
-  virtual scx::Arg* arg_method(const scx::Auth& auth,const std::string& name,scx::Arg* args);
+  // ScriptObject methods
+  virtual std::string get_string() const;
+
+  virtual scx::ScriptRef* script_op(const scx::ScriptAuth& auth,
+				    const scx::ScriptRef& ref,
+				    const scx::ScriptOp& op,
+				    const scx::ScriptRef* right=0);
+
+  virtual scx::ScriptRef* script_method(const scx::ScriptAuth& auth,
+					const scx::ScriptRef& ref,
+					const std::string& name,
+					const scx::ScriptRef* args);
+
+  typedef scx::ScriptRefTo<SSLChannel> Ref;
 
 protected:
 

@@ -23,6 +23,7 @@ Free Software Foundation, Inc.,
 #include "sconex/Module.h"
 #include "sconex/FileStat.h"
 #include "sconex/FilePath.h"
+#include "sconex/ScriptBase.h"
 
 #include <dlfcn.h>
 #include <sys/types.h>
@@ -76,9 +77,9 @@ void ModuleLoaderDLL::load_module()
         if (m_parent) {
 	  Module* mod = m_parent;
 	  FilePath parent_path;
-	  while (mod && mod->m_parent) {
+	  while (mod && mod->m_parent_module) {
 	    parent_path = FilePath(mod->name()) + parent_path;
-	    mod = mod->m_parent;
+	    mod = mod->m_parent_module;
 	  }
 	  path = get_path() +
 	         FilePath(parent_path) +
@@ -88,7 +89,9 @@ void ModuleLoaderDLL::load_module()
 	}
         break;
 
-      default: return; // Can't find it anywhere
+      default: // Can't find it anywhere
+	log("Unable to locate module '"+m_name+"'");
+	return; 
     }
   } while (!FileStat(path).is_file());
 
@@ -104,7 +107,7 @@ void ModuleLoaderDLL::load_module()
     return;
   }
 
-  m_module = proc();
+  m_module = new Module::Ref(proc());
 }
 
 //=============================================================================
@@ -113,12 +116,12 @@ void ModuleLoaderDLL::unload_module()
   MutexLocker locker(m_mutex);
   
   if (m_module) {
-    DEBUG_ASSERT(m_module->get_num_refs() == 0,
-                "unload_module() Deleting referenced module");
+    DEBUG_ASSERT(m_module->object()->num_refs() == 1,
+		 "unload_module() Deleting referenced module");
 
-    m_module->close();
+    m_module->object()->close();
     delete m_module;
-    m_module=0;
+    m_module = 0;
   }
 
   unload_dll();

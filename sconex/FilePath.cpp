@@ -24,6 +24,7 @@ Free Software Foundation, Inc.,
 #include "sconex/FileStat.h"
 #include "sconex/File.h"
 #include "sconex/User.h"
+#include "sconex/ScriptTypes.h"
 namespace scx {
 
 const char* path_sep = "/";
@@ -235,6 +236,85 @@ bool FilePath::move(const FilePath& source, const FilePath& dest)
 
   DEBUG_LOG_ERRNO("FilePath::move failed");
   return false;
+}
+
+
+// ### ScriptFile ###
+
+//=========================================================================
+ScriptFile::ScriptFile(const scx::FilePath& path, const std::string& filename)
+  : m_path(path),
+    m_filename(filename)
+{
+
+}
+
+//=========================================================================
+ScriptFile::ScriptFile(const ScriptFile& c)
+  : m_path(c.m_path),
+    m_filename(c.m_filename)
+{
+
+}
+
+//=========================================================================
+ScriptFile::~ScriptFile()
+{
+
+}
+
+//=========================================================================
+scx::ScriptObject* ScriptFile::new_copy() const
+{
+  return new ScriptFile(*this);
+}
+
+//=========================================================================
+std::string ScriptFile::get_string() const
+{
+  return m_filename;
+}
+
+//=========================================================================
+int ScriptFile::get_int() const
+{
+  return !m_filename.empty();
+}
+
+//=========================================================================
+ScriptRef* ScriptFile::script_op(const ScriptAuth& auth,
+				 const ScriptRef& ref,
+				 const ScriptOp& op,
+				 const ScriptRef* right)
+{
+  if (op.type() == ScriptOp::Lookup) {
+    const std::string name = right->object()->get_string();
+
+    if (name == "filename") 
+      return ScriptString::new_ref(m_filename);
+    if (name == "exists")
+      return ScriptInt::new_ref(FileStat(m_path).exists());
+    if (name == "is_file")
+      return ScriptInt::new_ref(FileStat(m_path).is_file());
+    if (name == "is_dir")
+      return ScriptInt::new_ref(FileStat(m_path).is_dir());
+    if (name == "size") 
+      return ScriptInt::new_ref(FileStat(m_path).size());
+  }
+
+  return ScriptObject::script_op(auth,ref,op,right);
+}
+
+//=========================================================================
+const FilePath& ScriptFile::get_path() const
+{
+  return m_path;
+}
+
+//=========================================================================
+const std::string& ScriptFile::get_filename() const
+{
+  return m_filename;
 }
 
 

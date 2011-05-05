@@ -20,14 +20,18 @@ Free Software Foundation, Inc.,
 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA */
 
 #include "sconex/Logger.h"
+#include "sconex/File.h"
+#include "sconex/Mutex.h"
 #include "sconex/Date.h"
 namespace scx {
 
 //=============================================================================
 Logger::Logger(const std::string& name)
+  : m_file(new File()),
+    m_mutex(new Mutex())
 {
   DEBUG_COUNT_CONSTRUCTOR(Logger);
-  if (m_file.open(name.c_str(),File::Write | File::Append | File::Create) !=
+  if (m_file->open(name.c_str(),File::Write | File::Append | File::Create) !=
       Ok) {
     std::cerr << "Unable to open log file '" << name
               << "' - will log to stdout\n";
@@ -40,7 +44,9 @@ Logger::Logger(const std::string& name)
 //=============================================================================
 Logger::~Logger()
 {
-  m_file.close();
+  m_file->close();
+  delete m_file;
+  delete m_mutex;
   DEBUG_COUNT_DESTRUCTOR(Logger);
 }
 
@@ -50,6 +56,8 @@ void Logger::log(
   Level level
 )
 {
+  Date now = Date::now(true);
+
   int na=0;
   std::string lcode;
   switch (level) {
@@ -58,16 +66,20 @@ void Logger::log(
     case Logger::Info:     lcode = "i"; break;
     case Logger::Debug:    lcode = "d"; break;
   }
-  std::string entry = Date::now(true).code() + " " +
-    lcode + " " + message + "\n";
+  std::ostringstream oss;
+  oss << now.code() << " " 
+      << std::setfill('0') << std::setw(6) << now.microsecond() << " "
+      << lcode << " " 
+      << message << "\n";
+  std::string str = oss.str();
 
-  m_mutex.lock();
-  if (m_file.is_open()) {
-    m_file.write(entry.c_str(),entry.size(),na);
+  m_mutex->lock();
+  if (m_file->is_open()) {
+    m_file->write(str.c_str(),str.size(),na);
   } else {
-    std::cout << entry;
+    std::cout << str;
   }
-  m_mutex.unlock();
+  m_mutex->unlock();
 }
 
 };

@@ -50,7 +50,7 @@ public:
   void set_type(Type type);
   Type get_type();
 
-  scx::Arg* new_arg();
+  scx::ScriptObject* new_obj();
   
 private:
 

@@ -20,7 +20,18 @@ Free Software Foundation, Inc.,
 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA */
 
 #include "sconex/Stream.h"
+#include "sconex/Module.h"
 namespace scx {
+
+ProviderScheme<Stream>* Stream::s_providers = 0;
+
+//=========================================================================
+Stream* Stream::create_new(const std::string& type,
+			   const ScriptRef* args)
+{
+  init();
+  return s_providers->provide(type,args);
+}
 
 //=============================================================================
 Stream::Stream(const std::string& stream_name)
@@ -35,11 +46,12 @@ Stream::Stream(const std::string& stream_name)
 //=============================================================================
 Stream::~Stream()
 {
-  std::list<ModuleRef*>::iterator it = m_module_refs.begin();
-  while (it != m_module_refs.end()) {
-    ModuleRef* r = (*it);
+  // Release the module refs
+  for (ModuleRefList::iterator it = m_module_refs.begin();
+       it != m_module_refs.end();
+       ++it) {
+    ScriptRef* r = (*it);
     delete r;
-    ++it;
   }
 
   DEBUG_COUNT_DESTRUCTOR(Stream);
@@ -118,9 +130,9 @@ void Stream::set_chain(Stream* chain)
 }
 
 //=============================================================================
-void Stream::add_module_ref(ModuleRef ref)
+void Stream::add_module_ref(Module* module)
 {
-  m_module_refs.push_back(new ModuleRef(ref));
+  m_module_refs.push_back(new ScriptRef(module));
 }
 
 //=============================================================================
@@ -146,6 +158,22 @@ std::string Stream::event_status() const
   if (m_events & (1<<SendReadable)) es[4]='R';
   if (m_events & (1<<SendWriteable)) es[5]='W';
   return es;
+}
+
+//=============================================================================
+void Stream::register_stream(const std::string& type,
+			     Provider<Stream>* factory)
+{
+  init();
+  s_providers->register_provider(type,factory);
+}
+
+//=============================================================================
+void Stream::unregister_stream(const std::string& type,
+			       Provider<Stream>* factory)
+{
+  init();
+  s_providers->unregister_provider(type,factory);
 }
 
 //=============================================================================
@@ -182,6 +210,12 @@ Descriptor& Stream::endpoint()
 {
   DEBUG_ASSERT(0 != m_endpoint,"endpoint() No endpoint set");
   return *m_endpoint;
+}
+
+//=============================================================================
+void Stream::init()
+{
+  if (!s_providers) s_providers = new ProviderScheme<Stream>();
 }
 
 };

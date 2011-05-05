@@ -22,10 +22,9 @@ Free Software Foundation, Inc.,
 #ifndef testbuilderControlStream_h
 #define testbuilderControlStream_h
 
+#include "TestBuilderModule.h"
 #include "sconex/Stream.h"
 #include "http/ResponseStream.h"
-
-class TestBuilderModule;
 
 //=========================================================================
 class TestBuilderControlStream : public http::ResponseStream {
@@ -42,7 +41,7 @@ protected:
 
 private:
   
-  TestBuilderModule& m_module;
+  TestBuilderModule::Ref m_module;
 
 };
 

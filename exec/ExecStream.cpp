@@ -34,12 +34,9 @@ Free Software Foundation, Inc.,
 #include "sconex/Process.h"
 #include "sconex/User.h"
 
-
 //=========================================================================
-ExecStream::ExecStream(
-  ExecModule& module,
-  scx::ArgList* args
-) 
+ExecStream::ExecStream(ExecModule& module,
+		       scx::ScriptList* args) 
   : scx::Stream("exec"),
     m_module(module),
     m_args(args),
@@ -86,7 +83,7 @@ bool ExecStream::spawn_process()
     const scx::Uri& uri = req.get_uri();
 
     delete m_args;
-    m_args = new scx::ArgList();
+    m_args = new scx::ScriptList();
 
     prog = req.get_path().path();
     m_process = new scx::Process(prog);
@@ -97,7 +94,7 @@ bool ExecStream::spawn_process()
       m_process->set_dir(wd);
     }
       
-    m_args->give(new scx::ArgString(uri.get_string()));
+    m_args->give(scx::ScriptString::new_ref(uri.get_string()));
 
     msg->get_response().set_header("Content-Type","text/html");
     msg->get_response().set_header("Connection","close");
@@ -152,14 +149,14 @@ bool ExecStream::spawn_process()
     
   } else if (m_args->size() > 0) {
 
-    prog = m_args->get(0)->get_string();
+    prog = m_args->get(0)->object()->get_string();
     m_process = new scx::Process(prog);
     m_module.log("Spawning process '" + prog + "'");
   }
 
   // Set arguments
   for (int i=0; i<m_args->size(); ++i) {
-    m_process->add_arg( m_args->get(i)->get_string() );
+    m_process->add_arg( m_args->get(i)->object()->get_string() );
   }
 
   m_process->set_user(m_module.get_exec_user());
@@ -178,7 +175,7 @@ bool ExecStream::spawn_process()
   // Add stream to interpret and pass through HTTP headers
   if (msg) {
     CGIResponseStream* crs = new CGIResponseStream(msg);
-    crs->add_module_ref(m_module.ref());
+    crs->add_module_ref(&m_module);
     m_process->add_stream(crs);
   }
   
@@ -214,7 +211,7 @@ std::string ExecStream::stream_status() const
   if (m_launched < 0) oss << "FAILED "; 
 
   if (m_args->size() > 0) {
-    oss << m_args->get(0)->get_string();
+    oss << m_args->get(0)->object()->get_string();
   } else {
     oss << "(no exe)";
   }

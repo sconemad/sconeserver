@@ -2,7 +2,7 @@
 
 File MIME type lookup module
 
-Copyright (c) 2000-2005 Andrew Wedgbury <wedge@sconemad.com>
+Copyright (c) 2000-2011 Andrew Wedgbury <wedge@sconemad.com>
 
 This program is free software; you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -24,19 +24,26 @@ Free Software Foundation, Inc.,
 
 #include "sconex/Module.h"
 
-//#########################################################################
+//=============================================================================
+// MIMEModule - A module which looks up the mimetype for a file
+//
 class MIMEModule : public scx::Module {
-
 public:
 
   MIMEModule();
   virtual ~MIMEModule();
 
   virtual std::string info() const;
-  
-  virtual scx::Arg* arg_lookup(const std::string& name);
-  virtual scx::Arg* arg_method(const scx::Auth& auth,const std::string& name,scx::Arg* args);
 
+  virtual scx::ScriptRef* script_op(const scx::ScriptAuth& auth,
+				    const scx::ScriptRef& ref,
+				    const scx::ScriptOp& op,
+				    const scx::ScriptRef* right=0);
+
+  virtual scx::ScriptRef* script_method(const scx::ScriptAuth& auth,
+					const scx::ScriptRef& ref,
+					const std::string& name,
+					const scx::ScriptRef* args);
 protected:
   
 private:

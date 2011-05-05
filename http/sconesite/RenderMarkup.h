@@ -1,8 +1,8 @@
 /* SconeServer (http://www.sconemad.com)
 
-Markup renderer
+Context for rendering XML based documents
 
-Copyright (c) 2000-2009 Andrew Wedgbury <wedge@sconemad.com>
+Copyright (c) 2000-2011 Andrew Wedgbury <wedge@sconemad.com>
 
 This program is free software; you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -23,23 +23,24 @@ Free Software Foundation, Inc.,
 #define sconesiteRenderMarkup_h
 
 #include "Context.h"
-#include "XMLDoc.h"
+#include "Article.h"
 #include "http/Request.h"
 #include "http/Response.h"
-#include "sconex/ArgObject.h"
+#include "sconex/ScriptBase.h"
 #include "sconex/Stream.h"
 #include "sconex/Descriptor.h"
 #include "sconex/FilePath.h"
 #include "sconex/FileDir.h"
-#include "sconex/ArgStatement.h"
+#include "sconex/ScriptStatement.h"
 
 class Profile;
-class Article;
 class SconesiteStream;
 
 //=========================================================================
+// RenderMarkupContext - Context for rendering XML based documents
+// May also be used to generate other documents if you're careful!
+//
 class RenderMarkupContext : public Context {
-
 public:
 
   RenderMarkupContext(
@@ -58,34 +59,56 @@ public:
   void set_article(Article* article);
   const Article* get_article() const;
 
-  // XMLDoc interface
-  virtual bool handle_start(const std::string& name, XMLAttrs& attrs, bool empty, void* data);
-  virtual bool handle_end(const std::string& name, XMLAttrs& attrs, void* data);
-  virtual void handle_process(const std::string& name, const char* data);
+  // Context methods
+  virtual bool handle_start(const std::string& name, 
+			    XMLAttrs& attrs, 
+			    bool empty, 
+			    void* data);
+
+  virtual bool handle_end(const std::string& name,
+			  XMLAttrs& attrs,
+			  void* data);
+
+  virtual void handle_process(const std::string& name,
+			      const char* data);
+
   virtual void handle_text(const char* text);
+
   virtual void handle_comment(const char* text);
+
   virtual void handle_error(const std::string& msg);
 
-  // ArgObject interface
-  virtual scx::Arg* arg_resolve(const std::string& name);
-  virtual scx::Arg* arg_lookup(const std::string& name);
-  virtual scx::Arg* arg_method(const scx::Auth& auth,const std::string& name,scx::Arg* args);
-  
+
+  // ScriptObject methods
+
+  virtual scx::ScriptRef* script_op(const scx::ScriptAuth& auth,
+				    const scx::ScriptRef& ref,
+				    const scx::ScriptOp& op,
+				    const scx::ScriptRef* right=0);
+
+  virtual scx::ScriptRef* script_method(const scx::ScriptAuth& auth,
+					const scx::ScriptRef& ref,
+					const std::string& name,
+					const scx::ScriptRef* args);
+
+  typedef scx::ScriptRefTo<RenderMarkupContext> Ref;
+
 protected:
 
-  void log(const std::string message,scx::Logger::Level level = scx::Logger::Info);
+  void log(const std::string message,
+	   scx::Logger::Level level = scx::Logger::Info);
   
   Profile& m_profile;
   SconesiteStream& m_stream;
   scx::Descriptor& m_output;
-  http::Request& m_request;
-  http::Response& m_response;
+  http::Request::Ref* m_request;
+  http::Response::Ref* m_response;
 
-  scx::ArgMap m_scx_env;
-  typedef std::vector<scx::ArgStatementGroup*> ArgStatementGroupList;
-  ArgStatementGroupList m_old_groups;
+  scx::ScriptMap m_scx_env;
+  typedef std::vector<scx::ScriptStatement::Ref*> StatementGroupList;
+  StatementGroupList m_old_groups;
 
-  Article* m_article;
+  Article::Ref* m_article;
 
   bool m_auto_number;
 

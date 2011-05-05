@@ -28,6 +28,7 @@ Free Software Foundation, Inc.,
 #include "sconex/Date.h"
 #include "sconex/StreamTransfer.h"
 #include "sconex/Kernel.h"
+#include "sconex/File.h"
 
 namespace http {
 
