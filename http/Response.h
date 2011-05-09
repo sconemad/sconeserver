@@ -22,11 +22,11 @@ Free Software Foundation, Inc.,
 #ifndef httpResponse_h
 #define httpResponse_h
 
-#include "http/http.h"
-#include "http/Status.h"
-#include "sconex/ScriptBase.h"
-#include "sconex/VersionTag.h"
-#include "sconex/MimeHeader.h"
+#include <http/http.h>
+#include <http/Status.h>
+#include <sconex/ScriptBase.h>
+#include <sconex/VersionTag.h>
+#include <sconex/MimeHeader.h>
 namespace http {
 
 //=============================================================================

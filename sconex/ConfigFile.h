@@ -24,8 +24,8 @@ Free Software Foundation, Inc.,
 #ifndef scxConfigFile_h
 #define scxConfigFile_h
 
-#include "sconex/sconex.h"
-#include "sconex/FilePath.h"
+#include <sconex/sconex.h>
+#include <sconex/FilePath.h>
 namespace scx {
 
 class ScriptRef;

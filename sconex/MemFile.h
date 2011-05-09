@@ -22,9 +22,9 @@ Free Software Foundation, Inc.,
 #ifndef scxMemFile_h
 #define scxMemFile_h
 
-#include "sconex/sconex.h"
-#include "sconex/Descriptor.h"
-#include "sconex/Buffer.h"
+#include <sconex/sconex.h>
+#include <sconex/Descriptor.h>
+#include <sconex/Buffer.h>
 
 namespace scx {
 

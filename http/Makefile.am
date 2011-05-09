@@ -1,7 +1,7 @@
 # SconeServer (http://www.sconemad.com)
 # automake file for http module
 
-SUBDIRS = dirindex getfile errorpage sconesite
+SUBDIRS = dirindex getfile errorpage
 
 AM_CPPFLAGS = -I$(top_srcdir)
 
@@ -23,7 +23,7 @@ ResponseStream.cpp \
 Session.cpp \
 Status.cpp
 
-httpincludedir = $(includedir)/http
+httpincludedir = $(includedir)/sconex/http
 
 httpinclude_HEADERS = \
 AuthRealm.h \

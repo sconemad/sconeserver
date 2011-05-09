@@ -219,7 +219,7 @@ Free Software Foundation, Inc.,
 #endif
 
 // sconex Debugging
-#include "sconex/Debug.h"
+#include <sconex/Debug.h>
 
 // Standard character constants
 #define CRLF "\r\n"

@@ -22,9 +22,9 @@ Free Software Foundation, Inc.,
 #ifndef tftpStream_h
 #define tftpStream_h
 
-#include "sconex/Stream.h"
-#include "sconex/File.h"
-#include "sconex/Logger.h"
+#include <sconex/Stream.h>
+#include <sconex/File.h>
+#include <sconex/Logger.h>
 
 class TFTPModule;
 

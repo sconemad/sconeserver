@@ -22,8 +22,8 @@ Free Software Foundation, Inc.,
 #ifndef scxServerModule_h
 #define scxServerModule_h
 
-#include "sconex/Module.h"
-#include "sconex/Stream.h"
+#include <sconex/Module.h>
+#include <sconex/Stream.h>
 #include "ConnectionChain.h"
 
 

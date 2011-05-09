@@ -22,7 +22,7 @@ Free Software Foundation, Inc.,
 #ifndef scxIOBase_h
 #define scxIOBase_h
 
-#include "sconex/sconex.h"
+#include <sconex/sconex.h>
 namespace scx {
 
 enum Condition { Ok, Wait, End, Close, Error };

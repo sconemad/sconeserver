@@ -22,8 +22,8 @@ Free Software Foundation, Inc.,
 #ifndef ServerListener_h
 #define ServerListener_h
 
-#include "sconex/Module.h"
-#include "sconex/Stream.h"
+#include <sconex/Module.h>
+#include <sconex/Stream.h>
 
 class ServerModule;
 

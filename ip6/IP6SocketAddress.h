@@ -22,7 +22,7 @@ Free Software Foundation, Inc.,
 #ifndef ip6SocketAddress_h
 #define ip6SocketAddress_h
 
-#include "sconex/SocketAddress.h"
+#include <sconex/SocketAddress.h>
 
 //=============================================================================
 class IP6SocketAddress : public scx::SocketAddress {

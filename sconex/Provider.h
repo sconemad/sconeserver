@@ -22,9 +22,9 @@ Free Software Foundation, Inc.,
 #ifndef scxProvider_h
 #define scxProvider_h
 
-#include "sconex/sconex.h"
-#include "sconex/utils.h"
-#include "sconex/ScriptBase.h"
+#include <sconex/sconex.h>
+#include <sconex/utils.h>
+#include <sconex/ScriptBase.h>
 
 // Uncomment to enable debug info
 //#define Provider_DEBUG_LOG(m) DEBUG_LOG(type_name(typeid(*this))+"::"+m)

@@ -20,9 +20,9 @@ Free Software Foundation, Inc.,
 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA */
 
 #include "LocalSocketAddress.h"
-#include "sconex/FileStat.h"
-#include "sconex/FilePath.h"
-#include "sconex/ScriptTypes.h"
+#include <sconex/FileStat.h>
+#include <sconex/FilePath.h>
+#include <sconex/ScriptTypes.h>
 
 // Some platforms still use UNIX instead of LOCAL
 #ifndef PF_LOCAL

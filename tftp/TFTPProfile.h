@@ -22,9 +22,9 @@ Free Software Foundation, Inc.,
 #ifndef TFTPProfile_h
 #define TFTPProfile_h
 
-#include "sconex/Stream.h"
-#include "sconex/Module.h"
-#include "sconex/ScriptBase.h"
+#include <sconex/Stream.h>
+#include <sconex/Module.h>
+#include <sconex/ScriptBase.h>
 
 class TFTPModule;
 

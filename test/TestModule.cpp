@@ -21,13 +21,13 @@ Free Software Foundation, Inc.,
 
 #include "TestModule.h"
 
-#include "sconex/ModuleInterface.h"
-#include "sconex/Module.h"
-#include "sconex/ScriptTypes.h"
-#include "sconex/FilePath.h"
-#include "sconex/FileDir.h"
-#include "sconex/FileStat.h"
-#include "sconex/Database.h"
+#include <sconex/ModuleInterface.h>
+#include <sconex/Module.h>
+#include <sconex/ScriptTypes.h>
+#include <sconex/FilePath.h>
+#include <sconex/FileDir.h>
+#include <sconex/FileStat.h>
+#include <sconex/Database.h>
 
 SCONESERVER_MODULE(TestModule);
 

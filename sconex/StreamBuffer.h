@@ -38,9 +38,9 @@ Free Software Foundation, Inc.,
 #ifndef scxStreamBuffer_h
 #define scxStreamBuffer_h
 
-#include "sconex/sconex.h"
-#include "sconex/Stream.h"
-#include "sconex/Buffer.h"
+#include <sconex/sconex.h>
+#include <sconex/Stream.h>
+#include <sconex/Buffer.h>
 namespace scx {
 
 #define StreamBuffer_MAX_BUFFER (10*1048576)

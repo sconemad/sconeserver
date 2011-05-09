@@ -22,7 +22,7 @@ Free Software Foundation, Inc.,
 #ifndef scxUnitTester_h
 #define scxUnitTester_h
 
-#include "sconex/sconex.h"
+#include <sconex/sconex.h>
 
 //===========================================================================
 // Run unit tests for the specified file

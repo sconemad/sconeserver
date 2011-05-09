@@ -23,7 +23,7 @@ Free Software Foundation, Inc.,
 #include "SSLModule.h"
 #include "SSLChannel.h"
 
-#include "sconex/StreamSocket.h"
+#include <sconex/StreamSocket.h>
 
 // Uncomment to enable debug info for the SSL Stream
 //#define SSLStream_DEBUG_LOG(m) DEBUG_LOG(m)

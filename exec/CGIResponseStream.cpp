@@ -21,7 +21,7 @@ Free Software Foundation, Inc.,
 
 #include "CGIResponseStream.h"
 
-#include "http/MessageStream.h"
+#include <http/MessageStream.h>
 
 //=========================================================================
 CGIResponseStream::CGIResponseStream(

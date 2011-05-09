@@ -21,10 +21,10 @@ Free Software Foundation, Inc.,
 
 #include "RSSModule.h"
 
-#include "sconex/ModuleInterface.h"
-#include "sconex/Module.h"
-#include "sconex/Kernel.h"
-#include "sconex/Job.h"
+#include <sconex/ModuleInterface.h>
+#include <sconex/Module.h>
+#include <sconex/Kernel.h>
+#include <sconex/Job.h>
 
 SCONESERVER_MODULE(RSSModule);
 

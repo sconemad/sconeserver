@@ -1,5 +1,4 @@
 # SconeServer (http://www.sconemad.com)
-# automake file for sconesite module
 
 AM_CPPFLAGS = -I$(top_srcdir)
 
@@ -20,7 +19,7 @@ Template.cpp \
 XMLArticleBody.cpp \
 XMLDoc.cpp
 
-sconesiteincludedir = $(includedir)/http/sconesite
+sconesiteincludedir = $(includedir)/sconex/sconesite
 
 sconesiteinclude_HEADERS = \
 SconesiteModule.h \

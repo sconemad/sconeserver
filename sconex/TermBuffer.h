@@ -22,8 +22,8 @@ Free Software Foundation, Inc.,
 #ifndef scxTermBuffer_h
 #define scxTermBuffer_h
 
-#include "sconex/sconex.h"
-#include "sconex/Stream.h"
+#include <sconex/sconex.h>
+#include <sconex/Stream.h>
 
 #include <termios.h>
 

@@ -22,8 +22,8 @@ Free Software Foundation, Inc.,
 #ifndef scxResponse_h
 #define scxResponse_h
 
-#include "sconex/sconex.h"
-#include "sconex/StreamBuffer.h"
+#include <sconex/sconex.h>
+#include <sconex/StreamBuffer.h>
 namespace scx {
 
 //=============================================================================

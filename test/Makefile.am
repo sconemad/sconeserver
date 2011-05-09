@@ -26,6 +26,7 @@ TESTS = runscripttests.sh
 
 
 EXTRA_DIST = \
+runscripttests.sh \
 sconescript/forloop.test \
 sconescript/list.test \
 sconescript/ops.test \
@@ -46,3 +47,6 @@ scripts/http-robust \
 scripts/localterm \
 scripts/stats \
 scripts/testbuild
+
+DISTCLEANFILES = \
+scones.log

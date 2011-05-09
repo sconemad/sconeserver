@@ -24,11 +24,11 @@ Free Software Foundation, Inc.,
 #include "Article.h"
 #include "Context.h"
 
-#include "sconex/Stream.h"
-#include "sconex/Date.h"
-#include "sconex/FileStat.h"
-#include "sconex/utils.h"
-#include "sconex/ScriptTypes.h"
+#include <sconex/Stream.h>
+#include <sconex/Date.h>
+#include <sconex/FileStat.h>
+#include <sconex/utils.h>
+#include <sconex/ScriptTypes.h>
 
 scx::Mutex* XMLDoc::m_clients_mutex = 0;
 

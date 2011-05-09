@@ -22,8 +22,8 @@ Free Software Foundation, Inc.,
 #ifndef sconesiteModule_h
 #define sconesiteModule_h
 
-#include "sconex/Module.h"
-#include "sconex/Job.h"
+#include <sconex/Module.h>
+#include <sconex/Job.h>
 #include "Profile.h"
 
 //=============================================================================

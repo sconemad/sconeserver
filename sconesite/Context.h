@@ -23,7 +23,7 @@ Free Software Foundation, Inc.,
 #define sconesiteContext_h
 
 #include "XMLDoc.h"
-#include "sconex/ScriptBase.h"
+#include <sconex/ScriptBase.h>
 
 //=========================================================================
 // Context - A document processing context

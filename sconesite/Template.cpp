@@ -1,8 +1,8 @@
 /* SconeServer (http://www.sconemad.com)
 
-Sconesite Article Body
+Sconesite Template
 
-Copyright (c) 2000-2011 Andrew Wedgbury <wedge@sconemad.com>
+Copyright (c) 2000-2009 Andrew Wedgbury <wedge@sconemad.com>
 
 This program is free software; you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -19,34 +19,39 @@ along with this program (see the file COPYING); if not, write to the
 Free Software Foundation, Inc.,
 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA */
 
-#ifndef sconesiteArticleBody_h
-#define sconesiteArticleBody_h
 
-#include "sconex/FilePath.h"
-#include "sconex/Date.h"
-#include "sconex/ScriptBase.h"
-#include "ArticleHeading.h"
+#include "Template.h"
+#include "Article.h"
+#include "Profile.h"
+#include "Context.h"
 
-class Context;
+#include <sconex/Stream.h>
+#include <sconex/StreamTransfer.h>
+#include <sconex/Date.h>
+#include <sconex/Kernel.h>
+#include <sconex/FileDir.h>
+
 
 //=========================================================================
-// ArticleBody - Sconesite article body interface
-//
-class ArticleBody : public scx::ScriptObject {
-public:
-  
-  virtual const std::string& get_name() const =0;
-  virtual const scx::FilePath& get_root() const =0;
-  virtual const std::string& get_file() const =0;
-  virtual scx::FilePath get_filepath() const =0;
+Template::Template(
+  Profile& profile,
+  const std::string& name,
+  const scx::FilePath& path
+) : XMLDoc(name,path,name + ".xml"),
+    m_profile(profile),
+    m_headings(1,name,0)
+{
 
-  virtual bool process(Context& context) =0;
-  virtual bool purge(const scx::Date& purge_time) =0;
+}
 
-  virtual const ArticleHeading& get_headings() const =0;
+//=========================================================================
+Template::~Template()
+{
 
-  typedef scx::ScriptRefTo<ArticleBody> Ref;
-  
-};
+}
 
-#endif
+//=========================================================================
+const ArticleHeading& Template::get_headings() const
+{
+  return m_headings;
+}

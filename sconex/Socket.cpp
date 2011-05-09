@@ -19,8 +19,8 @@ along with this program (see the file COPYING); if not, write to the
 Free Software Foundation, Inc.,
 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA */
 
-#include "sconex/Socket.h"
-#include "sconex/Time.h"
+#include <sconex/Socket.h>
+#include <sconex/Time.h>
 namespace scx {
 
 //=============================================================================

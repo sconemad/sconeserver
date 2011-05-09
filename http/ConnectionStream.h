@@ -25,8 +25,8 @@ Free Software Foundation, Inc.,
 #ifndef httpConnectionStream_h
 #define httpConnectionStream_h
 
-#include "http/HTTPModule.h"
-#include "sconex/LineBuffer.h"
+#include <http/HTTPModule.h>
+#include <sconex/LineBuffer.h>
 namespace http {
 
 class Request;

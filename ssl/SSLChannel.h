@@ -22,9 +22,9 @@ Free Software Foundation, Inc.,
 #ifndef SSLChannel_h
 #define SSLChannel_h
 
-#include "sconex/Stream.h"
-#include "sconex/Module.h"
-#include "sconex/ScriptBase.h"
+#include <sconex/Stream.h>
+#include <sconex/Module.h>
+#include <sconex/ScriptBase.h>
 
 #include <openssl/crypto.h>
 #include <openssl/ssl.h>

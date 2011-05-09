@@ -19,20 +19,20 @@ along with this program (see the file COPYING); if not, write to the
 Free Software Foundation, Inc.,
 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA */
 
-#include "http/MessageStream.h"
-#include "http/ConnectionStream.h"
-#include "http/Request.h"
-#include "http/Response.h"
-#include "http/HostMapper.h"
-#include "http/Host.h"
-#include "http/DocRoot.h"
+#include <http/MessageStream.h>
+#include <http/ConnectionStream.h>
+#include <http/Request.h>
+#include <http/Response.h>
+#include <http/HostMapper.h>
+#include <http/Host.h>
+#include <http/DocRoot.h>
 
-#include "sconex/sconex.h"
-#include "sconex/Buffer.h"
-#include "sconex/VersionTag.h"
-#include "sconex/Date.h"
-#include "sconex/StreamSocket.h"
-#include "sconex/utils.h"
+#include <sconex/sconex.h>
+#include <sconex/Buffer.h>
+#include <sconex/VersionTag.h>
+#include <sconex/Date.h>
+#include <sconex/StreamSocket.h>
+#include <sconex/utils.h>
 
 namespace http {
   

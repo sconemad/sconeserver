@@ -1,8 +1,8 @@
 /* SconeServer (http://www.sconemad.com)
 
-Sconesite Template
+Sconesite Article Body
 
-Copyright (c) 2000-2009 Andrew Wedgbury <wedge@sconemad.com>
+Copyright (c) 2000-2011 Andrew Wedgbury <wedge@sconemad.com>
 
 This program is free software; you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -19,38 +19,34 @@ along with this program (see the file COPYING); if not, write to the
 Free Software Foundation, Inc.,
 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA */
 
-#ifndef sconesiteTemplate_h
-#define sconesiteTemplate_h
+#ifndef sconesiteArticleBody_h
+#define sconesiteArticleBody_h
 
-#include "sconex/Stream.h"
-#include "sconex/FilePath.h"
-#include "XMLDoc.h"
+#include <sconex/FilePath.h>
+#include <sconex/Date.h>
+#include <sconex/ScriptBase.h>
+#include "ArticleHeading.h"
 
-class Profile;
+class Context;
 
 //=========================================================================
-class Template : public XMLDoc {
-
+// ArticleBody - Sconesite article body interface
+//
+class ArticleBody : public scx::ScriptObject {
 public:
-
-  Template(Profile& profile,
-           const std::string& name,
-           const scx::FilePath& path);
-
-  ~Template();
-
-  virtual const ArticleHeading& get_headings() const;
-
-  typedef scx::ScriptRefTo<Template> Ref;
   
-protected:
+  virtual const std::string& get_name() const =0;
+  virtual const scx::FilePath& get_root() const =0;
+  virtual const std::string& get_file() const =0;
+  virtual scx::FilePath get_filepath() const =0;
 
-private:
+  virtual bool process(Context& context) =0;
+  virtual bool purge(const scx::Date& purge_time) =0;
+
+  virtual const ArticleHeading& get_headings() const =0;
+
+  typedef scx::ScriptRefTo<ArticleBody> Ref;
   
-  Profile& m_profile;
-
-  ArticleHeading m_headings;
-
 };
 
 #endif

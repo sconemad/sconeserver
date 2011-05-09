@@ -22,9 +22,9 @@ Free Software Foundation, Inc.,
 #ifndef sconesiteArticle_h
 #define sconesiteArticle_h
 
-#include "sconex/ScriptBase.h"
-#include "sconex/Stream.h"
-#include "sconex/FilePath.h"
+#include <sconex/ScriptBase.h>
+#include <sconex/Stream.h>
+#include <sconex/FilePath.h>
 #include "ArticleBody.h"
 
 class SconesiteModule;

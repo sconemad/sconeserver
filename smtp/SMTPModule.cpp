@@ -22,11 +22,11 @@ Free Software Foundation, Inc.,
 #include "smtp/SMTPModule.h"
 #include "smtp/SMTPClient.h"
 
-#include "sconex/ScriptTypes.h"
-#include "sconex/Logger.h"
-#include "sconex/ModuleInterface.h"
-#include "sconex/Process.h"
-#include "sconex/ScriptExpr.h"
+#include <sconex/ScriptTypes.h>
+#include <sconex/Logger.h>
+#include <sconex/ModuleInterface.h>
+#include <sconex/Process.h>
+#include <sconex/ScriptExpr.h>
 
 namespace smtp {
 

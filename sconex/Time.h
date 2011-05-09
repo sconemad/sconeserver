@@ -22,8 +22,8 @@ Free Software Foundation, Inc.,
 #ifndef scxTime_h
 #define scxTime_h
 
-#include "sconex/sconex.h"
-#include "sconex/ScriptBase.h"
+#include <sconex/sconex.h>
+#include <sconex/ScriptBase.h>
 #include <time.h>
 namespace scx {
 

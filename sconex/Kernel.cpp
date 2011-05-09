@@ -19,14 +19,14 @@ along with this program (see the file COPYING); if not, write to the
 Free Software Foundation, Inc.,
 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA */
 
-#include "sconex/Kernel.h"
-#include "sconex/ConfigStream.h"
-#include "sconex/ScriptEngine.h"
-#include "sconex/TermBuffer.h"
-#include "sconex/Console.h"
-#include "sconex/Logger.h"
-#include "sconex/Debug.h"
-#include "sconex/User.h"
+#include <sconex/Kernel.h>
+#include <sconex/ConfigStream.h>
+#include <sconex/ScriptEngine.h>
+#include <sconex/TermBuffer.h>
+#include <sconex/Console.h>
+#include <sconex/Logger.h>
+#include <sconex/Debug.h>
+#include <sconex/User.h>
 
 namespace scx {
 

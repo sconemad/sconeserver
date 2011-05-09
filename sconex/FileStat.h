@@ -22,8 +22,8 @@ Free Software Foundation, Inc.,
 #ifndef scxFileStat_h
 #define scxFileStat_h
 
-#include "sconex.h"
-#include "Date.h"
+#include <sconex/sconex.h>
+#include <sconex/Date.h>
 
 #include <sys/stat.h>
 #include <sys/types.h>

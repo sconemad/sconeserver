@@ -21,15 +21,15 @@ Free Software Foundation, Inc.,
 
 #include "ServerModule.h"
 
-#include "sconex/ModuleInterface.h"
-#include "sconex/Descriptor.h"
-#include "sconex/Kernel.h"
-#include "sconex/ScriptTypes.h"
-#include "sconex/ConfigStream.h"
-#include "sconex/TermBuffer.h"
-#include "sconex/StreamBuffer.h"
-#include "sconex/StreamDebugger.h"
-#include "sconex/ScriptEngine.h"
+#include <sconex/ModuleInterface.h>
+#include <sconex/Descriptor.h>
+#include <sconex/Kernel.h>
+#include <sconex/ScriptTypes.h>
+#include <sconex/ConfigStream.h>
+#include <sconex/TermBuffer.h>
+#include <sconex/StreamBuffer.h>
+#include <sconex/StreamDebugger.h>
+#include <sconex/ScriptEngine.h>
 
 SCONESERVER_MODULE(ServerModule);
 

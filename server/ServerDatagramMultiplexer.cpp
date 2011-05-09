@@ -22,9 +22,9 @@ Free Software Foundation, Inc.,
 #include "ServerDatagramMultiplexer.h"
 #include "ServerModule.h"
 
-#include "sconex/Kernel.h" 
-#include "sconex/DatagramChannel.h"
-#include "sconex/ScriptTypes.h"
+#include <sconex/Kernel.h> 
+#include <sconex/DatagramChannel.h>
+#include <sconex/ScriptTypes.h>
 
 //=============================================================================
 ServerDatagramMultiplexer::ServerDatagramMultiplexer(ServerModule& module,

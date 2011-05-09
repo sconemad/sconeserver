@@ -22,9 +22,9 @@ Free Software Foundation, Inc.,
 #ifndef httpStatus_h
 #define httpStatus_h
 
-#include "http/http.h"
+#include <http/http.h>
 
-#include "sconex/sconex.h"
+#include <sconex/sconex.h>
 namespace http {
   
 //===========================================================================

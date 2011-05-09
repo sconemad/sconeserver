@@ -23,8 +23,8 @@ Free Software Foundation, Inc.,
 #define rssModule_h
 
 #include "Feed.h"
-#include "sconex/Module.h"
-#include "sconex/Job.h"
+#include <sconex/Module.h>
+#include <sconex/Job.h>
 
 //=========================================================================
 class RSSModule : public scx::Module {

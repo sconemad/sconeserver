@@ -48,8 +48,8 @@ Free Software Foundation, Inc.,
 #ifndef scxScriptStatement_h
 #define scxScriptStatement_h
 
-#include "sconex/sconex.h"
-#include "sconex/ScriptBase.h"
+#include <sconex/sconex.h>
+#include <sconex/ScriptBase.h>
 namespace scx {
 
 class ScriptExpr;

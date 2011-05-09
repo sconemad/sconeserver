@@ -22,12 +22,12 @@ Free Software Foundation, Inc.,
 #include "ForwardModule.h"
 //#include "ForwardStream.h"
 
-#include "sconex/ModuleInterface.h"
-#include "sconex/Module.h"
-#include "sconex/ScriptTypes.h"
-#include "sconex/StreamSocket.h"
-#include "sconex/StreamTransfer.h"
-#include "sconex/Kernel.h"
+#include <sconex/ModuleInterface.h>
+#include <sconex/Module.h>
+#include <sconex/ScriptTypes.h>
+#include <sconex/StreamSocket.h>
+#include <sconex/StreamTransfer.h>
+#include <sconex/Kernel.h>
 
 SCONESERVER_MODULE(ForwardModule);
 

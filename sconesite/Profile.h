@@ -22,10 +22,10 @@ Free Software Foundation, Inc.,
 #ifndef sconesiteProfile_h
 #define sconesiteProfile_h
 
-#include "sconex/Stream.h"
-#include "sconex/FilePath.h"
-#include "sconex/ScriptBase.h"
-#include "sconex/Database.h"
+#include <sconex/Stream.h>
+#include <sconex/FilePath.h>
+#include <sconex/ScriptBase.h>
+#include <sconex/Database.h>
 
 #include "Article.h"
 #include "Template.h"

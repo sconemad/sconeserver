@@ -22,12 +22,12 @@ Free Software Foundation, Inc.,
 #ifndef httpRequest_h
 #define httpRequest_h
 
-#include "http/Session.h"
-#include "sconex/ScriptBase.h"
-#include "sconex/VersionTag.h"
-#include "sconex/Uri.h"
-#include "sconex/MimeHeader.h"
-#include "sconex/FilePath.h"
+#include <http/Session.h>
+#include <sconex/ScriptBase.h>
+#include <sconex/VersionTag.h>
+#include <sconex/Uri.h>
+#include <sconex/MimeHeader.h>
+#include <sconex/FilePath.h>
 namespace http {
 
 class DocRoot;

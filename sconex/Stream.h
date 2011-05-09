@@ -22,10 +22,10 @@ Free Software Foundation, Inc.,
 #ifndef scxStream_h
 #define scxStream_h
 
-#include "sconex/sconex.h"
-#include "sconex/IOBase.h"
-#include "sconex/Descriptor.h"
-#include "sconex/Provider.h"
+#include <sconex/sconex.h>
+#include <sconex/IOBase.h>
+#include <sconex/Descriptor.h>
+#include <sconex/Provider.h>
 namespace scx {
 
 class Module;

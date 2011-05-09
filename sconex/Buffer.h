@@ -35,7 +35,7 @@ Free Software Foundation, Inc.,
 #ifndef scxBuffer_h
 #define scxBuffer_h
 
-#include "sconex/sconex.h"
+#include <sconex/sconex.h>
 namespace scx {
 
 //=============================================================================

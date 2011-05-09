@@ -24,10 +24,10 @@ Free Software Foundation, Inc.,
 
 #include "smtp/SMTPModule.h"
 
-#include "sconex/ScriptBase.h"
-#include "sconex/LineBuffer.h"
-#include "sconex/Mutex.h"
-#include "sconex/MimeHeader.h"
+#include <sconex/ScriptBase.h>
+#include <sconex/LineBuffer.h>
+#include <sconex/Mutex.h>
+#include <sconex/MimeHeader.h>
 
 namespace smtp {
 

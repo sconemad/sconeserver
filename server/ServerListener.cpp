@@ -22,10 +22,10 @@ Free Software Foundation, Inc.,
 #include "ServerListener.h"
 #include "ServerModule.h"
 
-#include "sconex/Kernel.h" 
-#include "sconex/StreamSocket.h"
-#include "sconex/ListenerSocket.h"
-#include "sconex/ScriptTypes.h"
+#include <sconex/Kernel.h> 
+#include <sconex/StreamSocket.h>
+#include <sconex/ListenerSocket.h>
+#include <sconex/ScriptTypes.h>
 
 //=============================================================================
 ServerListener::ServerListener(ServerModule& module,

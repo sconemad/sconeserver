@@ -9,7 +9,7 @@ class, passing the class name as an argument, eg:
 
 --- MyModule.cpp ---
 #include "MyModule.h
-#include "sconex/ModuleInterface.h"
+#include <sconex/ModuleInterface.h>
 
 SCONESERVER_MODULE(MyModule);
 

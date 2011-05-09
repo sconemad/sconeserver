@@ -7,7 +7,7 @@ Copyright (c) 2000-2005 Andrew Wedgbury <wedge@sconemad.com> */
 #ifndef rot13Stream_h
 #define rot13Stream_h
 
-#include "sconex/Stream.h"
+#include <sconex/Stream.h>
 
 //=========================================================================
 class Rot13Stream : public scx::Stream {

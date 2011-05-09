@@ -25,14 +25,14 @@ Free Software Foundation, Inc.,
 #include "Profile.h"
 #include "Context.h"
 
-#include "sconex/Stream.h"
-#include "sconex/StreamTransfer.h"
-#include "sconex/Date.h"
-#include "sconex/Kernel.h"
-#include "sconex/FileDir.h"
-#include "sconex/FilePath.h"
-#include "sconex/ScriptExpr.h"
-#include "sconex/ScriptStatement.h"
+#include <sconex/Stream.h>
+#include <sconex/StreamTransfer.h>
+#include <sconex/Date.h>
+#include <sconex/Kernel.h>
+#include <sconex/FileDir.h>
+#include <sconex/FilePath.h>
+#include <sconex/ScriptExpr.h>
+#include <sconex/ScriptStatement.h>
 
 //=========================================================================
 bool ArticleSortDate(const Article* a, const Article* b)

@@ -22,9 +22,9 @@ Free Software Foundation, Inc.,
 #ifndef httpHostMapper_h
 #define httpHostMapper_h
 
-#include "http/http.h"
-#include "http/Host.h"
-#include "sconex/ScriptBase.h"
+#include <http/http.h>
+#include <http/Host.h>
+#include <sconex/ScriptBase.h>
 namespace scx { class Descriptor; };
 
 namespace http {

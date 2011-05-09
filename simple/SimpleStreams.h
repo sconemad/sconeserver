@@ -25,8 +25,8 @@ Free Software Foundation, Inc.,
 #ifndef SimpleStreams_h
 #define SimpleStreams_h
 
-#include "sconex/Stream.h"
-#include "sconex/Module.h"
+#include <sconex/Stream.h>
+#include <sconex/Module.h>
 
 //=========================================================================
 class EchoStream : public scx::Stream {

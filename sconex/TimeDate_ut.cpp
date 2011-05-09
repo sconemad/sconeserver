@@ -19,9 +19,9 @@ along with this program (see the file COPYING); if not, write to the
 Free Software Foundation, Inc.,
 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA */
 
-#include "sconex/Time.h"
-#include "sconex/Date.h"
-#include "sconex/UnitTester.h"
+#include <sconex/Time.h>
+#include <sconex/Date.h>
+#include <sconex/UnitTester.h>
 using namespace scx;
 
 void TimeDate_ut()

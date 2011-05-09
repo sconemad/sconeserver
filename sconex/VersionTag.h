@@ -22,8 +22,8 @@ Free Software Foundation, Inc.,
 #ifndef scxVersionTag_h
 #define scxVersionTag_h
 
-#include "sconex/sconex.h"
-#include "sconex/ScriptBase.h"
+#include <sconex/sconex.h>
+#include <sconex/ScriptBase.h>
 namespace scx {
 
 //===========================================================================

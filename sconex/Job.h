@@ -22,10 +22,10 @@ Free Software Foundation, Inc.,
 #ifndef scxJob_h
 #define scxJob_h
 
-#include "sconex/sconex.h"
-#include "sconex/Thread.h"
-#include "sconex/Time.h"
-#include "sconex/Date.h"
+#include <sconex/sconex.h>
+#include <sconex/Thread.h>
+#include <sconex/Time.h>
+#include <sconex/Date.h>
 namespace scx {
 
 class Multiplexer;

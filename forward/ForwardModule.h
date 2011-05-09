@@ -22,8 +22,8 @@ Free Software Foundation, Inc.,
 #ifndef forwardModule_h
 #define forwardModule_h
 
-#include "sconex/Module.h"
-#include "sconex/Stream.h"
+#include <sconex/Module.h>
+#include <sconex/Stream.h>
 
 //=============================================================================
 // ForwardModule - A module to forward connections on to another host

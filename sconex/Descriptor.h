@@ -60,10 +60,10 @@ Free Software Foundation, Inc.,
 #ifndef scxDescriptor_h
 #define scxDescriptor_h
 
-#include "sconex/sconex.h"
-#include "sconex/IOBase.h"
-#include "sconex/Date.h"
-#include "sconex/Job.h"
+#include <sconex/sconex.h>
+#include <sconex/IOBase.h>
+#include <sconex/Date.h>
+#include <sconex/Job.h>
 namespace scx {
 
 class Stream;

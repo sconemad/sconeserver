@@ -11,9 +11,7 @@ MySqlModule.cpp \
 MySqlProfile.cpp \
 MySqlQuery.cpp
 
-mysqlincludedir = $(includedir)/mysql
-
-mysqlinclude_HEADERS = \
+noinst_HEADERS = \
 MySqlModule.h \
 MySqlProfile.h \
 MySqlQuery.h

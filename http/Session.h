@@ -22,10 +22,10 @@ Free Software Foundation, Inc.,
 #ifndef httpSession_h
 #define httpSession_h
 
-#include "http/http.h"
-#include "sconex/ScriptBase.h"
-#include "sconex/ScriptTypes.h"
-#include "sconex/Job.h"
+#include <http/http.h>
+#include <sconex/ScriptBase.h>
+#include <sconex/ScriptTypes.h>
+#include <sconex/Job.h>
 namespace http {
 
 class HTTPModule;

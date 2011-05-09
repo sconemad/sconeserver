@@ -26,13 +26,13 @@ Free Software Foundation, Inc.,
 #include "http/MessageStream.h"
 #include "http/Request.h"
 
-#include "sconex/Kernel.h"
-#include "sconex/FilePath.h"
-#include "sconex/StreamSocket.h"
-#include "sconex/StreamTransfer.h"
-#include "sconex/StreamDebugger.h"
-#include "sconex/Process.h"
-#include "sconex/User.h"
+#include <sconex/Kernel.h>
+#include <sconex/FilePath.h>
+#include <sconex/StreamSocket.h>
+#include <sconex/StreamTransfer.h>
+#include <sconex/StreamDebugger.h>
+#include <sconex/Process.h>
+#include <sconex/User.h>
 
 //=========================================================================
 ExecStream::ExecStream(ExecModule& module,

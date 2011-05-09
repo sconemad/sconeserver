@@ -22,7 +22,7 @@ Free Software Foundation, Inc.,
 #ifndef ServerDatagramMultiplexer_h
 #define ServerDatagramMultiplexer_h
 
-#include "sconex/DatagramMultiplexer.h"
+#include <sconex/DatagramMultiplexer.h>
 
 class ServerModule;
 

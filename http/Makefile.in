@@ -267,7 +267,7 @@ target_vendor = @target_vendor@
 top_build_prefix = @top_build_prefix@
 top_builddir = @top_builddir@
 top_srcdir = @top_srcdir@
-SUBDIRS = dirindex getfile errorpage sconesite
+SUBDIRS = dirindex getfile errorpage
 AM_CPPFLAGS = -I$(top_srcdir)
 pkglib_LTLIBRARIES = http.la
 http_la_SOURCES = \
@@ -286,7 +286,7 @@ ResponseStream.cpp \
 Session.cpp \
 Status.cpp
 
-httpincludedir = $(includedir)/http
+httpincludedir = $(includedir)/sconex/http
 httpinclude_HEADERS = \
 AuthRealm.h \
 Client.h \

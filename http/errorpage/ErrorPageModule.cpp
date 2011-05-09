@@ -20,17 +20,17 @@ Free Software Foundation, Inc.,
 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA */
 
 
-#include "http/HTTPModule.h"
-#include "http/Request.h"
-#include "http/MessageStream.h"
-#include "http/Status.h"
+#include <http/HTTPModule.h>
+#include <http/Request.h>
+#include <http/MessageStream.h>
+#include <http/Status.h>
 
-#include "sconex/ModuleInterface.h"
-#include "sconex/Module.h"
-#include "sconex/Stream.h"
-#include "sconex/StreamTransfer.h"
-#include "sconex/Kernel.h"
-#include "sconex/LineBuffer.h"
+#include <sconex/ModuleInterface.h>
+#include <sconex/Module.h>
+#include <sconex/Stream.h>
+#include <sconex/StreamTransfer.h>
+#include <sconex/Kernel.h>
+#include <sconex/LineBuffer.h>
 
 //=========================================================================
 class VarSubstStream : public scx::LineBuffer {

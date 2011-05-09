@@ -19,9 +19,9 @@ along with this program (see the file COPYING); if not, write to the
 Free Software Foundation, Inc.,
 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA */
 
-#include "sconex/MemFile.h"
-#include "sconex/UnitTester.h"
-#include "sconex/LineBuffer.h"
+#include <sconex/MemFile.h>
+#include <sconex/UnitTester.h>
+#include <sconex/LineBuffer.h>
 using namespace scx;
 
 void LineBuffer_ut()

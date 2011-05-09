@@ -19,11 +19,11 @@ along with this program (see the file COPYING); if not, write to the
 Free Software Foundation, Inc.,
 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA */
 
-#include "sconex/ModuleLoaderDLL.h"
-#include "sconex/Module.h"
-#include "sconex/FileStat.h"
-#include "sconex/FilePath.h"
-#include "sconex/ScriptBase.h"
+#include <sconex/ModuleLoaderDLL.h>
+#include <sconex/Module.h>
+#include <sconex/FileStat.h>
+#include <sconex/FilePath.h>
+#include <sconex/ScriptBase.h>
 
 #include <dlfcn.h>
 #include <sys/types.h>

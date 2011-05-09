@@ -21,13 +21,13 @@ Free Software Foundation, Inc.,
 
 #include "LettuceMediaStream.h"
 
-#include "sconex/ModuleInterface.h"
-#include "sconex/Module.h"
-#include "sconex/File.h"
-#include "sconex/Stream.h"
-#include "sconex/StreamTransfer.h"
-#include "sconex/LineBuffer.h"
-#include "sconex/Kernel.h"
+#include <sconex/ModuleInterface.h>
+#include <sconex/Module.h>
+#include <sconex/File.h>
+#include <sconex/Stream.h>
+#include <sconex/StreamTransfer.h>
+#include <sconex/LineBuffer.h>
+#include <sconex/Kernel.h>
 
 #define PLS_PATH "/mnt/data/music/lettuce.m3u"
 

@@ -317,8 +317,8 @@ AC_CONFIG_FILES([http/Makefile])
 AC_CONFIG_FILES([http/getfile/Makefile])
 AC_CONFIG_FILES([http/dirindex/Makefile])
 AC_CONFIG_FILES([http/errorpage/Makefile])
-AC_CONFIG_FILES([http/sconesite/Makefile])
-AC_CONFIG_FILES([http/sconesite/image/Makefile])
+AC_CONFIG_FILES([sconesite/Makefile])
+AC_CONFIG_FILES([sconesite/image/Makefile])
 AC_CONFIG_FILES([exec/Makefile])
 AC_CONFIG_FILES([forward/Makefile])
 AC_CONFIG_FILES([tftp/Makefile])
@@ -352,8 +352,8 @@ The following modules will be built:
     + getfile      yes
     + dirindex     yes
     + errorpage    yes
-    + sconesite    $SCONESITE
-      + image      $SCONESITE_IMAGE
+  + sconesite      $SCONESITE
+    + image        $SCONESITE_IMAGE
   + ssl            $SSL
   + exec           yes   
   + forward        yes   

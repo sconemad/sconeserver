@@ -19,14 +19,14 @@ along with this program (see the file COPYING); if not, write to the
 Free Software Foundation, Inc.,
 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA */
 
-#include "sconex/ScriptBase.h"
-#include "sconex/ScriptTypes.h"
-#include "sconex/ScriptEngine.h"
-#include "sconex/Multiplexer.h"
-#include "sconex/Console.h"
-#include "sconex/File.h"
-#include "sconex/Logger.h"
-#include "sconex/Debug.h"
+#include <sconex/ScriptBase.h>
+#include <sconex/ScriptTypes.h>
+#include <sconex/ScriptEngine.h>
+#include <sconex/Multiplexer.h>
+#include <sconex/Console.h>
+#include <sconex/File.h>
+#include <sconex/Logger.h>
+#include <sconex/Debug.h>
 using namespace scx;
 
 Console* con = 0;

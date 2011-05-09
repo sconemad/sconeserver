@@ -19,13 +19,14 @@ along with this program (see the file COPYING); if not, write to the
 Free Software Foundation, Inc.,
 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA */
 
-#include "sconex/Module.h"
-#include "sconex/ModuleLoader.h"
-#include "sconex/ModuleLoaderDLL.h"
-#include "sconex/ConfigFile.h"
-#include "sconex/ScriptExpr.h"
-#include "sconex/Logger.h"
-#include "sconex/FileStat.h"
+#include <sconex/Module.h>
+#include <sconex/ModuleLoader.h>
+#include <sconex/ModuleLoaderDLL.h>
+#include <sconex/ConfigFile.h>
+#include <sconex/ScriptExpr.h>
+#include <sconex/Logger.h>
+#include <sconex/FileStat.h>
+#include <sconex/FileDir.h>
 
 namespace scx {
 
@@ -190,6 +191,7 @@ ScriptRef* Module::script_op(const ScriptAuth& auth,
 	"insmod" == name ||
 	"rmmod" == name ||
 	"load_config" == name ||
+	"run_parts" == name ||
 	"set_mod_path" == name ||
 	"set_conf_path" == name ||
 	"set_var_path" == name) {
@@ -394,6 +396,20 @@ ScriptRef* Module::script_method(const ScriptAuth& auth,
     return 0;
   }
 
+  if ("run_parts" == name) {
+    if (!auth.admin()) return ScriptError::new_ref("Not permitted");
+
+    const ScriptString* a_path = get_method_arg<ScriptString>(args,0,"path");
+    FilePath path;
+    if (a_path) {
+      path = a_path->get_string();
+    }
+    if (false == load_config_dir(path)) {
+      return ScriptError::new_ref("Error occured");
+    }
+    return 0;
+  }
+
   if ("set_mod_path" == name) {
     if (!auth.admin()) return ScriptError::new_ref("Not permitted");
 
@@ -501,6 +517,35 @@ bool Module::load_config_file(FilePath path)
   ConfigFile config(path);
   ScriptRef ctx(this);
   return config.load(&ctx);
+}
+
+//=============================================================================
+bool Module::load_config_dir(FilePath path)
+{
+  const char* filepattern =
+    "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ1234567890_-";
+
+  FileDir dir(path);
+  std::list<std::string> files;
+  while (dir.next()) {
+    if (dir.stat().is_file() &&
+	dir.name().find_first_not_of(filepattern) == std::string::npos) {
+      files.push_back(dir.name());
+    }
+  }
+  files.sort();
+
+  bool ok = true;
+  ScriptRef ctx(this);
+  for (std::list<std::string>::const_iterator it = files.begin();
+       it != files.end();
+       ++it) {
+    ConfigFile config(path + *it);
+    if (!config.load(&ctx)) {
+      ok = false;
+    }
+  }
+  return ok;
 }
 
 //=============================================================================

@@ -22,8 +22,8 @@ Free Software Foundation, Inc.,
 #ifndef scxConsole_h
 #define scxConsole_h
 
-#include "sconex/sconex.h"
-#include "sconex/Descriptor.h"
+#include <sconex/sconex.h>
+#include <sconex/Descriptor.h>
 namespace scx {
 
 //=============================================================================

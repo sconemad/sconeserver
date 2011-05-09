@@ -4,10 +4,10 @@ A very simple module which only allows connections on Tuesdays!
 
 Copyright (c) 2000-2011 Andrew Wedgbury <wedge@sconemad.com> */
 
-#include "sconex/Module.h"
-#include "sconex/ModuleInterface.h"
-#include "sconex/Date.h"
-#include "sconex/Stream.h"
+#include <sconex/Module.h>
+#include <sconex/ModuleInterface.h>
+#include <sconex/Date.h>
+#include <sconex/Stream.h>
 
 //=============================================================================
 // Our module class, which must be derived from scx::Module

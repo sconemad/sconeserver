@@ -35,9 +35,9 @@ Free Software Foundation, Inc.,
 #ifndef scxMultiplexer_h
 #define scxMultiplexer_h
 
-#include "sconex/sconex.h"
-#include "sconex/Mutex.h"
-#include "sconex/Job.h"
+#include <sconex/sconex.h>
+#include <sconex/Mutex.h>
+#include <sconex/Job.h>
 namespace scx {
 
 //=============================================================================

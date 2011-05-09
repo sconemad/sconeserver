@@ -23,10 +23,10 @@ Free Software Foundation, Inc.,
 #define MySqlModule_h
 
 #include "MySqlProfile.h"
-#include "sconex/Database.h"
-#include "sconex/ModuleInterface.h"
-#include "sconex/Module.h"
-#include "sconex/Provider.h"
+#include <sconex/Database.h>
+#include <sconex/ModuleInterface.h>
+#include <sconex/Module.h>
+#include <sconex/Provider.h>
 
 namespace mysql {
 

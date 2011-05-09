@@ -22,12 +22,12 @@ Free Software Foundation, Inc.,
 #ifndef httpAuthRealm_h
 #define httpAuthRealm_h
 
-#include "http/http.h"
-#include "sconex/ScriptBase.h"
-#include "sconex/ScriptTypes.h"
-#include "sconex/FilePath.h"
-#include "sconex/Date.h"
-#include "sconex/Mutex.h"
+#include <http/http.h>
+#include <sconex/ScriptBase.h>
+#include <sconex/ScriptTypes.h>
+#include <sconex/FilePath.h>
+#include <sconex/Date.h>
+#include <sconex/Mutex.h>
 namespace http {
 
 class HTTPModule;

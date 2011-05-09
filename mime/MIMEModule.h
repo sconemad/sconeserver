@@ -22,7 +22,7 @@ Free Software Foundation, Inc.,
 #ifndef MIMEModule_h
 #define MIMEModule_h
 
-#include "sconex/Module.h"
+#include <sconex/Module.h>
 
 //=============================================================================
 // MIMEModule - A module which looks up the mimetype for a file

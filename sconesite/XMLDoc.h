@@ -24,9 +24,9 @@ Free Software Foundation, Inc.,
 
 #include "ArticleBody.h"
 
-#include "sconex/FilePath.h"
-#include "sconex/Date.h"
-#include "sconex/Mutex.h"
+#include <sconex/FilePath.h>
+#include <sconex/Date.h>
+#include <sconex/Mutex.h>
 
 #include <libxml/parser.h>
 #include <libxml/tree.h>

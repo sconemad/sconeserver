@@ -23,10 +23,10 @@ Free Software Foundation, Inc.,
 #include "StatModule.h"
 #include "StatStream.h"
 
-#include "sconex/ModuleInterface.h"
-#include "sconex/Module.h"
-#include "sconex/ScriptTypes.h"
-#include "sconex/Stream.h"
+#include <sconex/ModuleInterface.h>
+#include <sconex/Module.h>
+#include <sconex/ScriptTypes.h>
+#include <sconex/Stream.h>
 
 SCONESERVER_MODULE(StatModule);
 

@@ -19,11 +19,11 @@ along with this program (see the file COPYING); if not, write to the
 Free Software Foundation, Inc.,
 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA */
 
-#include "sconex/ConfigFile.h"
-#include "sconex/File.h"
-#include "sconex/ScriptEngine.h"
-#include "sconex/FilePath.h"
-#include "sconex/FileStat.h"
+#include <sconex/ConfigFile.h>
+#include <sconex/File.h>
+#include <sconex/ScriptEngine.h>
+#include <sconex/FilePath.h>
+#include <sconex/FileStat.h>
 
 namespace scx {
 
@@ -45,14 +45,14 @@ ConfigFile::~ConfigFile()
 //=============================================================================
 bool ConfigFile::load(ScriptRef* ctx)
 {
-  //  ctx->log("LOAD " + m_filename.path());
+  //  ctx->object()->log("LOAD " + m_filename.path());
   File conf;
   conf.open(m_filename,File::Read);
   ScriptEngine* script = new ScriptEngineExec(ScriptAuth::Admin,
 					      ctx->ref_copy());
   conf.add_stream(script);
   script->event(Stream::Readable);
-  //  ctx->log("DONE " + m_filename.path());
+  //  ctx->object()->log("DONE " + m_filename.path());
 
   return true;
 }

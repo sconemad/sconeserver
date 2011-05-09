@@ -23,7 +23,7 @@ Free Software Foundation, Inc.,
 #define execCGIResponseStream_h
 
 #include "ExecModule.h"
-#include "sconex/LineBuffer.h"
+#include <sconex/LineBuffer.h>
 
 namespace http { class MessageStream; };
 

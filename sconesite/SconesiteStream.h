@@ -23,8 +23,8 @@ Free Software Foundation, Inc.,
 #define sconesiteStream_h
 
 #include "RenderMarkup.h"
-#include "sconex/Stream.h"
-#include "http/ResponseStream.h"
+#include <sconex/Stream.h>
+#include <http/ResponseStream.h>
 
 class Profile;
 class Article;

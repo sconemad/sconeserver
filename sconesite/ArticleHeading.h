@@ -22,7 +22,7 @@ Free Software Foundation, Inc.,
 #ifndef sconesiteArticleHeading_h
 #define sconesiteArticleHeading_h
 
-#include "sconex/ScriptBase.h"
+#include <sconex/ScriptBase.h>
 
 //=========================================================================
 // ArticleHeading - Represents a heading in a document, can be arranged in

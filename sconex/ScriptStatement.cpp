@@ -19,9 +19,9 @@ along with this program (see the file COPYING); if not, write to the
 Free Software Foundation, Inc.,
 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA */
 
-#include "sconex/ScriptStatement.h"
-#include "sconex/ScriptEngine.h"
-#include "sconex/ScriptExpr.h"
+#include <sconex/ScriptStatement.h>
+#include <sconex/ScriptEngine.h>
+#include <sconex/ScriptExpr.h>
 namespace scx {
 
 //=============================================================================

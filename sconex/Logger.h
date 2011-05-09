@@ -22,7 +22,7 @@ Free Software Foundation, Inc.,
 #ifndef scxLogger_h
 #define scxLogger_h
 
-#include "sconex/sconex.h"
+#include <sconex/sconex.h>
 namespace scx {
 
 class File;

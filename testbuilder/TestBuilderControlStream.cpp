@@ -29,10 +29,10 @@ Free Software Foundation, Inc.,
 #include "http/MessageStream.h"
 #include "http/Status.h"
 
-#include "sconex/Stream.h"
-#include "sconex/Date.h"
-#include "sconex/Kernel.h"
-#include "sconex/utils.h"
+#include <sconex/Stream.h>
+#include <sconex/Date.h>
+#include <sconex/Kernel.h>
+#include <sconex/utils.h>
 
 const char ALPHA[] =
 "abcdefghijklmnopqrstuvwxyz"

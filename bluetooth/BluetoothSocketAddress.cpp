@@ -20,7 +20,7 @@ Free Software Foundation, Inc.,
 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA */
 
 #include "BluetoothSocketAddress.h"
-#include "sconex/ScriptTypes.h"
+#include <sconex/ScriptTypes.h>
 
 //=============================================================================
 BluetoothSocketAddress::BluetoothSocketAddress(const scx::ScriptRef* args)

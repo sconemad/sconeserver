@@ -13,4 +13,6 @@ RSSModule.cpp
 rss_la_LDFLAGS = -module -avoid-version
 rss_la_LIBADD = -lxml2
 
-
+noinst_HEADERS = \
+Feed.h \
+RSSModule.h

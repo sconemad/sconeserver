@@ -22,10 +22,10 @@ Free Software Foundation, Inc.,
 #ifndef httpDocRoot_h
 #define httpDocRoot_h
 
-#include "http/http.h"
-#include "sconex/ScriptBase.h"
-#include "sconex/ScriptTypes.h"
-#include "sconex/FilePath.h"
+#include <http/http.h>
+#include <sconex/ScriptBase.h>
+#include <sconex/ScriptTypes.h>
+#include <sconex/FilePath.h>
 
 namespace scx { class Descriptor; }
 

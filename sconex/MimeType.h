@@ -22,8 +22,8 @@ Free Software Foundation, Inc.,
 #ifndef scxMimeType_h
 #define scxMimeType_h
 
-#include "sconex/sconex.h"
-#include "sconex/ScriptBase.h"
+#include <sconex/sconex.h>
+#include <sconex/ScriptBase.h>
 namespace scx {
 
 //===========================================================================

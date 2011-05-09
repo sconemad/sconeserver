@@ -20,9 +20,9 @@ Free Software Foundation, Inc.,
 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA */
 
 
-#include "sconex/Date.h"
-#include "sconex/ScriptTypes.h"
-#include "sconex/utils.h"
+#include <sconex/Date.h>
+#include <sconex/ScriptTypes.h>
+#include <sconex/utils.h>
 namespace scx {
 
 Date::MonthNameMap* Date::s_month_table = 0;

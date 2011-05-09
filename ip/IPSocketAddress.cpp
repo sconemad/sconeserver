@@ -20,7 +20,7 @@ Free Software Foundation, Inc.,
 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA */
 
 #include "IPSocketAddress.h"
-#include "sconex/ScriptTypes.h"
+#include <sconex/ScriptTypes.h>
 
 #define m_s_addr m_addr.sin_addr.s_addr
 

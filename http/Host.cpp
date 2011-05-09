@@ -20,14 +20,14 @@ Free Software Foundation, Inc.,
 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA */
 
 
-#include "http/Host.h"
-#include "http/HostMapper.h"
-#include "http/DocRoot.h"
-#include "http/MessageStream.h"
-#include "http/Request.h"
-#include "http/AuthRealm.h"
-#include "http/Session.h"
-#include "sconex/ConfigFile.h"
+#include <http/Host.h>
+#include <http/HostMapper.h>
+#include <http/DocRoot.h>
+#include <http/MessageStream.h>
+#include <http/Request.h>
+#include <http/AuthRealm.h>
+#include <http/Session.h>
+#include <sconex/ConfigFile.h>
 namespace http {
 
 //=========================================================================

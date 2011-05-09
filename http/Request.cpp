@@ -20,12 +20,12 @@ Free Software Foundation, Inc.,
 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA */
 
 
-#include "http/Request.h"
-#include "http/Session.h"
+#include <http/Request.h>
+#include <http/Session.h>
 
-#include "sconex/StreamSocket.h"
-#include "sconex/File.h"
-#include "sconex/Module.h"
+#include <sconex/StreamSocket.h>
+#include <sconex/File.h>
+#include <sconex/Module.h>
 namespace http {
 
 //===========================================================================

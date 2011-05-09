@@ -19,17 +19,17 @@ along with this program (see the file COPYING); if not, write to the
 Free Software Foundation, Inc.,
 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA */
 
-#include "http/HTTPModule.h"
-#include "http/ConnectionStream.h"
-#include "http/Request.h"
-#include "http/MessageStream.h"
-#include "http/PartialResponseStream.h"
-#include "http/Status.h"
+#include <http/HTTPModule.h>
+#include <http/ConnectionStream.h>
+#include <http/Request.h>
+#include <http/MessageStream.h>
+#include <http/PartialResponseStream.h>
+#include <http/Status.h>
 
-#include "sconex/Logger.h"
-#include "sconex/Response.h"
-#include "sconex/VersionTag.h"
-#include "sconex/utils.h"
+#include <sconex/Logger.h>
+#include <sconex/Response.h>
+#include <sconex/VersionTag.h>
+#include <sconex/utils.h>
 namespace http {
 
 int connection_count=0;

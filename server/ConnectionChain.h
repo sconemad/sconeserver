@@ -22,7 +22,7 @@ Free Software Foundation, Inc.,
 #ifndef ConnectionChain_h
 #define ConnectionChain_h
 
-#include "sconex/ScriptBase.h"
+#include <sconex/ScriptBase.h>
 
 namespace scx { class Descriptor; class Module; };
 class ConnectionNode;

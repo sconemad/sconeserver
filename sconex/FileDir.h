@@ -22,9 +22,9 @@ Free Software Foundation, Inc.,
 #ifndef scxFileDir_h
 #define scxFileDir_h
 
-#include "sconex/sconex.h"
-#include "sconex/FileStat.h"
-#include "sconex/FilePath.h"
+#include <sconex/sconex.h>
+#include <sconex/FileStat.h>
+#include <sconex/FilePath.h>
 
 #ifdef HAVE_DIRENT_H
 #  include <dirent.h>

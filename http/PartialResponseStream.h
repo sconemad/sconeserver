@@ -25,13 +25,13 @@ Free Software Foundation, Inc.,
 #ifndef httpPartialResponseStream_h
 #define httpPartialResponseStream_h
 
-#include "http/HTTPModule.h"
-#include "http/Status.h"
-#include "http/Response.h"
-#include "sconex/Stream.h"
-#include "sconex/VersionTag.h"
-#include "sconex/FilePath.h"
-#include "sconex/MimeHeader.h"
+#include <http/HTTPModule.h>
+#include <http/Status.h>
+#include <http/Response.h>
+#include <sconex/Stream.h>
+#include <sconex/VersionTag.h>
+#include <sconex/FilePath.h>
+#include <sconex/MimeHeader.h>
 namespace scx { class Buffer; };
 
 namespace http {

@@ -20,15 +20,15 @@ Free Software Foundation, Inc.,
 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA */
 
 
-#include "http/ResponseStream.h"
-#include "http/Request.h"
-#include "http/MessageStream.h"
-#include "http/Status.h"
+#include <http/ResponseStream.h>
+#include <http/Request.h>
+#include <http/MessageStream.h>
+#include <http/Status.h>
 
-#include "sconex/Date.h"
-#include "sconex/StreamTransfer.h"
-#include "sconex/Kernel.h"
-#include "sconex/File.h"
+#include <sconex/Date.h>
+#include <sconex/StreamTransfer.h>
+#include <sconex/Kernel.h>
+#include <sconex/File.h>
 
 namespace http {
 

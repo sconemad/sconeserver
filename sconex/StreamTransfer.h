@@ -22,10 +22,10 @@ Free Software Foundation, Inc.,
 #ifndef scxStreamTransfer_h
 #define scxStreamTransfer_h
 
-#include "sconex/sconex.h"
-#include "sconex/Stream.h"
-#include "sconex/Descriptor.h"
-#include "sconex/Buffer.h"
+#include <sconex/sconex.h>
+#include <sconex/Stream.h>
+#include <sconex/Descriptor.h>
+#include <sconex/Buffer.h>
 namespace scx {
 
 #define StreamTransfer_MAX_BUFFER (10*1048576)

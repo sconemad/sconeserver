@@ -22,12 +22,12 @@ Free Software Foundation, Inc.,
 #ifndef scxModule_h
 #define scxModule_h
 
-#include "sconex/sconex.h"
-#include "sconex/VersionTag.h"
-#include "sconex/ScriptBase.h"
-#include "sconex/FilePath.h"
-#include "sconex/Date.h"
-#include "sconex/Logger.h"
+#include <sconex/sconex.h>
+#include <sconex/VersionTag.h>
+#include <sconex/ScriptBase.h>
+#include <sconex/FilePath.h>
+#include <sconex/Date.h>
+#include <sconex/Logger.h>
 
 namespace scx {
 
@@ -110,6 +110,7 @@ protected:
   ModuleLoader* find_module(const std::string& name);
 
   bool load_config_file(FilePath path = FilePath());
+  bool load_config_dir(FilePath path = FilePath());
   
 private:
 

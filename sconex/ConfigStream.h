@@ -22,10 +22,10 @@ Free Software Foundation, Inc.,
 #ifndef scxConfigStream_h
 #define scxConfigStream_h
 
-#include "Module.h"
-#include "Descriptor.h"
-#include "LineBuffer.h"
-#include "ScriptExpr.h"
+#include <sconex/Module.h>
+#include <sconex/Descriptor.h>
+#include <sconex/LineBuffer.h>
+#include <sconex/ScriptExpr.h>
 
 namespace scx {
 

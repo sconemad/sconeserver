@@ -26,18 +26,18 @@ Free Software Foundation, Inc.,
 #include "SconesiteModule.h"
 #include "SconesiteStream.h"
 
-#include "sconex/Stream.h"
-#include "sconex/StreamTransfer.h"
-#include "sconex/Date.h"
-#include "sconex/Kernel.h"
-#include "sconex/File.h"
-#include "sconex/FileDir.h"
-#include "sconex/ScriptEngine.h"
-#include "sconex/ScriptExpr.h"
-#include "sconex/MemFile.h"
-#include "sconex/Socket.h"
-#include "sconex/StreamSocket.h"
-#include "sconex/utils.h"
+#include <sconex/Stream.h>
+#include <sconex/StreamTransfer.h>
+#include <sconex/Date.h>
+#include <sconex/Kernel.h>
+#include <sconex/File.h>
+#include <sconex/FileDir.h>
+#include <sconex/ScriptEngine.h>
+#include <sconex/ScriptExpr.h>
+#include <sconex/MemFile.h>
+#include <sconex/Socket.h>
+#include <sconex/StreamSocket.h>
+#include <sconex/utils.h>
 
 const char* XHTML_DOCTYPE = "<!DOCTYPE html PUBLIC '-//W3C//DTD XHTML 1.0 Transitional//EN' 'http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd'>";
 

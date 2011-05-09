@@ -16,7 +16,6 @@
 @SET_MAKE@
 
 # SconeServer (http://www.sconemad.com)
-# automake file for sconesite module
 
 
 
@@ -40,7 +39,7 @@ POST_UNINSTALL = :
 build_triplet = @build@
 host_triplet = @host@
 target_triplet = @target@
-subdir = http/sconesite
+subdir = sconesite
 DIST_COMMON = $(sconesiteinclude_HEADERS) $(srcdir)/Makefile.am \
 	$(srcdir)/Makefile.in
 ACLOCAL_M4 = $(top_srcdir)/aclocal.m4
@@ -282,7 +281,7 @@ Template.cpp \
 XMLArticleBody.cpp \
 XMLDoc.cpp
 
-sconesiteincludedir = $(includedir)/http/sconesite
+sconesiteincludedir = $(includedir)/sconex/sconesite
 sconesiteinclude_HEADERS = \
 SconesiteModule.h \
 SconesiteStream.h \
@@ -313,9 +312,9 @@ $(srcdir)/Makefile.in: @MAINTAINER_MODE_TRUE@ $(srcdir)/Makefile.am  $(am__confi
 	      exit 1;; \
 	  esac; \
 	done; \
-	echo ' cd $(top_srcdir) && $(AUTOMAKE) --gnu http/sconesite/Makefile'; \
+	echo ' cd $(top_srcdir) && $(AUTOMAKE) --gnu sconesite/Makefile'; \
 	$(am__cd) $(top_srcdir) && \
-	  $(AUTOMAKE) --gnu http/sconesite/Makefile
+	  $(AUTOMAKE) --gnu sconesite/Makefile
 .PRECIOUS: Makefile
 Makefile: $(srcdir)/Makefile.in $(top_builddir)/config.status
 	@case '$?' in \

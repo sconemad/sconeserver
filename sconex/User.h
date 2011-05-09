@@ -22,7 +22,7 @@ Free Software Foundation, Inc.,
 #ifndef scxUser_h
 #define scxUser_h
 
-#include "sconex/sconex.h"
+#include <sconex/sconex.h>
 
 #include <pwd.h>
 

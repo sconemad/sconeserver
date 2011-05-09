@@ -21,14 +21,14 @@ Free Software Foundation, Inc.,
 
 #include "smtp/SMTPClient.h"
 
-#include "sconex/Logger.h"
-#include "sconex/VersionTag.h"
-#include "sconex/utils.h"
-#include "sconex/Kernel.h"
-#include "sconex/Date.h"
-#include "sconex/StreamSocket.h"
-#include "sconex/StreamDebugger.h"
-#include "sconex/ScriptTypes.h"
+#include <sconex/Logger.h>
+#include <sconex/VersionTag.h>
+#include <sconex/utils.h>
+#include <sconex/Kernel.h>
+#include <sconex/Date.h>
+#include <sconex/StreamSocket.h>
+#include <sconex/StreamDebugger.h>
+#include <sconex/ScriptTypes.h>
 namespace smtp {
 
 //=============================================================================

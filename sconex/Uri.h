@@ -22,8 +22,8 @@ Free Software Foundation, Inc.,
 #ifndef scxUri_h
 #define scxUri_h
 
-#include "sconex/sconex.h"
-#include "sconex/ScriptBase.h"
+#include <sconex/sconex.h>
+#include <sconex/ScriptBase.h>
 namespace scx {
 
 //===========================================================================

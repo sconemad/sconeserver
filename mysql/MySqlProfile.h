@@ -22,8 +22,8 @@ Free Software Foundation, Inc.,
 #ifndef MySqlProfile_h
 #define MySqlProfile_h
 
-#include "sconex/Database.h"
-#include "sconex/Mutex.h"
+#include <sconex/Database.h>
+#include <sconex/Mutex.h>
 
 #include <mysql.h>
 

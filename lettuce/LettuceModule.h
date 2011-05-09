@@ -22,8 +22,8 @@ Free Software Foundation, Inc.,
 #ifndef lettuceModule_h
 #define lettuceModule_h
 
-#include "sconex/Module.h"
-#include "sconex/Stream.h"
+#include <sconex/Module.h>
+#include <sconex/Stream.h>
 
 //=========================================================================
 class LettuceModule : public scx::Module,

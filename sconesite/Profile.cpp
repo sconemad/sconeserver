@@ -25,14 +25,14 @@ Free Software Foundation, Inc.,
 #include "Template.h"
 #include "SconesiteModule.h"
 
-#include "sconex/Stream.h"
-#include "sconex/StreamTransfer.h"
-#include "sconex/Date.h"
-#include "sconex/Kernel.h"
-#include "sconex/File.h"
-#include "sconex/FileDir.h"
-#include "sconex/ScriptTypes.h"
-#include "sconex/Database.h"
+#include <sconex/Stream.h>
+#include <sconex/StreamTransfer.h>
+#include <sconex/Date.h>
+#include <sconex/Kernel.h>
+#include <sconex/File.h>
+#include <sconex/FileDir.h>
+#include <sconex/ScriptTypes.h>
+#include <sconex/Database.h>
 
 #include <memory> // Using auto_ptr
 

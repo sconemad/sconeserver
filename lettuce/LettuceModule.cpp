@@ -23,8 +23,8 @@ Free Software Foundation, Inc.,
 #include "LettuceCommandStream.h"
 #include "LettuceMediaStream.h"
 
-#include "sconex/ModuleInterface.h"
-#include "sconex/ScriptTypes.h"
+#include <sconex/ModuleInterface.h>
+#include <sconex/ScriptTypes.h>
 
 SCONESERVER_MODULE(LettuceModule);
 

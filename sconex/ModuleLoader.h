@@ -22,10 +22,10 @@ Free Software Foundation, Inc.,
 #ifndef scxModuleLoader_h
 #define scxModuleLoader_h
 
-#include "sconex/sconex.h"
-#include "sconex/FilePath.h"
-#include "sconex/Module.h"
-#include "sconex/Mutex.h"
+#include <sconex/sconex.h>
+#include <sconex/FilePath.h>
+#include <sconex/Module.h>
+#include <sconex/Mutex.h>
 namespace scx {
 
 class Logger;

@@ -22,8 +22,8 @@ Free Software Foundation, Inc.,
 #ifndef scxDatagramMultiplexer_h
 #define scxDatagramMultiplexer_h
 
-#include "sconex/sconex.h"
-#include "sconex/Stream.h"
+#include <sconex/sconex.h>
+#include <sconex/Stream.h>
 namespace scx {
 
 class DatagramSocket;

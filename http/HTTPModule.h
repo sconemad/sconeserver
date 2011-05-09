@@ -22,14 +22,14 @@ Free Software Foundation, Inc.,
 #ifndef httpModule_h
 #define httpModule_h
 
-#include "http/http.h"
-#include "http/HostMapper.h"
-#include "http/AuthRealm.h"
-#include "http/Session.h"
-#include "sconex/Module.h"
-#include "sconex/Descriptor.h"
-#include "sconex/Uri.h"
-#include "sconex/Stream.h"
+#include <http/http.h>
+#include <http/HostMapper.h>
+#include <http/AuthRealm.h>
+#include <http/Session.h>
+#include <sconex/Module.h>
+#include <sconex/Descriptor.h>
+#include <sconex/Uri.h>
+#include <sconex/Stream.h>
 
 namespace http {
 

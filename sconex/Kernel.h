@@ -22,9 +22,9 @@ Free Software Foundation, Inc.,
 #ifndef scxKernel_h
 #define scxKernel_h
 
-#include "sconex/Module.h"
-#include "sconex/Multiplexer.h"
-#include "sconex/Job.h"
+#include <sconex/Module.h>
+#include <sconex/Multiplexer.h>
+#include <sconex/Job.h>
 
 namespace scx {
 

@@ -22,7 +22,7 @@ Free Software Foundation, Inc.,
 #ifndef scxMutex_h
 #define scxMutex_h
 
-#include "sconex/sconex.h"
+#include <sconex/sconex.h>
 namespace scx {
 
 class SCONEX_API ConditionEvent;

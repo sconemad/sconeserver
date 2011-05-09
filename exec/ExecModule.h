@@ -22,9 +22,9 @@ Free Software Foundation, Inc.,
 #ifndef execModule_h
 #define execModule_h
 
-#include "sconex/Module.h"
-#include "sconex/Stream.h"
-#include "sconex/User.h"
+#include <sconex/Module.h>
+#include <sconex/Stream.h>
+#include <sconex/User.h>
 
 //=========================================================================
 class ExecModule : public scx::Module,

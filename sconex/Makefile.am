@@ -83,6 +83,7 @@ File.h \
 FileDir.h \
 FilePath.h \
 FileStat.h \
+IOBase.h \
 Job.h \
 Kernel.h \
 LineBuffer.h \

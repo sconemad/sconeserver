@@ -22,8 +22,8 @@ Free Software Foundation, Inc.,
 #ifndef scxDatagramSocket_h
 #define scxDatagramSocket_h
 
-#include "sconex/sconex.h"
-#include "sconex/Socket.h"
+#include <sconex/sconex.h>
+#include <sconex/Socket.h>
 namespace scx {
 
 //=============================================================================

@@ -21,10 +21,10 @@ Free Software Foundation, Inc.,
 
 #include "LettuceCommandStream.h"
 
-#include "sconex/DatagramChannel.h"
-#include "sconex/SocketAddress.h"
-#include "sconex/Stream.h"
-#include "sconex/ScriptTypes.h"
+#include <sconex/DatagramChannel.h>
+#include <sconex/SocketAddress.h>
+#include <sconex/Stream.h>
+#include <sconex/ScriptTypes.h>
 
 //=========================================================================
 LettuceBuffer::LettuceBuffer(

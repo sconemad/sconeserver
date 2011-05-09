@@ -22,10 +22,10 @@ Free Software Foundation, Inc.,
 #ifndef ScriptExpr_h
 #define ScriptExpr_h
 
-#include "sconex/sconex.h"
-#include "sconex/ScriptBase.h"
-#include "sconex/ScriptTypes.h"
-#include "sconex/Provider.h"
+#include <sconex/sconex.h>
+#include <sconex/ScriptBase.h>
+#include <sconex/ScriptTypes.h>
+#include <sconex/Provider.h>
 namespace scx {
 
 class StandardContext;

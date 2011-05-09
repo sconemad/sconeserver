@@ -22,7 +22,7 @@ Free Software Foundation, Inc.,
 #ifndef scxMimeHeader_h
 #define scxMimeHeader_h
 
-#include "sconex/sconex.h"
+#include <sconex/sconex.h>
 namespace scx {
 
   

@@ -24,14 +24,14 @@ Free Software Foundation, Inc.,
 
 #include "Context.h"
 #include "Article.h"
-#include "http/Request.h"
-#include "http/Response.h"
-#include "sconex/ScriptBase.h"
-#include "sconex/Stream.h"
-#include "sconex/Descriptor.h"
-#include "sconex/FilePath.h"
-#include "sconex/FileDir.h"
-#include "sconex/ScriptStatement.h"
+#include <http/Request.h>
+#include <http/Response.h>
+#include <sconex/ScriptBase.h>
+#include <sconex/Stream.h>
+#include <sconex/Descriptor.h>
+#include <sconex/FilePath.h>
+#include <sconex/FileDir.h>
+#include <sconex/ScriptStatement.h>
 
 class Profile;
 class SconesiteStream;

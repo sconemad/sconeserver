@@ -22,9 +22,9 @@ Free Software Foundation, Inc.,
 #ifndef scxSocket_h
 #define scxSocket_h
 
-#include "sconex/sconex.h"
-#include "sconex/Descriptor.h"
-#include "sconex/SocketAddress.h"
+#include <sconex/sconex.h>
+#include <sconex/Descriptor.h>
+#include <sconex/SocketAddress.h>
 namespace scx {
 
 //=============================================================================

@@ -8,8 +8,8 @@ creating modules that modify data streams within the SconeServer framework.
 
 Copyright (c) 2000-2011 Andrew Wedgbury <wedge@sconemad.com> */
 
-#include "sconex/Module.h"
-#include "sconex/Stream.h"
+#include <sconex/Module.h>
+#include <sconex/Stream.h>
 
 //=============================================================================
 // Rot13Module - our module class, which must be derived from scx::Module

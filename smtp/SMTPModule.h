@@ -22,11 +22,11 @@ Free Software Foundation, Inc.,
 #ifndef smtpModule_h
 #define smtpModule_h
 
-#include "sconex/Module.h"
-#include "sconex/Descriptor.h"
-#include "sconex/Uri.h"
-#include "sconex/StreamSocket.h"
-#include "sconex/ScriptBase.h"
+#include <sconex/Module.h>
+#include <sconex/Descriptor.h>
+#include <sconex/Uri.h>
+#include <sconex/StreamSocket.h>
+#include <sconex/ScriptBase.h>
 
 namespace smtp {
 

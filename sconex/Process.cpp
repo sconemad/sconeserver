@@ -19,9 +19,9 @@ along with this program (see the file COPYING); if not, write to the
 Free Software Foundation, Inc.,
 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA */
 
-#include "sconex/Process.h"
-#include "sconex/utils.h"
-#include "sconex/Mutex.h"
+#include <sconex/Process.h>
+#include <sconex/utils.h>
+#include <sconex/Mutex.h>
 
 #ifdef HAVE_SYS_WAIT_H
 #  include <sys/wait.h>

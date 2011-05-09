@@ -20,10 +20,10 @@ Free Software Foundation, Inc.,
 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA */
 
 
-#include "http/Session.h"
-#include "http/HTTPModule.h"
-#include "sconex/ConfigFile.h"
-#include "sconex/Kernel.h"
+#include <http/Session.h>
+#include <http/HTTPModule.h>
+#include <sconex/ConfigFile.h>
+#include <sconex/Kernel.h>
 namespace http {
 
 class SessionManager;

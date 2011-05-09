@@ -23,8 +23,8 @@ Free Software Foundation, Inc.,
 #define tftpModule_h
 
 #include "TFTPProfile.h"
-#include "sconex/Module.h"
-#include "sconex/Stream.h"
+#include <sconex/Module.h>
+#include <sconex/Stream.h>
 
 //=============================================================================
 // TFTPModule - Trivial File Transfer Protocol module

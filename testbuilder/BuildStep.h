@@ -26,8 +26,8 @@ Free Software Foundation, Inc.,
 #include "BuildProfile.h"
 #include "Build.h"
 
-#include "sconex/Date.h"
-#include "sconex/Mutex.h"
+#include <sconex/Date.h>
+#include <sconex/Mutex.h>
 
 namespace scx { class Process; class StreamTokenizer; };
 class BuildProcessStream;

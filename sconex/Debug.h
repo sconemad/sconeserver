@@ -25,7 +25,7 @@ Free Software Foundation, Inc.,
 // THIS TURNS DEBUGGING ON AND OFF
 #define _DEBUG
 
-#include "sconex/sconex.h"
+#include <sconex/sconex.h>
 namespace scx {
 
 class Logger;

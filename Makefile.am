@@ -18,6 +18,7 @@ ip6 \
 local \
 bluetooth \
 http \
+sconesite \
 mime \
 simple \
 ssl \

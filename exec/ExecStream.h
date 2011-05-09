@@ -23,9 +23,9 @@ Free Software Foundation, Inc.,
 #define execStream_h
 
 #include "ExecModule.h"
-#include "sconex/Stream.h"
-#include "sconex/Module.h"
-#include "sconex/ScriptTypes.h"
+#include <sconex/Stream.h>
+#include <sconex/Module.h>
+#include <sconex/ScriptTypes.h>
 
 namespace scx { class Process; }
 

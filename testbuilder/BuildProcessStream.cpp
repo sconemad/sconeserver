@@ -21,7 +21,7 @@ Free Software Foundation, Inc.,
 
 #include "BuildProcessStream.h"
 #include "BuildStep.h"
-#include "sconex/Process.h"
+#include <sconex/Process.h>
 
 //=========================================================================
 BuildProcessStream::BuildProcessStream(

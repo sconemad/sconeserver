@@ -22,9 +22,9 @@ Free Software Foundation, Inc.,
 #ifndef statChannel_h
 #define statChannel_h
 
-#include "sconex/Stream.h"
-#include "sconex/Module.h"
-#include "sconex/ScriptBase.h"
+#include <sconex/Stream.h>
+#include <sconex/Module.h>
+#include <sconex/ScriptBase.h>
 
 //=============================================================================
 // StatChannel - A statistic-collection channel

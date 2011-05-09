@@ -22,11 +22,11 @@ Free Software Foundation, Inc.,
 #include "SimpleModule.h"
 #include "SimpleStreams.h"
 
-#include "sconex/ModuleInterface.h"
-#include "sconex/Socket.h"
-#include "sconex/Date.h"
-#include "sconex/Response.h"
-#include "sconex/ScriptTypes.h"
+#include <sconex/ModuleInterface.h>
+#include <sconex/Socket.h>
+#include <sconex/Date.h>
+#include <sconex/Response.h>
+#include <sconex/ScriptTypes.h>
 
 SCONESERVER_MODULE(SimpleModule);
 

@@ -22,8 +22,8 @@ Free Software Foundation, Inc.,
 #ifndef scxThread_h
 #define scxThread_h
 
-#include "sconex/sconex.h"
-#include "sconex/Mutex.h"
+#include <sconex/sconex.h>
+#include <sconex/Mutex.h>
 namespace scx {
 
 //=============================================================================

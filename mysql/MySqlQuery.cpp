@@ -22,9 +22,9 @@ Free Software Foundation, Inc.,
 
 #include "MySqlQuery.h"
 #include "MySqlModule.h"
-#include "sconex/utils.h"
-#include "sconex/ScriptTypes.h"
-#include "sconex/Date.h"
+#include <sconex/utils.h>
+#include <sconex/ScriptTypes.h>
+#include <sconex/Date.h>
 
 namespace mysql {
 

@@ -22,12 +22,12 @@ Free Software Foundation, Inc.,
 #ifndef httpResponseStream_h
 #define httpResponseStream_h
 
-#include "sconex/Stream.h"
-#include "sconex/LineBuffer.h"
-#include "sconex/Buffer.h"
-#include "sconex/MimeHeader.h"
-#include "http/http.h"
-#include "http/MessageStream.h"
+#include <sconex/Stream.h>
+#include <sconex/LineBuffer.h>
+#include <sconex/Buffer.h>
+#include <sconex/MimeHeader.h>
+#include <http/http.h>
+#include <http/MessageStream.h>
 
 namespace http {
 

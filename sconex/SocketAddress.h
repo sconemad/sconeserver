@@ -22,8 +22,8 @@ Free Software Foundation, Inc.,
 #ifndef scxSocketAddress_h
 #define scxSocketAddress_h
 
-#include "sconex/sconex.h"
-#include "sconex/ScriptBase.h"
+#include <sconex/sconex.h>
+#include <sconex/ScriptBase.h>
 namespace scx {
 
 class Socket;

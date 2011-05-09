@@ -24,10 +24,10 @@ Free Software Foundation, Inc.,
 
 #include "BuildProfile.h"
 
-#include "sconex/Module.h"
-#include "sconex/Thread.h"
-#include "sconex/Mutex.h"
-#include "sconex/User.h"
+#include <sconex/Module.h>
+#include <sconex/Thread.h>
+#include <sconex/Mutex.h>
+#include <sconex/User.h>
 
 class Build;
 

@@ -20,7 +20,7 @@ Free Software Foundation, Inc.,
 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA */
 
 #include "IP6SocketAddress.h"
-#include "sconex/ScriptTypes.h"
+#include <sconex/ScriptTypes.h>
 
 //=============================================================================
 IP6SocketAddress::IP6SocketAddress(const scx::ScriptRef* args)

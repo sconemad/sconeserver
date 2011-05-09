@@ -22,7 +22,7 @@ Free Software Foundation, Inc.,
 #ifndef sslStream_h
 #define sslStream_h
 
-#include "sconex/Stream.h"
+#include <sconex/Stream.h>
 
 // Includes from OpenSSL shared library
 #include <openssl/ssl.h>

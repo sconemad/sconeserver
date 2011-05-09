@@ -22,8 +22,8 @@ Free Software Foundation, Inc.,
 #ifndef scxModuleLoaderDLL_h
 #define scxModuleLoaderDLL_h
 
-#include "sconex/sconex.h"
-#include "sconex/ModuleLoader.h"
+#include <sconex/sconex.h>
+#include <sconex/ModuleLoader.h>
 namespace scx {
 
 //=============================================================================

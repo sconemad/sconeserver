@@ -22,12 +22,12 @@ Free Software Foundation, Inc.,
 #ifndef lettuceMediaStream_h
 #define lettuceMediaStream_h
 
-#include "sconex/Module.h"
-#include "sconex/File.h"
-#include "sconex/Stream.h"
-#include "sconex/StreamTransfer.h"
-#include "sconex/LineBuffer.h"
-#include "sconex/Kernel.h"
+#include <sconex/Module.h>
+#include <sconex/File.h>
+#include <sconex/Stream.h>
+#include <sconex/StreamTransfer.h>
+#include <sconex/LineBuffer.h>
+#include <sconex/Kernel.h>
 
 
 //=========================================================================

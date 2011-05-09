@@ -27,20 +27,20 @@ Free Software Foundation, Inc.,
 #include "Template.h"
 #include "RenderMarkup.h"
 
-#include "http/HTTPModule.h"
-#include "http/Request.h"
-#include "http/Session.h"
-#include "http/MessageStream.h"
-#include "http/Status.h"
+#include <http/HTTPModule.h>
+#include <http/Request.h>
+#include <http/Session.h>
+#include <http/MessageStream.h>
+#include <http/Status.h>
 
-#include "sconex/Stream.h"
-#include "sconex/Date.h"
-#include "sconex/NullFile.h"
-#include "sconex/StreamTransfer.h"
-#include "sconex/StreamSocket.h"
-#include "sconex/Kernel.h"
-#include "sconex/StreamDebugger.h"
-#include "sconex/FilePath.h"
+#include <sconex/Stream.h>
+#include <sconex/Date.h>
+#include <sconex/NullFile.h>
+#include <sconex/StreamTransfer.h>
+#include <sconex/StreamSocket.h>
+#include <sconex/Kernel.h>
+#include <sconex/StreamDebugger.h>
+#include <sconex/FilePath.h>
 
 //=========================================================================
 // ParamReaderStream - Stream for reading parameters in mime headers

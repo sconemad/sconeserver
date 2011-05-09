@@ -23,9 +23,9 @@ Free Software Foundation, Inc.,
 #define sslModule_h
 
 #include "SSLChannel.h"
-#include "sconex/Module.h"
-#include "sconex/Descriptor.h"
-#include "sconex/Stream.h"
+#include <sconex/Module.h>
+#include <sconex/Descriptor.h>
+#include <sconex/Stream.h>
 
 //=============================================================================
 // SSLModule - A module providing Secure Socket Layer encryption streams

@@ -22,7 +22,7 @@ Free Software Foundation, Inc.,
 
 #include "StatChannel.h"
 #include "StatModule.h"
-#include "sconex/ScriptTypes.h"
+#include <sconex/ScriptTypes.h>
 
 //=========================================================================
 StatChannel::StatChannel(const std::string& name)

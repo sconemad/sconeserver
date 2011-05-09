@@ -22,8 +22,8 @@ Free Software Foundation, Inc.,
 #ifndef scxFilePath_h
 #define scxFilePath_h
 
-#include "sconex/sconex.h"
-#include "sconex/ScriptBase.h"
+#include <sconex/sconex.h>
+#include <sconex/ScriptBase.h>
 namespace scx {
 
 class User;

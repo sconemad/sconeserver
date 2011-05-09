@@ -22,10 +22,10 @@ Free Software Foundation, Inc.,
 #ifndef scxScriptEngine_h
 #define scxScriptEngine_h
 
-#include "sconex/sconex.h"
-#include "sconex/StreamTokenizer.h"
-#include "sconex/ScriptExpr.h"
-#include "sconex/ScriptStatement.h"
+#include <sconex/sconex.h>
+#include <sconex/StreamTokenizer.h>
+#include <sconex/ScriptExpr.h>
+#include <sconex/ScriptStatement.h>
 namespace scx {
 
 class ScriptStatement;

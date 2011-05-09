@@ -26,8 +26,8 @@ Free Software Foundation, Inc.,
 #include "TFTPStream.h"
 #include "TFTPProfile.h"
 
-#include "sconex/ModuleInterface.h"
-#include "sconex/ScriptTypes.h"
+#include <sconex/ModuleInterface.h>
+#include <sconex/ScriptTypes.h>
 
 SCONESERVER_MODULE(TFTPModule);
 

@@ -22,7 +22,7 @@ Free Software Foundation, Inc.,
 #ifndef scxBase64_h
 #define scxBase64_h
 
-#include "sconex/sconex.h"
+#include <sconex/sconex.h>
 namespace scx {
 
 //===========================================================================

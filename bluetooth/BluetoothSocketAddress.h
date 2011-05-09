@@ -22,7 +22,7 @@ Free Software Foundation, Inc.,
 #ifndef bluetoothSocketAddress_h
 #define bluetoothSocketAddress_h
 
-#include "sconex/SocketAddress.h"
+#include <sconex/SocketAddress.h>
 
 #include <bluetooth/bluetooth.h>
 #include <bluetooth/rfcomm.h>

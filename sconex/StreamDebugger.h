@@ -22,9 +22,9 @@ Free Software Foundation, Inc.,
 #ifndef scxStreamDebugger_h
 #define scxStreamDebugger_h
 
-#include "sconex/sconex.h"
-#include "sconex/Stream.h"
-#include "sconex/File.h"
+#include <sconex/sconex.h>
+#include <sconex/Stream.h>
+#include <sconex/File.h>
 namespace scx {
 
 //=============================================================================

@@ -19,39 +19,38 @@ along with this program (see the file COPYING); if not, write to the
 Free Software Foundation, Inc.,
 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA */
 
+#ifndef sconesiteTemplate_h
+#define sconesiteTemplate_h
 
-#include "Template.h"
-#include "Article.h"
-#include "Profile.h"
-#include "Context.h"
+#include <sconex/Stream.h>
+#include <sconex/FilePath.h>
+#include "XMLDoc.h"
 
-#include "sconex/Stream.h"
-#include "sconex/StreamTransfer.h"
-#include "sconex/Date.h"
-#include "sconex/Kernel.h"
-#include "sconex/FileDir.h"
-
+class Profile;
 
 //=========================================================================
-Template::Template(
-  Profile& profile,
-  const std::string& name,
-  const scx::FilePath& path
-) : XMLDoc(name,path,name + ".xml"),
-    m_profile(profile),
-    m_headings(1,name,0)
-{
+class Template : public XMLDoc {
 
-}
+public:
 
-//=========================================================================
-Template::~Template()
-{
+  Template(Profile& profile,
+           const std::string& name,
+           const scx::FilePath& path);
 
-}
+  ~Template();
 
-//=========================================================================
-const ArticleHeading& Template::get_headings() const
-{
-  return m_headings;
-}
+  virtual const ArticleHeading& get_headings() const;
+
+  typedef scx::ScriptRefTo<Template> Ref;
+  
+protected:
+
+private:
+  
+  Profile& m_profile;
+
+  ArticleHeading m_headings;
+
+};
+
+#endif

@@ -24,13 +24,13 @@ Free Software Foundation, Inc.,
 #include "ServerDatagramMultiplexer.h"
 #include "ServerModule.h"
 
-#include "sconex/Kernel.h" 
-#include "sconex/ListenerSocket.h"
-#include "sconex/DatagramSocket.h"
-#include "sconex/Descriptor.h"
-#include "sconex/Module.h"
-#include "sconex/ScriptTypes.h"
-#include "sconex/Stream.h"
+#include <sconex/Kernel.h> 
+#include <sconex/ListenerSocket.h>
+#include <sconex/DatagramSocket.h>
+#include <sconex/Descriptor.h>
+#include <sconex/Module.h>
+#include <sconex/ScriptTypes.h>
+#include <sconex/Stream.h>
 
 //=============================================================================
 ConnectionChain::ConnectionChain(

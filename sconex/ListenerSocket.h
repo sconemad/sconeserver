@@ -22,8 +22,8 @@ Free Software Foundation, Inc.,
 #ifndef scxListenerSocket_h
 #define scxListenerSocket_h
 
-#include "sconex/sconex.h"
-#include "sconex/Socket.h"
+#include <sconex/sconex.h>
+#include <sconex/Socket.h>
 namespace scx {
 
 class StreamSocket;

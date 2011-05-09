@@ -25,8 +25,8 @@ Free Software Foundation, Inc.,
 #include "StatModule.h"
 #include "StatChannel.h"
 
-#include "sconex/Stream.h"
-#include "sconex/Module.h"
+#include <sconex/Stream.h>
+#include <sconex/Module.h>
 
 //=========================================================================
 // StatStream - A transparent stream which collects connection and data 

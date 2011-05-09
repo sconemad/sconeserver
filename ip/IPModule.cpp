@@ -20,10 +20,10 @@ Free Software Foundation, Inc.,
 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA */
 
 
-#include "sconex/ModuleInterface.h"
-#include "sconex/Module.h"
-#include "sconex/ScriptTypes.h"
-#include "sconex/ScriptExpr.h"
+#include <sconex/ModuleInterface.h>
+#include <sconex/Module.h>
+#include <sconex/ScriptTypes.h>
+#include <sconex/ScriptExpr.h>
 #include "IPSocketAddress.h"
 
 //=========================================================================

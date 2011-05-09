@@ -22,9 +22,9 @@ Free Software Foundation, Inc.,
 #ifndef scxStreamTokenizer_h
 #define scxStreamTokenizer_h
 
-#include "sconex/sconex.h"
-#include "sconex/Stream.h"
-#include "sconex/Buffer.h"
+#include <sconex/sconex.h>
+#include <sconex/Stream.h>
+#include <sconex/Buffer.h>
 namespace scx {
 
 #define StreamTokenizer_MAX_BUFFER (10*1048576)

@@ -19,7 +19,7 @@ along with this program (see the file COPYING); if not, write to the
 Free Software Foundation, Inc.,
 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA */
 
-#include "sconex/StreamTransfer.h"
+#include <sconex/StreamTransfer.h>
 namespace scx {
 
 // Uncomment to enable debug logging

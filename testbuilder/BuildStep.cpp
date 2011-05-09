@@ -22,13 +22,13 @@ Free Software Foundation, Inc.,
 
 #include "BuildStep.h"
 #include "BuildProcessStream.h"
-#include "sconex/Process.h"
-#include "sconex/FilePath.h"
-#include "sconex/StreamTransfer.h"
-#include "sconex/StreamTokenizer.h"
-#include "sconex/File.h"
-#include "sconex/Kernel.h"
-#include "sconex/User.h"
+#include <sconex/Process.h>
+#include <sconex/FilePath.h>
+#include <sconex/StreamTransfer.h>
+#include <sconex/StreamTokenizer.h>
+#include <sconex/File.h>
+#include <sconex/Kernel.h>
+#include <sconex/User.h>
 
 //=========================================================================
 BuildStep::BuildStep(

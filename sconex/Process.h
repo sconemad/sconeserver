@@ -22,10 +22,10 @@ Free Software Foundation, Inc.,
 #ifndef scxProcess_h
 #define scxProcess_h
 
-#include "sconex/sconex.h"
-#include "sconex/StreamSocket.h"
-#include "sconex/FilePath.h"
-#include "sconex/User.h"
+#include <sconex/sconex.h>
+#include <sconex/StreamSocket.h>
+#include <sconex/FilePath.h>
+#include <sconex/User.h>
 namespace scx {
 
 class Mutex;

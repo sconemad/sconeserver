@@ -23,9 +23,9 @@ Free Software Foundation, Inc.,
 #include "StatStream.h"
 #include "StatModule.h"
 
-#include "sconex/ModuleInterface.h"
-#include "sconex/Module.h"
-#include "sconex/Stream.h"
+#include <sconex/ModuleInterface.h>
+#include <sconex/Module.h>
+#include <sconex/Stream.h>
 
 //=========================================================================
 StatStream::StatStream(StatModule& mod,

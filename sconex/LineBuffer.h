@@ -22,8 +22,8 @@ Free Software Foundation, Inc.,
 #ifndef scxLineBuffer_h
 #define scxLineBuffer_h
 
-#include "sconex/sconex.h"
-#include "sconex/StreamTokenizer.h"
+#include <sconex/sconex.h>
+#include <sconex/StreamTokenizer.h>
 namespace scx {
 
 //=============================================================================

@@ -22,7 +22,7 @@ Free Software Foundation, Inc.,
 #ifndef statModule_h
 #define statModule_h
 
-#include "sconex/Module.h"
+#include <sconex/Module.h>
 #include "stat/StatChannel.h"
 
 class StatModule;

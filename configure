@@ -17349,9 +17349,9 @@ ac_config_files="$ac_config_files http/dirindex/Makefile"
 
 ac_config_files="$ac_config_files http/errorpage/Makefile"
 
-ac_config_files="$ac_config_files http/sconesite/Makefile"
+ac_config_files="$ac_config_files sconesite/Makefile"
 
-ac_config_files="$ac_config_files http/sconesite/image/Makefile"
+ac_config_files="$ac_config_files sconesite/image/Makefile"
 
 ac_config_files="$ac_config_files exec/Makefile"
 
@@ -18514,8 +18514,8 @@ do
     "http/getfile/Makefile") CONFIG_FILES="$CONFIG_FILES http/getfile/Makefile" ;;
     "http/dirindex/Makefile") CONFIG_FILES="$CONFIG_FILES http/dirindex/Makefile" ;;
     "http/errorpage/Makefile") CONFIG_FILES="$CONFIG_FILES http/errorpage/Makefile" ;;
-    "http/sconesite/Makefile") CONFIG_FILES="$CONFIG_FILES http/sconesite/Makefile" ;;
-    "http/sconesite/image/Makefile") CONFIG_FILES="$CONFIG_FILES http/sconesite/image/Makefile" ;;
+    "sconesite/Makefile") CONFIG_FILES="$CONFIG_FILES sconesite/Makefile" ;;
+    "sconesite/image/Makefile") CONFIG_FILES="$CONFIG_FILES sconesite/image/Makefile" ;;
     "exec/Makefile") CONFIG_FILES="$CONFIG_FILES exec/Makefile" ;;
     "forward/Makefile") CONFIG_FILES="$CONFIG_FILES forward/Makefile" ;;
     "tftp/Makefile") CONFIG_FILES="$CONFIG_FILES tftp/Makefile" ;;
@@ -20066,8 +20066,8 @@ The following modules will be built:
     + getfile      yes
     + dirindex     yes
     + errorpage    yes
-    + sconesite    $SCONESITE
-      + image      $SCONESITE_IMAGE
+  + sconesite      $SCONESITE
+    + image        $SCONESITE_IMAGE
   + ssl            $SSL
   + exec           yes
   + forward        yes
@@ -20101,8 +20101,8 @@ The following modules will be built:
     + getfile      yes
     + dirindex     yes
     + errorpage    yes
-    + sconesite    $SCONESITE
-      + image      $SCONESITE_IMAGE
+  + sconesite      $SCONESITE
+    + image        $SCONESITE_IMAGE
   + ssl            $SSL
   + exec           yes
   + forward        yes

@@ -19,11 +19,11 @@ along with this program (see the file COPYING); if not, write to the
 Free Software Foundation, Inc.,
 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA */
 
-#include "sconex/ConfigFile.h"
+#include <sconex/ConfigFile.h>
 
 #include "SSLChannel.h"
 #include "SSLModule.h"
-#include "sconex/ScriptTypes.h"
+#include <sconex/ScriptTypes.h>
 
 //=========================================================================
 SSLChannel::SSLChannel(SSLModule& mod,

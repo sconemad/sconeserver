@@ -22,10 +22,10 @@ Free Software Foundation, Inc.,
 #ifndef httpHost_h
 #define httpHost_h
 
-#include "http/http.h"
-#include "http/DocRoot.h"
-#include "sconex/ScriptBase.h"
-#include "sconex/FilePath.h"
+#include <http/http.h>
+#include <http/DocRoot.h>
+#include <sconex/ScriptBase.h>
+#include <sconex/FilePath.h>
 
 namespace scx { class Descriptor; }
 

@@ -22,14 +22,14 @@ Free Software Foundation, Inc.,
 #ifndef httpClient_h
 #define httpClient_h
 
-#include "http/HTTPModule.h"
-#include "http/Request.h"
-#include "http/Response.h"
+#include <http/HTTPModule.h>
+#include <http/Request.h>
+#include <http/Response.h>
 
-#include "sconex/ScriptBase.h"
-#include "sconex/LineBuffer.h"
-#include "sconex/Uri.h"
-#include "sconex/Mutex.h"
+#include <sconex/ScriptBase.h>
+#include <sconex/LineBuffer.h>
+#include <sconex/Uri.h>
+#include <sconex/Mutex.h>
 namespace http {
 
 class ClientStream;

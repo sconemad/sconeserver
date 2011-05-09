@@ -22,8 +22,8 @@ Free Software Foundation, Inc.,
 #ifndef scxDatagramChannel_h
 #define scxDatagramChannel_h
 
-#include "sconex/sconex.h"
-#include "sconex/Descriptor.h"
+#include <sconex/sconex.h>
+#include <sconex/Descriptor.h>
 namespace scx {
 
 class DatagramSocket;

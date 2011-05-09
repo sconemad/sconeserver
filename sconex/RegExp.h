@@ -22,8 +22,8 @@ Free Software Foundation, Inc.,
 #ifndef scxRegExp_h
 #define scxRegExp_h
 
-#include "sconex/sconex.h"
-#include "sconex/ScriptBase.h"
+#include <sconex/sconex.h>
+#include <sconex/ScriptBase.h>
 namespace scx {
 
 //===========================================================================

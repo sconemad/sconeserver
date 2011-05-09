@@ -23,7 +23,7 @@ Free Software Foundation, Inc.,
 #define testbuilderControlStream_h
 
 #include "TestBuilderModule.h"
-#include "sconex/Stream.h"
+#include <sconex/Stream.h>
 #include "http/ResponseStream.h"
 
 //=========================================================================

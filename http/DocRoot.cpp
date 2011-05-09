@@ -20,16 +20,16 @@ Free Software Foundation, Inc.,
 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA */
 
 
-#include "http/DocRoot.h"
-#include "http/Host.h"
-#include "http/MessageStream.h"
-#include "http/Request.h"
-#include "http/AuthRealm.h"
-#include "sconex/Uri.h"
-#include "sconex/Base64.h"
-#include "sconex/utils.h"
-#include "sconex/Date.h"
-#include "sconex/FileStat.h"
+#include <http/DocRoot.h>
+#include <http/Host.h>
+#include <http/MessageStream.h>
+#include <http/Request.h>
+#include <http/AuthRealm.h>
+#include <sconex/Uri.h>
+#include <sconex/Base64.h>
+#include <sconex/utils.h>
+#include <sconex/Date.h>
+#include <sconex/FileStat.h>
 namespace http {
 
 

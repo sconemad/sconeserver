@@ -24,9 +24,9 @@ Free Software Foundation, Inc.,
 #include "SSLStream.h"
 #include "SSLChannel.h"
 
-#include "sconex/ModuleInterface.h"
-#include "sconex/StreamDebugger.h"
-#include "sconex/ScriptTypes.h"
+#include <sconex/ModuleInterface.h>
+#include <sconex/StreamDebugger.h>
+#include <sconex/ScriptTypes.h>
 
 #include <openssl/ssl.h>
 

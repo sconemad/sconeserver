@@ -22,7 +22,7 @@ Free Software Foundation, Inc.,
 #ifndef scxUtils_h
 #define scxUtils_h
 
-#include "sconex/sconex.h"
+#include <sconex/sconex.h>
 namespace scx {
 
 void SCONEX_API strup(std::string& s);

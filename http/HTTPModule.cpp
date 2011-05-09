@@ -19,17 +19,17 @@ along with this program (see the file COPYING); if not, write to the
 Free Software Foundation, Inc.,
 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA */
 
-#include "http/HTTPModule.h"
-#include "http/ConnectionStream.h"
-#include "http/Host.h"
-#include "http/Client.h"
+#include <http/HTTPModule.h>
+#include <http/ConnectionStream.h>
+#include <http/Host.h>
+#include <http/Client.h>
 
-#include "sconex/ScriptTypes.h"
-#include "sconex/Logger.h"
-#include "sconex/ModuleInterface.h"
-#include "sconex/ModuleLoaderDLL.h"
-#include "sconex/StreamDebugger.h"
-#include "sconex/ScriptExpr.h"
+#include <sconex/ScriptTypes.h>
+#include <sconex/Logger.h>
+#include <sconex/ModuleInterface.h>
+#include <sconex/ModuleLoaderDLL.h>
+#include <sconex/StreamDebugger.h>
+#include <sconex/ScriptExpr.h>
 
 namespace http {
 

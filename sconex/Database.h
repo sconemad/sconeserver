@@ -22,8 +22,8 @@ Free Software Foundation, Inc.,
 #ifndef scxDatabase_h
 #define scxDatabase_h
 
-#include "sconex/Provider.h"
-#include "sconex/ScriptBase.h"
+#include <sconex/Provider.h>
+#include <sconex/ScriptBase.h>
 
 namespace scx {
 

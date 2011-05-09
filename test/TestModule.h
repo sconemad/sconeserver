@@ -22,7 +22,7 @@ Free Software Foundation, Inc.,
 #ifndef TestModule_h
 #define TestModule_h
 
-#include "sconex/Module.h"
+#include <sconex/Module.h>
 
 //=============================================================================
 class TestModule : public scx::Module {

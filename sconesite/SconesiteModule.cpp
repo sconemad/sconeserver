@@ -24,11 +24,11 @@ Free Software Foundation, Inc.,
 #include "SconesiteStream.h"
 #include "Profile.h"
 
-#include "sconex/ModuleInterface.h"
-#include "sconex/Module.h"
-#include "sconex/ScriptTypes.h"
-#include "sconex/Stream.h"
-#include "sconex/Kernel.h"
+#include <sconex/ModuleInterface.h>
+#include <sconex/Module.h>
+#include <sconex/ScriptTypes.h>
+#include <sconex/Stream.h>
+#include <sconex/Kernel.h>
 
 SCONESERVER_MODULE(SconesiteModule);
 

@@ -22,7 +22,7 @@ Free Software Foundation, Inc.,
 #ifndef localSocketAddress_h
 #define localSocketAddress_h
 
-#include "sconex/SocketAddress.h"
+#include <sconex/SocketAddress.h>
 #include "sys/un.h"
 
 //=============================================================================

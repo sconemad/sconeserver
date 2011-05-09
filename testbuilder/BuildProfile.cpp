@@ -24,7 +24,7 @@ Free Software Foundation, Inc.,
 #include "Build.h"
 #include "BuildStep.h"
 
-#include "sconex/ScriptTypes.h"
+#include <sconex/ScriptTypes.h>
 
 //=========================================================================
 BuildProfile::BuildProfile(TestBuilderModule& module, const std::string& name)

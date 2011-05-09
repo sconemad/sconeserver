@@ -23,7 +23,7 @@ Free Software Foundation, Inc.,
 #include "MySqlModule.h"
 #include "MySqlProfile.h"
 #include "MySqlQuery.h"
-#include "sconex/ScriptTypes.h"
+#include <sconex/ScriptTypes.h>
 
 namespace mysql {
 

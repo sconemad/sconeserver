@@ -22,8 +22,8 @@ Free Software Foundation, Inc.,
 #ifndef lettuceCommandStream_h
 #define lettuceCommandStream_h
 
-#include "sconex/Module.h"
-#include "sconex/Stream.h"
+#include <sconex/Module.h>
+#include <sconex/Stream.h>
 
 
 //=========================================================================

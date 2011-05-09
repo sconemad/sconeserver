@@ -25,13 +25,13 @@ Free Software Foundation, Inc.,
 #include "Build.h"
 #include "BuildStep.h"
 
-#include "sconex/ModuleInterface.h"
-#include "sconex/Module.h"
-#include "sconex/Stream.h"
-#include "sconex/ScriptTypes.h"
-#include "sconex/Date.h"
-#include "sconex/FileDir.h"
-#include "sconex/File.h"
+#include <sconex/ModuleInterface.h>
+#include <sconex/Module.h>
+#include <sconex/Stream.h>
+#include <sconex/ScriptTypes.h>
+#include <sconex/Date.h>
+#include <sconex/FileDir.h>
+#include <sconex/File.h>
 
 SCONESERVER_MODULE(TestBuilderModule);
 

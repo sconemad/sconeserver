@@ -22,11 +22,11 @@ Free Software Foundation, Inc.,
 #ifndef rssFeed_h
 #define rssFeed_h
 
-#include "sconex/ScriptBase.h"
-#include "sconex/ScriptTypes.h"
-#include "sconex/Date.h"
-#include "sconex/Uri.h"
-#include "sconex/Mutex.h"
+#include <sconex/ScriptBase.h>
+#include <sconex/ScriptTypes.h>
+#include <sconex/Date.h>
+#include <sconex/Uri.h>
+#include <sconex/Mutex.h>
 
 #include <libxml/parser.h>
 #include <libxml/tree.h>

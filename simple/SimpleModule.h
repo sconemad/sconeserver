@@ -22,8 +22,8 @@ Free Software Foundation, Inc.,
 #ifndef SimpleModule_h
 #define SimpleModule_h
 
-#include "sconex/Module.h"
-#include "sconex/Stream.h"
+#include <sconex/Module.h>
+#include <sconex/Stream.h>
 
 //=============================================================================
 class SimpleModule : public scx::Module,

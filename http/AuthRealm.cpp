@@ -20,15 +20,15 @@ Free Software Foundation, Inc.,
 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA */
 
 
-#include "http/AuthRealm.h"
-#include "http/HTTPModule.h"
-#include "http/MessageStream.h"
-#include "http/Request.h"
-#include "sconex/Uri.h"
-#include "sconex/LineBuffer.h"
-#include "sconex/User.h"
-#include "sconex/File.h"
-#include "sconex/ScriptTypes.h"
+#include <http/AuthRealm.h>
+#include <http/HTTPModule.h>
+#include <http/MessageStream.h>
+#include <http/Request.h>
+#include <sconex/Uri.h>
+#include <sconex/LineBuffer.h>
+#include <sconex/User.h>
+#include <sconex/File.h>
+#include <sconex/ScriptTypes.h>
 
 namespace http {
 

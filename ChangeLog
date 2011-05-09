@@ -1,8 +1,15 @@
 
+2011-05-09 Andrew Wedgbury <wedge@sconemad.com>
+
+	* all: Include sconex headers with system includes,
+	another big change!
+	* sconesite: Moved from http/sconesite.
+	* sconex/Module: Add run-parts - runs all conf files in a directory.
+	
 2011-05-05 Andrew Wedgbury <wedge@sconemad.com>
 
-	* all: Rename SconeScript "Arg..." base classes to "Script...", as that
-	makes more sense. This is quite a big change!
+	* all: Rename SconeScript "Arg..." base classes to "Script...", as 
+	that makes more sense. This is quite a big change!
 	* sconex/ScriptBase: ScriptObject replaces Arg, with ScriptRef as a
 	ref counting smart pointer (ref is held by the ScriptObject).
 	* sconex/ScriptTypes: Standard Script types moved here.

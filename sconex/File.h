@@ -22,10 +22,10 @@ Free Software Foundation, Inc.,
 #ifndef scxFile_h
 #define scxFile_h
 
-#include "sconex/sconex.h"
-#include "sconex/Descriptor.h"
-#include "sconex/FilePath.h"
-#include "sconex/FileStat.h"
+#include <sconex/sconex.h>
+#include <sconex/Descriptor.h>
+#include <sconex/FilePath.h>
+#include <sconex/FileStat.h>
 
 namespace scx {
 

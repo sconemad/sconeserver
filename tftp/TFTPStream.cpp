@@ -23,9 +23,9 @@ Free Software Foundation, Inc.,
 #include "TFTPModule.h"
 #include "TFTPProfile.h"
 
-#include "sconex/DatagramSocket.h"
-#include "sconex/DatagramChannel.h"
-#include "sconex/Kernel.h"
+#include <sconex/DatagramSocket.h>
+#include <sconex/DatagramChannel.h>
+#include <sconex/Kernel.h>
 
 // Uncomment to enable debug info
 //#define TFTPStream_DEBUG_LOG(m) DEBUG_LOG(m)

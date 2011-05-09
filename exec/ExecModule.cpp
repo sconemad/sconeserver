@@ -22,10 +22,10 @@ Free Software Foundation, Inc.,
 #include "ExecModule.h"
 #include "ExecStream.h"
 
-#include "sconex/ModuleInterface.h"
-#include "sconex/Module.h"
-#include "sconex/ScriptTypes.h"
-#include "sconex/Process.h"
+#include <sconex/ModuleInterface.h>
+#include <sconex/Module.h>
+#include <sconex/ScriptTypes.h>
+#include <sconex/Process.h>
 
 SCONESERVER_MODULE(ExecModule);
 

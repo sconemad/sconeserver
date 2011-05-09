@@ -12,3 +12,7 @@ LettuceMediaStream.cpp
 
 lettuce_la_LDFLAGS = -module -avoid-version
 
+noinst_HEADERS = \
+LettuceModule.h \
+LettuceCommandStream.h \
+LettuceMediaStream.h
