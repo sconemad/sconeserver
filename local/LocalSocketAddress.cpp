@@ -33,8 +33,10 @@ Free Software Foundation, Inc.,
 #endif
     
 //=============================================================================
-LocalSocketAddress::LocalSocketAddress(const scx::ScriptRef* args)
-  : scx::SocketAddress(PF_LOCAL,SOCK_STREAM)
+LocalSocketAddress::LocalSocketAddress(scx::Module* module,
+				       const scx::ScriptRef* args)
+  : scx::SocketAddress(PF_LOCAL,SOCK_STREAM),
+    m_module(module)
 {
   DEBUG_COUNT_CONSTRUCTOR(LocalSocketAddress);
   memset(&m_addr,0,sizeof(m_addr));
@@ -50,7 +52,8 @@ LocalSocketAddress::LocalSocketAddress(const scx::ScriptRef* args)
 
 //=============================================================================
 LocalSocketAddress::LocalSocketAddress(const LocalSocketAddress& c)
-  : scx::SocketAddress(c)
+  : scx::SocketAddress(c),
+    m_module(c.m_module)
 {
   DEBUG_COUNT_CONSTRUCTOR(LocalSocketAddress);
   memcpy(&m_addr,&c.m_addr,sizeof(m_addr));

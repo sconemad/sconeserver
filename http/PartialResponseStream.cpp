@@ -35,9 +35,7 @@ namespace http {
 #endif
 
 //=============================================================================
-PartialResponseStream::PartialResponseStream(
-  HTTPModule& module
-)
+PartialResponseStream::PartialResponseStream(HTTPModule* module)
   : scx::Stream("http:partialresponse"),
     m_module(module),
     m_range_start(-1),

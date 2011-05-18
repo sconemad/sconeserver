@@ -36,7 +36,7 @@ namespace mysql {
 
 //=========================================================================
 MySqlProfile::MySqlProfile(
-  MySqlModule& module,
+  MySqlModule* module,
   const std::string& name,
   const std::string& database,
   const std::string& username,
@@ -48,7 +48,7 @@ MySqlProfile::MySqlProfile(
     m_num_connections(0),
     m_pool_max(5)
 {
-  m_parent = &module;
+  m_parent = module;
 
   std::string::size_type i1 = database.find_first_of(":");
   if (i1 != std::string::npos) {
@@ -137,7 +137,7 @@ void MySqlProfile::release_connection(MYSQL* conn)
 //=============================================================================
 scx::DbQuery* MySqlProfile::new_query(const std::string& query)
 {
-  return new MySqlQuery(*this,query);
+  return new MySqlQuery(this,query);
 }
 
 //=============================================================================
@@ -150,7 +150,7 @@ std::string MySqlProfile::get_string() const
 scx::ScriptRef* MySqlProfile::script_op(const scx::ScriptAuth& auth,
 					const scx::ScriptRef& ref,
 					const scx::ScriptOp& op,
-					scx::ScriptRef* right)
+					const scx::ScriptRef* right)
 {
   if (op.type() == scx::ScriptOp::Lookup) {
     const std::string name = right->object()->get_string();
@@ -174,7 +174,7 @@ scx::ScriptRef* MySqlProfile::script_op(const scx::ScriptAuth& auth,
 scx::ScriptRef* MySqlProfile::script_method(const scx::ScriptAuth& auth,
 					    const scx::ScriptRef& ref,
 					    const std::string& name,
-					    scx::ScriptRef* args)
+					    const scx::ScriptRef* args)
 {
   // Allow this for now
   //  if (!auth.trusted()) return new scx::ArgError("Not permitted");
@@ -183,7 +183,7 @@ scx::ScriptRef* MySqlProfile::script_method(const scx::ScriptAuth& auth,
     const scx::ScriptString* a_str = 
       scx::get_method_arg<scx::ScriptString>(args,0,"query");
     std::string s_str = (a_str ? a_str->get_string() : "");
-    return new MySqlQuery::Ref(new MySqlQuery(*this,s_str));
+    return new MySqlQuery::Ref(new MySqlQuery(this,s_str));
   }
 
   if ("set_connection_pool" == name) {

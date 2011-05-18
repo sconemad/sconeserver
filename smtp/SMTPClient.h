@@ -62,8 +62,8 @@ public:
     Failure 
   };
   
-  SMTPClient(SMTPModule& module,
-	 const scx::ScriptRef* args);
+  SMTPClient(SMTPModule* module,
+	     const scx::ScriptRef* args);
   SMTPClient(const SMTPClient& c);
   virtual ~SMTPClient();
 
@@ -91,7 +91,7 @@ public:
 
 private:
 
-  SMTPModule& m_module;
+  scx::ScriptRefTo<SMTPModule> m_module;
 
   MessageHeader m_header;
   
@@ -119,7 +119,7 @@ public:
     End
   };
 
-  SMTPClientStream(SMTPModule& module,
+  SMTPClientStream(SMTPModule* module,
 		   SMTPClient* client);
   
   virtual ~SMTPClientStream();
@@ -139,7 +139,7 @@ protected:
 
 private:
 
-  SMTPModule& m_module;
+  scx::ScriptRefTo<SMTPModule> m_module;
   SMTPClient* m_client;
   SMTPClient::Result m_result;
   std::string m_result_str;

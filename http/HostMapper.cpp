@@ -102,6 +102,16 @@ bool HostMapper::connect_request(scx::Descriptor* endpoint,
 }
 
 //=============================================================================
+Host* HostMapper::lookup_host(const std::string& name)
+{
+  HostMap::iterator it = m_hosts.find(name);
+  if (it != m_hosts.end()) {
+    return it->second->object();
+  }
+  return 0;
+}
+
+//=============================================================================
 scx::ScriptRef* HostMapper::script_op(const scx::ScriptAuth& auth,
 				      const scx::ScriptRef& ref,
 				      const scx::ScriptOp& op,

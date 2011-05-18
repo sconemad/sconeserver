@@ -42,7 +42,7 @@ public:
   virtual std::string info() const;
 
   virtual int init();
-  virtual void close();
+  virtual bool close();
   
   const scx::ScriptRef* get_server() const;
 

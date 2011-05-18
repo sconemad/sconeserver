@@ -2,7 +2,7 @@
 
 Simple streams
 
-Copyright (c) 2000-2005 Andrew Wedgbury <wedge@sconemad.com>
+Copyright (c) 2000-2011 Andrew Wedgbury <wedge@sconemad.com>
 
 This program is free software; you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -23,8 +23,9 @@ Free Software Foundation, Inc.,
 #include <sconex/Stream.h>
 
 //=========================================================================
-EchoStream::EchoStream()
-  : scx::Stream("echo")
+EchoStream::EchoStream(scx::Module* module)
+  : scx::Stream("echo"),
+    m_module(module)
 {
   enable_event(scx::Stream::Readable,true);
 }
@@ -61,8 +62,9 @@ scx::Condition EchoStream::event(scx::Stream::Event e)
 }
 
 //=========================================================================
-DiscardStream::DiscardStream()
-  : scx::Stream("discard")
+DiscardStream::DiscardStream(scx::Module* module)
+  : scx::Stream("discard"),
+    m_module(module)
 {
   enable_event(scx::Stream::Readable,true);
 }
@@ -97,8 +99,9 @@ scx::Condition DiscardStream::event(scx::Stream::Event e)
 std::string ChargenStream::s_chargen_str("!\"#$%&'()*+,-./0123456789:;<=>?@ABCDEFGHIJKLMNOPQRSTUVWXYZ[\\]^_`abcdefghijklmnopqrstuvwxyz{|}~ ");
 
 //=========================================================================
-ChargenStream::ChargenStream()
+ChargenStream::ChargenStream(scx::Module* module)
   : scx::Stream("chargen"),
+    m_module(module),
     m_x(0), m_s(0)
 {
   enable_event(scx::Stream::Readable,true);

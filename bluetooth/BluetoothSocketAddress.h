@@ -23,6 +23,7 @@ Free Software Foundation, Inc.,
 #define bluetoothSocketAddress_h
 
 #include <sconex/SocketAddress.h>
+#include <sconex/Module.h>
 
 #include <bluetooth/bluetooth.h>
 #include <bluetooth/rfcomm.h>
@@ -31,7 +32,8 @@ Free Software Foundation, Inc.,
 class BluetoothSocketAddress : public scx::SocketAddress {
 public:
 
-  BluetoothSocketAddress(const scx::ScriptRef* args);
+  BluetoothSocketAddress(scx::Module* module,
+			 const scx::ScriptRef* args);
 
   BluetoothSocketAddress(const BluetoothSocketAddress& c);
   
@@ -49,7 +51,7 @@ public:
   virtual const struct sockaddr* get_sockaddr() const;
   virtual socklen_t get_sockaddr_size() const;
   
-  // Arg methods
+  // ScriptObject methods
 
   virtual std::string get_string() const;
 
@@ -67,6 +69,8 @@ public:
   short get_channel() const;
 
 protected:
+
+  scx::Module::Ref m_module;
 
   struct sockaddr_rc m_addr;
   bool m_valid;

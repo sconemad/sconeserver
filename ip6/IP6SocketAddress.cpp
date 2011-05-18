@@ -23,8 +23,10 @@ Free Software Foundation, Inc.,
 #include <sconex/ScriptTypes.h>
 
 //=============================================================================
-IP6SocketAddress::IP6SocketAddress(const scx::ScriptRef* args)
-  : scx::SocketAddress(PF_INET6,SOCK_STREAM)
+IP6SocketAddress::IP6SocketAddress(scx::Module* module,
+				   const scx::ScriptRef* args)
+  : scx::SocketAddress(PF_INET6,SOCK_STREAM),
+    m_module(module)
 {
   DEBUG_COUNT_CONSTRUCTOR(IP6SocketAddress);
   memset(&m_addr,0,sizeof(m_addr));
@@ -58,6 +60,7 @@ IP6SocketAddress::IP6SocketAddress(const scx::ScriptRef* args)
 //=============================================================================
 IP6SocketAddress::IP6SocketAddress(const IP6SocketAddress& c)
   : scx::SocketAddress(c),
+    m_module(c.m_module),
     m_host(c.m_host),
     m_service(c.m_service),
     m_valid(c.m_valid)

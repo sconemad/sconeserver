@@ -48,11 +48,9 @@ class Host;
 class HTTP_API MessageStream : public scx::Stream {
 public:
 
-  MessageStream(
-    HTTPModule& module,
-    ConnectionStream& httpstream,
-    Request* request
-  );
+  MessageStream(HTTPModule* module,
+		ConnectionStream& httpstream,
+		Request* request);
   
   virtual ~MessageStream();
 
@@ -83,7 +81,7 @@ private:
   bool build_header();
   scx::Condition write_header();
   
-  HTTPModule& m_module;
+  HTTPModule::Ref m_module;
   ConnectionStream& m_httpstream;
   Request::Ref m_request;
   Response::Ref m_response;

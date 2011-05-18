@@ -67,7 +67,8 @@ class MySqlQuery : public scx::DbQuery {
 
 public:
 
-  MySqlQuery(MySqlProfile& profile, const std::string& query = "");
+  MySqlQuery(MySqlProfile* profile, 
+	     const std::string& query = "");
   MySqlQuery(const MySqlQuery& c);
   virtual ~MySqlQuery();
 
@@ -80,12 +81,12 @@ public:
   virtual scx::ScriptRef* script_op(const scx::ScriptAuth& auth,
 				    const scx::ScriptRef& ref,
 				    const scx::ScriptOp& op,
-				    scx::ScriptRef* right=0);
+				    const scx::ScriptRef* right=0);
 
   virtual scx::ScriptRef* script_method(const scx::ScriptAuth& auth,
 					const scx::ScriptRef& ref,
 					const std::string& name,
-					scx::ScriptRef* args);
+					const scx::ScriptRef* args);
 
   // DbQuery methods
   virtual bool exec(const scx::ScriptRef* args);
@@ -100,8 +101,7 @@ protected:
   void init();
   void log_error(const std::string& context, bool invalid);
 
-  MySqlProfile& m_profile;
-  scx::ScriptRef m_module_ref;
+  scx::ScriptRefTo<MySqlProfile> m_profile;
 
   std::string m_query;
   MYSQL* m_conn;

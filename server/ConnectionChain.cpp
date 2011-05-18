@@ -33,14 +33,12 @@ Free Software Foundation, Inc.,
 #include <sconex/Stream.h>
 
 //=============================================================================
-ConnectionChain::ConnectionChain(
-  const std::string& name,
-  ServerModule& module
-)
-  : m_name(name),
-    m_module(module)
+ConnectionChain::ConnectionChain(ServerModule* module,
+				 const std::string& name)
+  : m_module(module),
+    m_name(name)
 {
-  m_parent = &module;
+  m_parent = module;
 }
 
 //=============================================================================
@@ -152,7 +150,7 @@ scx::ScriptRef* ConnectionChain::script_method(const scx::ScriptAuth& auth,
     }
     
     log("Adding " + s_type + "(" + logargs + ")");
-    add(new ConnectionNode(s_type, ml, m_module) );
+    add(new ConnectionNode(m_module.object(), s_type, ml));
 
     return 0;
   }
@@ -191,8 +189,7 @@ scx::ScriptRef* ConnectionChain::script_method(const scx::ScriptAuth& auth,
     if (sa->socket_type() == SOCK_STREAM) {
       // STREAM socket
 
-      ServerListener* rl = new ServerListener(m_module, m_name);
-      rl->add_module_ref(&m_module);
+      ServerListener* rl = new ServerListener(m_module.object(), m_name);
     
       const int bl = 5;
       scx::ListenerSocket* ls = new scx::ListenerSocket(sa, bl);
@@ -220,8 +217,7 @@ scx::ScriptRef* ConnectionChain::script_method(const scx::ScriptAuth& auth,
       //log("Listening on " + sa->get_string());
       
       ServerDatagramMultiplexer* mp = 
-	new ServerDatagramMultiplexer(m_module, m_name);
-      mp->add_module_ref(&m_module);
+	new ServerDatagramMultiplexer(m_module.object(), m_name);
       ds->add_stream(mp);
   
       scx::Kernel::get()->connect(ds,0);
@@ -259,14 +255,12 @@ scx::ScriptRef* ConnectionChain::script_method(const scx::ScriptAuth& auth,
 //###---
 
 //=============================================================================
-ConnectionNode::ConnectionNode(
-  const std::string& type,
-  scx::ScriptRef* args,
-  ServerModule& module
-)
-  : m_type(type),
-    m_args(args),
-    m_module(module)
+ConnectionNode::ConnectionNode(ServerModule* module,
+			       const std::string& type,
+			       scx::ScriptRef* args)
+  : m_module(module),
+    m_type(type),
+    m_args(args)
 {
 
 }
@@ -291,7 +285,8 @@ bool ConnectionNode::connect(
       return false;
     }
 
-    ConnectionChain::Ref* chain = m_module.find(chain_name->get_string());
+    ConnectionChain::Ref* chain = 
+      m_module.object()->find(chain_name->get_string());
     if (!chain) {
       DEBUG_LOG("Unknown chain '" << chain_name << "'");
       return false;

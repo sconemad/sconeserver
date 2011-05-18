@@ -56,12 +56,10 @@ void LettuceModule::provide(const std::string& type,
 			    scx::Stream*& object)
 {
   if (type == "lettuce-command") {
-    object = new LettuceCommandStream(*this);
-    object->add_module_ref(this);
+    object = new LettuceCommandStream(this);
 
   } else if (type == "lettuce-media") {
-    object = new LettuceMediaStream(*this);
-    object->add_module_ref(this);
+    object = new LettuceMediaStream(this);
 
   }
 }

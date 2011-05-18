@@ -2,7 +2,7 @@
 
 Lettuce command stream
 
-Copyright (c) 2000-2009 Andrew Wedgbury <wedge@sconemad.com>
+Copyright (c) 2000-2011 Andrew Wedgbury <wedge@sconemad.com>
 
 This program is free software; you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -25,11 +25,12 @@ Free Software Foundation, Inc.,
 #include <sconex/Module.h>
 #include <sconex/Stream.h>
 
+class LettuceModule;
 
 //=========================================================================
 class LettuceBuffer {
-
 public:
+
   enum Type {
     LettuceBufferEmpty = 0x00,
     LettuceBufferBool = 0x10,
@@ -63,10 +64,9 @@ private:
 
 //=========================================================================
 class LettuceCommandStream : public scx::Stream {
-
 public:
 
-  LettuceCommandStream(scx::Module& module);
+  LettuceCommandStream(LettuceModule* module);
   ~LettuceCommandStream();
   
 protected:
@@ -75,7 +75,7 @@ protected:
 
 private:
 
-  scx::Module& m_module;
+  scx::ScriptRefTo<LettuceModule> m_module;
 
 };
 #endif

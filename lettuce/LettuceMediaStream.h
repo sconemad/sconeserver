@@ -29,13 +29,14 @@ Free Software Foundation, Inc.,
 #include <sconex/LineBuffer.h>
 #include <sconex/Kernel.h>
 
+class LettuceModule;
 
 //=========================================================================
 class LettuceMediaStream : public scx::Stream {
 
 public:
 
-  LettuceMediaStream(scx::Module& module);
+  LettuceMediaStream(LettuceModule* module);
   ~LettuceMediaStream();
   
 protected:
@@ -46,7 +47,7 @@ protected:
 
 private:
 
-  scx::Module& m_module;
+  scx::ScriptRefTo<LettuceModule> m_module;
 
   scx::File* m_pls_file;
   scx::LineBuffer* m_pls_buffer;

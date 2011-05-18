@@ -36,6 +36,7 @@ public:
   virtual std::string info() const;
 
   virtual int init();
+  virtual bool close();
 
   // Refresh all RSS feeds
   void refresh(bool force);

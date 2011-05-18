@@ -33,6 +33,26 @@ Free Software Foundation, Inc.,
 #include <sconex/LineBuffer.h>
 
 //=========================================================================
+class ErrorPageModule : public scx::Module,
+			public scx::Provider<scx::Stream> {
+public:
+
+  ErrorPageModule();
+  virtual ~ErrorPageModule();
+
+  virtual std::string info() const;
+
+  virtual int init();
+  
+  // Provider<Stream> method
+  virtual void provide(const std::string& type,
+		       const scx::ScriptRef* args,
+		       scx::Stream*& object);
+};
+
+SCONESERVER_MODULE(ErrorPageModule);
+
+//=========================================================================
 class VarSubstStream : public scx::LineBuffer {
 
 public:
@@ -47,9 +67,7 @@ public:
     m_vars["httpversion"] = m_msg->get_request().get_version().get_string();
   };
   
-  virtual ~VarSubstStream()
-  {
-  };
+  virtual ~VarSubstStream() { };
 
   virtual scx::Condition read(void* buffer,int n,int& na)
   {
@@ -64,7 +82,8 @@ public:
         int toklen = end-start-2;
         std::string tok = std::string(m_line,start+2,toklen);
         std::string rep;
-        std::map<std::string,std::string>::const_iterator iter = m_vars.find(tok);
+        std::map<std::string,std::string>::const_iterator iter = 
+	  m_vars.find(tok);
         if (iter!=m_vars.end()) {
           rep = (*iter).second;
         }
@@ -93,195 +112,33 @@ private:
 
 //=========================================================================
 class ErrorPageStream : public scx::Stream {
-
 public:
 
-  ErrorPageStream(
-    scx::Module& module
-  ) : Stream("errorpage"),
-      m_module(module),
-      m_file_mode(false)
-  {
+  ErrorPageStream(ErrorPageModule* module) 
+  : Stream("errorpage"),
+    m_module(module),
+    m_file_mode(false)
+  { };
 
-  }
-
-  ~ErrorPageStream()
-  {
-
-  }
+  ~ErrorPageStream() { };
 
 protected:
 
   void log(const std::string message,
-	   scx::Logger::Level level = scx::Logger::Info)
-  {
-    http::MessageStream* msg = GET_HTTP_MESSAGE();
-    if (msg) {
-      http::Request& req = const_cast<http::Request&>(msg->get_request());
-      m_module.log(req.get_id() + " " + message,level);
-    }
-  };
+	   scx::Logger::Level level = scx::Logger::Info);
 
-  virtual scx::Condition event(scx::Stream::Event e) 
-  {
+  virtual scx::Condition event(scx::Stream::Event e);
 
-    if (e == scx::Stream::Opening) {
-
-      http::MessageStream* msg = GET_HTTP_MESSAGE();
-      const http::Request& req = msg->get_request();
-      const http::Status& status = msg->get_response().get_status();
-      
-      if (req.get_method() != "GET" && 
-	  req.get_method() != "HEAD" &&
-	  req.get_method() != "POST" ) {
-	// Don't understand the method
-	return scx::Close;
-      }
- 
-      bool body_allowed = (status.code() >= 200 &&
-                           status.code() != 204 &&
-                           status.code() != 304);
-
-      if (body_allowed) {
-        msg->get_response().set_header("Content-Type","text/html");
-      }
-      if (body_allowed &&
-          (req.get_method() == "GET" || req.get_method() == "POST")) {
-	// Only need to send the message body if method is GET
-
-        /*
-        const http::FSDirectory* dir = msg->get_dir_node();
-        const scx::Arg* a_error_page = dir->get_param("error_page");
-        if (a_error_page) {
-          std::string s_error_page = a_error_page->get_string();
-          scx::FilePath path = dir->path() + s_error_page;
-          
-          scx::File* file = new scx::File();
-          if (file->open(path,scx::File::Read) == scx::Ok) {
-            m_file_mode = true;
-
-            m_module.log("Sending '" + status.string() +
-                         "' response using template file mode"); 
-            
-            VarSubstStream* varsubst = new VarSubstStream(msg);
-            file->add_stream(varsubst);
-            
-            int clength = file->size();
-            const int MAX_BUFFER_SIZE = 65536;
-            
-            scx::StreamTransfer* xfer =
-              new scx::StreamTransfer(file,std::min(clength,MAX_BUFFER_SIZE));
-            xfer->set_close_when_finished(true);
-            endpoint().add_stream(xfer);
-            
-            // Add file to kernel
-            scx::Kernel::get()->connect(file,0);
-          } else {
-            delete file;
-          }
-        }
-        */
-        if (m_file_mode == false) {
-          log("Sending '" + status.string() + "' response using basic mode"); 
-          enable_event(scx::Stream::Writeable,true);
-        }
-        
-      } else {
-        log("Sending '" + status.string() + "' header-only response");
-        return scx::Close;
-      }
-    }
-    
-    if (e == scx::Stream::Writeable) {
-
-      if (!m_file_mode) {
-        send_basic_page();
-        return scx::Close;
-      }
-    }
-  
-    return scx::Ok;
-  };
-
-  void send_basic_page()
-  {
-    http::MessageStream* msg = GET_HTTP_MESSAGE();
-    const http::Request& req = msg->get_request();
-    const http::Status& status = msg->get_response().get_status();
-
-    std::ostringstream oss;
-    oss << "<html>"
-        << "<head>"
-        << "<title>"
-        << status.string()
-        << "</title>"
-        << "</head>"
-        << "<body>"
-        << "<h1>"
-        << status.string()
-        << "</h1>";
-    
-    switch (status.code()) {
-      
-      case http::Status::Found:
-        oss << "<p>"
-            << "Redirecting to '<em>"
-            << msg->get_response().get_header("Location")
-            << "</em>'"
-            << "</p>\n";
-        break;
-        
-      case http::Status::NotFound:
-        oss << "<p>"
-            << "The requested page '<em>"
-            << req.get_uri().get_path()
-            << "</em>' could not be found on this server."
-            << "</p>\n";
-        break;
-        
-      default:
-        break;
-    }
-    
-    oss << "</body>"
-        << "</html>";
-    
-    Stream::write(oss.str());
-  };
+  void send_basic_page();
   
 private:
     
-  scx::Module& m_module;
+  scx::ScriptRefTo<ErrorPageModule> m_module;
 
   bool m_file_mode;
   
 };
 
-
-//=========================================================================
-class ErrorPageModule : public scx::Module,
-			public scx::Provider<scx::Stream> {
-public:
-
-  ErrorPageModule();
-  virtual ~ErrorPageModule();
-
-  virtual std::string info() const;
-
-  virtual int init();
-  
-  // Provider<Stream> method
-  virtual void provide(const std::string& type,
-		       const scx::ScriptRef* args,
-		       scx::Stream*& object);
-
-protected:
-
-private:
-
-};
-
-SCONESERVER_MODULE(ErrorPageModule);
 
 //=========================================================================
 ErrorPageModule::ErrorPageModule(
@@ -313,6 +170,144 @@ void ErrorPageModule::provide(const std::string& type,
 			      const scx::ScriptRef* args,
 			      scx::Stream*& object)
 {
-  object = new ErrorPageStream(*this);
-  object->add_module_ref(this);
+  object = new ErrorPageStream(this);
+}
+
+
+//=========================================================================
+void ErrorPageStream::log(const std::string message, scx::Logger::Level level)
+{
+  http::MessageStream* msg = GET_HTTP_MESSAGE();
+  if (msg) {
+    http::Request& req = const_cast<http::Request&>(msg->get_request());
+    m_module.object()->log(req.get_id() + " " + message,level);
+  }
+}
+
+//=========================================================================
+scx::Condition ErrorPageStream::event(scx::Stream::Event e) 
+{
+  if (e == scx::Stream::Opening) {
+    
+    http::MessageStream* msg = GET_HTTP_MESSAGE();
+    const http::Request& req = msg->get_request();
+    const http::Status& status = msg->get_response().get_status();
+    
+    if (req.get_method() != "GET" && 
+	req.get_method() != "HEAD" &&
+	req.get_method() != "POST" ) {
+      // Don't understand the method
+      return scx::Close;
+    }
+    
+    bool body_allowed = (status.code() >= 200 &&
+			 status.code() != 204 &&
+			 status.code() != 304);
+    
+    if (body_allowed) {
+      msg->get_response().set_header("Content-Type","text/html");
+    }
+    if (body_allowed &&
+	(req.get_method() == "GET" || req.get_method() == "POST")) {
+      // Only need to send the message body if method is GET
+      
+      /*
+        const http::FSDirectory* dir = msg->get_dir_node();
+        const scx::Arg* a_error_page = dir->get_param("error_page");
+        if (a_error_page) {
+	std::string s_error_page = a_error_page->get_string();
+	scx::FilePath path = dir->path() + s_error_page;
+        
+	scx::File* file = new scx::File();
+	if (file->open(path,scx::File::Read) == scx::Ok) {
+	m_file_mode = true;
+	
+	m_module.log("Sending '" + status.string() +
+	"' response using template file mode"); 
+        
+	VarSubstStream* varsubst = new VarSubstStream(msg);
+	file->add_stream(varsubst);
+        
+	int clength = file->size();
+	const int MAX_BUFFER_SIZE = 65536;
+        
+	scx::StreamTransfer* xfer =
+	new scx::StreamTransfer(file,std::min(clength,MAX_BUFFER_SIZE));
+	xfer->set_close_when_finished(true);
+	endpoint().add_stream(xfer);
+        
+	// Add file to kernel
+	scx::Kernel::get()->connect(file,0);
+	} else {
+	delete file;
+	}
+        }
+      */
+      if (m_file_mode == false) {
+	log("Sending '" + status.string() + "' response using basic mode"); 
+	enable_event(scx::Stream::Writeable,true);
+      }
+      
+    } else {
+      log("Sending '" + status.string() + "' header-only response");
+      return scx::Close;
+    }
+  }
+  
+  if (e == scx::Stream::Writeable) {
+    
+    if (!m_file_mode) {
+      send_basic_page();
+      return scx::Close;
+    }
+  }
+  
+  return scx::Ok;
+}
+
+//=========================================================================
+void ErrorPageStream::send_basic_page()
+{
+  http::MessageStream* msg = GET_HTTP_MESSAGE();
+  const http::Request& req = msg->get_request();
+  const http::Status& status = msg->get_response().get_status();
+  
+  std::ostringstream oss;
+  oss << "<html>"
+      << "<head>"
+      << "<title>"
+      << status.string()
+      << "</title>"
+      << "</head>"
+      << "<body>"
+      << "<h1>"
+      << status.string()
+      << "</h1>";
+  
+  switch (status.code()) {
+    
+  case http::Status::Found:
+    oss << "<p>"
+	<< "Redirecting to '<em>"
+	<< msg->get_response().get_header("Location")
+	<< "</em>'"
+	<< "</p>\n";
+    break;
+    
+  case http::Status::NotFound:
+    oss << "<p>"
+	<< "The requested page '<em>"
+	<< req.get_uri().get_path()
+	<< "</em>' could not be found on this server."
+	<< "</p>\n";
+    break;
+    
+  default:
+    break;
+  }
+  
+  oss << "</body>"
+      << "</html>";
+  
+  Stream::write(oss.str());
 }

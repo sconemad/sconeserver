@@ -23,13 +23,15 @@ Free Software Foundation, Inc.,
 #define localSocketAddress_h
 
 #include <sconex/SocketAddress.h>
+#include <sconex/Module.h>
 #include "sys/un.h"
 
 //=============================================================================
 class LocalSocketAddress : public scx::SocketAddress {
 public:
 
-  LocalSocketAddress(const scx::ScriptRef* args);
+  LocalSocketAddress(scx::Module* module,
+		     const scx::ScriptRef* args);
 
   LocalSocketAddress(const LocalSocketAddress& c);
   
@@ -62,6 +64,8 @@ public:
   std::string get_path() const;
   
 protected:
+
+  scx::Module::Ref m_module;
 
   struct sockaddr_un m_addr;
   

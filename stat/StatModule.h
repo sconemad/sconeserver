@@ -37,6 +37,8 @@ public:
 
   virtual std::string info() const;
   
+  virtual bool close();
+  
   StatChannel* find_channel(const std::string& name);
   StatChannel* add_channel(const std::string& name);
   bool remove_channel(const std::string& name);

@@ -40,12 +40,6 @@ MySqlModule::MySqlModule(
 MySqlModule::~MySqlModule()
 {
   scx::Database::unregister_provider("MySQL",this);
-
-  for (MySqlProfileMap::const_iterator it = m_profiles.begin();
-       it != m_profiles.end();
-       ++it) {
-    delete it->second;
-  }
 }
 
 //=========================================================================
@@ -61,9 +55,17 @@ int MySqlModule::init()
 }
 
 //=========================================================================
-void MySqlModule::close()
+bool MySqlModule::close()
 {
-
+  if (!scx::Module::close()) return false;
+  
+  for (MySqlProfileMap::const_iterator it = m_profiles.begin();
+       it != m_profiles.end();
+       ++it) {
+    delete it->second;
+  }
+  m_profiles.clear();
+  return true;
 }
 
 //=========================================================================
@@ -84,7 +86,7 @@ MySqlQuery* MySqlModule::new_query(const std::string& profile,
   MySqlProfile* p = lookup_profile(profile);
   if (!p) return 0;
 
-  return new MySqlQuery(*p,query);
+  return new MySqlQuery(p,query);
 }
 
 //=============================================================================
@@ -118,7 +120,6 @@ scx::ScriptRef* MySqlModule::script_method(const scx::ScriptAuth& auth,
 					   const scx::ScriptRef* args)
 {
   if (name == "add") {
-    DEBUG_LOG("MySqlModule::add");
     if (!auth.admin()) return scx::ScriptError::new_ref("Not permitted");
 
     const scx::ScriptString* a_profile = 
@@ -148,8 +149,6 @@ void MySqlModule::provide(const std::string& type,
 			  const scx::ScriptRef* args,
 			  scx::Database::Ref*& object)
 {
-  DEBUG_LOG("MySqlModule::provide");
-
   const scx::ScriptString* a_profile = 
     scx::get_method_arg<scx::ScriptString>(args,0,"profile");
   if (!a_profile) {
@@ -185,7 +184,7 @@ void MySqlModule::provide(const std::string& type,
       return;
     }
 
-    profile = new MySqlProfile(*this,
+    profile = new MySqlProfile(this,
 			       s_profile,
 			       a_db->get_string(),
 			       a_user->get_string(),

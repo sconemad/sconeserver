@@ -23,12 +23,14 @@ Free Software Foundation, Inc.,
 #define ip6SocketAddress_h
 
 #include <sconex/SocketAddress.h>
+#include <sconex/Module.h>
 
 //=============================================================================
 class IP6SocketAddress : public scx::SocketAddress {
 public:
 
-  IP6SocketAddress(const scx::ScriptRef* args);
+  IP6SocketAddress(scx::Module* module,
+		   const scx::ScriptRef* args);
 
   IP6SocketAddress(const IP6SocketAddress& c);
   
@@ -77,6 +79,8 @@ public:
   // Get the service name (resolves if required)
 
 protected:
+
+  scx::Module::Ref m_module;
 
   struct sockaddr_in6 m_addr;
   std::string m_host;

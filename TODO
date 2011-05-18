@@ -2,7 +2,7 @@ SconeServer (http://www.sconemad.com)
 TODO List and ideas for future development
 
 ------------------------
-For 0.8.0 release
+For 1.0.0 release
 ------------------------
 
 ------------------------
@@ -18,10 +18,6 @@ NEW MODULES
 * HTTP:Perl
   For running perl in process.
 
-* TFTP
-  A good one to test connected UDP once implemented.
-  Started but not working very well.
-
 ------------------------
 SCONEX
 ------------------------
@@ -29,11 +25,6 @@ SCONEX
 * Seamless File & MemFile operation
   To allow files to be cached in memory but read from using the regular file
   interface.
-
-* Refactor SconeScript(Arg) and framework classes.
-  Arg, ArgProc, ArgObject
-  Module, ModuleLoader*
-  TimeDate, Version
 
 ------------------------
 HTTP

@@ -40,8 +40,8 @@ public:
 
 protected:
 
-  virtual void load_module();
-  virtual void unload_module();
+  virtual bool load_module();
+  virtual bool unload_module();
 
 private:
 

@@ -37,6 +37,8 @@ public:
   virtual ~SconesiteModule();
   
   virtual std::string info() const;
+
+  virtual bool close();
   
   void refresh();
   Profile* lookup_profile(const std::string& name);
@@ -56,6 +58,9 @@ public:
   virtual void provide(const std::string& type,
 		       const scx::ScriptRef* args,
 		       scx::Stream*& object);
+
+  typedef scx::ScriptRefTo<SconesiteModule> Ref;
+
 protected:
   
 private:

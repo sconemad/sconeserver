@@ -164,7 +164,6 @@ void ExecModule::provide(const std::string& type,
   }
 
   // Create the exec stream
-  object = new ExecStream(*this,eargs);
-  object->add_module_ref(this);
+  object = new ExecStream(this,eargs);
 }
 

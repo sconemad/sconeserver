@@ -173,7 +173,6 @@ void TFTPModule::provide(const std::string& type,
     return;
   }
 
-  object = new TFTPStream(*this,profile->get_string());
-  object->add_module_ref(this);
+  object = new TFTPStream(this,profile->get_string());
 }
 

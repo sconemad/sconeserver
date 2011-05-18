@@ -105,7 +105,7 @@ public:
   void set_chain(Stream* chain);
   // Get/set chain pointer
 
-  void add_module_ref(Module* module);
+  //  void add_module_ref(Module* module);
   // Make this stream reference a module
   // This should prevent the module from being unloaded while this stream is
   // active.

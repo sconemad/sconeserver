@@ -45,7 +45,14 @@ ModuleLoader::ModuleLoader(
 //=============================================================================
 ModuleLoader::~ModuleLoader()
 {
+  close();
   DEBUG_COUNT_DESTRUCTOR(ModuleLoader);
+}
+
+//=============================================================================
+bool ModuleLoader::close()
+{
+  return unload_module();
 }
 
 //=============================================================================
@@ -109,13 +116,15 @@ void ModuleLoader::set_conf_path(const FilePath& path)
 }
 
 //=============================================================================
-void ModuleLoader::load_module()
+bool ModuleLoader::load_module()
 {
+  return true;
 }
 
 //=============================================================================
-void ModuleLoader::unload_module()
+bool ModuleLoader::unload_module()
 {
+  return true;
 }
 
 //=============================================================================

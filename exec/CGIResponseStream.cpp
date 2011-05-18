@@ -24,10 +24,10 @@ Free Software Foundation, Inc.,
 #include <http/MessageStream.h>
 
 //=========================================================================
-CGIResponseStream::CGIResponseStream(
-  http::MessageStream* http_msg
-) 
+CGIResponseStream::CGIResponseStream(ExecModule* module,
+				     http::MessageStream* http_msg) 
   : scx::LineBuffer("exec:cgi-response"),
+    m_module(module),
     m_http_msg(http_msg),
     m_done_headers(false)
 {

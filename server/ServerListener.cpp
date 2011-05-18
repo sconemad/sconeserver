@@ -28,7 +28,7 @@ Free Software Foundation, Inc.,
 #include <sconex/ScriptTypes.h>
 
 //=============================================================================
-ServerListener::ServerListener(ServerModule& module,
+ServerListener::ServerListener(ServerModule* module,
 			       const std::string& chain
 ) : Stream("server"),
     m_module(module),
@@ -66,7 +66,7 @@ scx::Condition ServerListener::event(scx::Stream::Event e)
       args.object()->give(scx::ScriptString::new_ref(m_chain));
       
       // Pass to the server to connect any streams
-      if (m_module.connect(s,&args)) {
+      if (m_module.object()->connect(s,&args)) {
 	
 	// Socket connected succesfully, give to kernel
 	scx::Kernel::get()->connect(s,0);

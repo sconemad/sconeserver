@@ -24,11 +24,9 @@ Free Software Foundation, Inc.,
 #include <sconex/Process.h>
 
 //=========================================================================
-BuildProcessStream::BuildProcessStream(
-  TestBuilderModule& module,
-  BuildStep* step
-  
-) : scx::Stream("testbuilder:process"),
+BuildProcessStream::BuildProcessStream(TestBuilderModule* module,
+				       BuildStep* step)
+  : scx::Stream("testbuilder:process"),
     m_module(module),
     m_step(step)
 {

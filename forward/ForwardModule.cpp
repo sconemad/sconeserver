@@ -34,8 +34,10 @@ SCONESERVER_MODULE(ForwardModule);
 //=========================================================================
 class ForwardStream : public scx::StreamTransfer {
 public:
-  ForwardStream(const scx::SocketAddress* dest)
+  ForwardStream(ForwardModule* module,
+		const scx::SocketAddress* dest)
     : scx::StreamTransfer(0),
+      m_module(module),
       m_connected(false),
       m_dest((scx::SocketAddress*)dest->new_copy())
   {
@@ -83,6 +85,8 @@ public:
 
 private:
 
+  scx::ScriptRefTo<ForwardModule> m_module;
+
   bool m_connected;
   scx::SocketAddress* m_dest;
 
@@ -120,5 +124,5 @@ void ForwardModule::provide(const std::string& type,
     return;
   }
 
-  object = new ForwardStream(sa);
+  object = new ForwardStream(this,sa);
 }

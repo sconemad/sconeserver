@@ -35,7 +35,7 @@ Free Software Foundation, Inc.,
 #include <sconex/User.h>
 
 //=========================================================================
-ExecStream::ExecStream(ExecModule& module,
+ExecStream::ExecStream(ExecModule* module,
 		       scx::ScriptList* args) 
   : scx::Stream("exec"),
     m_module(module),
@@ -145,13 +145,13 @@ bool ExecStream::spawn_process()
       m_process->set_env("HTTP_COOKIE",cookie);
     }
     
-    m_module.log("Spawning CGI process '" + prog + "'");
+    m_module.object()->log("Spawning CGI process '" + prog + "'");
     
   } else if (m_args->size() > 0) {
 
     prog = m_args->get(0)->object()->get_string();
     m_process = new scx::Process(prog);
-    m_module.log("Spawning process '" + prog + "'");
+    m_module.object()->log("Spawning process '" + prog + "'");
   }
 
   // Set arguments
@@ -159,7 +159,7 @@ bool ExecStream::spawn_process()
     m_process->add_arg( m_args->get(i)->object()->get_string() );
   }
 
-  m_process->set_user(m_module.get_exec_user());
+  m_process->set_user(m_module.object()->get_exec_user());
   
   // Launch the new process and connect socket
   if (!m_process->launch()) {
@@ -174,8 +174,7 @@ bool ExecStream::spawn_process()
 
   // Add stream to interpret and pass through HTTP headers
   if (msg) {
-    CGIResponseStream* crs = new CGIResponseStream(msg);
-    crs->add_module_ref(&m_module);
+    CGIResponseStream* crs = new CGIResponseStream(m_module.object(),msg);
     m_process->add_stream(crs);
   }
   

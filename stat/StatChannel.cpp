@@ -25,8 +25,9 @@ Free Software Foundation, Inc.,
 #include <sconex/ScriptTypes.h>
 
 //=========================================================================
-StatChannel::StatChannel(const std::string& name)
-  : m_name(name)
+StatChannel::StatChannel(StatModule* module, const std::string& name)
+  : m_module(module),
+    m_name(name)
 {
 
 }

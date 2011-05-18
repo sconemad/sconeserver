@@ -2,7 +2,7 @@
 
 Build process observer stream
 
-Copyright (c) 2000-2006 Andrew Wedgbury <wedge@sconemad.com>
+Copyright (c) 2000-2011 Andrew Wedgbury <wedge@sconemad.com>
 
 This program is free software; you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -29,13 +29,10 @@ class BuildStep;
 
 //=========================================================================
 class BuildProcessStream : public scx::Stream {
-
 public:
 
-  BuildProcessStream(
-    TestBuilderModule& module,
-    BuildStep* step
-  );
+  BuildProcessStream(TestBuilderModule* module,
+		     BuildStep* step);
   
   ~BuildProcessStream();
 
@@ -47,7 +44,7 @@ protected:
 
 private:
 
-  TestBuilderModule& m_module;
+  scx::ScriptRefTo<TestBuilderModule> m_module;
   BuildStep* m_step;
  
 };

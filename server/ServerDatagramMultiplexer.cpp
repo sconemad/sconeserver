@@ -27,7 +27,7 @@ Free Software Foundation, Inc.,
 #include <sconex/ScriptTypes.h>
 
 //=============================================================================
-ServerDatagramMultiplexer::ServerDatagramMultiplexer(ServerModule& module,
+ServerDatagramMultiplexer::ServerDatagramMultiplexer(ServerModule* module,
 						     const std::string& chain
 ) : scx::DatagramMultiplexer(),
     m_module(module),
@@ -50,7 +50,7 @@ bool ServerDatagramMultiplexer::channel_open(scx::DatagramChannel* channel)
   args.object()->give(scx::ScriptString::new_ref(m_chain));
 
   // Pass to the server to connect any streams
-  return m_module.connect(channel,&args);
+  return m_module.object()->connect(channel,&args);
 }
 
 //=============================================================================

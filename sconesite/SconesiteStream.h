@@ -22,22 +22,19 @@ Free Software Foundation, Inc.,
 #ifndef sconesiteStream_h
 #define sconesiteStream_h
 
-#include "RenderMarkup.h"
+#include <sconesite/RenderMarkup.h>
+#include <sconesite/Article.h>
 #include <sconex/Stream.h>
 #include <http/ResponseStream.h>
 
 class Profile;
-class Article;
 
 //=========================================================================
 class SconesiteStream : public http::ResponseStream {
-
 public:
 
-  SconesiteStream(
-    SconesiteModule& module,
-    Profile& profile
-  );
+  SconesiteStream(SconesiteModule* module,
+		  Profile& profile);
   
   ~SconesiteStream();
 
@@ -54,10 +51,10 @@ protected:
 
 private:
   
-  SconesiteModule& m_module;
-
+  scx::ScriptRefTo<SconesiteModule> m_module;
+  
   Profile& m_profile;
-  Article* m_article;
+  Article::Ref* m_article;
 
   bool m_accept;
   RenderMarkupContext::Ref* m_context;

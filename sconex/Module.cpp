@@ -50,8 +50,6 @@ Module::Module(
 //=============================================================================
 Module::~Module()
 {
-  close();
-
   delete m_logger;
 
   DEBUG_COUNT_DESTRUCTOR(Module);
@@ -86,13 +84,22 @@ int Module::init()
 }
 
 //=============================================================================
-void Module::close()
+bool Module::close()
 {
-  std::list<ModuleLoader*>::reverse_iterator it;
-  for (it = m_modules.rbegin(); it != m_modules.rend(); it++) {
-    delete (*it);
+  bool done = true;
+  m_modules.reverse();
+  std::list<ModuleLoader*>::iterator it;
+  for (it = m_modules.begin(); it != m_modules.end(); it++) {
+    ModuleLoader* loader = *it;
+    if (loader->close()) {
+      delete loader;
+      it = m_modules.erase(it);
+    } else {
+      done = false;
+    }
   }
-  m_modules.clear();
+  m_modules.reverse();
+  return done;
 }
 
 //=============================================================================

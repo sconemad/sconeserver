@@ -35,12 +35,11 @@ Free Software Foundation, Inc.,
 class StatStream : public scx::Stream {
 public:
 
-  StatStream(StatModule& mod, StatChannel* channel);
+  StatStream(StatModule* module, 
+	     StatChannel* channel);
   ~StatStream();
   
 protected:
-
-  //  virtual scx::Condition event(int type);
 
   virtual scx::Condition read(void* buffer,int n,int& na);
   virtual scx::Condition write(const void* buffer,int n,int& na);
@@ -51,7 +50,7 @@ private:
 
   void inc_stat(const std::string& type, long value);
   
-  StatModule& m_mod;
+  StatModule::Ref m_module;
   StatChannel::Ref m_channel;  
 };
 

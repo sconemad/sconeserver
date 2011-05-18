@@ -89,10 +89,9 @@ protected:
 
 
 //=========================================================================
-SconesiteStream::SconesiteStream(
-  SconesiteModule& module,
-  Profile& profile
-) : http::ResponseStream("sconesite"),
+SconesiteStream::SconesiteStream(SconesiteModule* module,
+				 Profile& profile)
+  : http::ResponseStream("sconesite"),
     m_module(module),
     m_profile(profile),
     m_article(0),
@@ -106,6 +105,7 @@ SconesiteStream::SconesiteStream(
 SconesiteStream::~SconesiteStream()
 {
   delete m_context;
+  delete m_article;
 }
 
 //=========================================================================
@@ -114,7 +114,8 @@ std::string SconesiteStream::stream_status() const
   std::ostringstream oss;
   oss << http::ResponseStream::stream_status()
       << " prf:" << m_profile.get_string()
-      << " art:" << (m_article ? m_article->get_href_path() : "NULL");
+      << " art:" 
+      << (m_article ? m_article->object()->get_href_path() : "NULL");
   return oss.str();
 }
 
@@ -124,7 +125,7 @@ void SconesiteStream::log(const std::string message, scx::Logger::Level level)
   http::MessageStream* msg = GET_HTTP_MESSAGE();
   if (msg) {
     http::Request& req = const_cast<http::Request&>(msg->get_request());
-    m_module.log(req.get_id() + " " + message,level);
+    m_module.object()->log(req.get_id() + " " + message,level);
   }
 }
 
@@ -147,6 +148,7 @@ scx::Condition SconesiteStream::event(scx::Stream::Event e)
 
     // Lookup the article and get remaining file path
     //    m_article = m_profile.get_index()->find_article(pathinfo,m_file);
+    log("Lookup article '" + pathinfo + "'");
     m_article = m_profile.lookup_article(pathinfo,m_file);
 
     // Check article exists
@@ -163,7 +165,7 @@ scx::Condition SconesiteStream::event(scx::Stream::Event e)
 						       req,
 						       resp);
     m_context = new RenderMarkupContext::Ref(rmc);
-    rmc->set_article(m_article);
+    rmc->set_article(m_article->object());
 
     /*
     // Check access is allowed
@@ -177,7 +179,7 @@ scx::Condition SconesiteStream::event(scx::Stream::Event e)
     
     if (m_file.empty()) {
       // Article request, check if we need to redirect to correct the path
-      std::string href = m_article->get_href_path();
+      std::string href = m_article->object()->get_href_path();
       if (pathinfo != href) {
         scx::Uri new_uri = uri;
         new_uri.set_path(href);
@@ -189,7 +191,7 @@ scx::Condition SconesiteStream::event(scx::Stream::Event e)
       
     } else {
       // File request, update the path in the request
-      scx::FilePath path = m_article->get_root() + m_file;
+      scx::FilePath path = m_article->object()->get_root() + m_file;
       req.set_path(path);
       log("File request for '" + path.path() + "'");
       
@@ -238,7 +240,8 @@ scx::Condition SconesiteStream::start_section(const scx::MimeHeaderTable& header
     if (ip == 0) {
       // Name starts with "file_" so stream it into a file
       scx::FilePath path = "/tmp";
-      std::string filename = m_module.name() + "-" + session->get_id() + "-" + name;
+      std::string filename = 
+	m_module.object()->name() + "-" + session->get_id() + "-" + name;
       path += filename;
       //      STREAM_DEBUG_LOG("Streaming section to file '" << path.path() << "'");
       req.set_param(name,
@@ -290,8 +293,8 @@ scx::Condition SconesiteStream::send_response()
     // Connect the getfile module and relinquish
     scx::Stream* getfile = scx::Stream::create_new("getfile",0);
     if (getfile) {
-      log("Article '" + m_article->get_string() + "' sending '" + pathinfo + 
-	  "' with getfile"); 
+      log("Article '" + m_article->object()->get_string() + 
+	  "' sending '" + pathinfo + "' with getfile"); 
       endpoint().add_stream(getfile);
       return scx::End;
     }
@@ -301,7 +304,7 @@ scx::Condition SconesiteStream::send_response()
     
   } else {
     // Request for the article itself
-    log("Sending article '" + m_article->get_string() + "'");
+    log("Sending article '" + m_article->object()->get_string() + "'");
   }
   
   // Set the endpoint blocking, saving previous state

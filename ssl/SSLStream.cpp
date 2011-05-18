@@ -42,11 +42,10 @@ Free Software Foundation, Inc.,
 BIO *BIO_new_scxsp(SSLStream* scxsp,int close_flag);
 
 //=============================================================================
-SSLStream::SSLStream(
-  SSLModule& mod,
-  const std::string& channel
-) : Stream("ssl"),
-    m_mod(mod),
+SSLStream::SSLStream(SSLModule* module,
+		     const std::string& channel) 
+  : Stream("ssl"),
+    m_module(module),
     m_channel(channel),
     m_client(false),
     m_ssl(0),
@@ -180,14 +179,14 @@ scx::Condition SSLStream::init_ssl()
   m_last_read_cond=scx::Ok;
   m_last_write_cond=scx::Ok;
   
-  SSLChannel* channel = m_mod.find_channel(m_channel);
+  SSLChannel* channel = m_module.object()->find_channel(m_channel);
   if (!channel) {
-    m_mod.log("init_ssl) Invalid SSL channel",scx::Logger::Error);
+    m_module.object()->log("init_ssl) Invalid SSL channel",scx::Logger::Error);
     return scx::Error;
   }
   m_ssl = channel->new_ssl();
   if (m_ssl == 0) {
-    m_mod.log("init_ssl) Invalid SSL object",scx::Logger::Error);
+    m_module.object()->log("init_ssl) Invalid SSL object",scx::Logger::Error);
     return scx::Error;
   }
   

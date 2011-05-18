@@ -101,6 +101,7 @@ Article::Article(
     m_id(id),
     m_parent_id(parent_id),
     m_link(link),
+    m_access_time(scx::Date::now()),
     m_body(0)
 {
   m_parent = &m_profile;
@@ -112,10 +113,6 @@ Article::Article(
   if (a_name) {
     m_name = a_name->object()->get_string();
     m_root = m_profile.get_path() + "art" + m_link;
-    
-    DEBUG_LOG("Loading XML article: name:" << m_name);
-    DEBUG_LOG("Loading XML article: profile path:" << m_profile.get_path().path());
-    DEBUG_LOG("Loading XML article: root:" << m_root.path());
     m_body = new ArticleBody::Ref(new XMLArticleBody(m_name,m_root));
   }
 
@@ -169,9 +166,10 @@ scx::ScriptRef* Article::get_meta(const std::string& name,
   if (recurse && BAD_SCRIPTREF(a)) {
     delete a; 
     a = 0;
-    Article* parent = m_profile.lookup_article(m_parent_id);
+    Article::Ref* parent = m_profile.lookup_article(m_parent_id);
     if (parent) {
-      return parent->get_meta(name,recurse);
+      a = parent->object()->get_meta(name,recurse);
+      delete parent;
     }
   }
   return a;
@@ -194,6 +192,18 @@ void Article::refresh(const scx::Date& purge_time)
 {
   // Purge any loaded article data if it hasn't been accessed recently
   if (m_body) m_body->object()->purge(purge_time);
+}
+
+//=========================================================================
+const scx::Date& Article::get_access_time() const
+{
+  return m_access_time;
+}
+
+//=========================================================================
+void Article::reset_access_time()
+{
+  m_access_time = scx::Date::now();
 }
 
 //=========================================================================
@@ -248,7 +258,7 @@ scx::ScriptRef* Article::script_op(const scx::ScriptAuth& auth,
       return scx::ScriptInt::new_ref(m_parent_id);
 
     if ("parent" == name) {
-      return new scx::ScriptRef( m_profile.lookup_article(m_parent_id) );
+      return m_profile.lookup_article(m_parent_id);
     }
 
     if ("headings" == name) {

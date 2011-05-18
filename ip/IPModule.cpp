@@ -69,6 +69,6 @@ void IPModule::provide(const std::string& type,
 		       scx::ScriptObject*& object)
 {
   if (type == "IPAddr") {
-    object = new IPSocketAddress(args);
+    object = new IPSocketAddress(this,args);
   }
 }

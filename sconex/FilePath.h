@@ -40,6 +40,10 @@ public:
 
   const std::string& path() const;
 
+  // Pop and return the last directory, 
+  // i.e. so "/one/two/three" becomes "/one/two" and returns "three"
+  std::string pop();
+
   FilePath& operator=(const FilePath& a);
   
   FilePath operator+(const FilePath& a) const;

@@ -35,7 +35,7 @@ class ServerModule;
 class ServerListener : public scx::Stream {
 public:
 
-  ServerListener(ServerModule& module,
+  ServerListener(ServerModule* module,
 		 const std::string& chain);
 
   virtual ~ServerListener();
@@ -48,7 +48,7 @@ protected:
 
 private:
 
-  ServerModule& m_module;
+  scx::ScriptRefTo<ServerModule> m_module;
   std::string m_chain;
 
 };

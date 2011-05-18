@@ -45,6 +45,8 @@ public:
   
   virtual ~ModuleLoader();
 
+  bool close();
+
   const std::string& get_name() const;
   
   FilePath get_path() const;
@@ -58,8 +60,8 @@ public:
   
 protected:
 
-  virtual void load_module();
-  virtual void unload_module();
+  virtual bool load_module();
+  virtual bool unload_module();
 
   std::string m_name;
   FilePath m_config_path;

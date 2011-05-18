@@ -26,13 +26,15 @@ Free Software Foundation, Inc.,
 #include <sconex/Module.h>
 #include <sconex/ScriptBase.h>
 
+class StatModule;
+
 //=============================================================================
 // StatChannel - A statistic-collection channel
 //
 class StatChannel : public scx::ScriptObject {
 public:
 
-  StatChannel(const std::string& name);
+  StatChannel(StatModule* module, const std::string& name);
   ~StatChannel();
 
   // Increment the named stat type by value
@@ -62,6 +64,8 @@ public:
 protected:
 
 private:
+
+  scx::ScriptRefTo<StatModule> m_module;
 
   std::string m_name;
 

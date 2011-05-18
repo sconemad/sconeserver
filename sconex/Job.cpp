@@ -95,7 +95,7 @@ bool PeriodicJob::should_run()
 std::string PeriodicJob::describe() const
 {
   Time left = (m_timeout - Date::now());
-  return "p:" + m_period.string() + " t:" + left.string() + " " + m_timeout.string();
+  return "p:" + m_period.string() + " t:" + left.string();
 }
 
 //=============================================================================

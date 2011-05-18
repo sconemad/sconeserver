@@ -37,11 +37,9 @@ Free Software Foundation, Inc.,
 namespace http {
   
 //=============================================================================
-MessageStream::MessageStream(
-  HTTPModule& module,
-  ConnectionStream& httpstream,
-  Request* request
-)
+MessageStream::MessageStream(HTTPModule* module,
+			     ConnectionStream& httpstream,
+			     Request* request)
   : scx::Stream("http:message"),
     m_module(module),
     m_httpstream(httpstream),
@@ -237,13 +235,13 @@ void MessageStream::send_continue()
 //=============================================================================
 HTTPModule& MessageStream::get_module()
 {
-  return m_module;
+  return *m_module.object();
 }
 
 //=============================================================================
 void MessageStream::log(const std::string& message,scx::Logger::Level level)
 {
-  m_module.log(m_request.object()->get_id() + " " + message,level);
+  m_module.object()->log(m_request.object()->get_id() + " " + message,level);
 }
 
 //=============================================================================
@@ -285,7 +283,7 @@ bool MessageStream::connect_request_module(bool error)
   }
 
   // Pass through to host mapper for connection to appropriate host object
-  HostMapper& mapper = m_module.get_hosts();
+  HostMapper& mapper = m_module.object()->get_hosts();
   return mapper.connect_request(&endpoint(),
 				*m_request.object(),
 				*m_response.object());

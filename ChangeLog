@@ -1,4 +1,22 @@
 
+2011-05-18 Andrew Wedgbury <wedge@sconemad.com>
+
+	* sconex/Stream: Remove module refs and add_module_ref() method.
+	* all: Replace use of add_module_ref with explcit module references.
+	* all: Make sure script objects provided by modules hold an explicit 
+	reference to the providing module where appropriate.
+	* sconex/Module: close() now returns bool, where false indicates the
+	module cannot be unloaded right now.
+	* all: Implement close() method for modules that need it.
+	* sconex/Kernel: Retry module unloading.
+	* sconex/Thread: Grab mutex when signaling exit (why does this fix it?)
+	* sconex/FilePath: Add pop() method and write unit test.
+	* sconex/Mutex: Improve RWLock (was ReaderWriterLock), add RWLocker.
+	* sconesite/Profile: Implement create,remove,rename article methods.
+	Implement proper locking for article cache using improved RWLock.
+	Purge cached articles after access time exceeds threshold.
+	* sconesite/Article: Store access time, allowing get and reset.
+	
 2011-05-09 Andrew Wedgbury <wedge@sconemad.com>
 
 	* all: Include sconex headers with system includes,

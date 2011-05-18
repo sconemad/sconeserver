@@ -79,8 +79,9 @@ public:
   const ArticleHeading& get_headings() const;
   std::string get_href_path() const;
   
-  // Sub-articles
   void refresh(const scx::Date& purge_time);
+  const scx::Date& get_access_time() const;
+  void reset_access_time();
 
   // ScriptObject methods
   virtual std::string get_string() const;
@@ -107,6 +108,8 @@ protected:
 
   std::string m_name;
   scx::FilePath m_root;
+
+  scx::Date m_access_time;
 
   ArticleBody::Ref* m_body;
   

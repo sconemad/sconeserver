@@ -1,28 +1,34 @@
 /* SconeServer (http://www.sconemad.com)
-
-Simple Rot13 text transform stream
-
-Copyright (c) 2000-2005 Andrew Wedgbury <wedge@sconemad.com> */
+Copyright (c) 2000-2011 Andrew Wedgbury <wedge@sconemad.com> */
 
 #include "Rot13Stream.h"
+#include "Rot13Module.h"
 
 //=========================================================================
-Rot13Stream::Rot13Stream(
-  bool rot_input,
-  bool rot_output
-)
+// Constructor
+//
+Rot13Stream::Rot13Stream(Rot13Module& module,
+			 bool rot_input,
+			 bool rot_output)
   : scx::Stream("rot13"),
+    m_module(&module),
     m_rot_input(rot_input),
     m_rot_output(rot_output)
 {
+  // Nothing to do here
 }
 
 //=========================================================================
+// Destructor
+//
 Rot13Stream::~Rot13Stream()
 {
+  // Nothing to do here
 }
 
 //=========================================================================
+// Stream read request
+//
 scx::Condition Rot13Stream::read(void* buffer,int n,int& na)
 {
   // Skip rot13 operation if not required.
@@ -44,6 +50,8 @@ scx::Condition Rot13Stream::read(void* buffer,int n,int& na)
 }
 
 //=========================================================================
+// Stream write request
+//
 scx::Condition Rot13Stream::write(const void* buffer,int n,int& na)
 {
   // Skip rot13 operation if not required
@@ -72,6 +80,8 @@ scx::Condition Rot13Stream::write(const void* buffer,int n,int& na)
 }
 
 //=========================================================================
+// Perform a rot13 transformation on a character
+//
 char Rot13Stream::rot13(char c)
 {
   const int rot = 13;

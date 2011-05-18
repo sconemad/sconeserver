@@ -36,6 +36,13 @@ Free Software Foundation, Inc.,
 
 #include <memory> // Using auto_ptr
 
+// Uncomment to enable debug logging
+//#define SCONESITEPROFILE_DEBUG_LOG(m) DEBUG_LOG(m)
+
+#ifndef SCONESITEPROFILE_DEBUG_LOG
+#  define SCONESITEPROFILE_DEBUG_LOG(m)
+#endif
+
 const char* ARTDIR = "art";
 const char* TPLDIR = "tpl";
 
@@ -70,6 +77,8 @@ Profile::~Profile()
        it_t != m_templates.end(); ++it_t) {
     delete it_t->second;
   }
+
+  delete m_db;
 }
 
 //=========================================================================
@@ -106,25 +115,24 @@ void Profile::refresh()
     }
   }
 
-  //TODO: purge from article cache
-
-  /*
-
-  // Create index article if it doesn't exist
-  if (m_index == 0) {
-    m_index = new Article(*this,"",m_path + ARTDIR,0);
-  }
-
-  // Calculate purge time for article data
+  // Calculate purge time for cached articles
   scx::Date purge_time;
   if (m_purge_threshold.seconds() != 0) {
     purge_time = scx::Date::now() - scx::Time(m_purge_threshold);
   }
   
-  // Scan articles
-  m_index->refresh(purge_time);  
-
-  */
+  // Scan cached articles and purge
+  scx::RWLocker locker(m_cache_lock,true,scx::RWLock::Write);
+  for (ArticleMap::iterator it_a = m_articles.begin();
+       it_a != m_articles.end();
+       ++it_a) {
+    Article::Ref* article = it_a->second;
+    if (article->object()->get_access_time() < purge_time) {
+      m_module.log("Purging article: /" + article->object()->get_href_path());
+      m_articles.erase(it_a);
+      delete article;
+    }
+  }
 }
 
 //=========================================================================
@@ -140,18 +148,22 @@ scx::FilePath& Profile::get_path()
 }
 
 //=========================================================================
-Article* Profile::lookup_article(int id)
+Article::Ref* Profile::lookup_article(int id)
 {
   // Look for article in cache
+  scx::RWLocker locker(m_cache_lock);
   ArticleMap::const_iterator id_it = m_articles.find(id);
   if (id_it != m_articles.end()) {
-    DEBUG_LOG("Article id cache hit for '" << id << "'");
-    return id_it->second->object();
+    SCONESITEPROFILE_DEBUG_LOG("Article id cache hit for '" << id << "'");
+    Article::Ref* article = id_it->second;
+    article->object()->reset_access_time();
+    return article->ref_copy();
   }
+  locker.unlock();
 
   // Look for article in database
-  std::auto_ptr<scx::DbQuery> query(
-    m_db->object()->new_query("SELECT path,parent FROM article WHERE id = ?"));
+  std::auto_ptr<scx::DbQuery> query(m_db->object()->new_query(
+    "SELECT path,parent FROM article WHERE id = ?"));
 
   std::string link;
   int cid = id;
@@ -186,29 +198,36 @@ Article* Profile::lookup_article(int id)
     }
   }
 
+  locker.lock();
   ArticleLinkMap::iterator itL = m_article_links.find(link);
   if (itL == m_article_links.end()) {
-    DEBUG_LOG("Article link cache add: " << id << " -> '" << link << "'");
+    SCONESITEPROFILE_DEBUG_LOG("Article link cache add: " << id << 
+			       " -> '" << link << "'");
+    locker.lock(scx::RWLock::Write); // Relock for writing
     m_article_links[link] = id;
   }
 
-  return load_article(id,pid,link);
+  locker.lock(scx::RWLock::Write);
+  return new Article::Ref(load_article(id,pid,link));
 }
 
 //=========================================================================
-Article* Profile::lookup_article(const std::string& href, std::string& extra)
+Article::Ref* Profile::lookup_article(const std::string& href,
+				      std::string& extra)
 {
   // Look for article in cache
+  scx::RWLocker locker(m_cache_lock);
   ArticleLinkMap::const_iterator it = m_article_links.find(href);
   if (it != m_article_links.end()) {
-    DEBUG_LOG("Article link cache hit for '" << href << "'");
+    SCONESITEPROFILE_DEBUG_LOG("Article link cache hit for '" << href << "'");
+    locker.unlock();
     return lookup_article(it->second);
   }
+  locker.unlock();
 
   // Look for article in database
-  std::auto_ptr<scx::DbQuery> query(
-    m_db->object()->new_query(
-      "SELECT id FROM article WHERE parent = ? AND path = ?"));
+  std::auto_ptr<scx::DbQuery> query(m_db->object()->new_query(
+    "SELECT id FROM article WHERE parent = ? AND path = ?"));
 
   std::string key = href;
   std::string path;
@@ -224,17 +243,22 @@ Article* Profile::lookup_article(const std::string& href, std::string& extra)
     query->exec(&args);
     if (!query->next_result()) {
       extra = key;
+      locker.lock();
       ArticleLinkMap::iterator itL = m_article_links.find(link);
       if (itL == m_article_links.end()) {
-	DEBUG_LOG("Article link cache add: " << id 
-		  << " -> '" << link << "'");
+	SCONESITEPROFILE_DEBUG_LOG("Article link cache add: " << id << 
+				   " -> '" << link << "'");
+	locker.lock(scx::RWLock::Write);
 	m_article_links[link] = id;
       }
       ArticleMap::iterator itA = m_articles.find(id);
       if (itA != m_articles.end()) {
-	return itA->second->object();
+	Article::Ref* article = itA->second;
+	article->object()->reset_access_time();
+	return article->ref_copy();
       }
-      return load_article(id,pid,link);
+      locker.lock(scx::RWLock::Write);
+      return new Article::Ref(load_article(id,pid,link));
 
     } else {
       scx::ScriptRef* row_ref = query->result();
@@ -255,102 +279,38 @@ Article* Profile::lookup_article(const std::string& href, std::string& extra)
     link += path + "/";
   }
 
-  /*
-  std::auto_ptr<scx::DbQuery> query(
-    m_db->object()->new_query("SELECT id FROM article WHERE link = ?"));
-  
-  std::string::size_type len = name.length();
-  std::string key = name;
-
-  if (len > 0 && key[len-1] != '/') {
-    key += "/";
-    ++len;
-  }
-    
-  while (true) {
-
-    ArticleLinkMap::iterator it = m_article_links.find(key);
-
-    if (it == m_article_links.end()) {
-      scx::ScriptList::Ref args(new scx::ScriptList());
-      args.object()->give(scx::ScriptString::new_ref(key));
-
-      query->exec(&args);
-      if (query->next_result()) {
-	scx::ScriptRef* row_ref = query->result();
-	scx::ScriptMap* row = dynamic_cast<scx::ScriptMap*>(row_ref->object());
-	if (row) {
-	  scx::ScriptRef* a_id = row->lookup("id");
-	  if (a_id) {
-	    int id = a_id->object()->get_int();
-	    m_article_links[key] = id;
-	    Article* art = new Article(*this,id);
-	    m_articles[id] = new Article::Ref(art);
-	    it = m_article_links.find(key);
-	    DEBUG_LOG("lookup(link) Cache add for " << id 
-		      << " -> '" << key << "'");
-	  }
-	}
-	delete row_ref;
-      }
-    }
-
-    if (it != m_article_links.end()) {
-
-      if (key.length() < name.length()) {
-	extra = name.substr(key.length());
-	std::string::size_type i = extra.find_first_not_of("/");
-	if (i == std::string::npos) {
-	  extra = "";
-	} else {
-	  extra = extra.substr(i);
-	}
-      }
-      // Found!
-      DEBUG_LOG("lookup(link) Cache hit for '" << key << "'");
-      ArticleMap::iterator ita = m_articles.find(it->second);
-      return ita->second->object();
-    }
-
-    len = key.length();
-    if (len == 1 && key == "/") { 
-      key = "";
-    } else {
-      std::string::size_type start = key.find_last_of("/",len-2);
-      if (start == std::string::npos) {
-	key = "";
-      } else {
-	key = key.substr(0,start+1);
-      }
-    }
-  }
-  */
   return 0;
 }
 
 //=========================================================================
-Article* Profile::create_article(int pid, const std::string name)
+Article::Ref* Profile::create_article(int pid,
+				      const std::string& name)
 {
   if (name.empty()) { //TODO: check name validity
-    DEBUG_LOG("Invalid article name: " << name);
+    SCONESITEPROFILE_DEBUG_LOG("Invalid article name: " << name);
     return 0;
   }
   
-  Article* parent = lookup_article(pid);
+  Article::Ref* parent = lookup_article(pid);
   if (!parent) {
-    DEBUG_LOG("Invalid parent article: " << pid);
+    SCONESITEPROFILE_DEBUG_LOG("Invalid parent article: " << pid);
     return 0;
   }
 
-  std::string link = parent->get_href_path() + name;
+  std::string link = parent->object()->get_href_path() + name;
+  scx::FilePath path = parent->object()->get_root() + name;
+  delete parent;
+
   std::string extra;
-  if (lookup_article(link,extra) && extra.empty()) {
-    // Aricle already exists
-    DEBUG_LOG("Article '" << link << "' already exists");
+  Article::Ref* existing = lookup_article(link,extra);
+  delete existing;
+  if (existing && extra.empty()) {
+    // Article already exists
+    SCONESITEPROFILE_DEBUG_LOG("Article '" << link << "' already exists");
     return 0;
   }
 
-  scx::FilePath path = parent->get_root() + name;
+  // Create article directory
   scx::FilePath::mkdir(path,false,00770);
 
   std::auto_ptr<scx::DbQuery> query(m_db->object()->new_query(
@@ -376,20 +336,26 @@ Article* Profile::create_article(int pid, const std::string name)
   }
 
   if (id <= 0) {
-    DEBUG_LOG("Could not determine id for new article");
+    SCONESITEPROFILE_DEBUG_LOG("Could not determine id for new article");
+    delete parent;
     return 0;
   }
+
+  scx::RWLocker locker(m_cache_lock,true,scx::RWLock::Write);
 
   Article* article = load_article(id,pid,link);
   scx::FilePath apath = article->get_filepath();
 
-  DEBUG_LOG("Article link cache add: " << id << " -> '" << link << "'");
+  SCONESITEPROFILE_DEBUG_LOG("Article link cache add: " << id << 
+			     " -> '" << link << "'");
   m_article_links[link] = id;
+
+  locker.unlock();
 
   scx::File file;
   if (scx::Ok != file.open(apath,scx::File::Write|scx::File::Create,00660)) {
-    DEBUG_LOG_ERRNO("Unable to create new article xml file '" 
-		    << apath.path() << "'");
+    DEBUG_LOG_ERRNO("Unable to create new article xml file '" << 
+		    apath.path() << "'");
     return 0;
   }
 
@@ -398,19 +364,20 @@ Article* Profile::create_article(int pid, const std::string name)
   file.write("</article>\n");
   file.close();
 
-  return article;
+  return new Article::Ref(article);
 }
 
 //=========================================================================
 bool Profile::remove_article(int id)
 {
-  Article* article = lookup_article(id);
+  Article::Ref* article = lookup_article(id);
   if (!article) {
-    DEBUG_LOG("Cannot find article");
+    SCONESITEPROFILE_DEBUG_LOG("Cannot find article");
     return false;
   }
-  std::string link = article->get_href_path();
-  scx::FilePath path = article->get_root();
+  std::string link = article->object()->get_href_path();
+  scx::FilePath path = article->object()->get_root();
+  delete article;
   scx::FilePath::rmdir(path,true);
   
   std::auto_ptr<scx::DbQuery> query(m_db->object()->new_query(
@@ -421,11 +388,102 @@ bool Profile::remove_article(int id)
   bool result = query->exec(&args);
 
   // Remove from caches
+  scx::RWLocker locker(m_cache_lock,true,scx::RWLock::Write);
+
+  article = m_articles[id];
+  m_articles.erase(id);
+  m_article_links.erase(link);
+
+  locker.unlock();
+
+  delete article;
+  return result;
+}
+
+//=========================================================================
+bool Profile::rename_article(int id,
+			     const std::string& new_name,
+			     int new_pid)
+{
+  Article::Ref* article = lookup_article(id);
+  if (!article) {
+    SCONESITEPROFILE_DEBUG_LOG("Cannot find article");
+    return false;
+  }
+  std::string link = article->object()->get_href_path();
+  scx::FilePath old_path = article->object()->get_root();
+  std::string old_name = article->object()->get_name();
+  delete article;
+
+  scx::FilePath new_path = old_path;
+  new_path.pop();
+  Article::Ref* new_parent = lookup_article(new_pid);
+  if (new_parent) {
+    new_path = new_parent->object()->get_root();
+    delete new_parent;
+  }
+
+  if (!new_name.empty()) {
+    new_path += new_name;
+  } else {
+    new_path += old_name;
+  }
+
+  if (old_path == new_path) {
+    SCONESITEPROFILE_DEBUG_LOG("Nothing to do");
+    return false;
+  }
+
+  bool ok = scx::FilePath::move(old_path, new_path);
+  if (!ok) {
+    return false;
+  }
+
+  if (new_parent) {
+    // Update parent id field
+    std::auto_ptr<scx::DbQuery> query(m_db->object()->new_query(
+      "UPDATE article SET parent = ? WHERE id = ?"));
+    scx::ScriptList::Ref args(new scx::ScriptList());
+    args.object()->give(scx::ScriptInt::new_ref(new_pid));
+    args.object()->give(scx::ScriptInt::new_ref(id));
+    ok = query->exec(&args);
+  }
+
+  if (!new_name.empty()) {
+    // Update path field
+    std::auto_ptr<scx::DbQuery> query(m_db->object()->new_query(
+      "UPDATE article SET path = ? WHERE id = ?"));
+    scx::ScriptList::Ref args(new scx::ScriptList());
+    args.object()->give(scx::ScriptString::new_ref(new_name));
+    args.object()->give(scx::ScriptInt::new_ref(id));
+    ok = query->exec(&args);
+  }  
+
+  // Remove from caches
+  scx::RWLocker locker(m_cache_lock,true,scx::RWLock::Write);
+  article = m_articles[id];
   m_articles.erase(id);
   m_article_links.erase(link);
   delete article;
 
-  return result;
+  // Child articles also need to be removed and deleted
+  for (ArticleLinkMap::iterator itl = m_article_links.begin();
+       itl != m_article_links.end();
+       ++itl) {
+    if (itl->first.find(link) == 0) {
+      // i.e. if the link starts with our moved article link, it is a child
+      SCONESITEPROFILE_DEBUG_LOG("Removing " << itl->second << 
+				 ": " << itl->first);
+      article = m_articles[itl->second];
+      m_articles.erase(itl->second);
+      m_article_links.erase(itl);
+      delete article;
+    }
+  }
+
+  locker.unlock();
+
+  return ok;
 }
 
 //=========================================================================
@@ -457,7 +515,8 @@ scx::ScriptRef* Profile::script_op(const scx::ScriptAuth& auth,
     if ("set_purge_threshold" == name ||
 	"lookup" == name ||
 	"create_article" == name ||
-	"remove_article" == name) {
+	"remove_article" == name ||
+	"rename_article" == name) {
       return new scx::ScriptMethodRef(ref,name);
     }
 
@@ -467,6 +526,20 @@ scx::ScriptRef* Profile::script_op(const scx::ScriptAuth& auth,
 
     if ("path" == name) 
       return scx::ScriptString::new_ref(m_path.path());
+
+    if ("article_cache" == name) {
+      std::ostringstream oss;
+      scx::RWLocker locker(m_cache_lock);
+      for (ArticleMap::iterator it_a = m_articles.begin();
+	   it_a != m_articles.end();
+	   ++it_a) {
+	Article* article = it_a->second->object();
+	oss << article->get_access_time().code()
+	    << " /" << article->get_href_path()
+	    << "\n";
+      }
+      return scx::ScriptString::new_ref(oss.str());
+    }
   }
 
   return scx::ScriptObject::script_op(auth,ref,op,right);
@@ -499,18 +572,16 @@ scx::ScriptRef* Profile::script_method(const scx::ScriptAuth& auth,
       scx::get_method_arg<scx::ScriptString>(args,0,"name");
     if (a_name) {
       std::string extra;
-      Article* art = lookup_article(a_name->get_string(),extra);
-      if (!art) return 0;
-      return new Article::Ref(art);
+      Article::Ref* art = lookup_article(a_name->get_string(),extra);
+      return art;
     }
 
     const scx::ScriptInt* a_id = 
       scx::get_method_arg<scx::ScriptInt>(args,0,"id");
     if (a_id) {
       std::string extra;
-      Article* art = lookup_article(a_id->get_int());
-      if (!art) return 0;
-      return new Article::Ref(art);
+      Article::Ref* art = lookup_article(a_id->get_int());
+      return art;
     }
 
     return scx::ScriptError::new_ref("No name or id specified");
@@ -525,11 +596,12 @@ scx::ScriptRef* Profile::script_method(const scx::ScriptAuth& auth,
       scx::get_method_arg<scx::ScriptString>(args,1,"name");
     if (!a_name) return scx::ScriptError::new_ref("No name specified");
 
-    Article* article = create_article(a_pid->get_int(),
-				      a_name->get_string());
-    if (!article) return scx::ScriptError::new_ref("Create article failed");
-
-    return new scx::ScriptRef(article);
+    Article::Ref* art = create_article(a_pid->get_int(),
+				       a_name->get_string());
+    if (!art) 
+      return scx::ScriptError::new_ref("Create article failed");
+    
+    return art;
   }
 
   if ("remove_article" == name) {
@@ -544,6 +616,31 @@ scx::ScriptRef* Profile::script_method(const scx::ScriptAuth& auth,
     return 0;
   }
 
+  if ("rename_article" == name) {
+    const scx::ScriptInt* a_id = 
+      scx::get_method_arg<scx::ScriptInt>(args,0,"id");
+    if (!a_id) return scx::ScriptError::new_ref("No id specified");
+
+    int i=1;
+    const scx::ScriptString* a_new_name = 
+      scx::get_method_arg<scx::ScriptString>(args,i,"name");
+    if (a_new_name) ++i;
+
+    const scx::ScriptInt* a_new_pid = 
+      scx::get_method_arg<scx::ScriptInt>(args,i,"pid");
+
+    if (!a_new_pid && !a_new_name) 
+      return scx::ScriptError::new_ref("No new name or parent id specified");
+
+    if (!rename_article(a_id->get_int(),
+			(a_new_name ? a_new_name->get_string() : ""),
+			(a_new_pid ? a_new_pid->get_int() : -1) )) {
+      return scx::ScriptError::new_ref("Rename article failed");
+    }
+
+    return 0;
+  }
+
   return scx::ScriptObject::script_method(auth,ref,name,args);
 }
 
@@ -552,17 +649,18 @@ bool Profile::set_meta(int id,
 		       const std::string& property,
 		       scx::ScriptRef* value)
 {
-  std::auto_ptr<scx::DbQuery> query(
-    m_db->object()->new_query("UPDATE article set "+property+" = ? WHERE id = ?"));
+  std::auto_ptr<scx::DbQuery> query(m_db->object()->new_query(
+    "UPDATE article set "+property+" = ? WHERE id = ?"));
 
   scx::ScriptList::Ref args(new scx::ScriptList());
   args.object()->give(value);
   args.object()->give(scx::ScriptInt::new_ref(id));
   bool result = query->exec(&args);
 
-  DEBUG_LOG("PROFILE set_meta "<<id<<":"<<property<<"="
-	    <<value->object()->get_string()
-	    <<(result?" OK":" FAILED"));
+  SCONESITEPROFILE_DEBUG_LOG("PROFILE set_meta " << id << 
+			     ":" << property << 
+			     "=" << value->object()->get_string() <<
+			     (result?" OK":" FAILED"));
   return result;
 }
 
@@ -570,8 +668,8 @@ bool Profile::set_meta(int id,
 scx::ScriptRef* Profile::get_meta(int id,
 				  const std::string& property) const
 {
-  std::auto_ptr<scx::DbQuery> query(
-    m_db->object()->new_query("SELECT "+property+" FROM article WHERE id = ?"));
+  std::auto_ptr<scx::DbQuery> query(m_db->object()->new_query(
+    "SELECT "+property+" FROM article WHERE id = ?"));
 
   scx::ScriptList::Ref args(new scx::ScriptList());
   args.object()->give(scx::ScriptInt::new_ref(id));
@@ -585,16 +683,19 @@ scx::ScriptRef* Profile::get_meta(int id,
     delete row_ref;
   }
   
-  DEBUG_LOG("PROFILE get_meta "<<id<<":"<<property<<"="
-	    <<(result?result->object()->get_string():"NULL"));
+  SCONESITEPROFILE_DEBUG_LOG("PROFILE get_meta " << id << 
+			     ":" << property << "=" <<
+			     (result?result->object()->get_string():"NULL"));
   return result;
 }
 
 //=========================================================================
 Article* Profile::load_article(int id, int pid, const std::string& link)
 {
-  DEBUG_LOG("Loading article [" << id << "] p=" << pid << " " << link);
+  SCONESITEPROFILE_DEBUG_LOG("Loading article [" << id << "] p=" << pid << 
+			     " " << link);
   Article* art = new Article(*this,id,pid,link);
+  // Article cache must be locked for writing before calling this method!
   m_articles[id] = new Article::Ref(art);
   return art;
 }

@@ -129,11 +129,13 @@ void Stream::set_chain(Stream* chain)
   m_chain = chain;
 }
 
+/*
 //=============================================================================
 void Stream::add_module_ref(Module* module)
 {
   m_module_refs.push_back(new ScriptRef(module));
 }
+*/
 
 //=============================================================================
 const std::string& Stream::stream_name() const

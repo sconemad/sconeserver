@@ -1,11 +1,8 @@
 /* SconeServer (http://www.sconemad.com)
 
-Simple streams:
-EchoStream - Echo protocol (RFC862)
-DiscardStream - Discard protocol (RFC863)
-ChargenStream - Character generator protocol (RFC864)
+Simple streams
 
-Copyright (c) 2000-2005 Andrew Wedgbury <wedge@sconemad.com>
+Copyright (c) 2000-2011 Andrew Wedgbury <wedge@sconemad.com>
 
 This program is free software; you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -29,41 +26,59 @@ Free Software Foundation, Inc.,
 #include <sconex/Module.h>
 
 //=========================================================================
+// EchoStream - Echo protocol (RFC862)
+//
 class EchoStream : public scx::Stream {
 public:
 
-  EchoStream();
+  EchoStream(scx::Module* module);
   ~EchoStream();
 
 protected:
 
   virtual scx::Condition event(scx::Stream::Event e);
+
+private:
   
+  scx::Module::Ref m_module;
+
 };
 
 //=========================================================================
+// DiscardStream - Discard protocol (RFC863)
+//
 class DiscardStream : public scx::Stream {
 public:
   
-  DiscardStream();
+  DiscardStream(scx::Module* module);
   ~DiscardStream();
 
 protected:
 
   virtual scx::Condition event(scx::Stream::Event e);
   
+private:
+  
+  scx::Module::Ref m_module;
+
 };
 
 //=========================================================================
+// ChargenStream - Character generator protocol (RFC864)
+//
 class ChargenStream : public scx::Stream {
 public:
   
-  ChargenStream();
+  ChargenStream(scx::Module* module);
   ~ChargenStream();
 
 protected:
 
   virtual scx::Condition event(scx::Stream::Event e);
+
+private:
+  
+  scx::Module::Ref m_module;
 
   int m_x;
   int m_s;

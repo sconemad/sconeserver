@@ -40,6 +40,8 @@ public:
 
   virtual std::string info() const;
 
+  virtual bool close();
+
   virtual bool connect(scx::Descriptor* endpoint,
 		       const scx::ScriptRef* args);
 

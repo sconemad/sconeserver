@@ -26,6 +26,7 @@ using namespace scx;
 int main(int argc,char* argv[])
 {
   UTRUN(Buffer);
+  UTRUN(FilePath);
   UTRUN(LineBuffer);
   UTRUN(MemFile);
   UTRUN(MimeHeader);

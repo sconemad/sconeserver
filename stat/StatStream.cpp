@@ -28,10 +28,10 @@ Free Software Foundation, Inc.,
 #include <sconex/Stream.h>
 
 //=========================================================================
-StatStream::StatStream(StatModule& mod,
+StatStream::StatStream(StatModule* module,
 		       StatChannel* channel)
   : scx::Stream("stat"),
-    m_mod(mod),
+    m_module(module),
     m_channel(channel)
 {
   inc_stat("conn",1);

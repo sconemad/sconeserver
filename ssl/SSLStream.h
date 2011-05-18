@@ -42,10 +42,8 @@ public:
     Connected    
   };
 
-  SSLStream(
-    SSLModule& mod,
-    const std::string& channel
-  );
+  SSLStream(SSLModule* module,
+	    const std::string& channel);
 
   virtual ~SSLStream();
 
@@ -64,7 +62,7 @@ public:
 
 protected:
 
-  SSLModule& m_mod;
+  scx::ScriptRefTo<SSLModule> m_module;
   std::string m_channel;
   bool m_client;
   

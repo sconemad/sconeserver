@@ -36,10 +36,8 @@ class ServerModule;
 class ConnectionChain : public scx::ScriptObject {
 public:
 
-  ConnectionChain(
-    const std::string& name,
-    ServerModule& module
-  );
+  ConnectionChain(ServerModule* module,
+		  const std::string& name);
 
   virtual ~ConnectionChain();
 
@@ -66,13 +64,13 @@ public:
   
 protected:
 
+  scx::ScriptRefTo<ServerModule> m_module;
+
   std::string m_name;
   
   typedef std::list<ConnectionNode*> ConnectionNodeList;
   ConnectionNodeList m_nodes;
-
-  ServerModule& m_module;
-
+  
 private:
 
 };
@@ -84,28 +82,24 @@ private:
 class ConnectionNode {
 public:
   
-  ConnectionNode(
-    const std::string& type,
-    scx::ScriptRef* args,
-    ServerModule& module
-  );
+  ConnectionNode(ServerModule* module,
+		 const std::string& type,
+		 scx::ScriptRef* args);
   
   ~ConnectionNode();
 
-  bool connect(
-    scx::Descriptor* d
-  );
+  bool connect(scx::Descriptor* d);
 
   const std::string& get_name() const;
   const scx::ScriptRef* get_args() const;
   
 protected:
 
+  scx::ScriptRefTo<ServerModule> m_module;
+  
   std::string m_type;
   scx::ScriptRef* m_args;
 
-  ServerModule& m_module;
-  
 };
 
 #endif

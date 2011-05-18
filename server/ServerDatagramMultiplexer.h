@@ -27,14 +27,13 @@ Free Software Foundation, Inc.,
 class ServerModule;
 
 //=============================================================================
-// ServerListener - This detects incoming connections on a listening 
-// socket, accepts connections and uses the given connection chain to setup
-// streams for the descriptor, before finally passing it to kernel to manage.
+// ServerDatagramMultiplexer - Datagram multiplexer which uses a connection
+// chain to setup streams when a channel is opened.
 //
 class ServerDatagramMultiplexer : public scx::DatagramMultiplexer {
 public:
 
-  ServerDatagramMultiplexer(ServerModule& module, 
+  ServerDatagramMultiplexer(ServerModule* module, 
 			    const std::string& chain);
 
   virtual ~ServerDatagramMultiplexer();
@@ -45,7 +44,7 @@ public:
   
 private:
 
-  ServerModule& m_module;
+  scx::ScriptRefTo<ServerModule> m_module;
   std::string m_chain;
 
 };

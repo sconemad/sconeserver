@@ -52,18 +52,26 @@ ServerModule::~ServerModule()
   scx::Stream::unregister_stream("term",this);
   scx::Stream::unregister_stream("sconescript",this);
   scx::Stream::unregister_stream("debug",this);
-
-  for (ConnectionChainMap::const_iterator it = m_chains.begin();
-       it != m_chains.end();
-       ++it) {
-    delete it->second;
-  }
 }
 
 //=========================================================================
 std::string ServerModule::info() const
 {
   return "Handles incoming connections";
+}
+
+//=============================================================================
+bool ServerModule::close()
+{
+  if (!scx::Module::close()) return false;
+
+  for (ConnectionChainMap::const_iterator it = m_chains.begin();
+       it != m_chains.end();
+       ++it) {
+    delete it->second;
+  }
+  m_chains.clear();
+  return true;
 }
 
 //=============================================================================
@@ -163,7 +171,7 @@ scx::ScriptRef* ServerModule::script_method(const scx::ScriptAuth& auth,
     }
 
     log("Adding {CHAIN:" + s_name + "}");
-    add(s_name, new ConnectionChain(s_name,*this) );
+    add(s_name, new ConnectionChain(this, s_name) );
 
     return 0;
   }

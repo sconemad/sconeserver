@@ -47,6 +47,8 @@ public:
 		       Request& request,
 		       Response& response);
 
+  Host* lookup_host(const std::string& name);
+
   // ScriptObject methods
   virtual scx::ScriptRef* script_op(const scx::ScriptAuth& auth,
 				    const scx::ScriptRef& ref,

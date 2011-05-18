@@ -23,8 +23,10 @@ Free Software Foundation, Inc.,
 #include <sconex/ScriptTypes.h>
 
 //=============================================================================
-BluetoothSocketAddress::BluetoothSocketAddress(const scx::ScriptRef* args)
-  : scx::SocketAddress(PF_BLUETOOTH,SOCK_STREAM,BTPROTO_RFCOMM)
+BluetoothSocketAddress::BluetoothSocketAddress(scx::Module* module,
+					       const scx::ScriptRef* args)
+  : scx::SocketAddress(PF_BLUETOOTH,SOCK_STREAM,BTPROTO_RFCOMM),
+    m_module(module)
 {
   DEBUG_COUNT_CONSTRUCTOR(BluetoothSocketAddress);
   memset(&m_addr,0,sizeof(m_addr));
@@ -51,6 +53,7 @@ BluetoothSocketAddress::BluetoothSocketAddress(const scx::ScriptRef* args)
 //=============================================================================
 BluetoothSocketAddress::BluetoothSocketAddress(const BluetoothSocketAddress& c)
   : scx::SocketAddress(c),
+    m_module(c.m_module),
     m_valid(c.m_valid)
 {
   DEBUG_COUNT_CONSTRUCTOR(BluetoothSocketAddress);

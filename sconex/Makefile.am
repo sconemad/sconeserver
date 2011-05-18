@@ -131,6 +131,7 @@ check_PROGRAMS = utest
 utest_SOURCES = \
 utest.cpp \
 Buffer_ut.cpp \
+FilePath_ut.cpp \
 LineBuffer_ut.cpp \
 MemFile_ut.cpp \
 MimeHeader_ut.cpp \

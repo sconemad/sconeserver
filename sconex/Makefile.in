@@ -95,10 +95,11 @@ libsconex_la_LINK = $(LIBTOOL) --tag=CXX $(AM_LIBTOOLFLAGS) \
 	$(LIBTOOLFLAGS) --mode=link $(CXXLD) $(AM_CXXFLAGS) \
 	$(CXXFLAGS) $(libsconex_la_LDFLAGS) $(LDFLAGS) -o $@
 am_utest_OBJECTS = utest.$(OBJEXT) Buffer_ut.$(OBJEXT) \
-	LineBuffer_ut.$(OBJEXT) MemFile_ut.$(OBJEXT) \
-	MimeHeader_ut.$(OBJEXT) MimeType_ut.$(OBJEXT) \
-	ScriptTypes_ut.$(OBJEXT) TimeDate_ut.$(OBJEXT) \
-	Uri_ut.$(OBJEXT) utils_ut.$(OBJEXT) VersionTag_ut.$(OBJEXT)
+	FilePath_ut.$(OBJEXT) LineBuffer_ut.$(OBJEXT) \
+	MemFile_ut.$(OBJEXT) MimeHeader_ut.$(OBJEXT) \
+	MimeType_ut.$(OBJEXT) ScriptTypes_ut.$(OBJEXT) \
+	TimeDate_ut.$(OBJEXT) Uri_ut.$(OBJEXT) utils_ut.$(OBJEXT) \
+	VersionTag_ut.$(OBJEXT)
 utest_OBJECTS = $(am_utest_OBJECTS)
 utest_DEPENDENCIES = libsconex.la
 DEFAULT_INCLUDES = -I.@am__isrc@ -I$(top_builddir)
@@ -371,6 +372,7 @@ libsconex_la_LDFLAGS = -version-info 1:0:0
 utest_SOURCES = \
 utest.cpp \
 Buffer_ut.cpp \
+FilePath_ut.cpp \
 LineBuffer_ut.cpp \
 MemFile_ut.cpp \
 MimeHeader_ut.cpp \
@@ -484,6 +486,7 @@ distclean-compile:
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/File.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/FileDir.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/FilePath.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/FilePath_ut.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/FileStat.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/Job.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/Kernel.Plo@am__quote@

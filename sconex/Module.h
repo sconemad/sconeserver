@@ -57,7 +57,7 @@ public:
   virtual int init();
 
   // Close the module
-  virtual void close();
+  virtual bool close();
   
   // Get a reference to ourself
   ScriptRef* ref();

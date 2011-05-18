@@ -69,6 +69,6 @@ void BluetoothModule::provide(const std::string& type,
 			      scx::ScriptObject*& object)
 {
   if (type == "BTAddr") {
-    object = new BluetoothSocketAddress(args);
+    object = new BluetoothSocketAddress(this,args);
   }
 }

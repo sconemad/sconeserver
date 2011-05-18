@@ -66,6 +66,29 @@ const std::string& FilePath::path() const
 }
 
 //=============================================================================
+std::string FilePath::pop()
+{
+  std::string popped;
+  std::string::size_type i = m_path.rfind(path_sep[0]);
+  if (i == std::string::npos) {
+    popped = m_path;
+    m_path = "";
+
+  } else if (i == 0) {
+    if (m_path.size() > 1) {
+      popped = m_path.substr(1);
+      m_path = path_sep;
+    }
+
+  } else {
+    popped = m_path.substr(i+1);
+    m_path = m_path.substr(0,i);
+  }
+    
+  return popped;
+}
+
+//=============================================================================
 FilePath& FilePath::operator=(const FilePath& a)
 {
   if (&a != this) {
@@ -78,6 +101,9 @@ FilePath& FilePath::operator=(const FilePath& a)
 FilePath FilePath::operator+(const FilePath& a) const
 {
   if (is_root(a.path())) {
+    return FilePath(a);
+  }
+  if (m_path.empty()) {
     return FilePath(a);
   }
   std::string path = m_path + path_sep + a.m_path;
@@ -99,17 +125,10 @@ void FilePath::operator+=(const FilePath& a)
 //=============================================================================
 void FilePath::normalize(std::string& pathstr)
 {
-  if (!pathstr.empty()) {
-    //  path.replace(path.find(bad_path_sep),1,path_sep);
-    
-    if (!is_root(pathstr)) {
-      // Remove trailing slash
-      unsigned int len = pathstr.length();
-      DEBUG_ASSERT(len > 0,"normalize() Invalid path length");
-      if (pathstr[len-1] == path_sep[0]) {
-        pathstr.erase(len-1,1);
-      }
-    }
+  // Remove any trailing slash
+  unsigned int len = pathstr.length();
+  if (len > 1 && pathstr[len-1] == path_sep[0]) {
+    pathstr.erase(len-1,1);
   }
 }
 

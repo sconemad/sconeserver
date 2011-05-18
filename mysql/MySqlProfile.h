@@ -37,7 +37,7 @@ class MySqlModule;
 class MySqlProfile : public scx::Database {
 public:
 
-  MySqlProfile(MySqlModule& module,
+  MySqlProfile(MySqlModule* module,
 	       const std::string& name,
 	       const std::string& database,
 	       const std::string& username,
@@ -57,12 +57,12 @@ public:
   virtual scx::ScriptRef* script_op(const scx::ScriptAuth& auth,
 				    const scx::ScriptRef& ref,
 				    const scx::ScriptOp& op,
-				    scx::ScriptRef* right=0);
+				    const scx::ScriptRef* right=0);
 
   virtual scx::ScriptRef* script_method(const scx::ScriptAuth& auth,
 					const scx::ScriptRef& ref,
 					const std::string& name,
-					scx::ScriptRef* args);
+					const scx::ScriptRef* args);
 
   typedef scx::ScriptRefTo<MySqlProfile> Ref;
 
@@ -70,7 +70,7 @@ private:
 
   friend class MySqlQuery;
 
-  MySqlModule& m_module;
+  scx::ScriptRefTo<MySqlModule> m_module;
 
   std::string m_name;
 

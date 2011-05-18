@@ -32,9 +32,8 @@ class CGIResponseStream : public scx::LineBuffer {
 
 public:
 
-  CGIResponseStream(
-    http::MessageStream* http_msg
-  );
+  CGIResponseStream(ExecModule* module,
+		    http::MessageStream* http_msg);
 
   ~CGIResponseStream();
   
@@ -43,6 +42,8 @@ protected:
   virtual scx::Condition event(scx::Stream::Event e);
 
 private:
+  
+  scx::ScriptRefTo<ExecModule> m_module;
 
   http::MessageStream* m_http_msg;
   bool m_done_headers;

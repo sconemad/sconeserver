@@ -45,7 +45,7 @@ public:
   virtual std::string info() const;
 
   virtual int init();
-  virtual void close();
+  virtual bool close();
   
   MySqlProfile* lookup_profile(const std::string& profile);
 

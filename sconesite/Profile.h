@@ -26,6 +26,7 @@ Free Software Foundation, Inc.,
 #include <sconex/FilePath.h>
 #include <sconex/ScriptBase.h>
 #include <sconex/Database.h>
+#include <sconex/Mutex.h>
 
 #include "Article.h"
 #include "Template.h"
@@ -52,15 +53,22 @@ public:
 
   // Find an article by id or name
   // the article is loaded into the cache if it is not already cached
-  Article* lookup_article(int id);
-  Article* lookup_article(const std::string& href, std::string& extra);
+  Article::Ref* lookup_article(int id);
+  Article::Ref* lookup_article(const std::string& href,
+			       std::string& extra);
 
   // Create an article with the specified parent
   // name is used for the path component from parent
-  Article* create_article(int pid, const std::string name);
+  Article::Ref* create_article(int pid, 
+			       const std::string& name);
 
   // Remove the specified article and any associated data
   bool remove_article(int id);
+
+  // Rename and/or move article and any associated data
+  bool rename_article(int id, 
+		      const std::string& new_name,
+		      int new_pid = -1);
 
   // Find a template by name
   Template* lookup_template(const std::string& name);
@@ -103,6 +111,9 @@ private:
   scx::FilePath m_path;
 
   scx::Database::Ref* m_db;
+
+  // Lock for article cache
+  scx::RWLock m_cache_lock;
 
   // Caches loaded articles, accessed by article ID
   typedef HASH_TYPE<int,Article::Ref*> ArticleMap;

@@ -35,7 +35,6 @@ class SessionManager;
 // check for timed-out sessions on a regular basis.
 //
 class SessionCleanupJob : public scx::PeriodicJob {
-
 public:
 
   SessionCleanupJob(SessionManager& manager, const scx::Time& period)
@@ -177,18 +176,14 @@ SessionManager::SessionManager(HTTPModule& module)
 {
   m_parent = &m_module;
 
-#ifndef DISABLE_JOBS
   m_job = scx::Kernel::get()->add_job(
     new SessionCleanupJob(*this,scx::Time(SESSION_JOB_TIMEOUT)));
-#endif
 }
 
 //=========================================================================
 SessionManager::~SessionManager()
 {
-#ifndef DISABLE_JOBS
   scx::Kernel::get()->end_job(m_job);
-#endif
 
   for (SessionMap::iterator it = m_sessions.begin();
        it != m_sessions.end();

@@ -42,7 +42,7 @@ Multiplexer::Multiplexer()
 //=============================================================================
 Multiplexer::~Multiplexer()
 {
-  close();
+
 }
 
 //=============================================================================
@@ -203,9 +203,6 @@ int Multiplexer::spin()
 
   } else {
 
-    //    timeval tv;
-    //    gettimeofday(&tv,0);
-    //    long ts = (tv.tv_sec*1000000) + tv.tv_usec;
     Date start = Date::now();
     
     // Select succeeded, decode events and allocate jobs
@@ -236,11 +233,8 @@ int Multiplexer::spin()
       }
     }
 
-    //    gettimeofday(&tv,0);
-    //    long te = (tv.tv_sec*1000000) + tv.tv_usec;
     Time elapsed = Date::now() - start;
 
-    //    m_job_waits_acc += (te-ts);
     m_job_waits_acc += elapsed.to_microseconds();
     
     if (++m_loops == 1000) {
@@ -248,12 +242,6 @@ int Multiplexer::spin()
       m_job_waits_acc = 0;
       m_jobs_run = 0;
       m_loops = 0;
-      /*
-      std::cerr << "\n";
-      for (int i=0; i<m_job_waits; ++i) {
-        std::cerr << "#";
-      }
-      */
     }
     
   }

@@ -35,10 +35,9 @@ namespace http {
 int connection_count=0;
 
 //=============================================================================
-ConnectionStream::ConnectionStream(
-  HTTPModule& module,
-  const std::string& profile
-) : scx::LineBuffer("http:connection",1024),
+ConnectionStream::ConnectionStream(HTTPModule* module,
+				   const std::string& profile)
+  : scx::LineBuffer("http:connection",1024),
     m_module(module),
     m_request(0),
     m_profile(profile),
@@ -61,7 +60,7 @@ scx::Condition ConnectionStream::event(scx::Stream::Event e)
   switch (e) {
     
     case scx::Stream::Opening: { // OPENING
-      endpoint().set_timeout(scx::Time(m_module.get_idle_timeout()));
+      endpoint().set_timeout(scx::Time(m_module.object()->get_idle_timeout()));
       m_num_connection = (++connection_count);
     } break;
 
@@ -183,14 +182,12 @@ bool ConnectionStream::process_request(Request*& request)
   DEBUG_ASSERT(request,"ConnectionStream::process_request() NULL request object");
 
   // Create and add the message stream
-  MessageStream* msg = new MessageStream(m_module,*this,request);
-  msg->add_module_ref(&m_module);
+  MessageStream* msg = new MessageStream(m_module.object(),*this,request);
   endpoint().add_stream(msg);
 
   if (!request->get_header("Range").empty()) {
     // Request specifies a byte range - add a partial response stream
-    PartialResponseStream* pss = new PartialResponseStream(m_module);
-    pss->add_module_ref(&m_module);
+    PartialResponseStream* pss = new PartialResponseStream(m_module.object());
     endpoint().add_stream(pss);
   }
 

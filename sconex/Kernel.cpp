@@ -69,13 +69,25 @@ int Kernel::init()
 }
 
 //=============================================================================
-void Kernel::close()
+bool Kernel::close()
 {
   log("Stopping threads");
   m_spinner.close();
 
-  log("Unloading modules");
-  Module::close();
+  const int max_retries = 10;
+  int retry = 0;
+  do {
+    if (++retry <= max_retries) {
+      std::ostringstream oss;
+      oss << "Unloading modules (attempt " << retry << ")";
+      log(oss.str());
+    } else {
+      log("Could not unload all modules",Logger::Error);
+      return false;
+    }
+  } while (!Module::close());
+
+  return true;
 }
 
 //=============================================================================
@@ -101,7 +113,7 @@ int Kernel::run()
       return 0;
     }
   }
-  
+
   close();
   log("Exiting");
   return 1;

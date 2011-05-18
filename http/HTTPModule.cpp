@@ -38,13 +38,17 @@ SCONESERVER_MODULE(HTTPModule);
 //=========================================================================
 HTTPModule::HTTPModule()
   : scx::Module("http",scx::version()),
-    m_hosts(new HostMapper(*this)),
-    m_realms(new AuthRealmManager(*this)),
-    m_sessions(new SessionManager(*this)),
+    m_hosts(0),
+    m_realms(0),
+    m_sessions(0),
     m_idle_timeout(30)
 {
   scx::Stream::register_stream("http",this);
   scx::ScriptExpr::register_type("HTTPClient",this);
+
+  m_hosts = new HostMapper::Ref(new HostMapper(*this));
+  m_realms = new AuthRealmManager::Ref(new AuthRealmManager(*this));
+  m_sessions = new SessionManager::Ref(new SessionManager(*this));
 }
 
 //=========================================================================
@@ -66,22 +70,32 @@ int HTTPModule::init()
   return Module::init();
 }
 
+//=========================================================================
+bool HTTPModule::close()
+{
+  if (!scx::Module::close()) return false;
+  
+  delete m_hosts; m_hosts=0;
+  delete m_realms; m_realms=0;
+  delete m_sessions; m_sessions=0;
+}
+
 //=============================================================================
 HostMapper& HTTPModule::get_hosts()
 {
-  return *m_hosts.object();
+  return *m_hosts->object();
 }
 
 //=========================================================================
 AuthRealmManager& HTTPModule::get_realms()
 {
-  return *m_realms.object();
+  return *m_realms->object();
 }
 
 //=========================================================================
 SessionManager& HTTPModule::get_sessions()
 {
-  return *m_sessions.object();
+  return *m_sessions->object();
 }
 
 //=============================================================================
@@ -119,9 +133,9 @@ scx::ScriptRef* HTTPModule::script_op(const scx::ScriptAuth& auth,
       return new scx::ScriptRef(m_client_proxy.new_copy());
   
     // Sub-objects
-    if ("hosts" == name) return m_hosts.ref_copy();
-    if ("realms" == name) return m_realms.ref_copy();
-    if ("sessions" == name) return m_sessions.ref_copy();
+    if ("hosts" == name) return m_hosts->ref_copy();
+    if ("realms" == name) return m_realms->ref_copy();
+    if ("sessions" == name) return m_sessions->ref_copy();
   }
 
   return scx::Module::script_op(auth,ref,op,right);
@@ -176,8 +190,7 @@ void HTTPModule::provide(const std::string& type,
     scx::get_method_arg<scx::ScriptString>(args,0,"profile");
   std::string profile = (a_profile ? a_profile->get_string() : "default");
 
-  object = new ConnectionStream(*this,profile);
-  object->add_module_ref(this);
+  object = new ConnectionStream(this,profile);
 }
 
 //=========================================================================
@@ -199,7 +212,7 @@ void HTTPModule::provide(const std::string& type,
     return;
   }
   
-  object = new Client(*this,method->get_string(),*uri);
+  object = new Client(this,method->get_string(),*uri);
 }
   
 };

@@ -2,7 +2,7 @@
 
 Trivial File Transfer Protocol (TFTP) Stream
 
-Copyright (c) 2000-2007 Andrew Wedgbury <wedge@sconemad.com>
+Copyright (c) 2000-2011 Andrew Wedgbury <wedge@sconemad.com>
 
 This program is free software; you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -30,13 +30,10 @@ class TFTPModule;
 
 //=============================================================================
 class TFTPStream : public scx::Stream {
-
 public:
 
-  TFTPStream(
-    TFTPModule& mod,
-    const std::string& profile
-  );
+  TFTPStream(TFTPModule* module,
+	     const std::string& profile);
 
   virtual ~TFTPStream();
 
@@ -53,7 +50,7 @@ private:
 
   void log(const std::string& message, scx::Logger::Level level = scx::Logger::Info);
  
-  TFTPModule& m_mod;
+  scx::ScriptRefTo<TFTPModule> m_module;
   std::string m_profile;
 
   enum TFTPState {

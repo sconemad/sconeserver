@@ -47,9 +47,7 @@ class Host;
 class HTTP_API PartialResponseStream : public scx::Stream {
 public:
 
-  PartialResponseStream(
-    HTTPModule& module
-  );
+  PartialResponseStream(HTTPModule* module);
   
   virtual ~PartialResponseStream();
 
@@ -59,7 +57,7 @@ public:
  
 private:
 
-  HTTPModule& m_module;
+  HTTPModule::Ref m_module;
 
   int m_range_start;
   int m_range_length;

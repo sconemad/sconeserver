@@ -60,9 +60,9 @@ int SMTPModule::init()
 }
 
 //=========================================================================
-void SMTPModule::close()
+bool SMTPModule::close()
 {
-
+  return true;
 }
   
 //=============================================================================
@@ -174,7 +174,7 @@ void SMTPModule::provide(const std::string& type,
 			 const scx::ScriptRef* args,
 			 scx::ScriptObject*& object)
 {
-  object = new SMTPClient(*this,args);
+  object = new SMTPClient(this,args);
 }
 
 };

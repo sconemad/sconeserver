@@ -69,6 +69,6 @@ void LocalModule::provide(const std::string& type,
 			  scx::ScriptObject*& object)
 {
   if (type == "LocalAddr") {
-    object = new LocalSocketAddress(args);
+    object = new LocalSocketAddress(this,args);
   }
 }

@@ -82,8 +82,10 @@ const char* inet_ntop(
 
 
 //=============================================================================
-IPSocketAddress::IPSocketAddress(const scx::ScriptRef* args)
-  : scx::SocketAddress(PF_INET,SOCK_STREAM)
+IPSocketAddress::IPSocketAddress(scx::Module* module,
+				 const scx::ScriptRef* args)
+  : scx::SocketAddress(PF_INET,SOCK_STREAM),
+    m_module(module)
 {
   DEBUG_COUNT_CONSTRUCTOR(IPSocketAddress);
   memset(&m_addr,0,sizeof(m_addr));
@@ -126,6 +128,7 @@ IPSocketAddress::IPSocketAddress(const scx::ScriptRef* args)
 //=============================================================================
 IPSocketAddress::IPSocketAddress(const IPSocketAddress& c)
   : scx::SocketAddress(c),
+    m_module(c.m_module),
     m_host(c.m_host),
     m_service(c.m_service),
     m_valid(c.m_valid)

@@ -40,6 +40,7 @@ public:
   virtual std::string info() const;
 
   virtual int init();
+  virtual bool close();
 
   SSLChannel* find_channel(const std::string& name);
   

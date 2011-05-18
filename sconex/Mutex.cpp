@@ -2,7 +2,7 @@
 
 Mutual exclusion class for thread synchronisation
 
-Copyright (c) 2000-2004 Andrew Wedgbury <wedge@sconemad.com>
+Copyright (c) 2000-2011 Andrew Wedgbury <wedge@sconemad.com>
 
 This program is free software; you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -62,20 +62,38 @@ bool Mutex::unlock()
 
 
 //=============================================================================
-MutexLocker::MutexLocker(
-  Mutex& mutex
-)
-  : m_mutex(mutex)
+MutexLocker::MutexLocker(Mutex& mutex, bool start_locked)
+  : m_mutex(mutex),
+    m_locked(false)
 {
-  m_mutex.lock();
+  if (start_locked) lock();
 }
 
 //=============================================================================
 MutexLocker::~MutexLocker()
 {
-  m_mutex.unlock();
+  if (m_locked) unlock();
 }
 
+//=============================================================================
+bool MutexLocker::lock()
+{
+  if (m_mutex.lock()) {
+    m_locked = true;
+    return true;
+  }
+  return false;
+}
+
+//=============================================================================
+bool MutexLocker::unlock()
+{
+  if (m_mutex.unlock()) {
+    m_locked = false;
+    return true;
+  }
+  return false;
+}
 
 //=============================================================================
 ConditionEvent::ConditionEvent()
@@ -113,63 +131,129 @@ void ConditionEvent::broadcast()
 
 
 //=============================================================================
-ReaderWriterLock::ReaderWriterLock()
+RWLock::RWLock()
   : m_readers(0),
     m_writing(false)
 {
-  DEBUG_COUNT_CONSTRUCTOR(ReaderWriterLock);
+  DEBUG_COUNT_CONSTRUCTOR(RWLock);
 }
 	
 //=============================================================================
-ReaderWriterLock::~ReaderWriterLock()
+RWLock::~RWLock()
 {
-  DEBUG_COUNT_DESTRUCTOR(ReaderWriterLock);
+  DEBUG_COUNT_DESTRUCTOR(RWLock);
 }
 
 //=============================================================================
-void ReaderWriterLock::read_lock()
+void RWLock::lock(Mode mode)
 {
   m_mutex.lock();
-  while (m_writing) {
-    m_condition.wait(m_mutex);
+
+  if (mode == Read) { // Lock reader
+    while (m_writing) {
+      m_condition.wait(m_mutex);
+    }
+    ++m_readers;
+
+  } else { // Lock writer
+    while (m_writing || m_readers > 0) {
+      m_condition.wait(m_mutex);
+    }
+    m_writing = true;
   }
-  ++m_readers;
   m_mutex.unlock();
 }
 
 //=============================================================================
-void ReaderWriterLock::read_unlock()
+void RWLock::unlock(Mode mode)
 {
   m_mutex.lock();
-  if (m_readers > 0) {
-    --m_readers;
-    if (m_readers == 0) {
-      m_condition.signal();
+  if (mode == Read) { // Unlock reader
+    if (m_readers > 0) {
+      --m_readers;
+      if (m_readers == 0) {
+	m_condition.signal();
+      }
+    }
+
+  } else { // Unlock writer
+    if (m_writing) {
+      m_writing = false;
+      m_condition.broadcast();
     }
   }
   m_mutex.unlock();
 }
 
 //=============================================================================
-void ReaderWriterLock::write_lock()
+void RWLock::convert(Mode mode)
 {
   m_mutex.lock();
-  while (m_writing || m_readers > 0) {
-    m_condition.wait(m_mutex);
+  if (mode == Read) {
+    if (m_writing) {
+      m_writing = false;
+      m_condition.broadcast();
+    }
+    ++m_readers;
+
+  } else {
+    if (m_readers > 0) {
+      --m_readers;
+      if (m_readers == 0) {
+	m_condition.signal();
+      }
+    }
+    while (m_writing || m_readers > 0) {
+      m_condition.wait(m_mutex);
+    }
+    m_writing = true;
   }
-  m_writing = true;
   m_mutex.unlock();
 }
 
 //=============================================================================
-void ReaderWriterLock::write_unlock()
+RWLocker::RWLocker(RWLock& rrlock,
+		   bool start_locked,
+		   RWLock::Mode mode)
+  : m_lock(rrlock),
+    m_mode(mode),
+    m_locked(false)
 {
-  m_mutex.lock();
-  if (m_writing) {
-    m_writing = false;
-    m_condition.broadcast();
+  if (start_locked) lock(mode);
+}
+
+//=============================================================================
+RWLocker::~RWLocker()
+{
+  if (m_locked) unlock();
+}
+
+//=============================================================================
+bool RWLocker::lock(RWLock::Mode mode)
+{
+  if (m_locked) {
+    if (m_mode == mode) 
+      return false; // Already locked in this mode
+
+    m_lock.convert(mode);
+
+  } else {
+    m_lock.lock(mode);
   }
-  m_mutex.unlock();
+
+  m_locked = true;
+  m_mode = mode;
+  return true;
+}
+
+//=============================================================================
+bool RWLocker::unlock()
+{
+  if (!m_locked) return false;
+
+  m_lock.unlock(m_mode);
+  m_locked = false;
+  return true;
 }
 
 };

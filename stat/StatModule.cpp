@@ -41,18 +41,26 @@ StatModule::StatModule()
 StatModule::~StatModule()
 {
   scx::Stream::unregister_stream("stat",this);
-
-  for (ChannelMap::iterator it = m_channels.begin();
-       it != m_channels.end();
-       ++it) {
-    delete it->second;
-  }
 }
 
 //=========================================================================
 std::string StatModule::info() const
 {
   return "Connection and I/O statistics";
+}
+
+//=========================================================================
+bool StatModule::close()
+{
+  if (!scx::Module::close()) return false;
+
+  for (ChannelMap::iterator it = m_channels.begin();
+       it != m_channels.end();
+       ++it) {
+    delete it->second;
+  }
+  m_channels.clear();
+  return true;
 }
 
 //=========================================================================
@@ -72,7 +80,7 @@ StatChannel* StatModule::add_channel(const std::string& name)
   StatChannel* channel = find_channel(name);
 
   if (!channel) {
-    channel = new StatChannel(name);
+    channel = new StatChannel(this, name);
     m_channels[name] = new StatChannel::Ref(channel);
   }
   
@@ -236,7 +244,6 @@ void StatModule::provide(const std::string& type,
   // Make sure there is a channel
   StatChannel* channel = add_channel(s_channel->get_string());
 
-  object = new StatStream(*this,channel);
-  object->add_module_ref(this);
+  object = new StatStream(this,channel);
 }
 

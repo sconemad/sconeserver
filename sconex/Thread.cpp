@@ -83,8 +83,10 @@ bool Thread::stop()
   }
 
   // Tell the thread that we're waiting for it to exit
+  m_mutex.lock();
   m_state = WaitingExit;
   m_wakeup.signal();
+  m_mutex.unlock();
 
   // Wait until the thread exits
   pthread_join(m_thread,0);

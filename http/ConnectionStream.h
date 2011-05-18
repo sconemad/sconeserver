@@ -41,10 +41,8 @@ public:
     http_Body
   };
 
-  ConnectionStream(
-    HTTPModule& module,
-    const std::string& profile
-  );
+  ConnectionStream(HTTPModule* module,
+		   const std::string& profile);
   
   virtual ~ConnectionStream();
 
@@ -64,7 +62,7 @@ public:
   
 private:
 
-  HTTPModule& m_module;
+  HTTPModule::Ref m_module;
 
   Request* m_request;
   // Stores the request currently being built

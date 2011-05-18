@@ -38,7 +38,7 @@ class ClientStream;
 class HTTP_API Client : public scx::ScriptObject {
 public:
 
-  Client(HTTPModule& module,
+  Client(HTTPModule* module,
          const std::string& method,
          const scx::Uri& url);
   Client(const Client& c);
@@ -72,7 +72,7 @@ public:
 
 private:
 
-  HTTPModule& m_module;
+  HTTPModule::Ref m_module;
 
   Request::Ref m_request;
   Response::Ref m_response;
@@ -95,14 +95,12 @@ public:
     End
   };
 
-  ClientStream(
-    HTTPModule& module,
-    Client* client,
-    Request& request,
-    const std::string& request_data,
-    Response& response,
-    std::string& response_data
-  );
+  ClientStream(HTTPModule* module,
+	       Client* client,
+	       Request& request,
+	       const std::string& request_data,
+	       Response& response,
+	       std::string& response_data);
   
   virtual ~ClientStream();
 
@@ -117,7 +115,7 @@ private:
 
   void build_request(const std::string& method, const scx::Uri& url);
   
-  HTTPModule& m_module;
+  HTTPModule::Ref m_module;
   Client* m_client;
 
   Request& m_request;
@@ -141,10 +139,8 @@ public:
     Established
   };
 
-  ProxyConnectStream(
-    HTTPModule& module,
-    Request& request
-  );
+  ProxyConnectStream(HTTPModule* module,
+		     Request& request);
   
   virtual ~ProxyConnectStream();
 
@@ -154,7 +150,7 @@ public:
   
 private:
 
-  HTTPModule& m_module;
+  HTTPModule::Ref m_module;
 
   Request& m_request;
   Response m_response;

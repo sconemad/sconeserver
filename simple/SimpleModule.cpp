@@ -64,12 +64,10 @@ void SimpleModule::provide(const std::string& type,
 			   scx::Stream*& object)
 {
   if ("echo" == type) {
-    object = new EchoStream();
-    object->add_module_ref(this);
+    object = new EchoStream(this);
     
   } else if ("discard" == type) {
-    object = new DiscardStream();
-    object->add_module_ref(this);
+    object = new DiscardStream(this);
 
   } else if ("daytime" == type) {
     // RFC867
@@ -77,8 +75,7 @@ void SimpleModule::provide(const std::string& type,
     object = new scx::Response(str);
     
   } else if ("chargen" == type) {
-    object = new ChargenStream();
-    object->add_module_ref(this);
+    object = new ChargenStream(this);
 
   } else if ("time" == type) {
     // RFC868

@@ -36,22 +36,22 @@ SCONESERVER_MODULE(SconesiteModule);
 
 //=========================================================================
 class SconesiteJob : public scx::PeriodicJob {
-
 public:
 
-  SconesiteJob(SconesiteModule& module, const scx::Time& period)
-    : scx::PeriodicJob("sconesite Article sync",period),
+  SconesiteJob(SconesiteModule* module, 
+	       const scx::Time& period)
+    : scx::PeriodicJob("sconesite Refresh",period),
       m_module(module) {};
 
   virtual bool run()
   {
-    m_module.refresh();
+    m_module.object()->refresh();
     reset_timeout();
     return false;
   };
 
 protected:
-  SconesiteModule& m_module;
+  SconesiteModule::Ref m_module;
 };
 
 //=========================================================================
@@ -61,13 +61,25 @@ SconesiteModule::SconesiteModule()
   scx::Stream::register_stream("sconesite",this);
 
   m_job = scx::Kernel::get()->add_job(
-    new SconesiteJob(*this,scx::Time(SCONESITE_JOB_PERIOD)));
+    new SconesiteJob(this,scx::Time(SCONESITE_JOB_PERIOD)));
 }
 
 //=========================================================================
 SconesiteModule::~SconesiteModule()
 {
   scx::Stream::unregister_stream("sconesite",this);
+}
+
+//=========================================================================
+std::string SconesiteModule::info() const
+{
+  return "Sconesite content management system";
+}
+
+//=========================================================================
+bool SconesiteModule::close()
+{
+  if (!scx::Module::close()) return false;
 
   scx::Kernel::get()->end_job(m_job);
 
@@ -76,12 +88,8 @@ SconesiteModule::~SconesiteModule()
        ++it) {
     delete it->second;
   }
-}
-
-//=========================================================================
-std::string SconesiteModule::info() const
-{
-  return "Sconesite content management system";
+  m_profiles.clear();
+  return true;
 }
 
 //=========================================================================
@@ -101,8 +109,7 @@ void SconesiteModule::provide(const std::string& type,
 	"' specified, aborting connection");
   }
   
-  object = new SconesiteStream(*this,*profile);
-  object->add_module_ref(this);
+  object = new SconesiteStream(this,*profile);
 }
 
 //=========================================================================
@@ -164,22 +171,21 @@ scx::ScriptRef* SconesiteModule::script_method(const scx::ScriptAuth& auth,
     const scx::ScriptString* a_profile =
       scx::get_method_arg<scx::ScriptString>(args,0,"name");
     if (!a_profile) {
-      return scx::ScriptError::new_ref("add() No profile name specified");
+      return scx::ScriptError::new_ref("No profile name specified");
     }
     std::string s_profile = a_profile->get_string();
-    
-    const scx::ScriptString* a_path =
-      scx::get_method_arg<scx::ScriptString>(args,1,"path");
-    if (!a_path) {
-      return scx::ScriptError::new_ref("add() No path specified");
-    }
+
+    scx::Module::Ref httpmod = scx::Kernel::get()->get_module("http");
+    http::HTTPModule* http = dynamic_cast<http::HTTPModule*>(httpmod.object());
+    http::Host* host = http ? http->get_hosts().lookup_host(s_profile) : 0;
+    if (!host)
+      return scx::ScriptError::new_ref("No http host for this profile");
 
     ProfileMap::const_iterator it = m_profiles.find(s_profile);
-    if (it != m_profiles.end()) {
-      return scx::ScriptError::new_ref("add() Profile already exists");
-    }
+    if (it != m_profiles.end())
+      return scx::ScriptError::new_ref("Profile already exists");
         
-    scx::FilePath path = a_path->get_string();
+    scx::FilePath path = host->get_path();
     log("Adding profile '" + s_profile + "' dir '" + path.path() + "'");
     Profile* profile = new Profile(*this,s_profile,path);
     m_profiles[s_profile] = new Profile::Ref(profile);

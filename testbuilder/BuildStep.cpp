@@ -232,8 +232,7 @@ bool BuildStep::launch()
   file->write(oss_log.str());
 
   m_process_mutex.lock();
-  m_process_stream = new BuildProcessStream(m_module,this);
-  m_process_stream->add_module_ref(&m_module);
+  m_process_stream = new BuildProcessStream(&m_module,this);
   process->add_stream(m_process_stream);
   
   scx::StreamTransfer* xfer = new scx::StreamTransfer(process);

@@ -1,8 +1,8 @@
 /* SconeServer (http://www.sconemad.com)
 
-Mutual exclusion class for thread synchronisation
+Thread synchronisation classes
 
-Copyright (c) 2000-2004 Andrew Wedgbury <wedge@sconemad.com>
+Copyright (c) 2000-2011 Andrew Wedgbury <wedge@sconemad.com>
 
 This program is free software; you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -28,19 +28,18 @@ namespace scx {
 class SCONEX_API ConditionEvent;
   
 //=============================================================================
+// Mutex - A mutual exclusion
+//
 class SCONEX_API Mutex {
-
 public:
 
   Mutex();
-  virtual ~Mutex();
+  ~Mutex();
 
   bool lock();
   bool try_lock();
   
   bool unlock();
-
-protected:
 
 private:
 
@@ -51,23 +50,28 @@ private:
 };
 
 //=============================================================================
+// MutexLocker - RAII class for Mutex
+//
 class SCONEX_API MutexLocker {
-
 public:
 
-  MutexLocker(Mutex& m_mutex);
-  
+  MutexLocker(Mutex& mutex, bool start_locked=true);
   ~MutexLocker();
+
+  bool lock();
+  bool unlock();
 
 private:
 
   Mutex& m_mutex;
+  bool m_locked;
 
 };
 
 //=============================================================================
+// ConditionEvent - For signalling between threads
+//
 class SCONEX_API ConditionEvent {
-
 public:
 
   ConditionEvent();
@@ -84,18 +88,21 @@ private:
 };
   
 //=============================================================================
-class SCONEX_API ReaderWriterLock {
-
+// RWLock - A mutex which allows multiple readers but only one writer
+//
+class SCONEX_API RWLock {
 public:
+
+  enum Mode { Read, Write };
   
-  ReaderWriterLock();
-  ~ReaderWriterLock();
+  RWLock();
+  ~RWLock();
 
-  void read_lock();
-  void read_unlock();
+  void lock(Mode mode);
+  void unlock(Mode mode);
 
-  void write_lock();
-  void write_unlock();
+  // Convert read lock to write lock or vice-versa
+  void convert(Mode mode);
 
 private:
 
@@ -104,8 +111,30 @@ private:
 
   unsigned int m_readers;
   bool m_writing;
+
 };
   
+//=============================================================================
+// RWLocker - RAII class for RWLock
+//
+class SCONEX_API RWLocker {
+public:
+
+  RWLocker(RWLock& rwlock,
+	   bool start_locked=true,
+	   RWLock::Mode mode=RWLock::Read);
+  ~RWLocker();
+
+  bool lock(RWLock::Mode mode=RWLock::Read);
+  bool unlock();
+
+private:
+
+  RWLock& m_lock;
+  RWLock::Mode m_mode;
+  bool m_locked;
+
+};
   
 };
 #endif

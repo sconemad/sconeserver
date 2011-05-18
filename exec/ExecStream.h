@@ -2,7 +2,7 @@
 
 External program execution Stream
 
-Copyright (c) 2000-2006 Andrew Wedgbury <wedge@sconemad.com>
+Copyright (c) 2000-2011 Andrew Wedgbury <wedge@sconemad.com>
 
 This program is free software; you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -31,10 +31,9 @@ namespace scx { class Process; }
 
 //=========================================================================
 class ExecStream : public scx::Stream {
-
 public:
 
-  ExecStream(ExecModule& module,
+  ExecStream(ExecModule* module,
 	     scx::ScriptList* args);
 
   ~ExecStream();
@@ -49,7 +48,8 @@ protected:
   
 private:
 
-  ExecModule& m_module;
+  scx::ScriptRefTo<ExecModule> m_module;
+
   scx::ScriptList* m_args;
   scx::Process* m_process;
 

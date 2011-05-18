@@ -23,12 +23,14 @@ Free Software Foundation, Inc.,
 #define ipSocketAddress_h
 
 #include <sconex/SocketAddress.h>
+#include <sconex/Module.h>
 
 //=============================================================================
 class IPSocketAddress : public scx::SocketAddress {
 public:
 
-  IPSocketAddress(const scx::ScriptRef* args);
+  IPSocketAddress(scx::Module* module,
+		  const scx::ScriptRef* args);
 
   IPSocketAddress(const IPSocketAddress& c);
   
@@ -81,6 +83,8 @@ public:
   // Get a string describing the socket type, e.g. "tcp" or "udp"
 
 protected:
+
+  scx::Module::Ref m_module;
 
   struct sockaddr_in m_addr;
   std::string m_host;

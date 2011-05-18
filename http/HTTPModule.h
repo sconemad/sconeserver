@@ -47,6 +47,7 @@ public:
   virtual std::string info() const;
 
   virtual int init();
+  virtual bool close();
 
   HostMapper& get_hosts();
   AuthRealmManager& get_realms();
@@ -76,14 +77,16 @@ public:
   virtual void provide(const std::string& type,
 		       const scx::ScriptRef* args,
 		       scx::ScriptObject*& object);
-  
+
+  typedef scx::ScriptRefTo<HTTPModule> Ref;
+
 protected:
 
 private:
 
-  HostMapper::Ref m_hosts;
-  AuthRealmManager::Ref m_realms;
-  SessionManager::Ref m_sessions;
+  HostMapper::Ref* m_hosts;
+  AuthRealmManager::Ref* m_realms;
+  SessionManager::Ref* m_sessions;
 
   unsigned int m_idle_timeout;
   scx::Uri m_client_proxy;

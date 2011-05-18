@@ -69,6 +69,6 @@ void IP6Module::provide(const std::string& type,
 			scx::ScriptObject*& object)
 {
   if (type == "IP6Addr") {
-    object = new IP6SocketAddress(args);
+    object = new IP6SocketAddress(this,args);
   }
 }

@@ -33,7 +33,7 @@ Free Software Foundation, Inc.,
 namespace http {
 
 //=============================================================================
-Client::Client(HTTPModule& module,
+Client::Client(HTTPModule* module,
                const std::string& method,
                const scx::Uri& url)
   : m_module(module),
@@ -125,7 +125,7 @@ scx::ScriptRef* Client::script_method(const scx::ScriptAuth& auth,
 bool Client::run(const std::string& request_data)
 {
   bool proxy = false;
-  scx::Uri addr_url = m_module.get_client_proxy();
+  scx::Uri addr_url = m_module.object()->get_client_proxy();
   if (addr_url.get_int()) {
     // Connect to proxy
     proxy = true;
@@ -159,14 +159,15 @@ bool Client::run(const std::string& request_data)
   scx::StreamSocket* sock = new scx::StreamSocket();
 
   // Set idle timeout
-  sock->set_timeout(scx::Time(m_module.get_idle_timeout()));
+  sock->set_timeout(scx::Time(m_module.object()->get_idle_timeout()));
   
   // Is this a secure http connection?
   if (m_request.object()->get_uri().get_scheme() == "https") {
     
     // If a proxy is in use, add a connect stream to setup the tunnel
     if (proxy) {
-      sock->add_stream( new ProxyConnectStream(m_module,*m_request.object()) );
+      sock->add_stream( new ProxyConnectStream(m_module.object(),
+					       *m_request.object()) );
     }
     
     // Connect an SSL stream to this socket
@@ -183,7 +184,7 @@ bool Client::run(const std::string& request_data)
   }
 
   // Add client stream
-  ClientStream* cs = new ClientStream(m_module,this,
+  ClientStream* cs = new ClientStream(m_module.object(),this,
 				      *m_request.object(),
 				      request_data,
 				      *m_response.object(),
@@ -240,14 +241,13 @@ void Client::event_complete(bool error)
 
 
 //=============================================================================
-ClientStream::ClientStream(
-  HTTPModule& module,
-  Client* client,
-  Request& request,
-  const std::string& request_data,
-  Response& response,
-  std::string& response_data
-) : scx::LineBuffer("http:client",1024),
+ClientStream::ClientStream(HTTPModule* module,
+			   Client* client,
+			   Request& request,
+			   const std::string& request_data,
+			   Response& response,
+			   std::string& response_data)
+  : scx::LineBuffer("http:client",1024),
     m_module(module),
     m_client(client),
     m_request(request),
@@ -442,10 +442,9 @@ void ClientStream::build_request(const std::string& method, const scx::Uri& url)
 
 
 //=============================================================================
-ProxyConnectStream::ProxyConnectStream(
-  HTTPModule& module,
-  Request& request
-) : scx::LineBuffer("http:proxy-connect",1024),
+ProxyConnectStream::ProxyConnectStream(HTTPModule* module,
+				       Request& request) 
+  : scx::LineBuffer("http:proxy-connect",1024),
     m_module(module),
     m_request(request),
     m_seq(Send)

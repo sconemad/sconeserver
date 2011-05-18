@@ -107,7 +107,7 @@ void MessageHeader::get_all_rcpts(std::vector<std::string>& rcpts) const
   
   
 //=============================================================================
-SMTPClient::SMTPClient(SMTPModule& module, 
+SMTPClient::SMTPClient(SMTPModule* module, 
 		       const scx::ScriptRef* args)
   : m_module(module),
     m_result(Unknown)
@@ -168,7 +168,7 @@ int SMTPClient::get_int() const
 //=============================================================================
 scx::ScriptRef* SMTPClient::send(const std::string& message)
 {
-  scx::StreamSocket* sock = m_module.new_server_connection();
+  scx::StreamSocket* sock = m_module.object()->new_server_connection();
 
   if (!sock) {
     // Could not create the socket
@@ -182,8 +182,7 @@ scx::ScriptRef* SMTPClient::send(const std::string& message)
   sock->add_stream(new scx::StreamDebugger("smtp-client"));
   
   // Add client stream
-  SMTPClientStream* cs = new SMTPClientStream(m_module,this);
-  cs->add_module_ref(&m_module);
+  SMTPClientStream* cs = new SMTPClientStream(m_module.object(),this);
   sock->add_stream(cs);
   
   if (!cs->set_message(m_header,message)) {
@@ -215,10 +214,12 @@ scx::ScriptRef* SMTPClient::send(const std::string& message)
 
   // Log result
   if (m_result != Success) {
-    m_module.log("SMTP session completed with error:" + m_result_str,
-		 scx::Logger::Error);
+    m_module.object()->log("SMTP session completed with error:" + 
+			   m_result_str,
+			   scx::Logger::Error);
   } else {
-    m_module.log("SMTP session completed succesfully: " + m_result_str);
+    m_module.object()->log("SMTP session completed succesfully: " + 
+			   m_result_str);
   }
   
   return scx::ScriptInt::new_ref(m_result == Success); 
@@ -307,7 +308,7 @@ scx::ScriptRef* SMTPClient::script_method(const scx::ScriptAuth& auth,
 }
 
 //=============================================================================
-SMTPClientStream::SMTPClientStream(SMTPModule& module,
+SMTPClientStream::SMTPClientStream(SMTPModule* module,
 				   SMTPClient* client)
   : scx::LineBuffer("smtp:client",1024),
     m_module(module),

@@ -50,7 +50,7 @@ ModuleLoaderDLL::~ModuleLoaderDLL()
 }
 
 //=============================================================================
-void ModuleLoaderDLL::load_module()
+bool ModuleLoaderDLL::load_module()
 {
   // Try and locate the module
   FilePath path;
@@ -91,12 +91,12 @@ void ModuleLoaderDLL::load_module()
 
       default: // Can't find it anywhere
 	log("Unable to locate module '"+m_name+"'");
-	return; 
+	return false; 
     }
   } while (!FileStat(path).is_file());
 
   if (!load_dll(path.path())) {
-    return;
+    return false;
   }
 
   PROC_SCONESERVER_MODULE proc =
@@ -104,27 +104,36 @@ void ModuleLoaderDLL::load_module()
 
   if (proc==0) {
     unload_dll();
-    return;
+    return false;
   }
 
   m_module = new Module::Ref(proc());
+  return true;
 }
 
 //=============================================================================
-void ModuleLoaderDLL::unload_module()
+bool ModuleLoaderDLL::unload_module()
 {
   MutexLocker locker(m_mutex);
   
   if (m_module) {
-    DEBUG_ASSERT(m_module->object()->num_refs() == 1,
-		 "unload_module() Deleting referenced module");
-
-    m_module->object()->close();
+    if (!m_module->object()->close()) {
+      log("Unload '" + m_name + "' failed");
+      return false;
+    }
+    int refs = m_module->object()->num_refs();
+    if (refs > 1) {
+      std::ostringstream oss;
+      oss << "Deferring unload of '" << m_name <<"' (" << refs << " refs)";
+      log(oss.str());
+      return false;
+    }
     delete m_module;
     m_module = 0;
   }
 
   unload_dll();
+  return true;
 }
 
 //=============================================================================

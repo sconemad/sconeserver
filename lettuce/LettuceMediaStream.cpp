@@ -20,6 +20,7 @@ Free Software Foundation, Inc.,
 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA */
 
 #include "LettuceMediaStream.h"
+#include "LettuceModule.h"
 
 #include <sconex/ModuleInterface.h>
 #include <sconex/Module.h>
@@ -33,9 +34,8 @@ Free Software Foundation, Inc.,
 
 
 //=========================================================================
-LettuceMediaStream::LettuceMediaStream(
-  scx::Module& module
-) : Stream("lettuce-media"),
+LettuceMediaStream::LettuceMediaStream(LettuceModule* module)
+  : Stream("lettuce-media"),
     m_module(module),
     m_pls_file(0),
     m_pls_buffer(0)
@@ -68,7 +68,7 @@ scx::Condition LettuceMediaStream::next_track()
       scx::FilePath path("/mnt/data/music");
       path += line;
       if (file->open(path,scx::File::Read) == scx::Ok) {
-        m_module.log("--START '" + path.path() + "'"); 
+        m_module.object()->log("--START '" + path.path() + "'"); 
         
         scx::StreamTransfer* xfer =
           new scx::StreamTransfer(file,1024);
@@ -80,7 +80,7 @@ scx::Condition LettuceMediaStream::next_track()
         return scx::Ok;
       }
 
-      m_module.log("--ERROR opening '" + path.path() + "'"); 
+      m_module.object()->log("--ERROR opening '" + path.path() + "'"); 
       delete file;
     }
   } while (c == scx::Ok);
@@ -97,10 +97,10 @@ scx::Condition LettuceMediaStream::event(scx::Stream::Event e)
 
     m_pls_file = new scx::File();
     if (m_pls_file->open(PLS_PATH,scx::File::Read) != scx::Ok) {
-      m_module.log("Cannot open playlist '" PLS_PATH "'"); 
+      m_module.object()->log("Cannot open playlist '" PLS_PATH "'"); 
       return scx::Close;
     }
-    m_module.log("-START playlist '" PLS_PATH "'"); 
+    m_module.object()->log("-START playlist '" PLS_PATH "'"); 
     
     m_pls_buffer = new scx::LineBuffer("pls");
     m_pls_file->add_stream(m_pls_buffer);
@@ -114,6 +114,6 @@ scx::Condition LettuceMediaStream::event(scx::Stream::Event e)
     }
   }
   
-  m_module.log("-END playlist '" PLS_PATH "'"); 
+  m_module.object()->log("-END playlist '" PLS_PATH "'"); 
   return scx::Ok;
 }

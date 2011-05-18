@@ -56,11 +56,10 @@ enum TFTPErrorCode {
 #define TFTP_PACKET_SIZE 516
 
 //=============================================================================
-TFTPStream::TFTPStream(
-  TFTPModule& mod,
-  const std::string& profile
-) : Stream("tftp"),
-    m_mod(mod),
+TFTPStream::TFTPStream(TFTPModule* module,
+		       const std::string& profile)
+  : Stream("tftp"),
+    m_module(module),
     m_profile(profile),
     m_state(tftp_Request),
     m_file(0),
@@ -110,7 +109,7 @@ scx::Condition TFTPStream::event(scx::Stream::Event e)
 	}
       }
 
-      TFTPProfile* profile = m_mod.find_profile(m_profile);
+      TFTPProfile* profile = m_module.object()->find_profile(m_profile);
       if (!profile) {
 	log("No tftp profile specified",scx::Logger::Error);
 	write_error(FileNotFound,"File not found");
@@ -338,5 +337,5 @@ bool TFTPStream::write_error(unsigned short code, const std::string& message)
 //=============================================================================
 void TFTPStream::log(const std::string& message, scx::Logger::Level level)
 {
-  m_mod.log("{"+m_profile+"} "+message,level);
+  m_module.object()->log("{"+m_profile+"} "+message,level);
 }

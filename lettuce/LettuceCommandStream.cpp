@@ -20,6 +20,7 @@ Free Software Foundation, Inc.,
 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA */
 
 #include "LettuceCommandStream.h"
+#include "LettuceModule.h"
 
 #include <sconex/DatagramChannel.h>
 #include <sconex/SocketAddress.h>
@@ -192,9 +193,8 @@ scx::ScriptObject* LettuceBuffer::new_obj()
 
 
 //=========================================================================
-LettuceCommandStream::LettuceCommandStream(
-  scx::Module& module
-) : Stream("lettuce-cmd"),
+LettuceCommandStream::LettuceCommandStream(LettuceModule* module)
+  : Stream("lettuce-cmd"),
     m_module(module)
 {
   enable_event(scx::Stream::Readable,true);
@@ -210,7 +210,7 @@ LettuceCommandStream::~LettuceCommandStream()
 scx::Condition LettuceCommandStream::event(scx::Stream::Event e) 
 {
   if (e == scx::Stream::Opening) {
-    m_module.log("Opening lettuce command stream");
+    m_module.object()->log("Opening lettuce command stream");
     endpoint().set_timeout(scx::Time(125));
   } 
 
@@ -246,7 +246,7 @@ scx::Condition LettuceCommandStream::event(scx::Stream::Event e)
       oss << a_name->get_string();
     }
     oss << ": " << a_data->get_string();
-    m_module.log(oss.str());
+    m_module.object()->log(oss.str());
     
     endpoint().reset_timeout();
 

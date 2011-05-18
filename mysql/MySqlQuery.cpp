@@ -201,12 +201,11 @@ scx::ScriptRef* MySqlArg::get_arg() const
 
 
 //=========================================================================
-MySqlQuery::MySqlQuery(MySqlProfile& profile,
+MySqlQuery::MySqlQuery(MySqlProfile* profile,
 		       const std::string& query)
   : m_profile(profile),
-    m_module_ref(&m_profile.m_module),
     m_query(query),
-    m_conn(profile.get_connection()),
+    m_conn(profile->get_connection()),
     m_stmt(0),
     m_param_bind(0),
     m_param_args(0),
@@ -223,9 +222,8 @@ MySqlQuery::MySqlQuery(MySqlProfile& profile,
 MySqlQuery::MySqlQuery(const MySqlQuery& c)
   : scx::DbQuery(c),
     m_profile(c.m_profile),
-    m_module_ref(c.m_module_ref),
     m_query(c.m_query),
-    m_conn(c.m_profile.get_connection()),
+    m_conn(m_profile.object()->get_connection()),
     m_stmt(0),
     m_param_bind(0),
     m_param_args(0),
@@ -249,7 +247,7 @@ MySqlQuery::~MySqlQuery()
     delete m_result_args;
   }
 
-  m_profile.release_connection(m_conn);
+  m_profile.object()->release_connection(m_conn);
 
   DEBUG_COUNT_DESTRUCTOR(MySqlQuery);
 }
@@ -277,7 +275,7 @@ int MySqlQuery::get_int() const
 scx::ScriptRef* MySqlQuery::script_op(const scx::ScriptAuth& auth,
 				      const scx::ScriptRef& ref,
 				      const scx::ScriptOp& op,
-				      scx::ScriptRef* right)
+				      const scx::ScriptRef* right)
 {
   if (op.type() == scx::ScriptOp::Lookup) {
     const std::string name = right->object()->get_string();
@@ -301,7 +299,7 @@ scx::ScriptRef* MySqlQuery::script_op(const scx::ScriptAuth& auth,
 scx::ScriptRef* MySqlQuery::script_method(const scx::ScriptAuth& auth,
 					  const scx::ScriptRef& ref,
 					  const std::string& name,
-					  scx::ScriptRef* args)
+					  const scx::ScriptRef* args)
 {
   if ("exec" == name) {
     if (!exec(args)) {
@@ -323,7 +321,7 @@ scx::ScriptRef* MySqlQuery::script_method(const scx::ScriptAuth& auth,
 //=========================================================================
 bool MySqlQuery::exec(const scx::ScriptRef* args)
 {
-  MySqlQuery_DEBUG_LOG("{"<<m_profile.m_name<<"} exec: "<<m_query);
+  MySqlQuery_DEBUG_LOG("{"<<m_profile.object()->m_name<<"} exec: "<<m_query);
   
   const scx::ScriptList* argsl = 
     (args ? dynamic_cast<const scx::ScriptList*>(args->object()) : 0);

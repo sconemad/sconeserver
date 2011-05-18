@@ -34,22 +34,22 @@ SCONESERVER_MODULE(RSSModule);
 
 //=========================================================================
 class RSSJob : public scx::PeriodicJob {
-
 public:
 
-  RSSJob(RSSModule& module, const scx::Time& period)
+  RSSJob(RSSModule* module,
+	 const scx::Time& period)
     : scx::PeriodicJob("rss Feed updates",period),
       m_module(module) {};
 
   virtual bool run()
   {
-    m_module.refresh(false);
+    m_module.object()->refresh(false);
     reset_timeout();
     return false;
   };
 
 protected:
-  RSSModule& m_module;
+  RSSModule::Ref m_module;
 };
 
 //=========================================================================
@@ -57,19 +57,13 @@ RSSModule::RSSModule(
 ) : scx::Module("rss",scx::version())
 {
   m_job = scx::Kernel::get()->add_job(
-    new RSSJob(*this,scx::Time(RSS_JOB_PERIOD)));
+    new RSSJob(this,scx::Time(RSS_JOB_PERIOD)));
 }
 
 //=========================================================================
 RSSModule::~RSSModule()
 {
-  scx::Kernel::get()->end_job(m_job);
 
-  for (FeedMap::const_iterator it = m_feeds.begin();
-       it != m_feeds.end();
-       ++it) {
-    delete it->second;
-  }
 }
 
 //=========================================================================
@@ -82,6 +76,23 @@ std::string RSSModule::info() const
 int RSSModule::init()
 {
   return Module::init();
+}
+
+//=========================================================================
+bool RSSModule::close()
+{
+  if (!scx::Module::close()) return false;
+
+  scx::Kernel::get()->end_job(m_job);
+
+  for (FeedMap::const_iterator it = m_feeds.begin();
+       it != m_feeds.end();
+       ++it) {
+    delete it->second;
+  }
+  m_feeds.clear();
+
+  return true;
 }
 
 //=========================================================================

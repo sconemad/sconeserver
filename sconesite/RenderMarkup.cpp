@@ -475,7 +475,7 @@ scx::ScriptRef* RenderMarkupContext::script_method(const scx::ScriptAuth& auth,
   if (name == "escape") {
     const scx::ScriptString* value = 
       scx::get_method_arg<scx::ScriptString>(args,0,"value");
-    if (!value)
+    if (value)
       return scx::ScriptString::new_ref(scx::escape_html(value->get_string()));
     return scx::ScriptString::new_ref("");
   }

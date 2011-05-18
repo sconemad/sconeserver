@@ -73,12 +73,6 @@ SSLModule::~SSLModule()
 {  
   scx::Stream::unregister_stream("ssl",this);
 
-  for (ChannelMap::const_iterator it = m_channels.begin();
-       it != m_channels.end();
-       it++) {
-    delete it->second;
-  }
-
   CRYPTO_set_locking_callback(NULL);
   for (int i=0; i<CRYPTO_NUM_LOCKS; i++) {
     pthread_mutex_destroy(&(lock_cs[i]));
@@ -110,6 +104,20 @@ int SSLModule::init()
   CRYPTO_set_locking_callback(pthreads_locking_callback);
   
   return Module::init();
+}
+
+//=========================================================================
+bool SSLModule::close()
+{
+  if (!scx::Module::close()) return false;
+
+  for (ChannelMap::const_iterator it = m_channels.begin();
+       it != m_channels.end();
+       it++) {
+    delete it->second;
+  }
+  m_channels.clear();
+  return true;
 }
 
 //=========================================================================
@@ -224,6 +232,5 @@ void SSLModule::provide(const std::string& type,
     return;
   }
 
-  object = new SSLStream(*this,channel->get_string());
-  object->add_module_ref(this);
+  object = new SSLStream(this,channel->get_string());
 }

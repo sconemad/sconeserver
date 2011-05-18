@@ -35,127 +35,6 @@ Free Software Foundation, Inc.,
 #include <sconex/MimeType.h>
 
 //=========================================================================
-class GetFileStream : public scx::Stream {
-public:
-
-  GetFileStream(
-    scx::Module& module
-  ) : Stream("getfile"),
-      m_module(module)
-  {
-
-  }
-
-  ~GetFileStream()
-  {
-
-  }
-  
-protected:
-
-  void log(const std::string message,
-	   scx::Logger::Level level = scx::Logger::Info)
-  {
-    http::MessageStream* msg = GET_HTTP_MESSAGE();
-    if (msg) {
-      http::Request& req = const_cast<http::Request&>(msg->get_request());
-      m_module.log(req.get_id() + " " + message,level);
-    }
-  };
-  
-  virtual scx::Condition event(scx::Stream::Event e) 
-  {
-    if (e == scx::Stream::Opening) {
-      http::MessageStream* msg = GET_HTTP_MESSAGE();
-      const http::Request& req = msg->get_request();
-      http::Response& resp = msg->get_response();
-
-      if (req.get_method() != "GET" && 
-	  req.get_method() != "HEAD" ) {
-	// Don't understand the method
-	resp.set_status(http::Status::NotImplemented);
-	return scx::Close;
-      }
-
-      // Open the file
-      scx::FilePath path = req.get_path();
-      scx::File* file = new scx::File();
-      if (file->open(path,scx::File::Read) != scx::Ok) {
-        log("Cannot open file '" + path.path() + "'"); 
-        resp.set_status(http::Status::Forbidden);
-        delete file;
-	return scx::Close;
-      } 
-
-      // Find last modified date
-      scx::Date lastmod = file->stat().time();
-      resp.set_header("Last-Modified",lastmod.string());
-
-      std::string mod = req.get_header("If-Modified-Since");
-      if (!mod.empty()) {
-	scx::Date dmod = scx::Date(mod);
-	if (lastmod <= dmod) {
-	  log("File is not modified"); 
-	  resp.set_status(http::Status::NotModified);
-	  delete file;
-	  return scx::Close;
-	}
-      }
-
-      resp.set_status(http::Status::Ok);
-
-      // Set content length
-      int clength = file->size();
-      std::ostringstream oss;
-      oss << clength;
-      resp.set_header("Content-Length",oss.str());
-
-      // Lookup MIME type for file
-      scx::Module::Ref mime = scx::Kernel::get()->get_module("mime");
-      if (mime.valid()) {
-        scx::ScriptList::Ref args(new scx::ScriptList());
-        args.object()->give( scx::ScriptString::new_ref(path.path()) );
-	scx::ScriptMethodRef lookup_method(mime,"lookup");
-        scx::ScriptRef* ret = 
-	  lookup_method.call(scx::ScriptAuth::Untrusted,&args);
-        scx::MimeType* mimetype = 0;
-        if (ret && (mimetype = dynamic_cast<scx::MimeType*>(ret->object()))) {
-          resp.set_header("Content-Type",mimetype->get_string());
-        }
-        delete ret;
-      }
-
-      if (req.get_method() == "HEAD") {
-	// Don't actually send the file, just the headers
-        log("Sending headers for '" + path.path() + "'"); 
-	delete file;
-	return scx::Close;
-      }
-
-      log("Sending '" + path.path() + "'"); 
-
-      const int MAX_BUFFER_SIZE = 65536;
-            
-      scx::StreamTransfer* xfer =
-        new scx::StreamTransfer(file,std::min(clength,MAX_BUFFER_SIZE));
-      xfer->set_close_when_finished(true);
-      endpoint().add_stream(xfer);
-      
-      // Add file to kernel
-      scx::Kernel::get()->connect(file,0);
-    }
-    
-    return scx::Ok;
-  };
-
-private:
-
-  scx::Module& m_module;
-
-};
-
-
-//=========================================================================
 class GetFileModule : public scx::Module,
 		      public scx::Provider<scx::Stream> {
 public:
@@ -171,14 +50,35 @@ public:
   virtual void provide(const std::string& type,
 		       const scx::ScriptRef* args,
 		       scx::Stream*& object);
-
-protected:
-
-private:
-
 };
 
 SCONESERVER_MODULE(GetFileModule);
+
+//=========================================================================
+class GetFileStream : public scx::Stream {
+public:
+
+  GetFileStream(
+    GetFileModule* module
+  ) : Stream("getfile"),
+      m_module(module)
+  { };
+
+  ~GetFileStream() { };
+  
+protected:
+
+  void log(const std::string message,
+	   scx::Logger::Level level = scx::Logger::Info);
+  
+  virtual scx::Condition event(scx::Stream::Event e);
+
+private:
+
+  scx::ScriptRefTo<GetFileModule> m_module;
+
+};
+
 
 //=========================================================================
 GetFileModule::GetFileModule(
@@ -210,6 +110,102 @@ void GetFileModule::provide(const std::string& type,
 			    const scx::ScriptRef* args,
 			    scx::Stream*& object)
 {
-  object = new GetFileStream(*this);
-  object->add_module_ref(this);
+  object = new GetFileStream(this);
+}
+
+
+//=========================================================================
+void GetFileStream::log(const std::string message, scx::Logger::Level level)
+{
+  http::MessageStream* msg = GET_HTTP_MESSAGE();
+  if (msg) {
+    http::Request& req = const_cast<http::Request&>(msg->get_request());
+    m_module.object()->log(req.get_id() + " " + message,level);
+    }
+}
+
+//=========================================================================
+scx::Condition GetFileStream::event(scx::Stream::Event e) 
+{
+  if (e == scx::Stream::Opening) {
+    http::MessageStream* msg = GET_HTTP_MESSAGE();
+    const http::Request& req = msg->get_request();
+    http::Response& resp = msg->get_response();
+    
+    if (req.get_method() != "GET" && 
+	req.get_method() != "HEAD" ) {
+      // Don't understand the method
+      resp.set_status(http::Status::NotImplemented);
+      return scx::Close;
+    }
+    
+    // Open the file
+    scx::FilePath path = req.get_path();
+    scx::File* file = new scx::File();
+    if (file->open(path,scx::File::Read) != scx::Ok) {
+      log("Cannot open file '" + path.path() + "'"); 
+      resp.set_status(http::Status::Forbidden);
+      delete file;
+      return scx::Close;
+    } 
+    
+    // Find last modified date
+    scx::Date lastmod = file->stat().time();
+    resp.set_header("Last-Modified",lastmod.string());
+    
+    std::string mod = req.get_header("If-Modified-Since");
+    if (!mod.empty()) {
+      scx::Date dmod = scx::Date(mod);
+      if (lastmod <= dmod) {
+	log("File is not modified"); 
+	resp.set_status(http::Status::NotModified);
+	delete file;
+	return scx::Close;
+      }
+    }
+    
+    resp.set_status(http::Status::Ok);
+    
+    // Set content length
+    int clength = file->size();
+    std::ostringstream oss;
+    oss << clength;
+    resp.set_header("Content-Length",oss.str());
+    
+    // Lookup MIME type for file
+    scx::Module::Ref mime = scx::Kernel::get()->get_module("mime");
+    if (mime.valid()) {
+      scx::ScriptList::Ref args(new scx::ScriptList());
+      args.object()->give( scx::ScriptString::new_ref(path.path()) );
+      scx::ScriptMethodRef lookup_method(mime,"lookup");
+      scx::ScriptRef* ret = 
+	lookup_method.call(scx::ScriptAuth::Untrusted,&args);
+      scx::MimeType* mimetype = 0;
+      if (ret && (mimetype = dynamic_cast<scx::MimeType*>(ret->object()))) {
+	resp.set_header("Content-Type",mimetype->get_string());
+      }
+      delete ret;
+    }
+
+    if (req.get_method() == "HEAD") {
+      // Don't actually send the file, just the headers
+      log("Sending headers for '" + path.path() + "'"); 
+      delete file;
+      return scx::Close;
+    }
+    
+    log("Sending '" + path.path() + "'"); 
+    
+    const int MAX_BUFFER_SIZE = 65536;
+    
+    scx::StreamTransfer* xfer =
+      new scx::StreamTransfer(file,std::min(clength,MAX_BUFFER_SIZE));
+    xfer->set_close_when_finished(true);
+    endpoint().add_stream(xfer);
+    
+    // Add file to kernel
+    scx::Kernel::get()->connect(file,0);
+  }
+  
+  return scx::Ok;
 }
