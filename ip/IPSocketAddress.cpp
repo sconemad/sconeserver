@@ -211,7 +211,7 @@ std::string IPSocketAddress::get_string() const
 scx::ScriptRef* IPSocketAddress::script_op(const scx::ScriptAuth& auth,
 					   const scx::ScriptRef& ref,
 					   const scx::ScriptOp& op,
-					   scx::ScriptRef* right)
+					   const scx::ScriptRef* right)
 {
   if (scx::ScriptOp::Lookup == op.type()) {
     std::string name = right->object()->get_string();

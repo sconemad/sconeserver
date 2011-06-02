@@ -76,10 +76,10 @@ am__installdirs = "$(DESTDIR)$(pkglibdir)" "$(DESTDIR)$(sysconfdir)" \
 	"$(DESTDIR)$(httpincludedir)"
 LTLIBRARIES = $(pkglib_LTLIBRARIES)
 http_la_LIBADD =
-am_http_la_OBJECTS = AuthRealm.lo Client.lo ConnectionStream.lo \
-	DocRoot.lo Host.lo HostMapper.lo HTTPModule.lo \
-	MessageStream.lo PartialResponseStream.lo Request.lo \
-	Response.lo ResponseStream.lo Session.lo Status.lo
+am_http_la_OBJECTS = AuthRealm.lo AuthRealmHtpasswd.lo AuthRealmDB.lo \
+	Client.lo ConnectionStream.lo DocRoot.lo Host.lo HostMapper.lo \
+	HTTPModule.lo MessageStream.lo PartialResponseStream.lo \
+	Request.lo Response.lo ResponseStream.lo Session.lo Status.lo
 http_la_OBJECTS = $(am_http_la_OBJECTS)
 http_la_LINK = $(LIBTOOL) --tag=CXX $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) \
 	--mode=link $(CXXLD) $(AM_CXXFLAGS) $(CXXFLAGS) \
@@ -272,6 +272,8 @@ AM_CPPFLAGS = -I$(top_srcdir)
 pkglib_LTLIBRARIES = http.la
 http_la_SOURCES = \
 AuthRealm.cpp \
+AuthRealmHtpasswd.cpp \
+AuthRealmDB.cpp \
 Client.cpp \
 ConnectionStream.cpp \
 DocRoot.cpp \
@@ -289,6 +291,8 @@ Status.cpp
 httpincludedir = $(includedir)/sconex/http
 httpinclude_HEADERS = \
 AuthRealm.h \
+AuthRealmHtpasswd.h \
+AuthRealmDB.h \
 Client.h \
 ConnectionStream.h \
 DocRoot.h \
@@ -382,6 +386,8 @@ distclean-compile:
 	-rm -f *.tab.c
 
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/AuthRealm.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/AuthRealmDB.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/AuthRealmHtpasswd.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/Client.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/ConnectionStream.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/DocRoot.Plo@am__quote@

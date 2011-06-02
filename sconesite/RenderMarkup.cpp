@@ -104,7 +104,7 @@ const Article* RenderMarkupContext::get_article() const
 
 //=========================================================================
 bool RenderMarkupContext::handle_start(const std::string& name,
-				       XMLAttrs& attrs,
+				       NodeAttrs& attrs,
 				       bool empty,
 				       void* data)
 {
@@ -192,7 +192,7 @@ bool RenderMarkupContext::handle_start(const std::string& name,
     }
 
     oss << "<" << name;
-    for (XMLAttrs::const_iterator it = attrs.begin();
+    for (NodeAttrs::const_iterator it = attrs.begin();
          it != attrs.end();
          ++it) {
       oss << " " << (*it).first << "=\"" << (*it).second << "\"";
@@ -212,7 +212,7 @@ bool RenderMarkupContext::handle_start(const std::string& name,
 
 //=========================================================================
 bool RenderMarkupContext::handle_end(const std::string& name,
-				     XMLAttrs& attrs,
+				     NodeAttrs& attrs,
 				     void* data)
 {
   bool repeat = false;
@@ -244,12 +244,13 @@ bool RenderMarkupContext::handle_end(const std::string& name,
 
 //=========================================================================
 void RenderMarkupContext::handle_process(const std::string& name,
-					 const char* data)
+					 const char* data,
+					 int line)
 {
   if (m_inhibit) return;
     
   scx::ScriptAuth auth(scx::ScriptAuth::Untrusted);
-  XMLDoc* doc = get_current_doc();
+  ArticleBody* doc = get_current_doc();
   const std::type_info& ti = typeid(*doc);
   if (ti == typeid(Template)) {
     // Trust templates
@@ -259,7 +260,7 @@ void RenderMarkupContext::handle_process(const std::string& name,
   if (name == "scxp") { // Sconescript evaluate and print
     // Create root statement using our environment
     scx::ScriptStatementGroup::Ref root(
-      new scx::ScriptStatementGroup(&m_scx_env));
+      new scx::ScriptStatementGroup(0, &m_scx_env));
     root.object()->set_parent(this);
     scx::ScriptExpr proc(auth,&root);
     scx::ScriptRef* result = 0;
@@ -290,7 +291,7 @@ void RenderMarkupContext::handle_process(const std::string& name,
       // Create root statement using our environment
       scx::ScriptStatement::Ref* root = 
 	new scx::ScriptStatement::Ref(
-          new scx::ScriptStatementGroup(&m_scx_env));
+          new scx::ScriptStatementGroup(0, &m_scx_env));
       m_old_groups.push_back(root);
       root->object()->set_parent(this);
       
@@ -301,29 +302,27 @@ void RenderMarkupContext::handle_process(const std::string& name,
       // Parse statements
       if (script->parse() != scx::End) {
         std::ostringstream oss;
-        oss << "Script ";
+        oss << doc->get_filepath().path() << ":" 
+	    << (line + script->get_error_line()) << ": Script ";
 	switch (script->get_error_type()) {
-  	  case scx::ScriptEngine::Tokenization: oss << "tokenization"; break;
-	  case scx::ScriptEngine::Syntax: oss << "syntax"; break;
-	  case scx::ScriptEngine::Underflow: oss << "underflow"; break;
-	  default: oss << "unknown"; break;
+	case scx::ScriptEngine::Tokenization: oss << "tokenization"; break;
+	case scx::ScriptEngine::Syntax: oss << "syntax"; break;
+	case scx::ScriptEngine::Underflow: oss << "underflow"; break;
+	default: oss << "unknown"; break;
 	}
-        oss << " error on line " << script->get_error_line() << ":\n" << data;
+        oss << " error";
         log(oss.str(),scx::Logger::Error);
       }
 
       // Run statements
-      scx::ScriptExpr proc(auth);
-      ret = root->object()->execute(proc);
-      if (ret && BAD_SCRIPTREF(ret)) {
-        std::ostringstream oss;
-        oss << "Script execution returned " 
-	    << ret->object()->get_string() << "\n" 
-	    << data;
-        log(oss.str(),scx::Logger::Error);
-      }
+      scx::ScriptTracer tracer(auth, doc->get_filepath().path(),line);
+      ret = root->object()->execute(tracer);
       delete ret;
       ((scx::ScriptStatementGroup*)root->object())->clear();
+      for (scx::ScriptTracer::ErrorList::iterator it = tracer.errors().begin();
+	   it != tracer.errors().end(); ++it) {
+	log(*it,scx::Logger::Error);
+      }
 
     } catch (...) { 
       delete ret;
@@ -377,6 +376,8 @@ scx::ScriptRef* RenderMarkupContext::script_op(const scx::ScriptAuth& auth,
 	"print_esc" == name ||
 	"print_json" == name ||
 	"escape" == name ||
+	"urlencode" == name ||
+	"urldecode" == name ||
 	"get_articles" == name ||
 	"process_article" == name ||
 	"edit_article" == name ||
@@ -477,6 +478,22 @@ scx::ScriptRef* RenderMarkupContext::script_method(const scx::ScriptAuth& auth,
       scx::get_method_arg<scx::ScriptString>(args,0,"value");
     if (value)
       return scx::ScriptString::new_ref(scx::escape_html(value->get_string()));
+    return scx::ScriptString::new_ref("");
+  }
+
+  if (name == "urlencode") {
+    const scx::ScriptString* value = 
+      scx::get_method_arg<scx::ScriptString>(args,0,"value");
+    if (value)
+      return scx::ScriptString::new_ref(scx::Uri::encode(value->get_string()));
+    return scx::ScriptString::new_ref("");
+  }
+
+  if (name == "urldecode") {
+    const scx::ScriptString* value = 
+      scx::get_method_arg<scx::ScriptString>(args,0,"value");
+    if (value)
+      return scx::ScriptString::new_ref(scx::Uri::decode(value->get_string()));
     return scx::ScriptString::new_ref("");
   }
 

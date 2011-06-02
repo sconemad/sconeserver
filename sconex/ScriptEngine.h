@@ -28,9 +28,6 @@ Free Software Foundation, Inc.,
 #include <sconex/ScriptStatement.h>
 namespace scx {
 
-class ScriptStatement;
-class ScriptStatementGroup;
-  
 //=============================================================================
 // ScriptEngine - This is a stream object which parses SconeScript programs
 // read from the data stream. Various common language constructs are supported
@@ -116,7 +113,8 @@ public:
 
   // Create a ScriptEngine parser to run in the specified context
   ScriptEngineExec(const ScriptAuth& auth,
-		   ScriptRef* ctx);
+		   ScriptRef* ctx,
+		   const std::string& file);
 
   // Destructor
   virtual ~ScriptEngineExec();
@@ -129,7 +127,7 @@ protected:
   virtual bool event_runnable();
   virtual bool event_error();
 
-  ScriptExpr m_proc;
+  ScriptTracer m_tracer;
   ScriptRef* m_ctx;
 
   // Descriptor to write error output to

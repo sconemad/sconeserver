@@ -115,6 +115,11 @@ MYSQL* MySqlProfile::get_connection()
     m_pool_mutex.unlock();
     return 0;
   }
+
+  // Set the reconnect flag
+  my_bool reconnect = 1;
+  ::mysql_options(conn,MYSQL_OPT_RECONNECT,(const char*)&reconnect);
+
   return conn;
 }
 
@@ -125,8 +130,8 @@ void MySqlProfile::release_connection(MYSQL* conn)
   if ((int)m_connection_pool.size() >= m_pool_max) {
     --m_num_connections;
     MySqlProfile_DEBUG_LOG("DBSQL profile " << m_name << 
-			   " closing connection (total:" << m_num_connections 
-			   << ")");
+			   " closing connection (total:" << 
+			   m_num_connections << ")");
     ::mysql_close(conn);
   } else {
     m_connection_pool.push_back(conn);

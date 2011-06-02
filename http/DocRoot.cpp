@@ -482,7 +482,10 @@ bool DocRoot::check_auth(Request& request, Response& response)
         }
       }
     }
-    if (realm->authorised(user,pass)) {
+    scx::ScriptRef* result = realm->authorised(user,pass);
+    bool passed = !BAD_SCRIPTREF(result);
+    delete result;
+    if (passed) {
       log("Auth passed for realm '" + realm_name + 
 	  "' user='" + user + "'",scx::Logger::Info);
       request.set_auth_user(user);

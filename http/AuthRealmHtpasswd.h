@@ -1,8 +1,8 @@
 /* SconeServer (http://www.sconemad.com)
 
-SconeX stream with debug output
+HTTP Authorisation using htpasswd files
 
-Copyright (c) 2000-2004 Andrew Wedgbury <wedge@sconemad.com>
+Copyright (c) 2000-2011 Andrew Wedgbury <wedge@sconemad.com>
 
 This program is free software; you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -19,37 +19,40 @@ along with this program (see the file COPYING); if not, write to the
 Free Software Foundation, Inc.,
 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA */
 
-#ifndef scxStreamDebugger_h
-#define scxStreamDebugger_h
+#ifndef httpAuthRealmHtpasswd_h
+#define httpAuthRealmHtpasswd_h
 
-#include <sconex/sconex.h>
-#include <sconex/Stream.h>
-#include <sconex/File.h>
-namespace scx {
+#include <http/AuthRealm.h>
+namespace http {
 
 //=============================================================================
-class SCONEX_API StreamDebugger : public Stream {
-
+// AuthRealmHtpasswd - An authorisation realm using htpasswd files.
+//
+class HTTP_API AuthRealmHtpasswd : public AuthRealm {
 public:
 
-  StreamDebugger(const std::string& name = "");
-  virtual ~StreamDebugger();
+  AuthRealmHtpasswd(HTTPModule* module,
+		    const scx::FilePath& path);
 
-  virtual Condition read(void* buffer,int n,int& na);
-  virtual Condition write(const void* buffer,int n,int& na);
+  virtual ~AuthRealmHtpasswd();
 
-  virtual std::string stream_status() const;
-  
-  std::string get_cond_str(Condition c);
+  // AuthRealm methods  
+  virtual scx::ScriptRef* authorised(const std::string& username,
+				     const std::string& password);
 
 protected:
 
-  void write_header(const std::string& message);
-
-  File* m_file;
+  void refresh();
 
 private:
 
+  scx::ScriptRefTo<HTTPModule> m_module;
+  scx::FilePath m_path;
+  scx::Date m_modtime;
+  scx::Mutex m_mutex;
+
+  typedef std::map<std::string,std::string> UserMap;
+  UserMap m_users;
 };
 
 };

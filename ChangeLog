@@ -1,4 +1,33 @@
 
+2011-06-02 Andrew Wedgbury <wedge@sconemad.com>
+
+	* sconex/ScriptExpr: Add create_object() method to programatically
+	create objects of registered standard types.
+	* sconex/Database: Add DbProxy, a proxy object to a db row.
+	* sconex/StreamDebugger: Handle failing to open debug file.
+	* sconex/ScriptStatement: Fix error reporting and for-loop parser.
+	Store line numbers in statements to improve error reporting.
+	Add ScriptTracer, which tracks line numbers when running scripts.
+	* sconex/ScriptEngine: Pass line numbers to statements.
+	* sconex/ConfigFile: Use ScriptTracer, pass in file name.
+	* sconex/StreamTokenizer: Remove SendReadable events (not sure?).
+	* sconex/Module: Return ScriptError if module cannot be loaded.
+	* sconex/Uri: Implement url encode method properly.
+	* http/AuthRealm: Refactor and introduce new realm provider API for
+	dynamically adding to the available realm types.
+	* http/AuthRealmHtpasswd: Rebrand existing realm system as
+	htpasswd realm provider.
+	* http/AuthRealmDB: New realm provider using database storage.
+	* http/Client: Use create_object() to create IpSocketAddress.
+	* sconesite/RenderMarkup: Add urlencode and urldecode script methods.
+	* sconesite/Context: Generalise to ArticleBody in place of XMLDoc.
+	* mysql/MySqlProfile: Set reconnect flag on connections.
+	* mysql/MySqlQuery: Return NULL as a ScriptError.
+	* local/LocalSocketAddress: Fix signature for script_op method.
+	* bluetooth/BluetoothSocketAddress: Fix signature for script_op method.
+	* ip/IpSocketAddress: Fix signature for script_op method.
+	* ip6/Ip6SocketAddress: Fix signature for script_op method.
+
 2011-05-18 Andrew Wedgbury <wedge@sconemad.com>
 
 	* sconex/Stream: Remove module refs and add_module_ref() method.

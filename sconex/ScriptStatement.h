@@ -54,15 +54,47 @@ namespace scx {
 
 class ScriptExpr;
 class ScriptEngine;
+class ScriptStatement;
 class ScriptStatementSub;
 class ScriptMap;
+
+//=============================================================================
+class SCONEX_API ScriptTracer {
+public:
+
+  ScriptTracer(const ScriptAuth& auth, 
+	       const std::string& file="",
+	       int line_offset=0);
+  ScriptTracer(const ScriptTracer& c);
+  virtual ~ScriptTracer();
+
+  virtual ScriptTracer* new_copy();
+
+  ScriptRef* evaluate(const std::string& expr,
+		      ScriptStatement* ctx = 0);
+
+  ScriptExpr& get_expr();
+  const std::string& get_file() const;
+  int get_line_offset() const;
+
+  typedef std::vector<std::string> ErrorList;
+  ErrorList& errors();
+
+protected:
+
+  ScriptExpr* m_expr;
+  std::string m_file;
+  int m_line_offset;
+
+  ErrorList m_errors;
+
+};
   
 //=============================================================================
 class SCONEX_API ScriptStatement : public ScriptObject {
-
 public:
 
-  ScriptStatement();
+  ScriptStatement(int line);
   ScriptStatement(const ScriptStatement& c);
   virtual ~ScriptStatement();
 
@@ -72,10 +104,10 @@ public:
   enum ParseMode { SemicolonTerminated, Bracketed, Name };
   virtual ParseMode parse_mode() const;
 
-  ScriptRef* execute(ScriptExpr& proc);
+  ScriptRef* execute(ScriptTracer& tracer);
 
   enum FlowMode { Normal, Return, Last, Next };
-  virtual ScriptRef* run(ScriptExpr& proc, FlowMode& flow) =0;
+  virtual ScriptRef* run(ScriptTracer& tracer, FlowMode& flow) =0;
 
   // ScriptObject methods
   virtual std::string get_string() const;
@@ -89,21 +121,26 @@ public:
 
   typedef ScriptRefTo<ScriptStatement> Ref;
 
+  int get_line() const;
+
+private:
+
+  int m_line;
+
 };
 
   
 //=============================================================================
 class SCONEX_API ScriptStatementExpr : public ScriptStatement {
-
 public:
   
-  ScriptStatementExpr(const std::string& expr);
+  ScriptStatementExpr(int line, const std::string& expr);
   ScriptStatementExpr(const ScriptStatementExpr& c);
   virtual ~ScriptStatementExpr();
   virtual ScriptObject* new_copy() const;
 
   virtual ParseResult parse(ScriptEngine& script, const std::string& token);
-  virtual ScriptRef* run(ScriptExpr& proc, FlowMode& flow);
+  virtual ScriptRef* run(ScriptTracer& tracer, FlowMode& flow);
 
 protected:
 
@@ -115,16 +152,15 @@ protected:
   
 //=============================================================================
 class SCONEX_API ScriptStatementGroup : public ScriptStatement {
-
 public:
   
-  ScriptStatementGroup(ScriptMap* env=0);
+  ScriptStatementGroup(int line, ScriptMap* env=0);
   ScriptStatementGroup(const ScriptStatementGroup& c);
   virtual ~ScriptStatementGroup();
   virtual ScriptObject* new_copy() const;
 
   virtual ParseResult parse(ScriptEngine& script, const std::string& token);
-  virtual ScriptRef* run(ScriptExpr& proc, FlowMode& flow);
+  virtual ScriptRef* run(ScriptTracer& tracer, FlowMode& flow);
 
   virtual ScriptRef* script_op(const ScriptAuth& auth,
 			       const ScriptRef& ref,
@@ -156,17 +192,16 @@ typedef ScriptRefTo<ScriptStatementGroup> StatementGroupRef;
   
 //=============================================================================
 class SCONEX_API ScriptStatementConditional : public ScriptStatement {
-
 public:
   
-  ScriptStatementConditional(const std::string& condition = "");
+  ScriptStatementConditional(int line, const std::string& condition = "");
   ScriptStatementConditional(const ScriptStatementConditional& c);
   virtual ~ScriptStatementConditional();
   virtual ScriptObject* new_copy() const;
 
   virtual ParseResult parse(ScriptEngine& script, const std::string& token);
   virtual ParseMode parse_mode() const;
-  virtual ScriptRef* run(ScriptExpr& proc, FlowMode& flow);
+  virtual ScriptRef* run(ScriptTracer& tracer, FlowMode& flow);
 
 protected:
 
@@ -187,17 +222,16 @@ protected:
   
 //=============================================================================
 class SCONEX_API ScriptStatementWhile : public ScriptStatement {
-
 public:
   
-  ScriptStatementWhile(const std::string& condition = "");
+  ScriptStatementWhile(int line, const std::string& condition = "");
   ScriptStatementWhile(const ScriptStatementWhile& c);
   virtual ~ScriptStatementWhile();
   virtual ScriptObject* new_copy() const;
 
   virtual ParseResult parse(ScriptEngine& script, const std::string& token);
   virtual ParseMode parse_mode() const;
-  virtual ScriptRef* run(ScriptExpr& proc, FlowMode& flow);
+  virtual ScriptRef* run(ScriptTracer& tracer, FlowMode& flow);
 
 protected:
 
@@ -215,17 +249,16 @@ protected:
 
 //=============================================================================
 class SCONEX_API ScriptStatementFor : public ScriptStatement {
-
 public:
   
-  ScriptStatementFor();
+  ScriptStatementFor(int line);
   ScriptStatementFor(const ScriptStatementFor& c);
   virtual ~ScriptStatementFor();
   virtual ScriptObject* new_copy() const;
 
   virtual ParseResult parse(ScriptEngine& script, const std::string& token);
   virtual ParseMode parse_mode() const;
-  virtual ScriptRef* run(ScriptExpr& proc, FlowMode& flow);
+  virtual ScriptRef* run(ScriptTracer& tracer, FlowMode& flow);
 
 protected:
 
@@ -249,17 +282,16 @@ protected:
   
 //=============================================================================
 class SCONEX_API ScriptStatementFlow : public ScriptStatement {
-
 public:
   
-  ScriptStatementFlow(FlowMode flow);
+  ScriptStatementFlow(int line, FlowMode flow);
   ScriptStatementFlow(const ScriptStatementFlow& c);
   virtual ~ScriptStatementFlow();
   virtual ScriptObject* new_copy() const;
 
   virtual ParseResult parse(ScriptEngine& script, const std::string& token);
   virtual ParseMode parse_mode() const;
-  virtual ScriptRef* run(ScriptExpr& proc, FlowMode& flow);
+  virtual ScriptRef* run(ScriptTracer& tracer, FlowMode& flow);
 
 protected:
 
@@ -277,19 +309,18 @@ protected:
 
 //=============================================================================
 class SCONEX_API ScriptStatementDecl : public ScriptStatement {
-
 public:
 
   enum DefType { Var, Const, Ref, ConstRef };
   
-  ScriptStatementDecl(DefType deftype, const std::string& name = "");
+  ScriptStatementDecl(int line, DefType deftype, const std::string& name = "");
   ScriptStatementDecl(const ScriptStatementDecl& c);
   virtual ~ScriptStatementDecl();
   virtual ScriptObject* new_copy() const;
 
   virtual ParseResult parse(ScriptEngine& script, const std::string& token);
   virtual ParseMode parse_mode() const;
-  virtual ScriptRef* run(ScriptExpr& proc, FlowMode& flow);
+  virtual ScriptRef* run(ScriptTracer& tracer, FlowMode& flow);
 
 protected:
 
@@ -310,17 +341,16 @@ protected:
   
 //=============================================================================
 class SCONEX_API ScriptStatementSub : public ScriptStatement {
-
 public:
   
-  ScriptStatementSub(const std::string& name = "");
+  ScriptStatementSub(int line, const std::string& name = "");
   ScriptStatementSub(const ScriptStatementSub& c);
   virtual ~ScriptStatementSub();
   virtual ScriptObject* new_copy() const;
 
   virtual ParseResult parse(ScriptEngine& script, const std::string& token);
   virtual ParseMode parse_mode() const;
-  virtual ScriptRef* run(ScriptExpr& proc, FlowMode& flow);
+  virtual ScriptRef* run(ScriptTracer& tracer, FlowMode& flow);
 
 protected:
 

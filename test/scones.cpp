@@ -54,6 +54,8 @@ public:
   virtual std::string get_string() const { return ""; };
   virtual int get_int() const { return 1; };
 
+protected:
+
 };
 
 
@@ -143,23 +145,27 @@ ScriptRef* ArgTest::script_method(const ScriptAuth& auth,
 //=============================================================================
 int main(int argc,char* argv[])
 {
-  Logger* logger = new scx::Logger("scones.log");
+  //  Logger* logger = new scx::Logger("scones.log");
+  Logger* logger = new scx::Logger("");
   Debug::get()->set_logger(logger);
 
   con = new Console();
+  std::string filename;
   
   Descriptor* in = 0;
   if (argv[1]) {
+    filename = argv[1];
     File* f = new File();
-    f->open(argv[1],File::Read);
+    f->open(filename,File::Read);
     in = f;
   } else {
     in = con;
+    filename = "stdin";
   }
   
   ScriptRef* ctx = new ScriptRef(new ArgTest());
   ScriptEngineExec* script = 
-    new ScriptEngineExec(ScriptAuth(ScriptAuth::Admin),ctx);
+    new ScriptEngineExec(ScriptAuth::Admin, ctx, filename);
   script->set_error_des(con);
   in->add_stream(script);
 

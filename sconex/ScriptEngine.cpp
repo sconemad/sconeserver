@@ -164,7 +164,7 @@ ScriptStatement::Ref* ScriptEngine::parse_token(const std::string& token)
   if (it == s_tokens->end()) {
     // Not a reserved token, so treat as an expression
     ScriptEngine_DEBUG_LOG("parse_token: New expression");
-    return new ScriptStatement::Ref(new ScriptStatementExpr(token));
+    return new ScriptStatement::Ref(new ScriptStatementExpr(m_line, token));
     // (don't need to stack plain expressions)
   }
   
@@ -173,62 +173,62 @@ ScriptStatement::Ref* ScriptEngine::parse_token(const std::string& token)
 
     case ScriptEngineToken_OPEN_BRACE:
       ScriptEngine_DEBUG_LOG("parse_token: New statement group");
-      s = new ScriptStatementGroup();
+      s = new ScriptStatementGroup(m_line);
       break;
 
     case ScriptEngineToken_IF:
       ScriptEngine_DEBUG_LOG("parse_token: New conditional");
-      s = new ScriptStatementConditional();
+      s = new ScriptStatementConditional(m_line);
       break;
 
     case ScriptEngineToken_WHILE:
       ScriptEngine_DEBUG_LOG("parse_token: New while loop");
-      s = new ScriptStatementWhile();
+      s = new ScriptStatementWhile(m_line);
       break;
 
     case ScriptEngineToken_FOR:
       ScriptEngine_DEBUG_LOG("parse_token: New for loop");
-      s = new ScriptStatementFor();
+      s = new ScriptStatementFor(m_line);
       break;
 
     case ScriptEngineToken_RETURN:
       ScriptEngine_DEBUG_LOG("parse_token: New flow return");
-      s = new ScriptStatementFlow(ScriptStatement::Return);
+      s = new ScriptStatementFlow(m_line, ScriptStatement::Return);
       break;
 
     case ScriptEngineToken_BREAK:
       ScriptEngine_DEBUG_LOG("parse_token: New flow last");
-      s = new ScriptStatementFlow(ScriptStatement::Last);
+      s = new ScriptStatementFlow(m_line, ScriptStatement::Last);
       break;
 
     case ScriptEngineToken_CONTINUE:
       ScriptEngine_DEBUG_LOG("parse_token: New flow next");
-      s = new ScriptStatementFlow(ScriptStatement::Next);
+      s = new ScriptStatementFlow(m_line, ScriptStatement::Next);
       break;
 
     case ScriptEngineToken_VAR:
       ScriptEngine_DEBUG_LOG("parse_token: New variable declaration");
-      s = new ScriptStatementDecl(ScriptStatementDecl::Var);
+      s = new ScriptStatementDecl(m_line, ScriptStatementDecl::Var);
       break;
 
     case ScriptEngineToken_CONST:
       ScriptEngine_DEBUG_LOG("parse_token: New constant declaration");
-      s = new ScriptStatementDecl(ScriptStatementDecl::Const);
+      s = new ScriptStatementDecl(m_line, ScriptStatementDecl::Const);
       break;
 
     case ScriptEngineToken_REF:
       ScriptEngine_DEBUG_LOG("parse_token: New reference declaration");
-      s = new ScriptStatementDecl(ScriptStatementDecl::Ref);
+      s = new ScriptStatementDecl(m_line, ScriptStatementDecl::Ref);
       break;
 
     case ScriptEngineToken_CONST_REF:
       ScriptEngine_DEBUG_LOG("parse_token: New constant reference declaration");
-      s = new ScriptStatementDecl(ScriptStatementDecl::ConstRef);
+      s = new ScriptStatementDecl(m_line, ScriptStatementDecl::ConstRef);
       break;
 
     case ScriptEngineToken_SUB:
       ScriptEngine_DEBUG_LOG("parse_token: New subroutine declaration");
-      s = new ScriptStatementSub();
+      s = new ScriptStatementSub(m_line);
       break;
  
     default:
@@ -435,11 +435,11 @@ void ScriptEngine::init()
 // ScriptEngineExec:
 
 //=============================================================================
-ScriptEngineExec::ScriptEngineExec(
-  const ScriptAuth& auth, 
-  ScriptRef* ctx)
-  : ScriptEngine(new ScriptStatement::Ref(new ScriptStatementGroup())),
-    m_proc(auth,ctx),
+ScriptEngineExec::ScriptEngineExec(const ScriptAuth& auth, 
+				   ScriptRef* ctx,
+				   const std::string& file)
+  : ScriptEngine(new ScriptStatement::Ref(new ScriptStatementGroup(0))),
+    m_tracer(auth,file),
     m_ctx(ctx),
     m_error_des(0)
 {
@@ -462,18 +462,27 @@ void ScriptEngineExec::set_error_des(Descriptor* error_des)
 //=============================================================================
 bool ScriptEngineExec::event_runnable()
 {
-  ScriptRef* ret = m_root->object()->execute(m_proc);
-  if (ret && BAD_SCRIPTREF(ret)) {
-    ScriptEngine_DEBUG_LOG(ret->object()->get_string() << "\n");
-    if (m_error_des) {
-      m_error_des->write(ret->object()->get_string() + "\n");
-    }
-  }
+  ScriptRef* ret = m_root->object()->execute(m_tracer);
   delete ret;
+
+  // Output any errors
+  for (ScriptTracer::ErrorList::iterator it = m_tracer.errors().begin();
+       it != m_tracer.errors().end(); ++it) {
+    if (m_ctx) {
+      m_ctx->object()->log(*it,scx::Logger::Error);
+    }
+    if (m_error_des) {
+      m_error_des->write(*it);
+      m_error_des->write("\n");
+    }    
+  }
+  m_tracer.errors().clear();
+
   ScriptStatementGroup* g_root = 
     dynamic_cast<ScriptStatementGroup*>(m_root->object());
   DEBUG_ASSERT(g_root,"Root statement should be type ScriptStatementGroup");
   g_root->clear();
+
   return true;
 }
 
@@ -481,16 +490,18 @@ bool ScriptEngineExec::event_runnable()
 bool ScriptEngineExec::event_error()
 {
   std::ostringstream oss;
-  oss << "Script parser: ";
+  oss << m_tracer.get_file() << ":" 
+      << get_error_line() << ": Script ";
   switch (get_error_type()) {
   case Tokenization: oss << "tokenization"; break;
   case Syntax: oss << "syntax"; break;
   case Underflow: oss << "underflow"; break;
   default: oss << "unknown"; break;
   }
-  oss << " error on line " << get_error_line();
-  ScriptEngine_DEBUG_LOG(oss.str());
-
+  oss << " error";
+  if (m_ctx) {
+    m_ctx->object()->log(oss.str(),scx::Logger::Error);
+  }
   if (m_error_des) {
     oss << "\n";
     m_error_des->write(oss.str());

@@ -132,6 +132,12 @@ std::string Session::get_string() const
   return get_id();
 }
 
+//=========================================================================
+int Session::get_int() const
+{
+  return valid();
+}
+
 //=============================================================================
 scx::ScriptRef* Session::script_op(const scx::ScriptAuth& auth,
 				   const scx::ScriptRef& ref,
@@ -148,6 +154,8 @@ scx::ScriptRef* Session::script_op(const scx::ScriptAuth& auth,
     
     // Properties
     if ("id" == name) return scx::ScriptString::new_ref(m_id);
+    if ("timeout" == name) 
+      return new scx::ScriptRef(m_timeout.new_copy());
 
   }
     

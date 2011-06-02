@@ -156,7 +156,8 @@ const std::string& MySqlArg::get_name() const
 //=========================================================================
 scx::ScriptRef* MySqlArg::get_arg() const
 {
-  if (m_is_null) return 0;
+  if (m_is_null) 
+    return scx::ScriptError::new_ref("NULL");
 
   switch (m_type) {
   case MYSQL_TYPE_STRING:
@@ -351,7 +352,7 @@ bool MySqlQuery::exec(const scx::ScriptRef* args)
   // Execute the statement
   
   if (::mysql_stmt_execute(m_stmt)) {
-    log_error("mysql_stmt_bind_param",false);
+    log_error("mysql_stmt_execute",false);
     return false;
   }
   

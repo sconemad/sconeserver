@@ -61,16 +61,17 @@ public:
 
   // Context methods
   virtual bool handle_start(const std::string& name, 
-			    XMLAttrs& attrs, 
+			    NodeAttrs& attrs, 
 			    bool empty, 
 			    void* data);
 
   virtual bool handle_end(const std::string& name,
-			  XMLAttrs& attrs,
+			  NodeAttrs& attrs,
 			  void* data);
 
   virtual void handle_process(const std::string& name,
-			      const char* data);
+			      const char* data,
+			      int line);
 
   virtual void handle_text(const char* text);
 

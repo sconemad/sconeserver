@@ -937,6 +937,7 @@ ScriptRef* ScriptMap::script_op(const ScriptAuth& auth,
       std::string name = right->object()->get_string();
 
       if ("set" == name ||
+	  "add" == name ||
           "remove" == name ||
           "clear" == name) {
         return new ScriptMethodRef(ref,name);
@@ -971,7 +972,7 @@ ScriptRef* ScriptMap::script_method(const ScriptAuth& auth,
 				    const std::string& name,
 				    const ScriptRef* args)
 {
-  if ("set" == name) {
+  if ("set" == name || "add" == name) {
     if (ref.is_const()) return ScriptError::new_ref("Not permitted");
     
     const ScriptString* a_name = get_method_arg<ScriptString>(args,0,"name");
@@ -1100,11 +1101,11 @@ void ScriptMap::clear()
 ScriptSub::ScriptSub(const std::string& name,
 		     const ScriptSubArgNames& args,
 		     ScriptRefTo<ScriptStatement>* body,
-		     ScriptExpr& proc)
+		     ScriptTracer& tracer)
   : m_name(name),
     m_arg_names(args),
     m_body(body),
-    m_proc(new ScriptExpr(proc))
+    m_tracer(tracer.new_copy())
 {
   DEBUG_COUNT_CONSTRUCTOR(ScriptSub);
 }
@@ -1115,7 +1116,7 @@ ScriptSub::ScriptSub(const ScriptSub& c)
     m_name(c.m_name),
     m_arg_names(c.m_arg_names),
     m_body(0),
-    m_proc(new ScriptExpr(*c.m_proc))
+    m_tracer(c.m_tracer->new_copy())
 {
   DEBUG_COUNT_CONSTRUCTOR(ScriptSub);
   if (c.m_body) {
@@ -1127,7 +1128,7 @@ ScriptSub::ScriptSub(const ScriptSub& c)
 ScriptSub::~ScriptSub()
 {
   delete m_body;
-  delete m_proc;
+  delete m_tracer;
   DEBUG_COUNT_DESTRUCTOR(ScriptSub);
 }
 
@@ -1186,7 +1187,7 @@ ScriptRef* ScriptSub::call(const ScriptAuth& auth, const ScriptRef* args)
     }
 
     // Execute the subroutine body
-    return m_body->object()->execute(*m_proc);
+    return m_body->object()->execute(*m_tracer);
   }
   return 0;
 }

@@ -312,7 +312,7 @@ ScriptRef* Module::script_method(const ScriptAuth& auth,
     ModuleLoader* existing_loader = find_module(name);
     if (existing_loader) {
       if (existing_loader->is_loaded()) {
-        return ScriptError::new_ref("insmod() Module [" + name +
+        return ScriptError::new_ref("Module [" + name +
 				    "] already loaded and in use");
       }
       // The old module is not loaded - probably invalid,
@@ -355,6 +355,7 @@ ScriptRef* Module::script_method(const ScriptAuth& auth,
       Module::Ref mod = loader->get_module();
       if (!mod.valid()) {
         remove_module(loader);
+	return ScriptError::new_ref("Cannot load module [" + name + "]");
       }
       return mod.ref_copy(ref.reftype());
     }
@@ -367,20 +368,20 @@ ScriptRef* Module::script_method(const ScriptAuth& auth,
     const ScriptString* a_name = 
       get_method_arg<ScriptString>(args,0,"name");
     if (!a_name) {
-      return ScriptError::new_ref("rmmod() No module specified");
+      return ScriptError::new_ref("No module specified");
     }
 
     std::string name = a_name->get_string();
     ModuleLoader* loader = find_module(name);
     if (!loader) {
-      return ScriptError::new_ref("rmmod() Module [" + name + "] not found");
+      return ScriptError::new_ref("Module [" + name + "] not found");
     }
 
     if (loader->is_loaded()) {
       Module::Ref mod = loader->get_module();
       int nr = mod.object()->num_refs() - 2;
       if (nr > 0) {
-        return ScriptError::new_ref("rmmod() Module [" + name + "] in use");
+        return ScriptError::new_ref("Module [" + name + "] in use");
       }
     }
     
@@ -398,7 +399,7 @@ ScriptRef* Module::script_method(const ScriptAuth& auth,
       path = a_path->get_string();
     }
     if (false == load_config_file(path)) {
-      return ScriptError::new_ref("load_config() Error occured");
+      return ScriptError::new_ref("Error occured");
     }
     return 0;
   }

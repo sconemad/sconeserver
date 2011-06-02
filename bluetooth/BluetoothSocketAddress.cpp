@@ -126,7 +126,7 @@ std::string BluetoothSocketAddress::get_string() const
 scx::ScriptRef* BluetoothSocketAddress::script_op(const scx::ScriptAuth& auth,
 						  const scx::ScriptRef& ref,
 						  const scx::ScriptOp& op,
-						  scx::ScriptRef* right)
+						  const scx::ScriptRef* right)
 {
   if (op.type() == scx::ScriptOp::Lookup) {
     const std::string name = right->object()->get_string();

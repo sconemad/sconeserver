@@ -97,9 +97,14 @@ ScriptRef* ScriptObject::script_op(const ScriptAuth& auth,
       return a;
     }
 
-  case ScriptOp::Lookup:
-    return ScriptError::new_ref("Unknown name: "+
-				right->object()->get_string());
+  case ScriptOp::Lookup: 
+    {
+      std::string name = right->object()->get_string();
+      if (name == "_refs") 
+	return scx::ScriptInt::new_ref(m_refs);
+      return ScriptError::new_ref("Unknown name: "+name);
+    }
+
   case ScriptOp::GreaterThan:
     return ScriptInt::new_ref(value > rvalue);
       

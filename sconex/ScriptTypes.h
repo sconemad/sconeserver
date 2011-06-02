@@ -27,6 +27,7 @@ Free Software Foundation, Inc.,
 namespace scx {
 
 class ScriptExpr;
+class ScriptTracer;
 
 //=============================================================================
 // ScriptString - A SconeScript text string
@@ -309,7 +310,7 @@ public:
   ScriptSub(const std::string& name,
 	    const ScriptSubArgNames& args,
 	    ScriptRefTo<ScriptStatement>* body, 
-	    ScriptExpr& proc);
+	    ScriptTracer& tracer);
 
   ScriptSub(const ScriptSub& c);
   virtual ~ScriptSub();
@@ -333,7 +334,7 @@ protected:
   std::string m_name;
   ScriptSubArgNames m_arg_names;
   ScriptRefTo<ScriptStatement>* m_body;
-  ScriptExpr* m_proc;
+  ScriptTracer* m_tracer;
 
 };
 

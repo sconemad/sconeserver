@@ -24,14 +24,91 @@ Free Software Foundation, Inc.,
 #include <sconex/ScriptExpr.h>
 namespace scx {
 
+
 //=============================================================================
-ScriptStatement::ScriptStatement()
+ScriptTracer::ScriptTracer(const ScriptAuth& auth,
+			   const std::string& file,
+			   int line_offset)
+  : m_expr(new ScriptExpr(auth)),
+    m_file(file),
+    m_line_offset(line_offset)
+{
+
+}
+
+//=============================================================================
+ScriptTracer::ScriptTracer(const ScriptTracer& c)
+  : m_expr(new ScriptExpr(*c.m_expr)),
+    m_file(c.m_file),
+    m_line_offset(c.m_line_offset)
+{
+  
+}
+
+//=============================================================================
+ScriptTracer::~ScriptTracer()
+{
+  delete m_expr;
+}
+
+//=============================================================================
+ScriptTracer* ScriptTracer::new_copy()
+{
+  return new ScriptTracer(*this);
+}
+
+//=============================================================================
+ScriptRef* ScriptTracer::evaluate(const std::string& expr,
+				  ScriptStatement* ctx)
+{
+  scx::ScriptRef ctxr(ctx);
+  m_expr->set_ctx(&ctxr);
+  ScriptRef* ret = m_expr->evaluate(expr);
+
+  if (ret && BAD_SCRIPTREF(ret)) {
+    std::ostringstream oss;
+    oss << m_file << ":" << (m_line_offset + ctx->get_line()) << ": " 
+	<< ret->object()->get_string() << " (" << expr << ")";
+    m_errors.push_back(oss.str());
+  }
+
+  return ret;
+}
+
+//=============================================================================
+ScriptExpr& ScriptTracer::get_expr() 
+{ 
+  return *m_expr;
+}
+
+//=============================================================================
+const std::string& ScriptTracer::get_file() const
+{
+  return m_file;
+}
+
+//=============================================================================
+int ScriptTracer::get_line_offset() const
+{
+  return m_line_offset;
+}
+
+//=============================================================================
+ScriptTracer::ErrorList& ScriptTracer::errors()
+{
+  return m_errors;
+}
+
+//=============================================================================
+ScriptStatement::ScriptStatement(int line)
+  : m_line(line)
 {
   DEBUG_COUNT_CONSTRUCTOR(ScriptStatement);
 }
 
 //=============================================================================
 ScriptStatement::ScriptStatement(const ScriptStatement& c)
+  : m_line(c.m_line)
 {
   DEBUG_COUNT_CONSTRUCTOR(ScriptStatement)
 }
@@ -49,10 +126,10 @@ ScriptStatement::ParseMode ScriptStatement::parse_mode() const
 }
 
 //=============================================================================
-ScriptRef* ScriptStatement::execute(ScriptExpr& proc)
+ScriptRef* ScriptStatement::execute(ScriptTracer& tracer)
 {
   ScriptStatement::FlowMode flow = ScriptStatement::Normal;
-  return run(proc,flow);
+  return run(tracer,flow);
 }
 
 //=============================================================================
@@ -83,8 +160,15 @@ void ScriptStatement::set_parent(ScriptObject* parent)
 }
 
 //=============================================================================
-ScriptStatementExpr::ScriptStatementExpr(const std::string& expr)
-  : m_expr(expr)
+int ScriptStatement::get_line() const
+{
+  return m_line;
+}
+
+//=============================================================================
+ScriptStatementExpr::ScriptStatementExpr(int line, const std::string& expr)
+  : ScriptStatement(line),
+    m_expr(expr)
 {
 
 }
@@ -119,17 +203,16 @@ ScriptStatement::ParseResult ScriptStatementExpr::parse(
 }
 
 //=============================================================================
-ScriptRef* ScriptStatementExpr::run(ScriptExpr& proc, FlowMode& flow)
+ScriptRef* ScriptStatementExpr::run(ScriptTracer& tracer, FlowMode& flow)
 {
-  ScriptRef ctx(this);
-  proc.set_ctx(&ctx);
-  return proc.evaluate(m_expr);
+  return tracer.evaluate(m_expr,this);
 }
 
 
 //=============================================================================
-ScriptStatementGroup::ScriptStatementGroup(ScriptMap* env)
-  : m_env(env),
+ScriptStatementGroup::ScriptStatementGroup(int line, ScriptMap* env)
+  : ScriptStatement(line),
+    m_env(env),
     m_own_env(false)
 {
   if (m_env == 0) {
@@ -196,15 +279,15 @@ ScriptStatement::ParseResult ScriptStatementGroup::parse(
 }
 
 //=============================================================================
-ScriptRef* ScriptStatementGroup::run(ScriptExpr& proc, FlowMode& flow)
+ScriptRef* ScriptStatementGroup::run(ScriptTracer& tracer, FlowMode& flow)
 {
   ScriptRef* ret=0;
   for (StatementList::iterator it = m_statements.begin();
        it != m_statements.end();
        ++it) {
     delete ret;
-    ret = (*it)->object()->run(proc,flow);
-    if (ret && (typeid(*ret) == typeid(scx::ScriptError))) {
+    ret = (*it)->object()->run(tracer,flow);
+    if (ret && (typeid(*ret->object()) == typeid(scx::ScriptError))) {
       return ret;
     } else if (flow != Normal) {
       return ret;
@@ -272,8 +355,9 @@ void ScriptStatementGroup::clear()
 
 
 //=============================================================================
-ScriptStatementConditional::ScriptStatementConditional(const std::string& condition)
-  : m_seq(0),
+ScriptStatementConditional::ScriptStatementConditional(int line, const std::string& condition)
+  : ScriptStatement(line),
+    m_seq(0),
     m_condition(condition),
     m_true_statement(0),
     m_false_statement(0)
@@ -366,19 +450,17 @@ ScriptStatement::ParseMode ScriptStatementConditional::parse_mode() const
 }
 
 //=============================================================================
-ScriptRef* ScriptStatementConditional::run(ScriptExpr& proc, FlowMode& flow)
+ScriptRef* ScriptStatementConditional::run(ScriptTracer& tracer, FlowMode& flow)
 {
   // Evaluate the condition
-  ScriptRef ctx(this);
-  proc.set_ctx(&ctx);
-  ScriptRef* result = proc.evaluate(m_condition);
+  ScriptRef* result = tracer.evaluate(m_condition,this);
   bool cond = (result && 0 != result->object()->get_int());
   delete result;
 
   if (cond) {
-    if (m_true_statement) return m_true_statement->object()->run(proc,flow);
+    if (m_true_statement) return m_true_statement->object()->run(tracer,flow);
   } else {
-    if (m_false_statement) return m_false_statement->object()->run(proc,flow);
+    if (m_false_statement) return m_false_statement->object()->run(tracer,flow);
   }
   
   return 0;
@@ -386,8 +468,9 @@ ScriptRef* ScriptStatementConditional::run(ScriptExpr& proc, FlowMode& flow)
 
 
 //=============================================================================
-ScriptStatementWhile::ScriptStatementWhile(const std::string& condition)
-  : m_seq(0),
+ScriptStatementWhile::ScriptStatementWhile(int line, const std::string& condition)
+  : ScriptStatement(line),
+    m_seq(0),
     m_condition(condition),
     m_body(0)
 {
@@ -453,15 +536,13 @@ ScriptStatement::ParseMode ScriptStatementWhile::parse_mode() const
 }
 
 //=============================================================================
-ScriptRef* ScriptStatementWhile::run(ScriptExpr& proc, FlowMode& flow)
+ScriptRef* ScriptStatementWhile::run(ScriptTracer& tracer, FlowMode& flow)
 {
   ScriptRef* ret=0;
-  ScriptRef ctx(this);
   
   while (true) {
     // Evaluate the condition
-    proc.set_ctx(&ctx);
-    ScriptRef* result = proc.evaluate(m_condition);
+    ScriptRef* result = tracer.evaluate(m_condition,this);
     bool cond = (result && 0 != result->object()->get_int());
     delete result;
 
@@ -472,7 +553,7 @@ ScriptRef* ScriptStatementWhile::run(ScriptExpr& proc, FlowMode& flow)
 
     if (m_body) {
       delete ret;
-      ret = m_body->object()->run(proc,flow);
+      ret = m_body->object()->run(tracer,flow);
       if (ret && (typeid(*ret->object()) == typeid(scx::ScriptError))) {
 	return ret;
       } else if (flow == Return) {
@@ -491,8 +572,9 @@ ScriptRef* ScriptStatementWhile::run(ScriptExpr& proc, FlowMode& flow)
 
 
 //=============================================================================
-ScriptStatementFor::ScriptStatementFor()
-  : m_seq(0),
+ScriptStatementFor::ScriptStatementFor(int line)
+  : ScriptStatement(line),
+    m_seq(0),
     m_body(0)
 {
 
@@ -533,10 +615,10 @@ ScriptStatement::ParseResult ScriptStatementFor::parse(
 {
   switch (++m_seq) {
     case 1: {
-      unsigned int isc1 = token.find(";",0);
+      std::string::size_type isc1 = token.find(";",0);
       if (isc1 == std::string::npos) return ScriptStatement::Error;
       m_initialiser = token.substr(0,isc1);
-      unsigned int isc2 = token.find(";",isc1+1);
+      std::string::size_type isc2 = token.find(";",isc1+1);
       if (isc2 == std::string::npos) return ScriptStatement::Error;
       m_condition = token.substr(isc1+1,isc2-isc1-1);
       m_increment = token.substr(isc2+1);
@@ -565,20 +647,17 @@ ScriptStatement::ParseMode ScriptStatementFor::parse_mode() const
 }
 
 //=============================================================================
-ScriptRef* ScriptStatementFor::run(ScriptExpr& proc, FlowMode& flow)
+ScriptRef* ScriptStatementFor::run(ScriptTracer& tracer, FlowMode& flow)
 {
   ScriptRef* ret=0;
-  ScriptRef ctx(this);
-  proc.set_ctx(&ctx);
   
   // Evaluate the initialiser
-  ScriptRef* result = proc.evaluate(m_initialiser);
+  ScriptRef* result = tracer.evaluate(m_initialiser,this);
   delete result;
 
   while (true) {
     // Evaluate the condition
-    proc.set_ctx(&ctx);
-    result = proc.evaluate(m_condition);
+    result = tracer.evaluate(m_condition,this);
     bool cond = (result && 0 != result->object()->get_int());
     delete result;
 
@@ -589,7 +668,7 @@ ScriptRef* ScriptStatementFor::run(ScriptExpr& proc, FlowMode& flow)
 
     if (m_body) {
       delete ret;
-      ret = m_body->object()->run(proc,flow);
+      ret = m_body->object()->run(tracer,flow);
       if (ret && (typeid(*ret->object()) == typeid(scx::ScriptError))) {
 	return ret;
       } else if (flow == Return) {
@@ -603,8 +682,7 @@ ScriptRef* ScriptStatementFor::run(ScriptExpr& proc, FlowMode& flow)
     }
 
     // Evaluate the increment
-    proc.set_ctx(&ctx);
-    result = proc.evaluate(m_increment);
+    result = tracer.evaluate(m_increment,this);
     delete result;
   }
 
@@ -613,8 +691,9 @@ ScriptRef* ScriptStatementFor::run(ScriptExpr& proc, FlowMode& flow)
 
 
 //=============================================================================
-ScriptStatementFlow::ScriptStatementFlow(FlowMode flow)
-  : m_seq(0),
+ScriptStatementFlow::ScriptStatementFlow(int line, FlowMode flow)
+  : ScriptStatement(line),
+    m_seq(0),
     m_flow(flow)
 {
 
@@ -670,13 +749,11 @@ ScriptStatement::ParseMode ScriptStatementFlow::parse_mode() const
 }
 
 //=============================================================================
-ScriptRef* ScriptStatementFlow::run(ScriptExpr& proc, FlowMode& flow)
+ScriptRef* ScriptStatementFlow::run(ScriptTracer& tracer, FlowMode& flow)
 {
   ScriptRef* ret=0;
   if (!m_ret_expr.empty()) {
-    ScriptRef ctx(this);
-    proc.set_ctx(&ctx);
-    ret = proc.evaluate(m_ret_expr);
+    ret = tracer.evaluate(m_ret_expr,this);
   }
 
   flow = m_flow;
@@ -685,9 +762,11 @@ ScriptRef* ScriptStatementFlow::run(ScriptExpr& proc, FlowMode& flow)
 
 
 //=============================================================================
-ScriptStatementDecl::ScriptStatementDecl(DefType deftype, 
+ScriptStatementDecl::ScriptStatementDecl(int line,
+					 DefType deftype, 
 					 const std::string& name)
-  : m_seq(0),
+  : ScriptStatement(line),
+    m_seq(0),
     m_deftype(deftype),
     m_name(name)
 {
@@ -751,13 +830,11 @@ ScriptStatement::ParseMode ScriptStatementDecl::parse_mode() const
 }
 
 //=============================================================================
-ScriptRef* ScriptStatementDecl::run(ScriptExpr& proc, FlowMode& flow)
+ScriptRef* ScriptStatementDecl::run(ScriptTracer& tracer, FlowMode& flow)
 {
   ScriptRef* initialiser=0;
   if (!m_initialiser.empty()) {
-    ScriptRef ctx(this);
-    proc.set_ctx(&ctx);
-    initialiser = proc.evaluate(m_initialiser);
+    initialiser = tracer.evaluate(m_initialiser,this);
   }
 
   ScriptList::Ref args(new ScriptList());
@@ -780,13 +857,14 @@ ScriptRef* ScriptStatementDecl::run(ScriptExpr& proc, FlowMode& flow)
     delete initialiser;
   }
 
-  return ScriptMethodRef(this,"var").call(proc.get_auth(),&args);
+  return ScriptMethodRef(this,"var").call(tracer.get_expr().get_auth(),&args);
 }
 
 
 //=============================================================================
-ScriptStatementSub::ScriptStatementSub(const std::string& name)
-  : m_seq(0),
+ScriptStatementSub::ScriptStatementSub(int line, const std::string& name)
+  : ScriptStatement(line),
+    m_seq(0),
     m_name(name),
     m_body(0)
 { 
@@ -878,17 +956,17 @@ ScriptStatement::ParseMode ScriptStatementSub::parse_mode() const
 }
 
 //=============================================================================
-ScriptRef* ScriptStatementSub::run(ScriptExpr& proc, FlowMode& flow)
+ScriptRef* ScriptStatementSub::run(ScriptTracer& tracer, FlowMode& flow)
 {
   ScriptList::Ref args(new ScriptList());
   args.object()->give(ScriptString::new_ref(m_name));
   args.object()->give(new ScriptRef(new ScriptSub(m_name,
 						  m_arg_names,
 						  m_body,
-						  proc)));
+						  tracer)));
   m_body = 0;
 
-  return ScriptMethodRef(this,"var").call(proc.get_auth(),&args);
+  return ScriptMethodRef(this,"var").call(tracer.get_expr().get_auth(),&args);
 }
 
 

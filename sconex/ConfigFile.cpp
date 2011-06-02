@@ -45,14 +45,14 @@ ConfigFile::~ConfigFile()
 //=============================================================================
 bool ConfigFile::load(ScriptRef* ctx)
 {
-  //  ctx->object()->log("LOAD " + m_filename.path());
   File conf;
-  conf.open(m_filename,File::Read);
-  ScriptEngine* script = new ScriptEngineExec(ScriptAuth::Admin,
-					      ctx->ref_copy());
-  conf.add_stream(script);
-  script->event(Stream::Readable);
-  //  ctx->object()->log("DONE " + m_filename.path());
+  if (Ok == conf.open(m_filename,File::Read)) {
+    ScriptEngine* script = new ScriptEngineExec(ScriptAuth::Admin,
+						ctx->ref_copy(),
+						m_filename.path());
+    conf.add_stream(script);
+    script->event(Stream::Readable);
+  }
 
   return true;
 }

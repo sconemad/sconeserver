@@ -32,9 +32,7 @@ Free Software Foundation, Inc.,
 #include <libxml/tree.h>
 #include <libxml/HTMLtree.h>
 
-typedef std::map<std::string,std::string> XMLAttrs;
-
-bool XMLAttr_bool(XMLAttrs& attrs, const std::string& value, bool def=false);
+bool XMLAttr_bool(NodeAttrs& attrs, const std::string& value, bool def=false);
 
 class Context;
 

@@ -65,6 +65,11 @@ public:
   static void unregister_type(const std::string& type,
 			      Provider<ScriptObject>* factory);
 
+  // Method to programatically create an object of one of the registered
+  // standard types.
+  static ScriptObject* create_object(const std::string& type,
+				     const ScriptRef* args);
+
 protected:
 
   // Evaluate expression or sub-expression

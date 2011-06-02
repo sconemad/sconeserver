@@ -292,22 +292,21 @@ short Uri::default_port(const std::string& scheme)
 //=============================================================================
 std::string Uri::encode(const std::string& str)
 {
-  std::string ret;
+  std::ostringstream oss;
   for (unsigned int i=0; i<str.size(); ++i) {
     char c = str[i];
-    switch (c) {
-      //TODO: This needs improving somewhat!
-      case ' ':
-        ret += "%20";
-        break;
-      
-      default:
-        ret += c;
-        break;
+    if (isalnum(c) || c == '$' || c == '-' || c == '_' || c == '.' || 
+	c == '+' || c == '!' || c == '*' || c == '\'' || c == '(' || 
+	c == ')' || c == ',') {
+      // These chars are permitted
+      oss << c;
+    } else {
+      // Anything else must be encoded
+      oss << "%" << std::setw(2) << std::setfill('0') << std::hex << (int)c;
     }
   }
   
-  return ret;
+  return oss.str();
 }
 
 //=============================================================================

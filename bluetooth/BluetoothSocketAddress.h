@@ -58,7 +58,7 @@ public:
   virtual scx::ScriptRef* script_op(const scx::ScriptAuth& auth,
 				    const scx::ScriptRef& ref,
 				    const scx::ScriptOp& op,
-				    scx::ScriptRef* right=0);
+				    const scx::ScriptRef* right=0);
   
   // Address
   void set_address(const std::string& addr);

@@ -9,6 +9,8 @@ pkglib_LTLIBRARIES = http.la
 
 http_la_SOURCES = \
 AuthRealm.cpp \
+AuthRealmHtpasswd.cpp \
+AuthRealmDB.cpp \
 Client.cpp \
 ConnectionStream.cpp \
 DocRoot.cpp \
@@ -27,6 +29,8 @@ httpincludedir = $(includedir)/sconex/http
 
 httpinclude_HEADERS = \
 AuthRealm.h \
+AuthRealmHtpasswd.h \
+AuthRealmDB.h \
 Client.h \
 ConnectionStream.h \
 DocRoot.h \

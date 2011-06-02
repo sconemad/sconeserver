@@ -230,7 +230,7 @@ void ServerModule::provide(const std::string& type,
 
   } else if ("sconescript" == type) {
     scx::ScriptRef* ctx = new scx::ScriptRef(scx::Kernel::get());
-    object = new scx::ScriptEngineExec(scx::ScriptAuth::Admin,ctx);
+    object = new scx::ScriptEngineExec(scx::ScriptAuth::Admin,ctx,"term");
 
   } else if ("debug" == type) {
     const scx::ScriptString* a_name =

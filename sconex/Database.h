@@ -30,8 +30,9 @@ namespace scx {
 class DbQuery;
   
 //=========================================================================
+// Database - Base class database interface
+//
 class Database : public ScriptObject {
-
 public:
 
   typedef scx::ScriptRefTo<Database> Ref;
@@ -60,8 +61,9 @@ protected:
 };
 
 //=========================================================================
+// DbQuery - Base class interface to a database query
+//
 class DbQuery : public ScriptObject {
-
 public:
 
   DbQuery();
@@ -75,6 +77,44 @@ public:
 
   typedef scx::ScriptRefTo<DbQuery> Ref;
   
+};
+
+//=========================================================================
+// DbRowProxy - An object which acts as a proxy for a row of data in a
+// database table identified by the specified key.
+//
+class DbProxy : public ScriptObject {
+public:
+
+  DbProxy(Database* db,
+	  const std::string& table,
+	  const std::string& key_field,
+	  ScriptObject* key);
+  DbProxy(const DbProxy& c);
+  ~DbProxy();
+
+  virtual ScriptObject* new_copy() const;
+
+  //  virtual std::string get_string() const;
+  //  virtual int get_int() const;
+
+  virtual ScriptRef* script_op(const ScriptAuth& auth,
+			       const ScriptRef& ref,
+			       const ScriptOp& op,
+			       const ScriptRef* right=0);
+
+  virtual ScriptRef* script_method(const ScriptAuth& auth,
+				   const ScriptRef& ref,
+				   const std::string& name,
+				   const ScriptRef* args);
+
+protected:
+
+  Database::Ref m_db;
+  std::string m_table;
+  std::string m_key_field;
+  ScriptRef m_key;
+
 };
   
 };

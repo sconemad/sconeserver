@@ -150,7 +150,7 @@ std::string IP6SocketAddress::get_string() const
 scx::ScriptRef* IP6SocketAddress::script_op(const scx::ScriptAuth& auth,
 					    const scx::ScriptRef& ref,
 					    const scx::ScriptOp& op,
-					    scx::ScriptRef* right)
+					    const scx::ScriptRef* right)
 {
   if (scx::ScriptOp::Lookup == op.type()) {
     std::string name = right->object()->get_string();

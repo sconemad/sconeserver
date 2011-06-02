@@ -124,13 +124,14 @@ void Profile::refresh()
   // Scan cached articles and purge
   scx::RWLocker locker(m_cache_lock,true,scx::RWLock::Write);
   for (ArticleMap::iterator it_a = m_articles.begin();
-       it_a != m_articles.end();
-       ++it_a) {
+       it_a != m_articles.end(); ) {
     Article::Ref* article = it_a->second;
     if (article->object()->get_access_time() < purge_time) {
       m_module.log("Purging article: /" + article->object()->get_href_path());
-      m_articles.erase(it_a);
+      m_articles.erase(it_a++);
       delete article;
+    } else {
+      ++it_a;
     }
   }
 }
@@ -528,17 +529,22 @@ scx::ScriptRef* Profile::script_op(const scx::ScriptAuth& auth,
       return scx::ScriptString::new_ref(m_path.path());
 
     if ("article_cache" == name) {
-      std::ostringstream oss;
+      scx::ScriptList::Ref* list = 
+	new scx::ScriptList::Ref(new scx::ScriptList());
       scx::RWLocker locker(m_cache_lock);
       for (ArticleMap::iterator it_a = m_articles.begin();
 	   it_a != m_articles.end();
 	   ++it_a) {
+	scx::ScriptMap::Ref* map =
+	  new scx::ScriptMap::Ref(new scx::ScriptMap());
 	Article* article = it_a->second->object();
-	oss << article->get_access_time().code()
-	    << " /" << article->get_href_path()
-	    << "\n";
+	map->object()->give("last_access",
+          new scx::ScriptRef(article->get_access_time().new_copy()));
+	map->object()->give("article",
+			    new Article::Ref(article));
+	list->object()->give(map);
       }
-      return scx::ScriptString::new_ref(oss.str());
+      return list;
     }
   }
 
@@ -658,9 +664,9 @@ bool Profile::set_meta(int id,
   bool result = query->exec(&args);
 
   SCONESITEPROFILE_DEBUG_LOG("PROFILE set_meta " << id << 
-			     ":" << property << 
-			     "=" << value->object()->get_string() <<
-			     (result?" OK":" FAILED"));
+   ":" << property << "=" << 
+   (value ? value->object()->get_string() : "NULL") <<
+   (result?" OK":" FAILED"));
   return result;
 }
 

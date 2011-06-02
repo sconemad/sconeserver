@@ -28,35 +28,44 @@ static Mutex* s_debugger_mutex = 0;
 static int s_debugger_index = 0;
 
 //=============================================================================
-StreamDebugger::StreamDebugger(
-  const std::string& name
-) : Stream("debug")
+StreamDebugger::StreamDebugger(const std::string& name) 
+  : Stream("debug"),
+    m_file(0)
 {
   DEBUG_COUNT_CONSTRUCTOR(StreamDebugger);
 
   if (s_debugger_mutex == 0) {
-    s_debugger_mutex = new Mutex;
+    s_debugger_mutex = new Mutex();
   }
   
   MutexLocker locker(*s_debugger_mutex);
-  ++s_debugger_index;
+  int index = ++s_debugger_index;
+  locker.unlock();
 
   std::ostringstream oss;
   oss << "/tmp/scxdbg." << name << "." 
-      << std::setfill('0') << std::setw(5) << s_debugger_index;
+      << std::setfill('0') << std::setw(5) << index;
   
-  m_file.open(oss.str(),File::Write | File::Create | File::Truncate);
-
-  write_header("OPENED");
+  m_file = new File();
+  if (Ok != m_file->open(oss.str(),File::Write | File::Create | File::Truncate)) {
+    DEBUG_LOG("Could not open debug file" << oss.str());
+    delete m_file;
+    m_file = 0;
+  } else {
+    write_header("OPENED");
+  }
 }
 
 //=============================================================================
 StreamDebugger::~StreamDebugger()
 {
   DEBUG_COUNT_DESTRUCTOR(StreamDebugger);
-  
-  write_header("CLOSED");
-  m_file.close();
+
+  if (m_file) {
+    write_header("CLOSED");
+    m_file->close();
+    delete m_file;
+  }
 }
 
 //=============================================================================
@@ -65,13 +74,15 @@ Condition StreamDebugger::read(void* buffer,int n,int& na)
   na=0;
   Condition c = Stream::read(buffer,n,na);
 
-  std::ostringstream oss;
-  oss << "READ " << na << "(" << n << ") " << get_cond_str(c);
-  write_header(oss.str());
-
-  if (na > 0) {
-    int na2;
-    m_file.write(buffer,na,na2);
+  if (m_file) {
+    std::ostringstream oss;
+    oss << "READ " << na << "(" << n << ") " << get_cond_str(c);
+    write_header(oss.str());
+    
+    if (na > 0) {
+      int na2;
+      m_file->write(buffer,na,na2);
+    }
   }
   
   return c;
@@ -83,13 +94,15 @@ Condition StreamDebugger::write(const void* buffer,int n,int& na)
   na=0;
   Condition c = Stream::write(buffer,n,na);
 
-  std::ostringstream oss;
-  oss << "WRITE " << na << "/" << n << " " << get_cond_str(c);
-  write_header(oss.str());
-
-  if (na > 0) {
-    int na2;
-    m_file.write(buffer,na,na2);
+  if (m_file) {
+    std::ostringstream oss;
+    oss << "WRITE " << na << "/" << n << " " << get_cond_str(c);
+    write_header(oss.str());
+    
+    if (na > 0) {
+      int na2;
+      m_file->write(buffer,na,na2);
+    }
   }
   
   return c;
@@ -113,13 +126,13 @@ void StreamDebugger::write_header(const std::string& message)
 {
   std::ostringstream oss;
   oss << "\n----< " << Date::now().code() << " " << message << " >----\n";
-  m_file.write(oss.str());
+  m_file->write(oss.str());
 }
 
 //=============================================================================
 std::string StreamDebugger::stream_status() const
 {
-  return m_file.path().path();
+  return m_file->path().path();
 }
 
 

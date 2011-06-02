@@ -28,70 +28,37 @@ Free Software Foundation, Inc.,
 #include <sconex/FilePath.h>
 #include <sconex/Date.h>
 #include <sconex/Mutex.h>
+#include <sconex/Provider.h>
 namespace http {
 
 class HTTPModule;
 class MessageStream;
 
 //=============================================================================
-// HTTPUser - An authorised HTTP user
+// AuthRealm - An authorisation realm, essentially an object which determines
+// whether a specified username/password combination is valid.
 //
-class HTTP_API HTTPUser : public scx::ScriptMap {
-public:
-
-  HTTPUser(HTTPModule& module,
-	   const std::string& username,
-	   const std::string& password,
-	   const scx::FilePath& path);
-
-  virtual ~HTTPUser();
-
-  bool authorised(const std::string& password);
-
-  // ScriptObject methods
-  virtual std::string get_string() const;
-
-  virtual scx::ScriptRef* script_op(const scx::ScriptAuth& auth,
-				    const scx::ScriptRef& ref,
-				    const scx::ScriptOp& op,
-				    const scx::ScriptRef* right=0);
-
-  virtual scx::ScriptRef* script_method(const scx::ScriptAuth& auth,
-					const scx::ScriptRef& ref,
-					const std::string& name,
-					const scx::ScriptRef* args);
-
-  typedef scx::ScriptRefTo<HTTPUser> Ref;
-
-private:
-
-  HTTPModule& m_module;
-
-  std::string m_username;
-  std::string m_password;
-
-};
-
-//=============================================================================
-// AuthRealm - An authorisation realm, essentially a collection of authorised 
-// users. A realm can then be assigned to control access to one or more
-// HTTP resources.
-// 
+// This is the base class, from which realm implementations are derived.
+// The default realm implementations can be suplemented using the realm
+// provider interface in AuthRealmManager below.
+//
+// A realm can be assigned to control access to one or more HTTP resources
+// via HTTP basic authentication, or queried directly from a script to provide
+// HTML-form based authentication.
 //
 class HTTP_API AuthRealm : public scx::ScriptObject {
 public:
 
   // Create an authorisation realm for specified profile and root path
-  AuthRealm(HTTPModule& module,
-	    const std::string name,
-	    const scx::FilePath& path);
+  AuthRealm(const std::string name);
 
   virtual ~AuthRealm();
 
-  HTTPUser* lookup_user(const std::string& username);
-  
-  bool authorised(const std::string& username,
-		  const std::string& password);
+  // Returns a 'good' scriptref if the specified username/password combination
+  // is valid, or a 'bad' scriptref (can be NULL) otherwise. In the succesful
+  // case, the scriptref might be an object representing the user.
+  virtual scx::ScriptRef* authorised(const std::string& username,
+				     const std::string& password) = 0;
 
   // ScriptObject methods
   virtual std::string get_string() const;
@@ -107,31 +74,22 @@ public:
 					const scx::ScriptRef* args);
 
   typedef scx::ScriptRefTo<AuthRealm> Ref;
-  
+
 protected:
 
-  void refresh();
-
-private:
-
-  HTTPModule& m_module;
   std::string m_name;
-  scx::FilePath m_path;
-  scx::Date m_modtime;
-  scx::Mutex m_mutex;
 
-  typedef std::map<std::string,HTTPUser::Ref*> UserMap;
-  UserMap m_users;
 };
 
 //=============================================================================
-// AuthRealmManager - Manages the available authorisation realms.
+// AuthRealmManager - Manages the available authorisation realms, and allows
+// additional realm types to be registered and used.
 //
-//
-class HTTP_API AuthRealmManager : public scx::ScriptObject {
+class HTTP_API AuthRealmManager : public scx::ScriptObject,
+                                  public scx::Provider<AuthRealm> {
 public:
 
-  AuthRealmManager(HTTPModule& module);
+  AuthRealmManager(HTTPModule* module);
   
   virtual ~AuthRealmManager();
   
@@ -148,16 +106,29 @@ public:
 					const std::string& name,
 					const scx::ScriptRef* args);
 
+  // AuthRealm provider interface for registering extension realm types
+  void register_realm(const std::string& type,
+		      scx::Provider<AuthRealm>* factory);
+  void unregister_realm(const std::string& type,
+			scx::Provider<AuthRealm>* factory);
+
+  // We also provide some standard realm types
+  virtual void provide(const std::string& type,
+		       const scx::ScriptRef* args,
+		       AuthRealm*& object);
+
   typedef scx::ScriptRefTo<AuthRealmManager> Ref;
-  
-protected:
 
 private:
 
-  HTTPModule& m_module;
+  HTTPModule* m_module;
 
   typedef std::map<std::string,AuthRealm::Ref*> AuthRealmMap;
   AuthRealmMap m_realms;
+
+  // AuthRealm providers
+  scx::ProviderScheme<AuthRealm> m_providers;
+
 };
 
 };

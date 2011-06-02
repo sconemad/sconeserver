@@ -331,7 +331,6 @@ scx::Condition SconesiteStream::send_response()
   std::ostringstream oss;
   oss << "--- Article rendered in " << elapsed.to_microseconds() << " us ---";
   log(oss.str());
-  write(oss.str());
   //---
 
   // Restore endpoint blocking state and reset timeout

@@ -92,12 +92,11 @@ bool ArticleMetaSorter::operator()(const Article* a, const Article* b)
 
 
 //=========================================================================
-Article::Article(
-  Profile& profile,
-  int id,
-  int parent_id,
-  const std::string& link
-) : m_profile(profile),
+Article::Article(Profile& profile,
+		 int id,
+		 int parent_id,
+		 const std::string& link)
+  : m_profile(profile),
     m_id(id),
     m_parent_id(parent_id),
     m_link(link),
@@ -262,8 +261,11 @@ scx::ScriptRef* Article::script_op(const scx::ScriptAuth& auth,
     }
 
     if ("headings" == name) {
-      //open();
       return get_headings().get_tree();
+    }
+
+    if ("access_time" == name) {
+      return new scx::ScriptRef(m_access_time.new_copy());
     }
 
     if ("body" == name)
@@ -339,7 +341,7 @@ scx::ScriptRef* Article::script_method(const scx::ScriptAuth& auth,
   }
 
   if (name == "get_files") {
-    //    if (!auth.trusted()) return scx::ScriptError::new_ref("Not permitted");
+    if (!auth.trusted()) return scx::ScriptError::new_ref("Not permitted");
 
     scx::ScriptList* filelist = new scx::ScriptList();
     scx::FileDir files(m_root);
@@ -349,17 +351,14 @@ scx::ScriptRef* Article::script_method(const scx::ScriptAuth& auth,
           file != ".." &&
           file != "article.xml" && file != "article.xml~" &&
           file != "meta.txt" && file != "meta.txt~") {
-	//        if (!lookup_article(file)) {
-        if (1) {
-          if (files.stat().is_dir()) {
-	    // Ignore directories for now?
-	    // filelist->give(scx::ScriptString::new_ref(file+"/"));
-          } else {
-            //            filelist->give(scx::ScriptString::new_ref(file));
-	    scx::ScriptFile* sfile = new scx::ScriptFile(files.path(),file);
-            filelist->give(new scx::ScriptRef(sfile));
-          }
-        }
+	if (files.stat().is_dir()) {
+	  // Ignore directories for now?
+	  // filelist->give(scx::ScriptString::new_ref(file+"/"));
+	} else {
+	  //            filelist->give(scx::ScriptString::new_ref(file));
+	  scx::ScriptFile* sfile = new scx::ScriptFile(files.path(),file);
+	  filelist->give(new scx::ScriptRef(sfile));
+	}
       }
     }
     return new scx::ScriptRef(filelist);

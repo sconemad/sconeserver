@@ -33,9 +33,9 @@ Free Software Foundation, Inc.,
 scx::Mutex* XMLDoc::m_clients_mutex = 0;
 
 //=========================================================================
-bool XMLAttr_bool(XMLAttrs& attrs, const std::string& value, bool def)
+bool XMLAttr_bool(NodeAttrs& attrs, const std::string& value, bool def)
 {
-  XMLAttrs::const_iterator it = attrs.find(value);
+  NodeAttrs::const_iterator it = attrs.find(value);
   if (it != attrs.end()) {
     if (it->second == "1") {
       return true;
@@ -218,6 +218,7 @@ void XMLDoc::get_node_text(std::string& txt, xmlNode* node)
 //=========================================================================
 void XMLDoc::process_node(Context& context, xmlNode* start)
 {
+  int line = start->line;
   for (xmlNode* node = start;
        node != 0;
        node = node->next) {
@@ -230,12 +231,12 @@ void XMLDoc::process_node(Context& context, xmlNode* start)
 	
       case XML_PI_NODE: {
 	std::string name((char*)node->name);
-	context.handle_process(name,(char*)node->content);
+	context.handle_process(name,(char*)node->content,line);
       } break;
 	
       case XML_ELEMENT_NODE: {
 	std::string name((char*)node->name);
-        XMLAttrs attrs;
+        NodeAttrs attrs;
         for (xmlAttr* attr = node->properties;
              attr != 0; 
              attr = attr->next) {
@@ -267,6 +268,8 @@ void XMLDoc::process_node(Context& context, xmlNode* start)
         DEBUG_LOG("XMLDoc: Unknown node type " << node->type);
       } break;
     }
+
+    line = node->line;
   }
 }
 

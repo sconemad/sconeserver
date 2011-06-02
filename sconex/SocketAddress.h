@@ -83,7 +83,7 @@ public:
   virtual ScriptRef* script_op(const ScriptAuth& auth,
 			       const ScriptRef& ref,
 			       const ScriptOp& op,
-			       ScriptRef* right);
+			       const ScriptRef* right);
 protected:
 
   int m_domain;

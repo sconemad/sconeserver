@@ -47,7 +47,7 @@ HTTPModule::HTTPModule()
   scx::ScriptExpr::register_type("HTTPClient",this);
 
   m_hosts = new HostMapper::Ref(new HostMapper(*this));
-  m_realms = new AuthRealmManager::Ref(new AuthRealmManager(*this));
+  m_realms = new AuthRealmManager::Ref(new AuthRealmManager(this));
   m_sessions = new SessionManager::Ref(new SessionManager(*this));
 }
 
@@ -78,6 +78,8 @@ bool HTTPModule::close()
   delete m_hosts; m_hosts=0;
   delete m_realms; m_realms=0;
   delete m_sessions; m_sessions=0;
+
+  return true;
 }
 
 //=============================================================================

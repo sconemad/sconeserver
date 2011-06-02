@@ -116,4 +116,10 @@ void Uri_ut()
   UTEST(u6.get_port() == 1225);
   UTEST(u6.get_path() == "presents");
   UTEST(u6.get_query() == "hohoho=santa");
+
+  UTSEC("utils");
+
+  UTMSG("encode");
+  UTEST(Uri::encode("one two") == "one%20two");
+
 }

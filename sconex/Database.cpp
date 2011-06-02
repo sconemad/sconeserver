@@ -22,6 +22,10 @@ Free Software Foundation, Inc.,
 
 #include <Database.h>
 
+#include <sconex/ScriptBase.h>
+#include <sconex/ScriptTypes.h>
+#include <memory>
+  
 namespace scx {
 
 template class Provider<Database>;
@@ -99,5 +103,122 @@ DbQuery::~DbQuery()
 {
   DEBUG_COUNT_DESTRUCTOR(DbQuery);
 }
+
+
+
+//=========================================================================
+DbProxy::DbProxy(Database* db,
+		 const std::string& table,
+		 const std::string& key_field,
+		 ScriptObject* key)
+  : m_db(db),
+    m_table(table),
+    m_key_field(key_field),
+    m_key(key,ScriptRef::ConstRef)
+{
+
+}
+
+//=========================================================================
+DbProxy::DbProxy(const DbProxy& c)
+  : ScriptObject(c),
+    m_db(c.m_db),
+    m_table(c.m_table),
+    m_key_field(c.m_key_field),
+    m_key(c.m_key)
+{
   
+}
+
+//=========================================================================
+DbProxy::~DbProxy()
+{
+
+}
+
+//=========================================================================
+ScriptObject* DbProxy::new_copy() const
+{
+  return new DbProxy(*this);
+}
+
+/*
+//=========================================================================
+std::string DbProxy::get_string() const
+{
+  return "";
+}
+
+//=========================================================================
+int DbProxy::get_int() const
+{
+  return 1;
+}
+*/
+
+//=========================================================================
+ScriptRef* DbProxy::script_op(const ScriptAuth& auth,
+			      const ScriptRef& ref,
+			      const ScriptOp& op,
+			      const ScriptRef* right)
+{
+  if (op.type() == ScriptOp::Lookup) {
+    const std::string name = right->object()->get_string();
+    
+    // Methods
+    if ("set" == name) {
+      return new ScriptMethodRef(ref,name);
+    }
+
+    std::auto_ptr<DbQuery> query(m_db.object()->new_query(
+      "SELECT "+name+" FROM "+m_table+" WHERE "+m_key_field+" = ?"));
+    
+    ScriptList::Ref args(new ScriptList());
+    args.object()->give(m_key.ref_copy());
+    query->exec(&args);
+    
+    ScriptRef* result = 0;
+    if (query->next_result()) {
+      ScriptRef* row_ref = query->result_list();
+      ScriptList* row = dynamic_cast<ScriptList*>(row_ref->object());
+      if (row) result = row->take(0);
+      delete row_ref;
+    }
+    return result;
+  }
+
+  return ScriptObject::script_op(auth,ref,op,right);
+}
+
+//=========================================================================
+ScriptRef* DbProxy::script_method(const ScriptAuth& auth,
+				  const ScriptRef& ref,
+				  const std::string& name,
+				  const ScriptRef* args)
+{
+  if (name == "set") {
+    const ScriptString* a_name = get_method_arg<ScriptString>(args,0,"name");
+    if (!a_name)
+      return ScriptError::new_ref("No name specified");
+    std::string s_name = a_name->get_string();
+    if (s_name.empty())
+      return ScriptError::new_ref("No name specified");
+
+    const ScriptRef* value = get_method_arg_ref(args,1,"value");
+    
+    std::auto_ptr<DbQuery> query(m_db.object()->new_query(
+      "UPDATE "+m_table+" SET "+s_name+" = ? WHERE "+m_key_field+" = ?"));
+    
+    ScriptList::Ref args(new ScriptList());
+    args.object()->give(value->ref_copy());
+    args.object()->give(m_key.ref_copy());
+    if (!query->exec(&args))
+      return ScriptError::new_ref("Failed to update value");
+
+    return 0;
+  }
+
+  return ScriptObject::script_method(auth,ref,name,args);
+}
+
 };

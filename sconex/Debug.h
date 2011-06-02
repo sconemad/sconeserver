@@ -41,18 +41,18 @@ class Mutex;
 
 #define DEBUG_LOG(message) \
   { \
-    std::ostringstream oss; \
-    oss << message; \
-    scx::Debug::get()->log(oss.str().c_str(),__FILE__,__LINE__); \
+    std::ostringstream scxDebug_oss; \
+    scxDebug_oss << message; \
+    scx::Debug::get()->log(scxDebug_oss.str().c_str(),__FILE__,__LINE__); \
   }                                                            
 // Log debug message
 
 #define DEBUG_LOG_ERRNO(message) \
   { \
-    std::ostringstream oss; \
+    std::ostringstream scxDebug_oss; \
     char buf[128]; \
-    oss << message << " (errno=" << errno << " " << strerror_r(errno,buf,128) << ")"; \
-    scx::Debug::get()->log(oss.str().c_str(),__FILE__,__LINE__); \
+    scxDebug_oss << message << " (errno=" << errno << " " << strerror_r(errno,buf,128) << ")"; \
+    scx::Debug::get()->log(scxDebug_oss.str().c_str(),__FILE__,__LINE__); \
   }                                                            
 // Log debug message with errno
 
@@ -66,18 +66,17 @@ class Mutex;
 
 #define DESCRIPTOR_DEBUG_LOG(message) \
   { \
-    std::ostringstream oss; \
-    oss << "[" << uid() << "] " << message; \
-    scx::Debug::get()->log(oss.str().c_str(),__FILE__,__LINE__); \
+    std::ostringstream scxDebug_oss; \
+    scxDebug_oss << "[" << uid() << "] " << message; \
+    scx::Debug::get()->log(scxDebug_oss.str().c_str(),__FILE__,__LINE__); \
   }                                                            
 // Log debug message with descriptor uid
 
 #define STREAM_DEBUG_LOG(message) \
   { \
-    std::ostringstream oss; \
-    oss << "[" << endpoint().uid() << "] " \
-        << message; \
-    scx::Debug::get()->log(oss.str().c_str(),__FILE__,__LINE__); \
+    std::ostringstream scxDebug_oss; \
+    scxDebug_oss << "[" << endpoint().uid() << "] " << message; \
+    scx::Debug::get()->log(scxDebug_oss.str().c_str(),__FILE__,__LINE__); \
   }                                                            
 // Log debug message with descriptor uid
   

@@ -143,6 +143,13 @@ void ScriptExpr::unregister_type(const std::string& type,
 }
 
 //===========================================================================
+ScriptObject* ScriptExpr::create_object(const std::string& type,
+					const ScriptRef* args)
+{
+  return s_standard_context->object()->provide(type,args);
+}
+
+//===========================================================================
 ScriptRef* ScriptExpr::expression(int p, bool f, bool exec)
 {
   ScriptRef* left = primary(f,exec);

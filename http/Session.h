@@ -57,6 +57,7 @@ public:
   
   // ScriptObject methods
   virtual std::string get_string() const;
+  virtual int get_int() const;
 
   virtual scx::ScriptRef* script_op(const scx::ScriptAuth& auth,
 				    const scx::ScriptRef& ref,

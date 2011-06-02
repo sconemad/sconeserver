@@ -30,6 +30,7 @@ Free Software Foundation, Inc.,
 #include <sconex/StreamSocket.h>
 #include <sconex/Kernel.h>
 #include <sconex/ScriptTypes.h>
+#include <sconex/ScriptExpr.h>
 namespace http {
 
 //=============================================================================
@@ -145,10 +146,9 @@ bool Client::run(const std::string& request_data)
   scx::ScriptList::Ref args(new scx::ScriptList());
   args.object()->give( scx::ScriptString::new_ref(addr_url.get_host()) );
   args.object()->give( scx::ScriptInt::new_ref(addr_url.get_port()) );
-  scx::ScriptMethodRef addr_method(ip,"addr");
-  scx::ScriptRef* addr_ref = addr_method.call(scx::ScriptAuth::Trusted,&args);
-  addr = (addr_ref ? 
-	  dynamic_cast<scx::SocketAddress*>(addr_ref->object()) : 0);
+
+  scx::ScriptObject* addr_obj = scx::ScriptExpr::create_object("IPAddr",&args);
+  addr = dynamic_cast<scx::SocketAddress*>(addr_obj);
 
   if (addr == 0) {
     DEBUG_LOG("Unable to create socket address");
@@ -176,7 +176,7 @@ bool Client::run(const std::string& request_data)
     scx::Stream* ssl = scx::Stream::create_new("ssl",&args);
     if (!ssl) {
       delete sock;
-      delete addr_ref;
+      delete addr;
       DEBUG_LOG("SSL support unavailable or not configured");
       return false;
     }
@@ -195,11 +195,11 @@ bool Client::run(const std::string& request_data)
   scx::Condition err = sock->connect(addr);
   if (err != scx::Ok && err != scx::Wait) {
     delete sock;
-    delete addr_ref;
+    delete addr;
     DEBUG_LOG("Unable to initiate connection");
     return false;
   }
-  delete addr_ref;
+  delete addr;
 
   // Give to the kernel for async processing
   if (!scx::Kernel::get()->connect(sock,0)) {
@@ -276,8 +276,6 @@ scx::Condition ClientStream::event(scx::Stream::Event e)
   switch (e) {
     
     case scx::Stream::Writeable: { // WRITEABLE
-      std::cerr << "W " << m_seq << "\n";
-
       if (m_seq == Send) {
         int na = 0;
         scx::Condition c = Stream::write(m_buffer->head(),m_buffer->used(),na);
@@ -302,7 +300,6 @@ scx::Condition ClientStream::event(scx::Stream::Event e)
     } break;
 
     case scx::Stream::Readable: { // READABLE
-      std::cerr << "R " << m_seq << "\n";
       std::string line;
 
       if (m_seq == RecieveResponse) {

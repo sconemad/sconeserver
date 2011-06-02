@@ -29,6 +29,8 @@ Free Software Foundation, Inc.,
 
 class Context;
 
+typedef std::map<std::string,std::string> NodeAttrs;
+
 //=========================================================================
 // ArticleBody - Sconesite article body interface
 //

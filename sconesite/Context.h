@@ -22,7 +22,7 @@ Free Software Foundation, Inc.,
 #ifndef sconesiteContext_h
 #define sconesiteContext_h
 
-#include "XMLDoc.h"
+#include "ArticleBody.h"
 #include <sconex/ScriptBase.h>
 
 //=========================================================================
@@ -34,21 +34,22 @@ public:
   Context();
   ~Context();
 
-  virtual bool handle_doc_start(XMLDoc* doc);
+  virtual bool handle_doc_start(ArticleBody* doc);
 
-  virtual bool handle_doc_end(XMLDoc* doc);
+  virtual bool handle_doc_end(ArticleBody* doc);
 
   virtual bool handle_start(const std::string& name, 
-			    XMLAttrs& attrs, 
+			    NodeAttrs& attrs, 
 			    bool empty, 
 			    void* data) =0;
 
   virtual bool handle_end(const std::string& name, 
-			  XMLAttrs& attr, 
+			  NodeAttrs& attr, 
 			  void* data) =0;
 
   virtual void handle_process(const std::string& name, 
-			      const char* data) =0;
+			      const char* data,
+			      int line) =0;
 
   virtual void handle_text(const char* text) =0;
 
@@ -58,10 +59,10 @@ public:
 
 protected:
 
-  XMLDoc* get_current_doc();
+  ArticleBody* get_current_doc();
   
-  typedef std::stack<XMLDoc*> XMLDocStack;
-  XMLDocStack m_doc_stack;
+  typedef std::stack<ArticleBody*> DocStack;
+  DocStack m_doc_stack;
   
 };
 

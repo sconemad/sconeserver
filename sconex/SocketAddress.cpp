@@ -111,7 +111,7 @@ int SocketAddress::get_int() const
 ScriptRef* SocketAddress::script_op(const ScriptAuth& auth,
 				    const ScriptRef& ref,
 				    const ScriptOp& op,
-				    ScriptRef* right)
+				    const ScriptRef* right)
 {
   if (ScriptOp::Lookup == op.type()) {
     std::string name = right->object()->get_string();

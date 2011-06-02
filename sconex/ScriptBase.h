@@ -182,6 +182,7 @@ protected:
 private:
 
   friend class ScriptRef;
+  friend class ScriptEngineExec;
   int add_ref();
   int remove_ref();
 
