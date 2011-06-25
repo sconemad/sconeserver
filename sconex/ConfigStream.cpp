@@ -85,6 +85,20 @@ Condition ConfigStream::event(Stream::Event e)
 	  m_output_mode = Serialized;
 	  continue;
 	}
+
+	if (buffer.find("set_int_type") == 0) {
+	  std::string::size_type i = buffer.find(" ");
+	  i = buffer.find_first_not_of(" ",i);
+	  m_proc.set_int_type(buffer.substr(i));
+	  continue;
+	}
+	
+	if (buffer.find("set_real_type") == 0) {
+	  std::string::size_type i = buffer.find(" ");
+	  i = buffer.find_first_not_of(" ",i);
+	  m_proc.set_real_type(buffer.substr(i));
+	  continue;
+	}
 	
 	ScriptRef* result = 0;
 	try {

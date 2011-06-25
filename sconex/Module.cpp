@@ -88,14 +88,15 @@ bool Module::close()
 {
   bool done = true;
   m_modules.reverse();
-  std::list<ModuleLoader*>::iterator it;
-  for (it = m_modules.begin(); it != m_modules.end(); it++) {
+  std::list<ModuleLoader*>::iterator it = m_modules.begin();
+  while (it != m_modules.end()) {
     ModuleLoader* loader = *it;
     if (loader->close()) {
       delete loader;
       it = m_modules.erase(it);
     } else {
       done = false;
+      ++it;
     }
   }
   m_modules.reverse();
@@ -379,6 +380,9 @@ ScriptRef* Module::script_method(const ScriptAuth& auth,
 
     if (loader->is_loaded()) {
       Module::Ref mod = loader->get_module();
+      if (!mod.object()->close()) {
+        return ScriptError::new_ref("Module [" + name + "] in use");
+      }
       int nr = mod.object()->num_refs() - 2;
       if (nr > 0) {
         return ScriptError::new_ref("Module [" + name + "] in use");

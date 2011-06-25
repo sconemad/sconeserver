@@ -23,6 +23,7 @@ Free Software Foundation, Inc.,
 #define scxUnitTester_h
 
 #include <sconex/sconex.h>
+#include <sconex/ScriptBase.h>
 
 //===========================================================================
 // Run unit tests for the specified file
@@ -60,6 +61,22 @@ Free Software Foundation, Inc.,
 
 
 namespace scx {
+
+//===========================================================================
+// Util functions for testing SconeScript ops  
+//
+void test_script_op(ScriptRef& left,
+		    const ScriptOp::OpType& op, // (binary)
+		    ScriptRef& right,
+		    const ScriptObject& expected);
+
+void test_script_op(const ScriptOp::OpType& op, // (prefix)
+		    ScriptRef& arg,
+		    const ScriptObject& expected);
+
+void test_script_op(ScriptRef& arg,
+		    const ScriptOp::OpType& op, // (postfix)
+		    const ScriptObject& expected);
 
 //===========================================================================
 class UnitTestResult {

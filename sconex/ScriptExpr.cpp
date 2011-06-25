@@ -44,7 +44,9 @@ ScriptRefTo<StandardContext>* ScriptExpr::s_standard_context = 0;
 
 //===========================================================================
 ScriptExpr::ScriptExpr(const ScriptAuth& auth, ScriptRef* ctx)
-  : m_auth(auth)
+  : m_auth(auth),
+    m_int_type("Int"),
+    m_real_type("Real")
 {
   init();
   m_contexts.push_back(s_standard_context);
@@ -54,6 +56,8 @@ ScriptExpr::ScriptExpr(const ScriptAuth& auth, ScriptRef* ctx)
 //===========================================================================
 ScriptExpr::ScriptExpr(const ScriptExpr& c)
   : m_auth(c.m_auth),
+    m_int_type(c.m_int_type),
+    m_real_type(c.m_real_type),
     m_contexts(c.m_contexts)
 {
   init();
@@ -127,10 +131,35 @@ const ScriptAuth& ScriptExpr::get_auth()
 }
   
 //===========================================================================
+void ScriptExpr::set_int_type(const std::string type)
+{
+  m_int_type = type;
+}
+
+//===========================================================================
+const std::string& ScriptExpr::get_int_type() const
+{
+  return m_int_type;
+}
+
+//===========================================================================
+void ScriptExpr::set_real_type(const std::string type)
+{
+  m_real_type = type;
+}
+
+//===========================================================================
+const std::string& ScriptExpr::get_real_type() const
+{
+  return m_real_type;
+}
+
+//===========================================================================
 void ScriptExpr::register_type(const std::string& type,
 			       Provider<ScriptObject>* factory)
 {
   init();
+  DEBUG_LOG("Registering standard type: " << type);
   s_standard_context->object()->register_provider(type,factory);
 }
 
@@ -139,6 +168,7 @@ void ScriptExpr::unregister_type(const std::string& type,
 				 Provider<ScriptObject>* factory)
 {
   init();
+  DEBUG_LOG("Unregistering standard type: " << type);
   s_standard_context->object()->unregister_provider(type,factory);
 }
 
@@ -590,21 +620,33 @@ void ScriptExpr::next()
     int ex=0;      // Counts exponentiations
     int num_dd=0;  // Counts decimal delimiters
     char pc=c;     // Previous c
+    int hex=0;
 
     while (++i < len) {
       c = m_expr[i];
-      ends = !isdigit(c);
+      ends = !isalnum(c);
       switch (c) {
-        case '.':
-          ends=false;
-          ++num_dd;
-          break;
-        case 'e': case 'E':
-          ends=(++ex>1);
-          break;
-        case '+': case '-':
-          ends=(pc!='e'&&pc!='E');
-          break;
+      case '.':
+	ends=false;
+	++num_dd;
+	break;
+      case 'x': case 'X':
+	ends=(++hex>1);
+	break;
+      case 'a': case 'A':
+      case 'b': case 'B':
+      case 'c': case 'C':
+      case 'd': case 'D':
+      case 'f': case 'F':
+	if (hex==1) ends=false;
+	break;
+      case 'e': case 'E':
+	if (hex==1) ends=false;
+	else ends=(++ex>1);
+	break;
+      case '+': case '-':
+	ends=(pc!='e'&&pc!='E');
+	break;
       }
       if (ends) break;
       pc=c;
@@ -614,24 +656,23 @@ void ScriptExpr::next()
     m_pos = i;
     m_type = ScriptExpr::Value;
 
-    if (num_dd==0) {
-      int value=atoi(m_name.c_str());
-      m_value = ScriptInt::new_ref(value);
-      ScriptExpr_DEBUG_LOG("next: (int) " << value);
-      return;
-      
-    } else if (num_dd==1) {
-      double value=atof(m_name.c_str());
-      m_value = ScriptReal::new_ref(value);
-      ScriptExpr_DEBUG_LOG("next: (real) " << value);
-      return;
-      
-    } else if (num_dd==3) {
-      // IP Address
-      m_value = ScriptString::new_ref(m_name);
-      ScriptExpr_DEBUG_LOG("next: (ipaddr) " << m_name);
+    scx::ScriptList::Ref args(new scx::ScriptList());
+    args.object()->give(ScriptString::new_ref(m_name));
+
+    if (num_dd==1 || ex == 1) {
+      m_value = new ScriptRef(create_object(m_real_type,&args));
+      ScriptExpr_DEBUG_LOG("next: (Real) " << value);
       return;
     }
+
+    if (num_dd==0) {
+      m_value = new ScriptRef(create_object(m_int_type,&args));
+      ScriptExpr_DEBUG_LOG("next: (Int) " << value);
+      return;
+    }
+
+    m_type = ScriptExpr::Null;
+    ScriptExpr_DEBUG_LOG("next: (bad value) " << m_name);
   }
 
   // Alpha
@@ -940,19 +981,17 @@ void StandardTypeProvider::provide(const std::string& type,
 				   const ScriptRef* args,
 				   ScriptObject*& object)
 {
-  const ScriptObject* a = get_method_arg<ScriptObject>(args,0,"value");
-  
   if ("String" == type) {
-    object = new ScriptString(a ? a->get_string() : "");
+    object = ScriptString::create(args);
 
   } else if ("Int" == type) {
-    object = new ScriptInt(a ? a->get_int() : 0);
+    object = ScriptInt::create(args);
 
   } else if ("Real" == type) {
-    object = new ScriptReal(a ? (double)a->get_int() : 0.0);
+    object = ScriptReal::create(args);
 
   } else if ("Error" == type) {
-    object = new ScriptError(a ? a->get_string() : "unknown");
+    object = ScriptError::create(args);
 
   } else if ("VersionTag" == type) {
     object = new VersionTag(args);

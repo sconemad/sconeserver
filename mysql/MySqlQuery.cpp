@@ -80,9 +80,9 @@ void MySqlArg::init_param(MYSQL_BIND& bind, const scx::ScriptRef* arg)
       m_length = sizeof(value);
       MySqlQuery_DEBUG_LOG("Binding long int param '" << value << "'");
       
-    } else if (typeid(scx::ScriptReal) == ti) {
+    } else if (typeid(scx::ScriptNum) == ti) {
       m_type = MYSQL_TYPE_DOUBLE;
-      double value = ((scx::ScriptReal*)obj)->get_real();
+      double value = ((scx::ScriptNum*)obj)->get_real();
       m_data.double_data = value;
       m_length = sizeof(value);
       MySqlQuery_DEBUG_LOG("Binding double param '" << value << "'");

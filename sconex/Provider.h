@@ -61,7 +61,7 @@ template<class T> class SCONEX_API ProviderScheme {
 public:
 
   typedef Provider<T> ProviderType;
-  typedef std::map<std::string, ProviderType*> ProviderMap;
+  typedef std::multimap<std::string, ProviderType*> ProviderMap;
   
   T* provide(const std::string& type, const ScriptRef* args);
   
@@ -81,11 +81,12 @@ template<class T> T* ProviderScheme<T>::provide(
   const ScriptRef* args
 )
 {
-  typename ProviderMap::iterator it = m_providers.find(type);
   Provider_DEBUG_LOG("provide("+type+","+
 		     (args ? args->object()->get_string() : "NULL") +")");
 
-  if (it == m_providers.end()) {
+  typename ProviderMap::iterator it = m_providers.upper_bound(type);
+  --it; // Use the last registered provider for this type
+  if (it == m_providers.end() || it->first != type) {
     return 0;
   }
 
@@ -101,12 +102,8 @@ template<class T> void ProviderScheme<T>::register_provider(
 )
 {
   Provider_DEBUG_LOG("register_provider("+type+")");
-  typename ProviderMap::iterator it = m_providers.find(type);
-  if (it != m_providers.end()) {
-    DEBUG_LOG("Type '"+type+"' already has a registered provider");
-  } else {
-    m_providers[type] = factory;
-  }
+
+  m_providers.insert( std::pair<std::string,Provider<T>*>(type,factory) );
 }
 
 //=============================================================================
@@ -115,13 +112,14 @@ template<class T> void ProviderScheme<T>::unregister_provider(
   ProviderType* factory)
 {
   Provider_DEBUG_LOG("unregister_provider("+type+")");
-  typename ProviderMap::iterator it = m_providers.find(type);
-  if (it != m_providers.end()) {
-    if (it->second != factory) {
-      DEBUG_LOG("Type '"+type+"' provider does not match already registered");
-    } else {
-      m_providers.erase(it);
-    }
+
+  typename ProviderMap::iterator it = m_providers.lower_bound(type);
+  typename ProviderMap::iterator max = m_providers.upper_bound(type);
+  while (it != max) {
+    if (it->second == factory) 
+      m_providers.erase(it++);
+    else 
+      ++it;
   }
 }
 

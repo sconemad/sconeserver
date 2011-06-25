@@ -298,8 +298,13 @@ public:
     return new ScriptRefTo<T>((T*)ScriptRef::object()->new_copy(),ref); 
   };
 
-  ScriptRefTo<T>& operator=(const ScriptRefTo<T>& c) { 
-    return ScriptRef::operator=(c); 
+  virtual ScriptRefTo<T>& operator=(const ScriptRefTo<T>& c) { 
+    if (this != &c && m_object != c.m_object) {
+      remove_ref();
+      m_object = c.m_object;
+      add_ref();
+    }
+    return *this;
   };
 
   // Is the ref valid (i.e. is it a ref to an object of type T)

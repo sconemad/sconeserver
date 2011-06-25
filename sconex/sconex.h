@@ -66,6 +66,10 @@ Free Software Foundation, Inc.,
 #  include <math.h>
 #endif
 
+#ifdef HAVE_LIMITS_H
+#  include <limits.h>
+#endif
+
 #ifdef HAVE_NETDB_H
 #  include <netdb.h>
 #endif

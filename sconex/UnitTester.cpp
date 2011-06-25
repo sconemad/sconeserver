@@ -22,6 +22,51 @@ Free Software Foundation, Inc.,
 #include <sconex/UnitTester.h>
 namespace scx {
 
+//=============================================================================
+static void test_script_op(ScriptRef& left,
+		    const ScriptOp::OpType& op,
+		    ScriptRef* right,
+		    const ScriptObject& expected)
+{
+  ScriptAuth auth(ScriptAuth::Admin);
+  UTCOD(ScriptRef* result = left.script_op(auth,op,right));
+  UTEST(result != 0);
+  std::cout << " result '" << result->object()->get_string()
+            << "' type '" << typeid(*result->object()).name() << "'\n";
+  std::cout << " expected '" << expected.get_string()
+            << "' type '" << typeid(expected).name() << "'\n";
+  UTEST(typeid(*result->object()) == typeid(expected));
+  UTEST(result->object()->get_int() == expected.get_int());
+  UTEST(result->object()->get_string() == expected.get_string());
+  delete result;
+}
+
+//=============================================================================
+void test_script_op(ScriptRef& left,
+		    const ScriptOp::OpType& op,
+		    ScriptRef& right,
+		    const ScriptObject& expected)
+{
+  test_script_op(left,op,&right,expected);
+}
+
+//=============================================================================
+void test_script_op(const ScriptOp::OpType& op,
+		    ScriptRef& arg,
+		    const ScriptObject& expected)
+{
+  test_script_op(arg,op,0,expected);
+}
+
+//=============================================================================
+void test_script_op(ScriptRef& arg,
+		    const ScriptOp::OpType& op,
+		    const ScriptObject& expected)
+{
+  test_script_op(arg,op,0,expected);
+}
+
+
 UnitTester* UnitTester::s_ut = 0;
 
 //=============================================================================

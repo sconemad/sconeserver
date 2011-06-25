@@ -16,7 +16,6 @@
 @SET_MAKE@
 
 # SconeServer (http://www.sconemad.com)
-# automake file for sconex library
 
 
 VPATH = @srcdir@
@@ -41,8 +40,8 @@ host_triplet = @host@
 target_triplet = @target@
 check_PROGRAMS = utest$(EXEEXT)
 TESTS = utest$(EXEEXT)
-subdir = sconex
-DIST_COMMON = $(sconexinclude_HEADERS) $(srcdir)/Makefile.am \
+subdir = maths
+DIST_COMMON = $(noinst_HEADERS) $(srcdir)/Makefile.am \
 	$(srcdir)/Makefile.in
 ACLOCAL_M4 = $(top_srcdir)/aclocal.m4
 am__aclocal_m4_deps = $(top_srcdir)/configure.in
@@ -73,35 +72,19 @@ am__nobase_list = $(am__nobase_strip_setup); \
 am__base_list = \
   sed '$$!N;$$!N;$$!N;$$!N;$$!N;$$!N;$$!N;s/\n/ /g' | \
   sed '$$!N;$$!N;$$!N;$$!N;s/\n/ /g'
-am__installdirs = "$(DESTDIR)$(libdir)" \
-	"$(DESTDIR)$(sconexincludedir)"
-LTLIBRARIES = $(lib_LTLIBRARIES)
-libsconex_la_LIBADD =
-am_libsconex_la_OBJECTS = sconex.lo utils.lo Base64.lo Buffer.lo \
-	ConfigFile.lo ConfigStream.lo Console.lo Database.lo \
-	DatagramChannel.lo DatagramMultiplexer.lo DatagramSocket.lo \
-	Date.lo Debug.lo Descriptor.lo File.lo FileDir.lo FilePath.lo \
-	FileStat.lo Job.lo Kernel.lo LineBuffer.lo ListenerSocket.lo \
-	Logger.lo MemFile.lo MimeHeader.lo MimeType.lo Module.lo \
-	ModuleLoader.lo ModuleLoaderDLL.lo Multiplexer.lo Mutex.lo \
-	NullFile.lo Process.lo RegExp.lo Response.lo ScriptBase.lo \
-	ScriptEngine.lo ScriptExpr.lo ScriptStatement.lo \
-	ScriptTypes.lo Socket.lo SocketAddress.lo Stream.lo \
-	StreamBuffer.lo StreamDebugger.lo StreamSocket.lo \
-	StreamTokenizer.lo StreamTransfer.lo TermBuffer.lo Thread.lo \
-	Time.lo UnitTester.lo Uri.lo User.lo VersionTag.lo
-libsconex_la_OBJECTS = $(am_libsconex_la_OBJECTS)
-libsconex_la_LINK = $(LIBTOOL) --tag=CXX $(AM_LIBTOOLFLAGS) \
+am__installdirs = "$(DESTDIR)$(pkglibdir)"
+LTLIBRARIES = $(pkglib_LTLIBRARIES)
+am__DEPENDENCIES_1 =
+maths_la_DEPENDENCIES = $(am__DEPENDENCIES_1)
+am_maths_la_OBJECTS = MathsModule.lo Num.lo
+maths_la_OBJECTS = $(am_maths_la_OBJECTS)
+maths_la_LINK = $(LIBTOOL) --tag=CXX $(AM_LIBTOOLFLAGS) \
 	$(LIBTOOLFLAGS) --mode=link $(CXXLD) $(AM_CXXFLAGS) \
-	$(CXXFLAGS) $(libsconex_la_LDFLAGS) $(LDFLAGS) -o $@
-am_utest_OBJECTS = utest.$(OBJEXT) Buffer_ut.$(OBJEXT) \
-	FilePath_ut.$(OBJEXT) LineBuffer_ut.$(OBJEXT) \
-	MemFile_ut.$(OBJEXT) MimeHeader_ut.$(OBJEXT) \
-	MimeType_ut.$(OBJEXT) ScriptTypes_ut.$(OBJEXT) \
-	TimeDate_ut.$(OBJEXT) Uri_ut.$(OBJEXT) utils_ut.$(OBJEXT) \
-	VersionTag_ut.$(OBJEXT)
+	$(CXXFLAGS) $(maths_la_LDFLAGS) $(LDFLAGS) -o $@
+@BUILD_MATHS_TRUE@am_maths_la_rpath = -rpath $(pkglibdir)
+am_utest_OBJECTS = utest.$(OBJEXT) Num_ut.$(OBJEXT)
 utest_OBJECTS = $(am_utest_OBJECTS)
-utest_DEPENDENCIES = libsconex.la
+utest_DEPENDENCIES = maths.la $(top_builddir)/sconex/libsconex.la
 DEFAULT_INCLUDES = -I.@am__isrc@ -I$(top_builddir)
 depcomp = $(SHELL) $(top_srcdir)/depcomp
 am__depfiles_maybe = depfiles
@@ -115,9 +98,9 @@ CXXLD = $(CXX)
 CXXLINK = $(LIBTOOL) --tag=CXX $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) \
 	--mode=link $(CXXLD) $(AM_CXXFLAGS) $(CXXFLAGS) $(AM_LDFLAGS) \
 	$(LDFLAGS) -o $@
-SOURCES = $(libsconex_la_SOURCES) $(utest_SOURCES)
-DIST_SOURCES = $(libsconex_la_SOURCES) $(utest_SOURCES)
-HEADERS = $(sconexinclude_HEADERS)
+SOURCES = $(maths_la_SOURCES) $(utest_SOURCES)
+DIST_SOURCES = $(maths_la_SOURCES) $(utest_SOURCES)
+HEADERS = $(noinst_HEADERS)
 ETAGS = etags
 CTAGS = ctags
 am__tty_colors = \
@@ -250,141 +233,22 @@ top_build_prefix = @top_build_prefix@
 top_builddir = @top_builddir@
 top_srcdir = @top_srcdir@
 AM_CPPFLAGS = -I$(top_srcdir)
-lib_LTLIBRARIES = libsconex.la
-libsconex_la_SOURCES = \
-sconex.cpp \
-utils.cpp \
-Base64.cpp \
-Buffer.cpp \
-ConfigFile.cpp \
-ConfigStream.cpp \
-Console.cpp \
-Database.cpp \
-DatagramChannel.cpp \
-DatagramMultiplexer.cpp \
-DatagramSocket.cpp \
-Date.cpp \
-Debug.cpp \
-Descriptor.cpp \
-File.cpp \
-FileDir.cpp \
-FilePath.cpp \
-FileStat.cpp \
-Job.cpp \
-Kernel.cpp \
-LineBuffer.cpp \
-ListenerSocket.cpp \
-Logger.cpp \
-MemFile.cpp \
-MimeHeader.cpp \
-MimeType.cpp \
-Module.cpp \
-ModuleLoader.cpp \
-ModuleLoaderDLL.cpp \
-Multiplexer.cpp \
-Mutex.cpp \
-NullFile.cpp \
-Process.cpp \
-RegExp.cpp \
-Response.cpp \
-ScriptBase.cpp \
-ScriptEngine.cpp \
-ScriptExpr.cpp \
-ScriptStatement.cpp \
-ScriptTypes.cpp \
-Socket.cpp \
-SocketAddress.cpp \
-Stream.cpp \
-StreamBuffer.cpp \
-StreamDebugger.cpp \
-StreamSocket.cpp \
-StreamTokenizer.cpp \
-StreamTransfer.cpp \
-TermBuffer.cpp \
-Thread.cpp \
-Time.cpp \
-UnitTester.cpp \
-Uri.cpp \
-User.cpp \
-VersionTag.cpp
+@BUILD_MATHS_TRUE@pkglib_LTLIBRARIES = maths.la
+maths_la_SOURCES = \
+MathsModule.cpp \
+Num.cpp
 
-sconexincludedir = $(includedir)/sconex
-sconexinclude_HEADERS = \
-sconex.h \
-utils.h \
-Base64.h \
-Buffer.h \
-ConfigFile.h \
-ConfigStream.h \
-Console.h \
-Database.h \
-DatagramChannel.h \
-DatagramMultiplexer.h \
-DatagramSocket.h \
-Date.h \
-Debug.h \
-Descriptor.h \
-File.h \
-FileDir.h \
-FilePath.h \
-FileStat.h \
-IOBase.h \
-Job.h \
-Kernel.h \
-LineBuffer.h \
-ListenerSocket.h \
-Logger.h \
-MemFile.h \
-MimeHeader.h \
-MimeType.h \
-Module.h \
-ModuleInterface.h \
-ModuleLoader.h \
-ModuleLoaderDLL.h \
-Multiplexer.h \
-Mutex.h \
-NullFile.h \
-Process.h \
-Provider.h \
-RegExp.h \
-Response.h \
-ScriptBase.h \
-ScriptEngine.h \
-ScriptExpr.h \
-ScriptStatement.h \
-ScriptTypes.h \
-Socket.h \
-SocketAddress.h \
-Stream.h \
-StreamBuffer.h \
-StreamDebugger.h \
-StreamSocket.h \
-StreamTokenizer.h \
-StreamTransfer.h \
-TermBuffer.h \
-Thread.h \
-Time.h \
-UnitTester.h \
-Uri.h \
-User.h \
-VersionTag.h
+noinst_HEADERS = \
+MathsModule.h \
+Num.h 
 
-libsconex_la_LDFLAGS = -version-info 1:0:0
+maths_la_LDFLAGS = -module -avoid-version
+maths_la_LIBADD = $(MATHS_LIBADD)
 utest_SOURCES = \
 utest.cpp \
-Buffer_ut.cpp \
-FilePath_ut.cpp \
-LineBuffer_ut.cpp \
-MemFile_ut.cpp \
-MimeHeader_ut.cpp \
-MimeType_ut.cpp \
-ScriptTypes_ut.cpp \
-TimeDate_ut.cpp \
-Uri_ut.cpp \
-utils_ut.cpp \
-VersionTag_ut.cpp
+Num_ut.cpp 
 
-utest_LDADD = libsconex.la
+utest_LDADD = maths.la $(top_builddir)/sconex/libsconex.la
 all: all-am
 
 .SUFFIXES:
@@ -398,9 +262,9 @@ $(srcdir)/Makefile.in: @MAINTAINER_MODE_TRUE@ $(srcdir)/Makefile.am  $(am__confi
 	      exit 1;; \
 	  esac; \
 	done; \
-	echo ' cd $(top_srcdir) && $(AUTOMAKE) --gnu sconex/Makefile'; \
+	echo ' cd $(top_srcdir) && $(AUTOMAKE) --gnu maths/Makefile'; \
 	$(am__cd) $(top_srcdir) && \
-	  $(AUTOMAKE) --gnu sconex/Makefile
+	  $(AUTOMAKE) --gnu maths/Makefile
 .PRECIOUS: Makefile
 Makefile: $(srcdir)/Makefile.in $(top_builddir)/config.status
 	@case '$?' in \
@@ -419,39 +283,39 @@ $(top_srcdir)/configure: @MAINTAINER_MODE_TRUE@ $(am__configure_deps)
 $(ACLOCAL_M4): @MAINTAINER_MODE_TRUE@ $(am__aclocal_m4_deps)
 	cd $(top_builddir) && $(MAKE) $(AM_MAKEFLAGS) am--refresh
 $(am__aclocal_m4_deps):
-install-libLTLIBRARIES: $(lib_LTLIBRARIES)
+install-pkglibLTLIBRARIES: $(pkglib_LTLIBRARIES)
 	@$(NORMAL_INSTALL)
-	test -z "$(libdir)" || $(MKDIR_P) "$(DESTDIR)$(libdir)"
-	@list='$(lib_LTLIBRARIES)'; test -n "$(libdir)" || list=; \
+	test -z "$(pkglibdir)" || $(MKDIR_P) "$(DESTDIR)$(pkglibdir)"
+	@list='$(pkglib_LTLIBRARIES)'; test -n "$(pkglibdir)" || list=; \
 	list2=; for p in $$list; do \
 	  if test -f $$p; then \
 	    list2="$$list2 $$p"; \
 	  else :; fi; \
 	done; \
 	test -z "$$list2" || { \
-	  echo " $(LIBTOOL) $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=install $(INSTALL) $(INSTALL_STRIP_FLAG) $$list2 '$(DESTDIR)$(libdir)'"; \
-	  $(LIBTOOL) $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=install $(INSTALL) $(INSTALL_STRIP_FLAG) $$list2 "$(DESTDIR)$(libdir)"; \
+	  echo " $(LIBTOOL) $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=install $(INSTALL) $(INSTALL_STRIP_FLAG) $$list2 '$(DESTDIR)$(pkglibdir)'"; \
+	  $(LIBTOOL) $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=install $(INSTALL) $(INSTALL_STRIP_FLAG) $$list2 "$(DESTDIR)$(pkglibdir)"; \
 	}
 
-uninstall-libLTLIBRARIES:
+uninstall-pkglibLTLIBRARIES:
 	@$(NORMAL_UNINSTALL)
-	@list='$(lib_LTLIBRARIES)'; test -n "$(libdir)" || list=; \
+	@list='$(pkglib_LTLIBRARIES)'; test -n "$(pkglibdir)" || list=; \
 	for p in $$list; do \
 	  $(am__strip_dir) \
-	  echo " $(LIBTOOL) $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=uninstall rm -f '$(DESTDIR)$(libdir)/$$f'"; \
-	  $(LIBTOOL) $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=uninstall rm -f "$(DESTDIR)$(libdir)/$$f"; \
+	  echo " $(LIBTOOL) $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=uninstall rm -f '$(DESTDIR)$(pkglibdir)/$$f'"; \
+	  $(LIBTOOL) $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=uninstall rm -f "$(DESTDIR)$(pkglibdir)/$$f"; \
 	done
 
-clean-libLTLIBRARIES:
-	-test -z "$(lib_LTLIBRARIES)" || rm -f $(lib_LTLIBRARIES)
-	@list='$(lib_LTLIBRARIES)'; for p in $$list; do \
+clean-pkglibLTLIBRARIES:
+	-test -z "$(pkglib_LTLIBRARIES)" || rm -f $(pkglib_LTLIBRARIES)
+	@list='$(pkglib_LTLIBRARIES)'; for p in $$list; do \
 	  dir="`echo $$p | sed -e 's|/[^/]*$$||'`"; \
 	  test "$$dir" != "$$p" || dir=.; \
 	  echo "rm -f \"$${dir}/so_locations\""; \
 	  rm -f "$${dir}/so_locations"; \
 	done
-libsconex.la: $(libsconex_la_OBJECTS) $(libsconex_la_DEPENDENCIES) 
-	$(libsconex_la_LINK) -rpath $(libdir) $(libsconex_la_OBJECTS) $(libsconex_la_LIBADD) $(LIBS)
+maths.la: $(maths_la_OBJECTS) $(maths_la_DEPENDENCIES) 
+	$(maths_la_LINK) $(am_maths_la_rpath) $(maths_la_OBJECTS) $(maths_la_LIBADD) $(LIBS)
 
 clean-checkPROGRAMS:
 	@list='$(check_PROGRAMS)'; test -n "$$list" || exit 0; \
@@ -471,73 +335,10 @@ mostlyclean-compile:
 distclean-compile:
 	-rm -f *.tab.c
 
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/Base64.Plo@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/Buffer.Plo@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/Buffer_ut.Po@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/ConfigFile.Plo@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/ConfigStream.Plo@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/Console.Plo@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/Database.Plo@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/DatagramChannel.Plo@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/DatagramMultiplexer.Plo@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/DatagramSocket.Plo@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/Date.Plo@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/Debug.Plo@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/Descriptor.Plo@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/File.Plo@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/FileDir.Plo@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/FilePath.Plo@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/FilePath_ut.Po@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/FileStat.Plo@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/Job.Plo@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/Kernel.Plo@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/LineBuffer.Plo@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/LineBuffer_ut.Po@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/ListenerSocket.Plo@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/Logger.Plo@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/MemFile.Plo@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/MemFile_ut.Po@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/MimeHeader.Plo@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/MimeHeader_ut.Po@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/MimeType.Plo@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/MimeType_ut.Po@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/Module.Plo@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/ModuleLoader.Plo@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/ModuleLoaderDLL.Plo@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/Multiplexer.Plo@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/Mutex.Plo@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/NullFile.Plo@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/Process.Plo@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/RegExp.Plo@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/Response.Plo@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/ScriptBase.Plo@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/ScriptEngine.Plo@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/ScriptExpr.Plo@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/ScriptStatement.Plo@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/ScriptTypes.Plo@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/ScriptTypes_ut.Po@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/Socket.Plo@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/SocketAddress.Plo@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/Stream.Plo@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/StreamBuffer.Plo@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/StreamDebugger.Plo@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/StreamSocket.Plo@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/StreamTokenizer.Plo@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/StreamTransfer.Plo@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/TermBuffer.Plo@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/Thread.Plo@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/Time.Plo@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/TimeDate_ut.Po@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/UnitTester.Plo@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/Uri.Plo@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/Uri_ut.Po@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/User.Plo@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/VersionTag.Plo@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/VersionTag_ut.Po@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/sconex.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/MathsModule.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/Num.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/Num_ut.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/utest.Po@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/utils.Plo@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/utils_ut.Po@am__quote@
 
 .cpp.o:
 @am__fastdepCXX_TRUE@	$(CXXCOMPILE) -MT $@ -MD -MP -MF $(DEPDIR)/$*.Tpo -c -o $@ $<
@@ -565,26 +366,6 @@ mostlyclean-libtool:
 
 clean-libtool:
 	-rm -rf .libs _libs
-install-sconexincludeHEADERS: $(sconexinclude_HEADERS)
-	@$(NORMAL_INSTALL)
-	test -z "$(sconexincludedir)" || $(MKDIR_P) "$(DESTDIR)$(sconexincludedir)"
-	@list='$(sconexinclude_HEADERS)'; test -n "$(sconexincludedir)" || list=; \
-	for p in $$list; do \
-	  if test -f "$$p"; then d=; else d="$(srcdir)/"; fi; \
-	  echo "$$d$$p"; \
-	done | $(am__base_list) | \
-	while read files; do \
-	  echo " $(INSTALL_HEADER) $$files '$(DESTDIR)$(sconexincludedir)'"; \
-	  $(INSTALL_HEADER) $$files "$(DESTDIR)$(sconexincludedir)" || exit $$?; \
-	done
-
-uninstall-sconexincludeHEADERS:
-	@$(NORMAL_UNINSTALL)
-	@list='$(sconexinclude_HEADERS)'; test -n "$(sconexincludedir)" || list=; \
-	files=`for p in $$list; do echo $$p; done | sed -e 's|^.*/||'`; \
-	test -n "$$files" || exit 0; \
-	echo " ( cd '$(DESTDIR)$(sconexincludedir)' && rm -f" $$files ")"; \
-	cd "$(DESTDIR)$(sconexincludedir)" && rm -f $$files
 
 ID: $(HEADERS) $(SOURCES) $(LISP) $(TAGS_FILES)
 	list='$(SOURCES) $(HEADERS) $(LISP) $(TAGS_FILES)'; \
@@ -766,7 +547,7 @@ check-am: all-am
 check: check-am
 all-am: Makefile $(LTLIBRARIES) $(HEADERS)
 installdirs:
-	for dir in "$(DESTDIR)$(libdir)" "$(DESTDIR)$(sconexincludedir)"; do \
+	for dir in "$(DESTDIR)$(pkglibdir)"; do \
 	  test -z "$$dir" || $(MKDIR_P) "$$dir"; \
 	done
 install: install-am
@@ -796,8 +577,8 @@ maintainer-clean-generic:
 	@echo "it deletes files that may require special tools to rebuild."
 clean: clean-am
 
-clean-am: clean-checkPROGRAMS clean-generic clean-libLTLIBRARIES \
-	clean-libtool mostlyclean-am
+clean-am: clean-checkPROGRAMS clean-generic clean-libtool \
+	clean-pkglibLTLIBRARIES mostlyclean-am
 
 distclean: distclean-am
 	-rm -rf ./$(DEPDIR)
@@ -817,13 +598,13 @@ info: info-am
 
 info-am:
 
-install-data-am: install-sconexincludeHEADERS
+install-data-am:
 
 install-dvi: install-dvi-am
 
 install-dvi-am:
 
-install-exec-am: install-libLTLIBRARIES
+install-exec-am: install-pkglibLTLIBRARIES
 
 install-html: install-html-am
 
@@ -863,25 +644,24 @@ ps: ps-am
 
 ps-am:
 
-uninstall-am: uninstall-libLTLIBRARIES uninstall-sconexincludeHEADERS
+uninstall-am: uninstall-pkglibLTLIBRARIES
 
 .MAKE: check-am install-am install-strip
 
 .PHONY: CTAGS GTAGS all all-am check check-TESTS check-am clean \
-	clean-checkPROGRAMS clean-generic clean-libLTLIBRARIES \
-	clean-libtool ctags distclean distclean-compile \
+	clean-checkPROGRAMS clean-generic clean-libtool \
+	clean-pkglibLTLIBRARIES ctags distclean distclean-compile \
 	distclean-generic distclean-libtool distclean-tags distdir dvi \
 	dvi-am html html-am info info-am install install-am \
 	install-data install-data-am install-dvi install-dvi-am \
 	install-exec install-exec-am install-html install-html-am \
-	install-info install-info-am install-libLTLIBRARIES \
-	install-man install-pdf install-pdf-am install-ps \
-	install-ps-am install-sconexincludeHEADERS install-strip \
-	installcheck installcheck-am installdirs maintainer-clean \
-	maintainer-clean-generic mostlyclean mostlyclean-compile \
-	mostlyclean-generic mostlyclean-libtool pdf pdf-am ps ps-am \
-	tags uninstall uninstall-am uninstall-libLTLIBRARIES \
-	uninstall-sconexincludeHEADERS
+	install-info install-info-am install-man install-pdf \
+	install-pdf-am install-pkglibLTLIBRARIES install-ps \
+	install-ps-am install-strip installcheck installcheck-am \
+	installdirs maintainer-clean maintainer-clean-generic \
+	mostlyclean mostlyclean-compile mostlyclean-generic \
+	mostlyclean-libtool pdf pdf-am ps ps-am tags uninstall \
+	uninstall-am uninstall-pkglibLTLIBRARIES
 
 
 # Tell versions [3.59,3.63) of GNU make to not export all variables.

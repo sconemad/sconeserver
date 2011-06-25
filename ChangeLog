@@ -1,4 +1,22 @@
 
+2011-06-03 Andrew Wedgbury <wedge@sconemad.com>
+	
+	* sconex/Provider: Allow multiple providers for a particular type,
+	where the last one registered is used.
+	* sconex/ScriptExpr: Allow int and real literal types to be set.
+	Support constants in standard context.
+	* sconex/ConfigStream: Add set_int_type and set_real_type commands.
+	* sconex/ScriptTypes: Relax arg type rules for list and map lookup.
+	Add static create() methods for use by providers.
+	Add ScriptNum type as intermediate base for ScriptInt and ScriptReal.
+	* sconex/ScriptBase: Add operator= for ScriptRefTo.
+	* http/AuthRealmDB: Use DB type from arguments (was hardcoded MySQL).
+	* sconex/UnitTester: Add test_script_op fns (from ScriptTypes_ut.cpp).
+	* sconex/Module: Fix module unloading.
+	* mysql/MySqlQuery: Treat ScriptNum types as MYSQL_TYPE_DOUBLE.
+	* maths: New module with basic maths functionality.
+	* maths/Num: SconeScript mathematical number using libmpfr & libgmp.
+	
 2011-06-02 Andrew Wedgbury <wedge@sconemad.com>
 
 	* sconex/ScriptExpr: Add create_object() method to programatically

@@ -126,7 +126,8 @@ void Kernel::connect_config_console()
   c->add_stream( new TermBuffer("term") );
   c->add_stream( new ConfigStream(new ScriptRef(this),true) );
   //  c->add_stream( new ScriptEngineExec(ScriptAuth::Admin,
-  //  				      new ScriptRef(this)) );
+  //  				      new ScriptRef(this),
+  //  				      "console") );
   connect(c,0);
 }
 

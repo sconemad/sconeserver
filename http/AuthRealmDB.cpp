@@ -56,12 +56,20 @@ std::string HTTPUser::get_string() const
 AuthRealmDB::AuthRealmDB(HTTPModule* module,
 			 const scx::ScriptRef* args)
   : AuthRealm(""),
-    m_module(module)
+    m_module(module),
+    m_db(0)
 {
   DEBUG_COUNT_CONSTRUCTOR(AuthRealmDB);
   m_parent = module;
 
-  m_db = scx::Database::open("MySQL",args);
+  const scx::ScriptString* type =
+    scx::get_method_arg<scx::ScriptString>(args,0,"type");
+
+  if (type) {
+    m_db = scx::Database::open(type->get_string(),args);
+  } else {
+    DEBUG_LOG("No DB type specified");
+  }
 }
 
 //=========================================================================
@@ -75,6 +83,8 @@ AuthRealmDB::~AuthRealmDB()
 scx::ScriptRef* AuthRealmDB::authorised(const std::string& username,
 					const std::string& password)
 {
+  if (!m_db) return 0;
+
   std::auto_ptr<scx::DbQuery> query(m_db->object()->new_query(
     "SELECT id,password FROM user WHERE username = ?"));
   

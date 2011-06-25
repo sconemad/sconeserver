@@ -216,6 +216,22 @@ if test "x$MYSQL" == "xyes"; then
   )
 fi
 
+# Maths module 
+# depends on libmpfr and libgmp (libmpfr-dev and libgmp-dev in Debian)
+# Include by default if libmpfr headers are found
+AC_ARG_WITH([maths],
+  [AC_HELP_STRING([--with-maths],[Enable Maths module])],
+  [MATHS="$withval"],
+  [AC_CHECK_HEADER([mpfr.h],[MATHS="yes"],[MATHS="no"])]
+)
+# Need libgmp and libmpfr library for maths
+if test "x$MATHS" == "xyes"; then
+  AC_CHECK_LIB([mpfr],[mpfr_init],
+    [MATHS_LIBADD="-lgmp -lmpfr"
+     AC_SUBST(MATHS_LIBADD)],
+    [AC_MSG_ERROR([libraries 'mpfr' and 'gmp' are required for the maths module])]
+  )
+fi
 
 # Checks for header files.
 AC_HEADER_STDC
@@ -228,7 +244,7 @@ AC_CHECK_HEADERS([string iostream iomanip fstream sstream map list queue stack s
 AC_CHECK_HEADERS([tr1/unordered_map ext/hash_map])
 AC_CHECK_HEADERS([sys/utsname.h typeinfo cxxabi.h])
 AC_CHECK_HEADERS([crypt.h shadow.h])
-AC_CHECK_HEADERS([math.h])
+AC_CHECK_HEADERS([math.h limits.h])
 AC_CHECK_HEADERS([pcre.h])
 
 # Checks for typedefs, structures, and compiler characteristics.
@@ -298,6 +314,7 @@ AM_CONDITIONAL(BUILD_SCONESITE, test x$SCONESITE = xyes)
 AM_CONDITIONAL(BUILD_SCONESITE_IMAGE, test x$SCONESITE_IMAGE = xyes)
 AM_CONDITIONAL(BUILD_RSS, test x$RSS = xyes)
 AM_CONDITIONAL(BUILD_MYSQL, test x$MYSQL = xyes)
+AM_CONDITIONAL(BUILD_MATHS, test x$MATHS = xyes)
 
 AC_CONFIG_FILES([Makefile])
 AC_CONFIG_FILES([sconex/Makefile])
@@ -328,6 +345,7 @@ AC_CONFIG_FILES([lettuce/Makefile])
 AC_CONFIG_FILES([mysql/Makefile])
 AC_CONFIG_FILES([smtp/Makefile])
 AC_CONFIG_FILES([rss/Makefile])
+AC_CONFIG_FILES([maths/Makefile])
 
 AC_OUTPUT
 
@@ -361,6 +379,7 @@ The following modules will be built:
   + mysql          $MYSQL
   + smtp	   yes
   + rss            $RSS
+  + maths          $MATHS
   + testbuilder    $TESTBUILDER
   + lettuce        $LETTUCE
   + test           yes

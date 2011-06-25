@@ -57,6 +57,14 @@ public:
   void set_auth(const ScriptAuth& auth);
   const ScriptAuth& get_auth();
 
+  // Set type to use for integer literals (default "Int")
+  void set_int_type(const std::string type);
+  const std::string& get_int_type() const;
+
+  // Set type to use for real literals (default "Real")
+  void set_real_type(const std::string type);
+  const std::string& get_real_type() const;
+
   // Register/unregister object types
   // Modules can use these methods to register object types that they 
   // provide, to make them available in the standard context.
@@ -106,6 +114,12 @@ protected:
 
   // Current authority
   ScriptAuth m_auth;
+
+  // Type for integer literals
+  std::string m_int_type;
+
+  // Type for real literals
+  std::string m_real_type;
 
   // Execution contexts
   typedef std::list<ScriptRef*> ContextList;

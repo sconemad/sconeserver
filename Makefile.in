@@ -193,6 +193,7 @@ LN_S = @LN_S@
 LTLIBOBJS = @LTLIBOBJS@
 MAINT = @MAINT@
 MAKEINFO = @MAKEINFO@
+MATHS_LIBADD = @MATHS_LIBADD@
 MKDIR_P = @MKDIR_P@
 MYSQL_LIBADD = @MYSQL_LIBADD@
 NM = @NM@
@@ -303,7 +304,8 @@ testbuilder \
 lettuce \
 mysql \
 smtp \
-rss
+rss \
+maths
 
 SUBDIRS = sconex examples $(MODULES)
 doc_DATA = AUTHORS COPYING ChangeLog INSTALL NEWS README THANKS TODO

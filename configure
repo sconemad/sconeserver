@@ -745,6 +745,8 @@ ac_func_list=
 ac_subst_vars='am__EXEEXT_FALSE
 am__EXEEXT_TRUE
 LTLIBOBJS
+BUILD_MATHS_FALSE
+BUILD_MATHS_TRUE
 BUILD_MYSQL_FALSE
 BUILD_MYSQL_TRUE
 BUILD_RSS_FALSE
@@ -772,6 +774,7 @@ BUILD_IP_TRUE
 BUILD_SERVER_FALSE
 BUILD_SERVER_TRUE
 LIBOBJS
+MATHS_LIBADD
 MYSQL_LIBADD
 SCONESITE_IMAGE_LDFLAGS
 SCONESITE_IMAGE_LIBADD
@@ -920,6 +923,7 @@ with_sconesite
 with_sconesite_image
 with_rss
 with_mysql
+with_maths
 '
       ac_precious_vars='build_alias
 host_alias
@@ -1586,6 +1590,7 @@ Optional Packages:
   --with-sconesite-image  Enable Sconesite:image module
   --with-rss              Enable rss module
   --with-mysql            Enable MySQL Database module
+  --with-maths            Enable Maths module
 
 Some influential environment variables:
   CXX         C++ compiler command
@@ -5470,13 +5475,13 @@ if test "${lt_cv_nm_interface+set}" = set; then :
 else
   lt_cv_nm_interface="BSD nm"
   echo "int some_variable = 0;" > conftest.$ac_ext
-  (eval echo "\"\$as_me:5473: $ac_compile\"" >&5)
+  (eval echo "\"\$as_me:5478: $ac_compile\"" >&5)
   (eval "$ac_compile" 2>conftest.err)
   cat conftest.err >&5
-  (eval echo "\"\$as_me:5476: $NM \\\"conftest.$ac_objext\\\"\"" >&5)
+  (eval echo "\"\$as_me:5481: $NM \\\"conftest.$ac_objext\\\"\"" >&5)
   (eval "$NM \"conftest.$ac_objext\"" 2>conftest.err > conftest.out)
   cat conftest.err >&5
-  (eval echo "\"\$as_me:5479: output\"" >&5)
+  (eval echo "\"\$as_me:5484: output\"" >&5)
   cat conftest.out >&5
   if $GREP 'External.*some_variable' conftest.out > /dev/null; then
     lt_cv_nm_interface="MS dumpbin"
@@ -6671,7 +6676,7 @@ ia64-*-hpux*)
   ;;
 *-*-irix6*)
   # Find out which ABI we are using.
-  echo '#line 6674 "configure"' > conftest.$ac_ext
+  echo '#line 6679 "configure"' > conftest.$ac_ext
   if { { eval echo "\"\$as_me\":${as_lineno-$LINENO}: \"$ac_compile\""; } >&5
   (eval $ac_compile) 2>&5
   ac_status=$?
@@ -8692,11 +8697,11 @@ else
    -e 's:.*FLAGS}\{0,1\} :&$lt_compiler_flag :; t' \
    -e 's: [^ ]*conftest\.: $lt_compiler_flag&:; t' \
    -e 's:$: $lt_compiler_flag:'`
-   (eval echo "\"\$as_me:8695: $lt_compile\"" >&5)
+   (eval echo "\"\$as_me:8700: $lt_compile\"" >&5)
    (eval "$lt_compile" 2>conftest.err)
    ac_status=$?
    cat conftest.err >&5
-   echo "$as_me:8699: \$? = $ac_status" >&5
+   echo "$as_me:8704: \$? = $ac_status" >&5
    if (exit $ac_status) && test -s "$ac_outfile"; then
      # The compiler can only warn and ignore the option if not recognized
      # So say no if there are warnings other than the usual output.
@@ -9031,11 +9036,11 @@ else
    -e 's:.*FLAGS}\{0,1\} :&$lt_compiler_flag :; t' \
    -e 's: [^ ]*conftest\.: $lt_compiler_flag&:; t' \
    -e 's:$: $lt_compiler_flag:'`
-   (eval echo "\"\$as_me:9034: $lt_compile\"" >&5)
+   (eval echo "\"\$as_me:9039: $lt_compile\"" >&5)
    (eval "$lt_compile" 2>conftest.err)
    ac_status=$?
    cat conftest.err >&5
-   echo "$as_me:9038: \$? = $ac_status" >&5
+   echo "$as_me:9043: \$? = $ac_status" >&5
    if (exit $ac_status) && test -s "$ac_outfile"; then
      # The compiler can only warn and ignore the option if not recognized
      # So say no if there are warnings other than the usual output.
@@ -9136,11 +9141,11 @@ else
    -e 's:.*FLAGS}\{0,1\} :&$lt_compiler_flag :; t' \
    -e 's: [^ ]*conftest\.: $lt_compiler_flag&:; t' \
    -e 's:$: $lt_compiler_flag:'`
-   (eval echo "\"\$as_me:9139: $lt_compile\"" >&5)
+   (eval echo "\"\$as_me:9144: $lt_compile\"" >&5)
    (eval "$lt_compile" 2>out/conftest.err)
    ac_status=$?
    cat out/conftest.err >&5
-   echo "$as_me:9143: \$? = $ac_status" >&5
+   echo "$as_me:9148: \$? = $ac_status" >&5
    if (exit $ac_status) && test -s out/conftest2.$ac_objext
    then
      # The compiler can only warn and ignore the option if not recognized
@@ -9191,11 +9196,11 @@ else
    -e 's:.*FLAGS}\{0,1\} :&$lt_compiler_flag :; t' \
    -e 's: [^ ]*conftest\.: $lt_compiler_flag&:; t' \
    -e 's:$: $lt_compiler_flag:'`
-   (eval echo "\"\$as_me:9194: $lt_compile\"" >&5)
+   (eval echo "\"\$as_me:9199: $lt_compile\"" >&5)
    (eval "$lt_compile" 2>out/conftest.err)
    ac_status=$?
    cat out/conftest.err >&5
-   echo "$as_me:9198: \$? = $ac_status" >&5
+   echo "$as_me:9203: \$? = $ac_status" >&5
    if (exit $ac_status) && test -s out/conftest2.$ac_objext
    then
      # The compiler can only warn and ignore the option if not recognized
@@ -11574,7 +11579,7 @@ else
   lt_dlunknown=0; lt_dlno_uscore=1; lt_dlneed_uscore=2
   lt_status=$lt_dlunknown
   cat > conftest.$ac_ext <<_LT_EOF
-#line 11577 "configure"
+#line 11582 "configure"
 #include "confdefs.h"
 
 #if HAVE_DLFCN_H
@@ -11670,7 +11675,7 @@ else
   lt_dlunknown=0; lt_dlno_uscore=1; lt_dlneed_uscore=2
   lt_status=$lt_dlunknown
   cat > conftest.$ac_ext <<_LT_EOF
-#line 11673 "configure"
+#line 11678 "configure"
 #include "confdefs.h"
 
 #if HAVE_DLFCN_H
@@ -13626,11 +13631,11 @@ else
    -e 's:.*FLAGS}\{0,1\} :&$lt_compiler_flag :; t' \
    -e 's: [^ ]*conftest\.: $lt_compiler_flag&:; t' \
    -e 's:$: $lt_compiler_flag:'`
-   (eval echo "\"\$as_me:13629: $lt_compile\"" >&5)
+   (eval echo "\"\$as_me:13634: $lt_compile\"" >&5)
    (eval "$lt_compile" 2>conftest.err)
    ac_status=$?
    cat conftest.err >&5
-   echo "$as_me:13633: \$? = $ac_status" >&5
+   echo "$as_me:13638: \$? = $ac_status" >&5
    if (exit $ac_status) && test -s "$ac_outfile"; then
      # The compiler can only warn and ignore the option if not recognized
      # So say no if there are warnings other than the usual output.
@@ -13725,11 +13730,11 @@ else
    -e 's:.*FLAGS}\{0,1\} :&$lt_compiler_flag :; t' \
    -e 's: [^ ]*conftest\.: $lt_compiler_flag&:; t' \
    -e 's:$: $lt_compiler_flag:'`
-   (eval echo "\"\$as_me:13728: $lt_compile\"" >&5)
+   (eval echo "\"\$as_me:13733: $lt_compile\"" >&5)
    (eval "$lt_compile" 2>out/conftest.err)
    ac_status=$?
    cat out/conftest.err >&5
-   echo "$as_me:13732: \$? = $ac_status" >&5
+   echo "$as_me:13737: \$? = $ac_status" >&5
    if (exit $ac_status) && test -s out/conftest2.$ac_objext
    then
      # The compiler can only warn and ignore the option if not recognized
@@ -13777,11 +13782,11 @@ else
    -e 's:.*FLAGS}\{0,1\} :&$lt_compiler_flag :; t' \
    -e 's: [^ ]*conftest\.: $lt_compiler_flag&:; t' \
    -e 's:$: $lt_compiler_flag:'`
-   (eval echo "\"\$as_me:13780: $lt_compile\"" >&5)
+   (eval echo "\"\$as_me:13785: $lt_compile\"" >&5)
    (eval "$lt_compile" 2>out/conftest.err)
    ac_status=$?
    cat out/conftest.err >&5
-   echo "$as_me:13784: \$? = $ac_status" >&5
+   echo "$as_me:13789: \$? = $ac_status" >&5
    if (exit $ac_status) && test -s out/conftest2.$ac_objext
    then
      # The compiler can only warn and ignore the option if not recognized
@@ -15609,6 +15614,72 @@ fi
 
 fi
 
+# Maths module
+# depends on libmpfr and libgmp (libmpfr-dev and libgmp-dev in Debian)
+# Include by default if libmpfr headers are found
+
+# Check whether --with-maths was given.
+if test "${with_maths+set}" = set; then :
+  withval=$with_maths; MATHS="$withval"
+else
+  ac_fn_cxx_check_header_mongrel "$LINENO" "mpfr.h" "ac_cv_header_mpfr_h" "$ac_includes_default"
+if test "x$ac_cv_header_mpfr_h" = x""yes; then :
+  MATHS="yes"
+else
+  MATHS="no"
+fi
+
+
+
+fi
+
+# Need libgmp and libmpfr library for maths
+if test "x$MATHS" == "xyes"; then
+  { $as_echo "$as_me:${as_lineno-$LINENO}: checking for mpfr_init in -lmpfr" >&5
+$as_echo_n "checking for mpfr_init in -lmpfr... " >&6; }
+if test "${ac_cv_lib_mpfr_mpfr_init+set}" = set; then :
+  $as_echo_n "(cached) " >&6
+else
+  ac_check_lib_save_LIBS=$LIBS
+LIBS="-lmpfr  $LIBS"
+cat confdefs.h - <<_ACEOF >conftest.$ac_ext
+/* end confdefs.h.  */
+
+/* Override any GCC internal prototype to avoid an error.
+   Use char because int might match the return type of a GCC
+   builtin and then its argument prototype would still apply.  */
+#ifdef __cplusplus
+extern "C"
+#endif
+char mpfr_init ();
+int
+main ()
+{
+return mpfr_init ();
+  ;
+  return 0;
+}
+_ACEOF
+if ac_fn_cxx_try_link "$LINENO"; then :
+  ac_cv_lib_mpfr_mpfr_init=yes
+else
+  ac_cv_lib_mpfr_mpfr_init=no
+fi
+rm -f core conftest.err conftest.$ac_objext \
+    conftest$ac_exeext conftest.$ac_ext
+LIBS=$ac_check_lib_save_LIBS
+fi
+{ $as_echo "$as_me:${as_lineno-$LINENO}: result: $ac_cv_lib_mpfr_mpfr_init" >&5
+$as_echo "$ac_cv_lib_mpfr_mpfr_init" >&6; }
+if test "x$ac_cv_lib_mpfr_mpfr_init" = x""yes; then :
+  MATHS_LIBADD="-lgmp -lmpfr"
+
+else
+  as_fn_error "libraries 'mpfr' and 'gmp' are required for the maths module" "$LINENO" 5
+
+fi
+
+fi
 
 # Checks for header files.
 { $as_echo "$as_me:${as_lineno-$LINENO}: checking for ANSI C header files" >&5
@@ -15994,12 +16065,14 @@ fi
 
 done
 
-for ac_header in math.h
+for ac_header in math.h limits.h
 do :
-  ac_fn_cxx_check_header_mongrel "$LINENO" "math.h" "ac_cv_header_math_h" "$ac_includes_default"
-if test "x$ac_cv_header_math_h" = x""yes; then :
+  as_ac_Header=`$as_echo "ac_cv_header_$ac_header" | $as_tr_sh`
+ac_fn_cxx_check_header_mongrel "$LINENO" "$ac_header" "$as_ac_Header" "$ac_includes_default"
+eval as_val=\$$as_ac_Header
+   if test "x$as_val" = x""yes; then :
   cat >>confdefs.h <<_ACEOF
-#define HAVE_MATH_H 1
+#define `$as_echo "HAVE_$ac_header" | $as_tr_cpp` 1
 _ACEOF
 
 fi
@@ -17312,6 +17385,14 @@ else
   BUILD_MYSQL_FALSE=
 fi
 
+ if test x$MATHS = xyes; then
+  BUILD_MATHS_TRUE=
+  BUILD_MATHS_FALSE='#'
+else
+  BUILD_MATHS_TRUE='#'
+  BUILD_MATHS_FALSE=
+fi
+
 
 ac_config_files="$ac_config_files Makefile"
 
@@ -17370,6 +17451,8 @@ ac_config_files="$ac_config_files mysql/Makefile"
 ac_config_files="$ac_config_files smtp/Makefile"
 
 ac_config_files="$ac_config_files rss/Makefile"
+
+ac_config_files="$ac_config_files maths/Makefile"
 
 
 cat >confcache <<\_ACEOF
@@ -17547,6 +17630,10 @@ Usually this means the macro was only invoked conditionally." "$LINENO" 5
 fi
 if test -z "${BUILD_MYSQL_TRUE}" && test -z "${BUILD_MYSQL_FALSE}"; then
   as_fn_error "conditional \"BUILD_MYSQL\" was never defined.
+Usually this means the macro was only invoked conditionally." "$LINENO" 5
+fi
+if test -z "${BUILD_MATHS_TRUE}" && test -z "${BUILD_MATHS_FALSE}"; then
+  as_fn_error "conditional \"BUILD_MATHS\" was never defined.
 Usually this means the macro was only invoked conditionally." "$LINENO" 5
 fi
 
@@ -18525,6 +18612,7 @@ do
     "mysql/Makefile") CONFIG_FILES="$CONFIG_FILES mysql/Makefile" ;;
     "smtp/Makefile") CONFIG_FILES="$CONFIG_FILES smtp/Makefile" ;;
     "rss/Makefile") CONFIG_FILES="$CONFIG_FILES rss/Makefile" ;;
+    "maths/Makefile") CONFIG_FILES="$CONFIG_FILES maths/Makefile" ;;
 
   *) as_fn_error "invalid argument: \`$ac_config_target'" "$LINENO" 5;;
   esac
@@ -20075,6 +20163,7 @@ The following modules will be built:
   + mysql          $MYSQL
   + smtp	   yes
   + rss            $RSS
+  + maths          $MATHS
   + testbuilder    $TESTBUILDER
   + lettuce        $LETTUCE
   + test           yes
@@ -20110,6 +20199,7 @@ The following modules will be built:
   + mysql          $MYSQL
   + smtp	   yes
   + rss            $RSS
+  + maths          $MATHS
   + testbuilder    $TESTBUILDER
   + lettuce        $LETTUCE
   + test           yes

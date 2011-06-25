@@ -31,7 +31,8 @@ testbuilder \
 lettuce \
 mysql \
 smtp \
-rss
+rss \
+maths
 
 SUBDIRS = sconex examples $(MODULES)
 

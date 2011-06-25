@@ -55,6 +55,7 @@ public:
   ScriptString(const ScriptString& c);
   virtual ~ScriptString();
 
+  static ScriptObject* create(const ScriptRef* args);
   virtual ScriptObject* new_copy() const;
 
   virtual std::string get_string() const;
@@ -82,6 +83,19 @@ protected:
 
 
 //=============================================================================
+// ScriptNum - A SconeScript numeric type
+//
+class SCONEX_API ScriptNum : public ScriptObject {
+public:
+
+  virtual double get_real() const;
+
+  typedef ScriptRefTo<ScriptNum> Ref;
+
+};
+
+
+//=============================================================================
 // ScriptInt - A SconeScript integer
 //
 // SconeScript ops:
@@ -94,16 +108,18 @@ protected:
 //   int! // factorial
 //   int++ int-- // postincrement, postdecrement
 //
-class SCONEX_API ScriptInt : public ScriptObject {
+class SCONEX_API ScriptInt : public ScriptNum {
 public:
 
   // Convenience method to create a new ScriptRef to a new ScriptInt
   static ScriptRef* new_ref(int value);
 
-  ScriptInt(int value);
+  ScriptInt(long value);
   ScriptInt(const ScriptInt& c);
   virtual ~ScriptInt();
 
+  static ScriptObject* from_string(const std::string& str, int base=10);
+  static ScriptObject* create(const ScriptRef* args);
   virtual ScriptObject* new_copy() const;
 
   virtual std::string get_string() const;
@@ -116,11 +132,11 @@ public:
   
   virtual void serialize(IOBase& output) const;
 
-  typedef ScriptRefTo<ScriptInt> Ref;
+  typedef ScriptRefTo<ScriptNum> Ref;
 
 protected:
 
-  int m_value;
+  long m_value;
 
 };
 
@@ -139,7 +155,7 @@ protected:
 //   int! // factorial
 //   int++ int-- // postincrement, postdecrement
 //
-class SCONEX_API ScriptReal : public ScriptObject {
+class SCONEX_API ScriptReal : public ScriptNum {
 public:
 
   // Convenience method to create a new ScriptRef to a new ScriptReal
@@ -149,6 +165,7 @@ public:
   ScriptReal(const ScriptReal& c);
   virtual ~ScriptReal();
 
+  static ScriptObject* create(const ScriptRef* args);
   virtual ScriptObject* new_copy() const;
 
   virtual std::string get_string() const;
@@ -352,6 +369,7 @@ public:
   ScriptError(const ScriptError& c);
   virtual ~ScriptError();
 
+  static ScriptObject* create(const ScriptRef* args);
   virtual ScriptObject* new_copy() const;
 
   virtual std::string get_string() const;

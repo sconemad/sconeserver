@@ -96,6 +96,13 @@ ScriptString::~ScriptString()
 }
 
 //===========================================================================
+ScriptObject* ScriptString::create(const ScriptRef* args)
+{
+  const ScriptRef* value = get_method_arg_ref(args,0,"value");
+  return new ScriptString(value ? value->object()->get_string() : "");
+}
+
+//===========================================================================
 ScriptObject* ScriptString::new_copy() const
 {
   return new ScriptString(*this);
@@ -232,6 +239,15 @@ void ScriptString::serialize(IOBase& output) const
 }
 
 
+// ### ScriptNum ###
+
+//===========================================================================
+double ScriptNum::get_real() const
+{
+  return (double)get_int();
+}
+
+
 // ### ScriptInt ###
 
 //===========================================================================
@@ -241,7 +257,7 @@ ScriptRef* ScriptInt::new_ref(int value)
 }
 
 //===========================================================================
-ScriptInt::ScriptInt(int value)
+ScriptInt::ScriptInt(long value)
   : m_value(value)
 {
   DEBUG_COUNT_CONSTRUCTOR(ScriptInt);
@@ -249,7 +265,7 @@ ScriptInt::ScriptInt(int value)
 
 //===========================================================================
 ScriptInt::ScriptInt(const ScriptInt& c)
-  : ScriptObject(c),
+  : ScriptNum(c),
     m_value(c.m_value)
 {
   DEBUG_COUNT_CONSTRUCTOR(ScriptInt);
@@ -259,6 +275,57 @@ ScriptInt::ScriptInt(const ScriptInt& c)
 ScriptInt::~ScriptInt()
 {
   DEBUG_COUNT_DESTRUCTOR(ScriptInt);
+}
+
+//===========================================================================
+ScriptObject* ScriptInt::from_string(const std::string& str, int base)
+{
+  const char* cs = str.c_str();
+  if (str.length() >= 2 && str[0] == '0') {
+    char t = str[1];
+    if (isdigit(t)) {
+      base = 8;
+      cs += 1;
+    } else {
+      switch (t) {
+      case 'b': base = 2; break;
+      case 't': base = 3; break;
+      case 'o': base = 8; break;
+      case 'd': base = 10; break;
+      case 'x': base = 16; break;
+      default: 
+	return new ScriptError("Unknown base");
+      }
+      cs += 2;
+    }
+  }
+
+  char* end = 0;
+  long l = strtol(cs, &end, base);
+  if (*end != '\0') {
+    return new ScriptError("Bad integer format '"+str+"'");
+  }
+  if (l == LONG_MAX || l == LONG_MIN) {
+    return new ScriptError("Integer overflow");
+  }
+
+  return new ScriptInt(l);
+}
+
+//===========================================================================
+ScriptObject* ScriptInt::create(const ScriptRef* args)
+{
+  const ScriptRef* value = get_method_arg_ref(args,0,"value");
+  if (!value) {
+    return new ScriptInt(0);
+  }
+
+  const ScriptString* str = dynamic_cast<const ScriptString*>(value->object());
+  if (str) {
+    return ScriptInt::from_string(str->get_string());
+  }
+  
+  return new ScriptInt(value->object()->get_int());
 }
 
 //===========================================================================
@@ -352,6 +419,11 @@ ScriptRef* ScriptInt::script_op(const ScriptAuth& auth,
 
       default: break;
       }
+
+    } else if (dynamic_cast<const ScriptReal*>(right->object())) {
+      // Promote to real and use real ops
+      ScriptReal lr((double)m_value);
+      return lr.script_op(auth,ref,op,right);
     }
 
   } else { // prefix or postfix ops
@@ -431,7 +503,7 @@ ScriptReal::ScriptReal(double value)
 
 //===========================================================================
 ScriptReal::ScriptReal(const ScriptReal& c)
-  : ScriptObject(c),
+  : ScriptNum(c),
     m_value(c.m_value)
 {
   DEBUG_COUNT_CONSTRUCTOR(ScriptReal);
@@ -441,6 +513,31 @@ ScriptReal::ScriptReal(const ScriptReal& c)
 ScriptReal::~ScriptReal()
 {
   DEBUG_COUNT_DESTRUCTOR(ScriptReal);
+}
+
+//===========================================================================
+ScriptObject* ScriptReal::create(const ScriptRef* args)
+{
+  const ScriptRef* value = get_method_arg_ref(args,0,"value");
+  if (!value) {
+    return new ScriptReal(0.0);
+  }
+  const ScriptString* str = dynamic_cast<const ScriptString*>(value->object());
+  if (str) {
+    char* end = 0;
+    double d = strtod(str->get_string().c_str(),&end);
+    if (*end == '\0') {
+      return new ScriptReal(d);
+    }
+    return new ScriptError("Bad numeric format '"+str->get_string()+"'");
+  }
+
+  const ScriptReal* real = dynamic_cast<const ScriptReal*>(value->object());
+  if (real) {
+    return new ScriptReal(real->get_real());
+  }
+
+  return new ScriptReal((double)value->object()->get_int());
 }
 
 //===========================================================================
@@ -470,9 +567,11 @@ ScriptRef* ScriptReal::script_op(const ScriptAuth& auth,
 				 const ScriptRef* right)
 {
   if (right) { // binary ops
-    const ScriptReal* rnum = dynamic_cast<const ScriptReal*> (right->object());
-    if (rnum) { // Real x Real ops
-      double rvalue = rnum->get_real();
+    const ScriptReal* rnum = dynamic_cast<const ScriptReal*>(right->object());
+    const ScriptInt* rint = dynamic_cast<const ScriptInt*>(right->object());
+
+    if (rnum || rint) { // Real x Real (or converted int) ops
+      double rvalue = rnum ? rnum->get_real() : (double)rint->get_int();
       switch (op.type()) {
 	
       case ScriptOp::Add:
@@ -651,9 +750,7 @@ ScriptRef* ScriptList::script_op(const ScriptAuth& auth,
 
   case ScriptOp::Subscript:
     {
-      const ScriptInt* aidx = dynamic_cast<const ScriptInt*> (right->object());
-      if (!aidx) return ScriptError::new_ref("Subscript must be integer");
-      int idx = aidx->get_int();
+      int idx = right->object()->get_int();
       if (idx < 0 || idx >= (int)m_list.size()) {
 	return ScriptError::new_ref("Array index out of bounds");
       }
@@ -923,10 +1020,7 @@ ScriptRef* ScriptMap::script_op(const ScriptAuth& auth,
 
   case ScriptOp::Subscript:
     {
-      const ScriptString* akey = 
-	dynamic_cast<const ScriptString*>(right->object());
-      if (!akey) return ScriptError::new_ref("Key must be a string");
-      ScriptRef* a = lookup(akey->get_string());
+      ScriptRef* a = lookup(right->object()->get_string());
       if (!a) return ScriptError::new_ref("Not defined");
       return a->ref_copy(ref.reftype());
     }
@@ -1226,6 +1320,13 @@ ScriptError::ScriptError(const ScriptError& c)
 ScriptError::~ScriptError()
 {
   DEBUG_COUNT_DESTRUCTOR(ScriptError);
+}
+
+//===========================================================================
+ScriptObject* ScriptError::create(const ScriptRef* args)
+{
+  const ScriptRef* value = get_method_arg_ref(args,0,"value");
+  return new ScriptError(value ? value->object()->get_string() : "unknown");
 }
 
 //===========================================================================
