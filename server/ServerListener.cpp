@@ -69,7 +69,7 @@ scx::Condition ServerListener::event(scx::Stream::Event e)
       if (m_module.object()->connect(s,&args)) {
 	
 	// Socket connected succesfully, give to kernel
-	scx::Kernel::get()->connect(s,0);
+	scx::Kernel::get()->connect(s);
 	
       } else {
 	// Failed to chain connection, terminate it

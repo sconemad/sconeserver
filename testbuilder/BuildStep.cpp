@@ -228,7 +228,7 @@ bool BuildStep::launch()
     delete process;
     return false;
   }
-  scx::Kernel::get()->connect(file,0);
+  scx::Kernel::get()->connect(file);
   file->write(oss_log.str());
 
   m_process_mutex.lock();
@@ -239,7 +239,7 @@ bool BuildStep::launch()
   xfer->set_close_when_finished(true);
   file->add_stream(xfer);
   
-  scx::Kernel::get()->connect(process,0);
+  scx::Kernel::get()->connect(process);
   m_process_mutex.unlock();
 
   return err;

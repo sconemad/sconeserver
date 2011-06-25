@@ -52,9 +52,7 @@ ConnectionChain::~ConnectionChain()
 }
 
 //=============================================================================
-bool ConnectionChain::connect(
-  scx::Descriptor* d
-)
+bool ConnectionChain::connect(scx::Descriptor* d)
 {
   for (ConnectionNodeList::iterator it = m_nodes.begin();
        it != m_nodes.end();
@@ -202,7 +200,7 @@ scx::ScriptRef* ConnectionChain::script_method(const scx::ScriptAuth& auth,
 
       //log("Listening on " + sa->get_string());
       
-      scx::Kernel::get()->connect(ls,0);
+      scx::Kernel::get()->connect(ls);
 
     } else {
       // DATAGRAM socket
@@ -220,7 +218,7 @@ scx::ScriptRef* ConnectionChain::script_method(const scx::ScriptAuth& auth,
 	new ServerDatagramMultiplexer(m_module.object(), m_name);
       ds->add_stream(mp);
   
-      scx::Kernel::get()->connect(ds,0);
+      scx::Kernel::get()->connect(ds);
     }
     return 0;
   }
@@ -242,7 +240,7 @@ scx::ScriptRef* ConnectionChain::script_method(const scx::ScriptAuth& auth,
 
     if (connect(ds)) {
       //log("Listening (all) on " + sa->get_string());
-      scx::Kernel::get()->connect(ds,0);
+      scx::Kernel::get()->connect(ds);
     } else {
       delete ds;
       return scx::ScriptError::new_ref("Failed to create chain");

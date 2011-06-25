@@ -30,9 +30,13 @@ namespace scx {
 
 //=============================================================================
 class SCONEX_API Kernel : public Module {
-
 public:
 
+  // Create a new sconex kernel for this app - must be called once at startup
+    static Kernel* create(const std::string& appname, 
+			  const VersionTag& version = scx::version());
+
+  // Get the kernel object singleton
   static Kernel* get();
   
   virtual ~Kernel();
@@ -42,17 +46,19 @@ public:
   virtual int init();
   virtual bool close();
 
-  int run();
+  // Run the kernel event loop.
+  // Returns either when the multiplexer runs out of descriptors, or a shutdown
+  // or restart is requested.
+  // A return value of 0 indicates a restart has been requested.
+  // If console is true, spawns a configuration console on stdin/stdout.
+  int run(bool console);
 
   void connect_config_console();
 
   virtual void set_logger(Logger* logger);
   
-  // Connect descriptor
-  virtual bool connect(
-    Descriptor* d,
-    ScriptRef* args
-  );
+  // Add a descriptor job to the kernel
+  virtual bool connect(Descriptor* d);
 
   // Add a job to the kernel
   JobID add_job(Job* job);
@@ -77,7 +83,7 @@ public:
   
 protected:
 
-  Kernel();
+  Kernel(const std::string& appname, const VersionTag& version);
 
 private:
 

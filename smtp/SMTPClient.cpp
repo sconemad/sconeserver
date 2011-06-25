@@ -199,7 +199,7 @@ scx::ScriptRef* SMTPClient::send(const std::string& message)
   m_mutex.lock();
   
   // Give to the kernel for async processing
-  if (!scx::Kernel::get()->connect(sock,0)) {
+  if (!scx::Kernel::get()->connect(sock)) {
     m_mutex.unlock();
     delete sock;
     DEBUG_LOG("System failure");

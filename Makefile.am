@@ -32,7 +32,8 @@ lettuce \
 mysql \
 smtp \
 rss \
-maths
+maths \
+ui
 
 SUBDIRS = sconex examples $(MODULES)
 

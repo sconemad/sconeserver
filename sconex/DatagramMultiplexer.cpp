@@ -62,7 +62,7 @@ scx::Condition DatagramMultiplexer::event(scx::Stream::Event e)
       channel = new DatagramChannel(*sock,*this,sa);
       if (channel_open(channel)) {
 	m_channels[sa->get_string()] = channel;
-	scx::Kernel::get()->connect(channel,0);
+	scx::Kernel::get()->connect(channel);
       } else {
 	delete channel;
       }

@@ -255,7 +255,7 @@ scx::Condition SconesiteStream::start_section(const scx::MimeHeaderTable& header
 	scx::StreamTransfer* xfer = new scx::StreamTransfer(&endpoint());
 	file->add_stream(xfer);
 	// Add file to kernel
-	scx::Kernel::get()->connect(file,0);
+	scx::Kernel::get()->connect(file);
 	file = 0;
 	return scx::Ok;
       }
@@ -274,7 +274,7 @@ scx::Condition SconesiteStream::start_section(const scx::MimeHeaderTable& header
   scx::NullFile* file = new scx::NullFile();
   scx::StreamTransfer* xfer = new scx::StreamTransfer(&endpoint());
   file->add_stream(xfer);
-  scx::Kernel::get()->connect(file,0);
+  scx::Kernel::get()->connect(file);
   resp.set_status(http::Status::Unauthorized);
   return scx::Ok;  
 }

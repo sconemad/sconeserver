@@ -1,6 +1,13 @@
 
 2011-06-25 Andrew Wedgbury <wedge@sconemad.com>
 
+	* sconex/Kernel: Tidy up kernel interface, pass app name and version.
+	* all: Remove unused second argument from kernel connect() calls.
+	* sconed: Simplify using new kernel interface.
+	* ui: Outline experimental new User Interface module.
+	
+2011-06-25 Andrew Wedgbury <wedge@sconemad.com>
+
 	* all: Changes to make libsconex an independent application framework:
 	Make module entry point macro more generic SCONEX_MODULE.
 	* sconex/Kernel: Change sconeserver to sconex.

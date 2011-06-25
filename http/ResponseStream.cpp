@@ -394,7 +394,7 @@ bool ResponseStream::send_file(const scx::FilePath& path)
   endpoint().add_stream(xfer);
 
   // Add file to kernel table
-  scx::Kernel::get()->connect(file,0);
+  scx::Kernel::get()->connect(file);
   
   return true;
 }

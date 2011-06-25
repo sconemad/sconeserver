@@ -745,6 +745,8 @@ ac_func_list=
 ac_subst_vars='am__EXEEXT_FALSE
 am__EXEEXT_TRUE
 LTLIBOBJS
+BUILD_UI_FALSE
+BUILD_UI_TRUE
 BUILD_MATHS_FALSE
 BUILD_MATHS_TRUE
 BUILD_MYSQL_FALSE
@@ -774,6 +776,7 @@ BUILD_IP_TRUE
 BUILD_SERVER_FALSE
 BUILD_SERVER_TRUE
 LIBOBJS
+UI_LIBADD
 MATHS_LIBADD
 MYSQL_LIBADD
 SCONESITE_IMAGE_LDFLAGS
@@ -924,6 +927,7 @@ with_sconesite_image
 with_rss
 with_mysql
 with_maths
+with_ui
 '
       ac_precious_vars='build_alias
 host_alias
@@ -1591,6 +1595,7 @@ Optional Packages:
   --with-rss              Enable rss module
   --with-mysql            Enable MySQL Database module
   --with-maths            Enable Maths module
+  --with-ui               Enable ui module
 
 Some influential environment variables:
   CXX         C++ compiler command
@@ -5475,13 +5480,13 @@ if test "${lt_cv_nm_interface+set}" = set; then :
 else
   lt_cv_nm_interface="BSD nm"
   echo "int some_variable = 0;" > conftest.$ac_ext
-  (eval echo "\"\$as_me:5478: $ac_compile\"" >&5)
+  (eval echo "\"\$as_me:5483: $ac_compile\"" >&5)
   (eval "$ac_compile" 2>conftest.err)
   cat conftest.err >&5
-  (eval echo "\"\$as_me:5481: $NM \\\"conftest.$ac_objext\\\"\"" >&5)
+  (eval echo "\"\$as_me:5486: $NM \\\"conftest.$ac_objext\\\"\"" >&5)
   (eval "$NM \"conftest.$ac_objext\"" 2>conftest.err > conftest.out)
   cat conftest.err >&5
-  (eval echo "\"\$as_me:5484: output\"" >&5)
+  (eval echo "\"\$as_me:5489: output\"" >&5)
   cat conftest.out >&5
   if $GREP 'External.*some_variable' conftest.out > /dev/null; then
     lt_cv_nm_interface="MS dumpbin"
@@ -6676,7 +6681,7 @@ ia64-*-hpux*)
   ;;
 *-*-irix6*)
   # Find out which ABI we are using.
-  echo '#line 6679 "configure"' > conftest.$ac_ext
+  echo '#line 6684 "configure"' > conftest.$ac_ext
   if { { eval echo "\"\$as_me\":${as_lineno-$LINENO}: \"$ac_compile\""; } >&5
   (eval $ac_compile) 2>&5
   ac_status=$?
@@ -8697,11 +8702,11 @@ else
    -e 's:.*FLAGS}\{0,1\} :&$lt_compiler_flag :; t' \
    -e 's: [^ ]*conftest\.: $lt_compiler_flag&:; t' \
    -e 's:$: $lt_compiler_flag:'`
-   (eval echo "\"\$as_me:8700: $lt_compile\"" >&5)
+   (eval echo "\"\$as_me:8705: $lt_compile\"" >&5)
    (eval "$lt_compile" 2>conftest.err)
    ac_status=$?
    cat conftest.err >&5
-   echo "$as_me:8704: \$? = $ac_status" >&5
+   echo "$as_me:8709: \$? = $ac_status" >&5
    if (exit $ac_status) && test -s "$ac_outfile"; then
      # The compiler can only warn and ignore the option if not recognized
      # So say no if there are warnings other than the usual output.
@@ -9036,11 +9041,11 @@ else
    -e 's:.*FLAGS}\{0,1\} :&$lt_compiler_flag :; t' \
    -e 's: [^ ]*conftest\.: $lt_compiler_flag&:; t' \
    -e 's:$: $lt_compiler_flag:'`
-   (eval echo "\"\$as_me:9039: $lt_compile\"" >&5)
+   (eval echo "\"\$as_me:9044: $lt_compile\"" >&5)
    (eval "$lt_compile" 2>conftest.err)
    ac_status=$?
    cat conftest.err >&5
-   echo "$as_me:9043: \$? = $ac_status" >&5
+   echo "$as_me:9048: \$? = $ac_status" >&5
    if (exit $ac_status) && test -s "$ac_outfile"; then
      # The compiler can only warn and ignore the option if not recognized
      # So say no if there are warnings other than the usual output.
@@ -9141,11 +9146,11 @@ else
    -e 's:.*FLAGS}\{0,1\} :&$lt_compiler_flag :; t' \
    -e 's: [^ ]*conftest\.: $lt_compiler_flag&:; t' \
    -e 's:$: $lt_compiler_flag:'`
-   (eval echo "\"\$as_me:9144: $lt_compile\"" >&5)
+   (eval echo "\"\$as_me:9149: $lt_compile\"" >&5)
    (eval "$lt_compile" 2>out/conftest.err)
    ac_status=$?
    cat out/conftest.err >&5
-   echo "$as_me:9148: \$? = $ac_status" >&5
+   echo "$as_me:9153: \$? = $ac_status" >&5
    if (exit $ac_status) && test -s out/conftest2.$ac_objext
    then
      # The compiler can only warn and ignore the option if not recognized
@@ -9196,11 +9201,11 @@ else
    -e 's:.*FLAGS}\{0,1\} :&$lt_compiler_flag :; t' \
    -e 's: [^ ]*conftest\.: $lt_compiler_flag&:; t' \
    -e 's:$: $lt_compiler_flag:'`
-   (eval echo "\"\$as_me:9199: $lt_compile\"" >&5)
+   (eval echo "\"\$as_me:9204: $lt_compile\"" >&5)
    (eval "$lt_compile" 2>out/conftest.err)
    ac_status=$?
    cat out/conftest.err >&5
-   echo "$as_me:9203: \$? = $ac_status" >&5
+   echo "$as_me:9208: \$? = $ac_status" >&5
    if (exit $ac_status) && test -s out/conftest2.$ac_objext
    then
      # The compiler can only warn and ignore the option if not recognized
@@ -11579,7 +11584,7 @@ else
   lt_dlunknown=0; lt_dlno_uscore=1; lt_dlneed_uscore=2
   lt_status=$lt_dlunknown
   cat > conftest.$ac_ext <<_LT_EOF
-#line 11582 "configure"
+#line 11587 "configure"
 #include "confdefs.h"
 
 #if HAVE_DLFCN_H
@@ -11675,7 +11680,7 @@ else
   lt_dlunknown=0; lt_dlno_uscore=1; lt_dlneed_uscore=2
   lt_status=$lt_dlunknown
   cat > conftest.$ac_ext <<_LT_EOF
-#line 11678 "configure"
+#line 11683 "configure"
 #include "confdefs.h"
 
 #if HAVE_DLFCN_H
@@ -13631,11 +13636,11 @@ else
    -e 's:.*FLAGS}\{0,1\} :&$lt_compiler_flag :; t' \
    -e 's: [^ ]*conftest\.: $lt_compiler_flag&:; t' \
    -e 's:$: $lt_compiler_flag:'`
-   (eval echo "\"\$as_me:13634: $lt_compile\"" >&5)
+   (eval echo "\"\$as_me:13639: $lt_compile\"" >&5)
    (eval "$lt_compile" 2>conftest.err)
    ac_status=$?
    cat conftest.err >&5
-   echo "$as_me:13638: \$? = $ac_status" >&5
+   echo "$as_me:13643: \$? = $ac_status" >&5
    if (exit $ac_status) && test -s "$ac_outfile"; then
      # The compiler can only warn and ignore the option if not recognized
      # So say no if there are warnings other than the usual output.
@@ -13730,11 +13735,11 @@ else
    -e 's:.*FLAGS}\{0,1\} :&$lt_compiler_flag :; t' \
    -e 's: [^ ]*conftest\.: $lt_compiler_flag&:; t' \
    -e 's:$: $lt_compiler_flag:'`
-   (eval echo "\"\$as_me:13733: $lt_compile\"" >&5)
+   (eval echo "\"\$as_me:13738: $lt_compile\"" >&5)
    (eval "$lt_compile" 2>out/conftest.err)
    ac_status=$?
    cat out/conftest.err >&5
-   echo "$as_me:13737: \$? = $ac_status" >&5
+   echo "$as_me:13742: \$? = $ac_status" >&5
    if (exit $ac_status) && test -s out/conftest2.$ac_objext
    then
      # The compiler can only warn and ignore the option if not recognized
@@ -13782,11 +13787,11 @@ else
    -e 's:.*FLAGS}\{0,1\} :&$lt_compiler_flag :; t' \
    -e 's: [^ ]*conftest\.: $lt_compiler_flag&:; t' \
    -e 's:$: $lt_compiler_flag:'`
-   (eval echo "\"\$as_me:13785: $lt_compile\"" >&5)
+   (eval echo "\"\$as_me:13790: $lt_compile\"" >&5)
    (eval "$lt_compile" 2>out/conftest.err)
    ac_status=$?
    cat out/conftest.err >&5
-   echo "$as_me:13789: \$? = $ac_status" >&5
+   echo "$as_me:13794: \$? = $ac_status" >&5
    if (exit $ac_status) && test -s out/conftest2.$ac_objext
    then
      # The compiler can only warn and ignore the option if not recognized
@@ -15681,6 +15686,74 @@ fi
 
 fi
 
+# Ui module
+# depends on libX11
+# Include by default if X headers are found
+
+# Check whether --with-ui was given.
+if test "${with_ui+set}" = set; then :
+  withval=$with_ui; UI="$withval"
+else
+  ac_fn_cxx_check_header_mongrel "$LINENO" "X11/Xlib.h" "ac_cv_header_X11_Xlib_h" "$ac_includes_default"
+if test "x$ac_cv_header_X11_Xlib_h" = x""yes; then :
+  UI="yes"
+else
+  UI="no"
+fi
+
+
+
+fi
+
+# Need libX11 library for ui
+if test "x$UI" == "xyes"; then
+  { $as_echo "$as_me:${as_lineno-$LINENO}: checking for XOpenDisplay in -lX11" >&5
+$as_echo_n "checking for XOpenDisplay in -lX11... " >&6; }
+if test "${ac_cv_lib_X11_XOpenDisplay+set}" = set; then :
+  $as_echo_n "(cached) " >&6
+else
+  ac_check_lib_save_LIBS=$LIBS
+LIBS="-lX11  $LIBS"
+cat confdefs.h - <<_ACEOF >conftest.$ac_ext
+/* end confdefs.h.  */
+
+/* Override any GCC internal prototype to avoid an error.
+   Use char because int might match the return type of a GCC
+   builtin and then its argument prototype would still apply.  */
+#ifdef __cplusplus
+extern "C"
+#endif
+char XOpenDisplay ();
+int
+main ()
+{
+return XOpenDisplay ();
+  ;
+  return 0;
+}
+_ACEOF
+if ac_fn_cxx_try_link "$LINENO"; then :
+  ac_cv_lib_X11_XOpenDisplay=yes
+else
+  ac_cv_lib_X11_XOpenDisplay=no
+fi
+rm -f core conftest.err conftest.$ac_objext \
+    conftest$ac_exeext conftest.$ac_ext
+LIBS=$ac_check_lib_save_LIBS
+fi
+{ $as_echo "$as_me:${as_lineno-$LINENO}: result: $ac_cv_lib_X11_XOpenDisplay" >&5
+$as_echo "$ac_cv_lib_X11_XOpenDisplay" >&6; }
+if test "x$ac_cv_lib_X11_XOpenDisplay" = x""yes; then :
+  UI_LIBADD="-lX11"
+
+else
+  as_fn_error "library 'X11' is required for the ui module" "$LINENO" 5
+
+fi
+
+fi
+
+
 # Checks for header files.
 { $as_echo "$as_me:${as_lineno-$LINENO}: checking for ANSI C header files" >&5
 $as_echo_n "checking for ANSI C header files... " >&6; }
@@ -17393,6 +17466,14 @@ else
   BUILD_MATHS_FALSE=
 fi
 
+ if test x$UI = xyes; then
+  BUILD_UI_TRUE=
+  BUILD_UI_FALSE='#'
+else
+  BUILD_UI_TRUE='#'
+  BUILD_UI_FALSE=
+fi
+
 
 ac_config_files="$ac_config_files Makefile"
 
@@ -17453,6 +17534,8 @@ ac_config_files="$ac_config_files smtp/Makefile"
 ac_config_files="$ac_config_files rss/Makefile"
 
 ac_config_files="$ac_config_files maths/Makefile"
+
+ac_config_files="$ac_config_files ui/Makefile"
 
 
 cat >confcache <<\_ACEOF
@@ -17634,6 +17717,10 @@ Usually this means the macro was only invoked conditionally." "$LINENO" 5
 fi
 if test -z "${BUILD_MATHS_TRUE}" && test -z "${BUILD_MATHS_FALSE}"; then
   as_fn_error "conditional \"BUILD_MATHS\" was never defined.
+Usually this means the macro was only invoked conditionally." "$LINENO" 5
+fi
+if test -z "${BUILD_UI_TRUE}" && test -z "${BUILD_UI_FALSE}"; then
+  as_fn_error "conditional \"BUILD_UI\" was never defined.
 Usually this means the macro was only invoked conditionally." "$LINENO" 5
 fi
 
@@ -18613,6 +18700,7 @@ do
     "smtp/Makefile") CONFIG_FILES="$CONFIG_FILES smtp/Makefile" ;;
     "rss/Makefile") CONFIG_FILES="$CONFIG_FILES rss/Makefile" ;;
     "maths/Makefile") CONFIG_FILES="$CONFIG_FILES maths/Makefile" ;;
+    "ui/Makefile") CONFIG_FILES="$CONFIG_FILES ui/Makefile" ;;
 
   *) as_fn_error "invalid argument: \`$ac_config_target'" "$LINENO" 5;;
   esac
@@ -20164,6 +20252,7 @@ The following modules will be built:
   + smtp	   yes
   + rss            $RSS
   + maths          $MATHS
+  + ui             $UI
   + testbuilder    $TESTBUILDER
   + lettuce        $LETTUCE
   + test           yes
@@ -20200,6 +20289,7 @@ The following modules will be built:
   + smtp	   yes
   + rss            $RSS
   + maths          $MATHS
+  + ui             $UI
   + testbuilder    $TESTBUILDER
   + lettuce        $LETTUCE
   + test           yes

@@ -204,7 +204,7 @@ scx::Condition GetFileStream::event(scx::Stream::Event e)
     endpoint().add_stream(xfer);
     
     // Add file to kernel
-    scx::Kernel::get()->connect(file,0);
+    scx::Kernel::get()->connect(file);
   }
   
   return scx::Ok;

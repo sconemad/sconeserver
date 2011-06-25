@@ -16,7 +16,7 @@
 @SET_MAKE@
 
 # SconeServer (http://www.sconemad.com)
-# automake file for http getfile module
+
 
 VPATH = @srcdir@
 pkgdatadir = $(datadir)/@PACKAGE@
@@ -38,8 +38,9 @@ POST_UNINSTALL = :
 build_triplet = @build@
 host_triplet = @host@
 target_triplet = @target@
-subdir = http/getfile
-DIST_COMMON = $(srcdir)/Makefile.am $(srcdir)/Makefile.in
+subdir = ui
+DIST_COMMON = $(noinst_HEADERS) $(srcdir)/Makefile.am \
+	$(srcdir)/Makefile.in
 ACLOCAL_M4 = $(top_srcdir)/aclocal.m4
 am__aclocal_m4_deps = $(top_srcdir)/configure.in
 am__configure_deps = $(am__aclocal_m4_deps) $(CONFIGURE_DEPENDENCIES) \
@@ -71,12 +72,14 @@ am__base_list = \
   sed '$$!N;$$!N;$$!N;$$!N;s/\n/ /g'
 am__installdirs = "$(DESTDIR)$(pkglibdir)"
 LTLIBRARIES = $(pkglib_LTLIBRARIES)
-getfile_la_LIBADD =
-am_getfile_la_OBJECTS = GetFileModule.lo
-getfile_la_OBJECTS = $(am_getfile_la_OBJECTS)
-getfile_la_LINK = $(LIBTOOL) --tag=CXX $(AM_LIBTOOLFLAGS) \
-	$(LIBTOOLFLAGS) --mode=link $(CXXLD) $(AM_CXXFLAGS) \
-	$(CXXFLAGS) $(getfile_la_LDFLAGS) $(LDFLAGS) -o $@
+am__DEPENDENCIES_1 =
+ui_la_DEPENDENCIES = $(am__DEPENDENCIES_1)
+am_ui_la_OBJECTS = UIModule.lo
+ui_la_OBJECTS = $(am_ui_la_OBJECTS)
+ui_la_LINK = $(LIBTOOL) --tag=CXX $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) \
+	--mode=link $(CXXLD) $(AM_CXXFLAGS) $(CXXFLAGS) \
+	$(ui_la_LDFLAGS) $(LDFLAGS) -o $@
+@BUILD_UI_TRUE@am_ui_la_rpath = -rpath $(pkglibdir)
 DEFAULT_INCLUDES = -I.@am__isrc@ -I$(top_builddir)
 depcomp = $(SHELL) $(top_srcdir)/depcomp
 am__depfiles_maybe = depfiles
@@ -90,8 +93,9 @@ CXXLD = $(CXX)
 CXXLINK = $(LIBTOOL) --tag=CXX $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) \
 	--mode=link $(CXXLD) $(AM_CXXFLAGS) $(CXXFLAGS) $(AM_LDFLAGS) \
 	$(LDFLAGS) -o $@
-SOURCES = $(getfile_la_SOURCES)
-DIST_SOURCES = $(getfile_la_SOURCES)
+SOURCES = $(ui_la_SOURCES)
+DIST_SOURCES = $(ui_la_SOURCES)
+HEADERS = $(noinst_HEADERS)
 ETAGS = etags
 CTAGS = ctags
 DISTFILES = $(DIST_COMMON) $(DIST_SOURCES) $(TEXINFOS) $(EXTRA_DIST)
@@ -223,11 +227,15 @@ top_build_prefix = @top_build_prefix@
 top_builddir = @top_builddir@
 top_srcdir = @top_srcdir@
 AM_CPPFLAGS = -I$(top_srcdir)
-pkglib_LTLIBRARIES = getfile.la
-getfile_la_SOURCES = \
-GetFileModule.cpp 
+@BUILD_UI_TRUE@pkglib_LTLIBRARIES = ui.la
+ui_la_SOURCES = \
+UIModule.cpp 
 
-getfile_la_LDFLAGS = -module -avoid-version
+noinst_HEADERS = \
+UIModule.h
+
+ui_la_LDFLAGS = -module -avoid-version
+ui_la_LIBADD = $(UI_LIBADD)
 all: all-am
 
 .SUFFIXES:
@@ -241,9 +249,9 @@ $(srcdir)/Makefile.in: @MAINTAINER_MODE_TRUE@ $(srcdir)/Makefile.am  $(am__confi
 	      exit 1;; \
 	  esac; \
 	done; \
-	echo ' cd $(top_srcdir) && $(AUTOMAKE) --gnu http/getfile/Makefile'; \
+	echo ' cd $(top_srcdir) && $(AUTOMAKE) --gnu ui/Makefile'; \
 	$(am__cd) $(top_srcdir) && \
-	  $(AUTOMAKE) --gnu http/getfile/Makefile
+	  $(AUTOMAKE) --gnu ui/Makefile
 .PRECIOUS: Makefile
 Makefile: $(srcdir)/Makefile.in $(top_builddir)/config.status
 	@case '$?' in \
@@ -293,8 +301,8 @@ clean-pkglibLTLIBRARIES:
 	  echo "rm -f \"$${dir}/so_locations\""; \
 	  rm -f "$${dir}/so_locations"; \
 	done
-getfile.la: $(getfile_la_OBJECTS) $(getfile_la_DEPENDENCIES) 
-	$(getfile_la_LINK) -rpath $(pkglibdir) $(getfile_la_OBJECTS) $(getfile_la_LIBADD) $(LIBS)
+ui.la: $(ui_la_OBJECTS) $(ui_la_DEPENDENCIES) 
+	$(ui_la_LINK) $(am_ui_la_rpath) $(ui_la_OBJECTS) $(ui_la_LIBADD) $(LIBS)
 
 mostlyclean-compile:
 	-rm -f *.$(OBJEXT)
@@ -302,7 +310,7 @@ mostlyclean-compile:
 distclean-compile:
 	-rm -f *.tab.c
 
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/GetFileModule.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/UIModule.Plo@am__quote@
 
 .cpp.o:
 @am__fastdepCXX_TRUE@	$(CXXCOMPILE) -MT $@ -MD -MP -MF $(DEPDIR)/$*.Tpo -c -o $@ $<
@@ -415,7 +423,7 @@ distdir: $(DISTFILES)
 	done
 check-am: all-am
 check: check-am
-all-am: Makefile $(LTLIBRARIES)
+all-am: Makefile $(LTLIBRARIES) $(HEADERS)
 installdirs:
 	for dir in "$(DESTDIR)$(pkglibdir)"; do \
 	  test -z "$$dir" || $(MKDIR_P) "$$dir"; \

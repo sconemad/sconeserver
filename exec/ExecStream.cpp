@@ -195,7 +195,7 @@ bool ExecStream::spawn_process()
   }
   
   // Add socket to Kernel table
-  scx::Kernel::get()->connect(m_process,0);
+  scx::Kernel::get()->connect(m_process);
   m_process = 0;
   
   return true;

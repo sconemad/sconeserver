@@ -27,17 +27,28 @@ Free Software Foundation, Inc.,
 #include <sconex/Logger.h>
 #include <sconex/Debug.h>
 #include <sconex/User.h>
+#include <sconex/Process.h>
 
 namespace scx {
 
 ScriptRefTo<Kernel>* Kernel::s_kernel = 0;
   
 //=============================================================================
+Kernel* Kernel::create(const std::string& appname,
+		       const VersionTag& version)
+{
+  DEBUG_ASSERT(!s_kernel,"Sconex kernel already created");
+
+  scx::Process::init();
+
+  s_kernel = new ScriptRefTo<Kernel>( new Kernel(appname, version) );
+  return s_kernel->object();
+}
+
+//=============================================================================
 Kernel* Kernel::get()
 {
-  if (!s_kernel) {
-    s_kernel = new ScriptRefTo<Kernel>( new Kernel() );
-  }
+  DEBUG_ASSERT(s_kernel,"Sconex kernel not created");
   return s_kernel->object();
 }
 
@@ -91,8 +102,17 @@ bool Kernel::close()
 }
 
 //=============================================================================
-int Kernel::run()
+int Kernel::run(bool console)
 {
+  int err = init();
+  if (err) {
+    return err;
+  }
+
+  if (console) {
+    connect_config_console();
+  }
+
   m_state = Run;
   log("Init complete, entering scheduler loop");
   
@@ -128,7 +148,7 @@ void Kernel::connect_config_console()
   //  c->add_stream( new ScriptEngineExec(ScriptAuth::Admin,
   //  				      new ScriptRef(this),
   //  				      "console") );
-  connect(c,0);
+  connect(c);
 }
 
 //=============================================================================
@@ -139,7 +159,7 @@ void Kernel::set_logger(Logger* logger)
 }
 
 //=============================================================================
-bool Kernel::connect(Descriptor* d,ScriptRef* args)
+bool Kernel::connect(Descriptor* d)
 {
   return (0 != add_job(new DescriptorJob(d)));
 }
@@ -179,7 +199,7 @@ ScriptRef* Kernel::script_op(const ScriptAuth& auth,
     }      
 
     // Properties
-    if ("sconex" == name) 
+    if ("kernel" == name) 
       return ref.ref_copy();
     if ("jobs" == name) 
       return ScriptString::new_ref(m_spinner.describe());
@@ -326,8 +346,8 @@ const std::string& Kernel::get_system_hardware() const
 
 
 //=============================================================================
-Kernel::Kernel() 
-  : Module("sconex",scx::version()),
+  Kernel::Kernel(const std::string& appname, const VersionTag& version)
+  : Module(appname,version),
     m_state(Init)
 {
   struct utsname sysinf;

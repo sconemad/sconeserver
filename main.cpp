@@ -19,9 +19,7 @@ along with this program (see the file COPYING); if not, write to the
 Free Software Foundation, Inc.,
 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA */
 
-#include "sconex/sconex.h"
-#include "sconex/Kernel.h"
-#include "sconex/Process.h"
+#include <sconex/Kernel.h>
 
 #ifdef HAVE_GETOPT_H
 #  include <getopt.h>
@@ -53,37 +51,24 @@ void empty_handler(int /*sig*/) { }
 //===========================================================================
 int run()
 {
-  scx::Process::init();
+  scx::Kernel* kernel = scx::Kernel::create("sconeserver", scx::version());
 
-  scx::Kernel* kernel = scx::Kernel::get();
-
+  // Set paths
+  kernel->set_conf_path(conf_path);
+  kernel->set_mod_path(mod_path);
+  kernel->set_var_path(var_path);
+  
+  // Set config autoloading
+  kernel->set_autoload_config(opt_load_config);
+    
   // Restart loop
   while (true) {
-    
-    // Set paths
-    kernel->set_conf_path(conf_path);
-    kernel->set_mod_path(mod_path);
-    kernel->set_var_path(var_path);
-    
-    // Set config autoloading
-    kernel->set_autoload_config(opt_load_config);
-    
-    // Init server
-    if (kernel->init()) {
+
+    // Enter the kernel loop
+    if (kernel->run(opt_foreground)) {
       break;
     }
 
-    // Connect console if running in foreground
-    if (opt_foreground) {
-      kernel->connect_config_console();
-      opt_foreground = false;
-    }
-
-    // Run server
-    if (kernel->run()) {
-      break;
-    }
-  
   }
 
   delete kernel;

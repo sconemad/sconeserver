@@ -171,6 +171,7 @@ SET_MAKE = @SET_MAKE@
 SHELL = @SHELL@
 SSL_LIBADD = @SSL_LIBADD@
 STRIP = @STRIP@
+UI_LIBADD = @UI_LIBADD@
 VERSION = @VERSION@
 abs_builddir = @abs_builddir@
 abs_srcdir = @abs_srcdir@

@@ -76,7 +76,7 @@ scx::Condition LettuceMediaStream::next_track()
         endpoint().add_stream(xfer);
         
         // Add file to kernel
-        scx::Kernel::get()->connect(file,0);
+        scx::Kernel::get()->connect(file);
         return scx::Ok;
       }
 

@@ -202,7 +202,7 @@ bool Client::run(const std::string& request_data)
   delete addr;
 
   // Give to the kernel for async processing
-  if (!scx::Kernel::get()->connect(sock,0)) {
+  if (!scx::Kernel::get()->connect(sock)) {
     delete sock;
     DEBUG_LOG("System failure");
     return false;

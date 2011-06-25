@@ -72,7 +72,7 @@ public:
       sock->add_stream(xfer2);
       
       // Add socket to kernel
-      scx::Kernel::get()->connect(sock,0);
+      scx::Kernel::get()->connect(sock);
   
       m_connected = true;
     }

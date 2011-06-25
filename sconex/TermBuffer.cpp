@@ -33,7 +33,7 @@ TermBuffer::TermBuffer(
   const std::string& stream_name
 )
   : Stream(stream_name),
-    m_prompt(ansi("01;33m") + "sconeserver" + ansi("01;31m") + "> " + ansi("00m")),
+    m_prompt(ansi("01;33m") + Kernel::get()->name() + ansi("01;31m") + "> " + ansi("00m")),
     m_history_pos(0),
     m_history_add(true)
 
