@@ -31,7 +31,7 @@ Free Software Foundation, Inc.,
 #include <gmp.h>
 #include <mpfr.h>
 
-SCONESERVER_MODULE(MathsModule);
+SCONEX_MODULE(MathsModule);
 
 const size_t ALLOC_LIMIT = 1000000;
 

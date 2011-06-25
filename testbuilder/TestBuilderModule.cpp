@@ -33,7 +33,7 @@ Free Software Foundation, Inc.,
 #include <sconex/FileDir.h>
 #include <sconex/File.h>
 
-SCONESERVER_MODULE(TestBuilderModule);
+SCONEX_MODULE(TestBuilderModule);
 
 //=========================================================================
 TestBuilderModule::TestBuilderModule(

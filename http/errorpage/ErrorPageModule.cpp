@@ -50,7 +50,7 @@ public:
 		       scx::Stream*& object);
 };
 
-SCONESERVER_MODULE(ErrorPageModule);
+SCONEX_MODULE(ErrorPageModule);
 
 //=========================================================================
 class VarSubstStream : public scx::LineBuffer {

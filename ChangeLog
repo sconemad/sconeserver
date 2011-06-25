@@ -1,5 +1,13 @@
 
-2011-06-03 Andrew Wedgbury <wedge@sconemad.com>
+2011-06-25 Andrew Wedgbury <wedge@sconemad.com>
+
+	* all: Changes to make libsconex an independent application framework:
+	Make module entry point macro more generic SCONEX_MODULE.
+	* sconex/Kernel: Change sconeserver to sconex.
+	* sconex/ModuleInterface: Change SconeServer_module to sconex_module.
+	* sconex/ModuleLoaderDLL: Change SconeServer_module to sconex_module.
+
+2011-06-25 Andrew Wedgbury <wedge@sconemad.com>
 	
 	* sconex/Provider: Allow multiple providers for a particular type,
 	where the last one registered is used.

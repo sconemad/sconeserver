@@ -28,7 +28,7 @@ Free Software Foundation, Inc.,
 #include <sconex/Response.h>
 #include <sconex/ScriptTypes.h>
 
-SCONESERVER_MODULE(SimpleModule);
+SCONEX_MODULE(SimpleModule);
 
 //=========================================================================
 SimpleModule::SimpleModule()

@@ -27,7 +27,7 @@ Free Software Foundation, Inc.,
 #include <sconex/ScriptTypes.h>
 #include <sconex/Process.h>
 
-SCONESERVER_MODULE(ExecModule);
+SCONEX_MODULE(ExecModule);
 
 //=========================================================================
 ExecModule::ExecModule()

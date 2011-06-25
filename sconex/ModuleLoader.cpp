@@ -25,7 +25,7 @@ Free Software Foundation, Inc.,
 #include <sconex/ScriptTypes.h>
 namespace scx {
 
-typedef Module* (*PROC_SCONESERVER_MODULE) (void);
+typedef Module* (*PROC_SCONEX_MODULE) (void);
 
 //=============================================================================
 ModuleLoader::ModuleLoader(

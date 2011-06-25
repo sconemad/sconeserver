@@ -29,7 +29,7 @@ Free Software Foundation, Inc.,
 #include <sconex/FileStat.h>
 #include <sconex/Database.h>
 
-SCONESERVER_MODULE(TestModule);
+SCONEX_MODULE(TestModule);
 
 //=========================================================================
 TestModule::TestModule(

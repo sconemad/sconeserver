@@ -33,7 +33,7 @@ Free Software Foundation, Inc.,
 
 namespace http {
 
-SCONESERVER_MODULE(HTTPModule);
+SCONEX_MODULE(HTTPModule);
 
 //=========================================================================
 HTTPModule::HTTPModule()

@@ -26,7 +26,7 @@ Free Software Foundation, Inc.,
 #include <sconex/Kernel.h>
 #include <sconex/Job.h>
 
-SCONESERVER_MODULE(RSSModule);
+SCONEX_MODULE(RSSModule);
 
 // This is the period for running the RSS feed refresh job, and sets the
 // minumum refresh time for feeds.

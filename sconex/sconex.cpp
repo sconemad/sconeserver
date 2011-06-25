@@ -32,7 +32,7 @@ VersionTag& version()
 }
 
 //=========================================================================
-const std::string& sconeserver_copyright()
+const std::string& sconex_copyright()
 {
   static std::string s_copyright = 
     "Copyright (c) 2000-2011 Andrew Wedgbury <wedge@sconemad.com>";

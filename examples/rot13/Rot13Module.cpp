@@ -8,8 +8,8 @@ Copyright (c) 2000-2011 Andrew Wedgbury <wedge@sconemad.com> */
 #include "sconex/ScriptTypes.h"
 
 // The following must be present to allow the resulting
-// shared object to be used as a SconeServer module.
-SCONESERVER_MODULE(Rot13Module);
+// shared object to be used as a sconex module.
+SCONEX_MODULE(Rot13Module);
 
 //=============================================================================
 // Constructor

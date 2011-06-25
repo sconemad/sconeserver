@@ -30,7 +30,7 @@ Free Software Foundation, Inc.,
 
 namespace smtp {
 
-SCONESERVER_MODULE(SMTPModule);
+SCONEX_MODULE(SMTPModule);
 
 //=========================================================================
 SMTPModule::SMTPModule()

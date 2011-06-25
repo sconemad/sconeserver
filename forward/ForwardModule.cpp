@@ -29,7 +29,7 @@ Free Software Foundation, Inc.,
 #include <sconex/StreamTransfer.h>
 #include <sconex/Kernel.h>
 
-SCONESERVER_MODULE(ForwardModule);
+SCONEX_MODULE(ForwardModule);
 
 //=========================================================================
 class ForwardStream : public scx::StreamTransfer {

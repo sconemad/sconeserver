@@ -60,7 +60,7 @@ private:
 
 };
 
-SCONESERVER_MODULE(ImageModule);
+SCONEX_MODULE(ImageModule);
 
 //=========================================================================
 ImageModule::ImageModule(

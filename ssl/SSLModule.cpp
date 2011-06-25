@@ -30,7 +30,7 @@ Free Software Foundation, Inc.,
 
 #include <openssl/ssl.h>
 
-SCONESERVER_MODULE(SSLModule);
+SCONEX_MODULE(SSLModule);
 
 //=========================================================================
 // Thread synchronization data and callbacks required by OpenSSL

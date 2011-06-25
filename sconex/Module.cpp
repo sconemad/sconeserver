@@ -70,7 +70,7 @@ std::string Module::name() const
 //=============================================================================
 std::string Module::copyright() const
 {
-  return sconeserver_copyright();
+  return sconex_copyright();
 }
 
 //=============================================================================

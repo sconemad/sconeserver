@@ -49,7 +49,7 @@ public:
 		       scx::Stream*& object);
 };
 
-SCONESERVER_MODULE(DirIndexModule);
+SCONEX_MODULE(DirIndexModule);
 
 //=========================================================================
 class DirIndexStream : public http::ResponseStream {

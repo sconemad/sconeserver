@@ -28,7 +28,7 @@ Free Software Foundation, Inc.,
 #include <sconex/ScriptTypes.h>
 #include <sconex/Stream.h>
 
-SCONESERVER_MODULE(StatModule);
+SCONEX_MODULE(StatModule);
 
 //=========================================================================
 StatModule::StatModule()

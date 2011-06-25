@@ -52,7 +52,7 @@ public:
 		       scx::Stream*& object);
 };
 
-SCONESERVER_MODULE(GetFileModule);
+SCONEX_MODULE(GetFileModule);
 
 //=========================================================================
 class GetFileStream : public scx::Stream {

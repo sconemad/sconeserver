@@ -26,7 +26,7 @@ Free Software Foundation, Inc.,
 #include <sconex/ModuleInterface.h>
 #include <sconex/ScriptTypes.h>
 
-SCONESERVER_MODULE(LettuceModule);
+SCONEX_MODULE(LettuceModule);
 
 //=========================================================================
 LettuceModule::LettuceModule(

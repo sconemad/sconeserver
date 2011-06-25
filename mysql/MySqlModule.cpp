@@ -27,7 +27,7 @@ Free Software Foundation, Inc.,
 
 namespace mysql {
 
-SCONESERVER_MODULE(MySqlModule);
+SCONEX_MODULE(MySqlModule);
 
 //=========================================================================
 MySqlModule::MySqlModule(

@@ -26,7 +26,7 @@ Free Software Foundation, Inc.,
 #include <sconex/MimeType.h>
 #include <sconex/ScriptTypes.h>
 
-SCONESERVER_MODULE(MIMEModule);
+SCONEX_MODULE(MIMEModule);
 
 //=========================================================================
 MIMEModule::MIMEModule(

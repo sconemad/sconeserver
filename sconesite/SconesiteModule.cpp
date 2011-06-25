@@ -30,7 +30,7 @@ Free Software Foundation, Inc.,
 #include <sconex/Stream.h>
 #include <sconex/Kernel.h>
 
-SCONESERVER_MODULE(SconesiteModule);
+SCONEX_MODULE(SconesiteModule);
 
 #define SCONESITE_JOB_PERIOD 7
 

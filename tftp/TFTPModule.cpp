@@ -29,7 +29,7 @@ Free Software Foundation, Inc.,
 #include <sconex/ModuleInterface.h>
 #include <sconex/ScriptTypes.h>
 
-SCONESERVER_MODULE(TFTPModule);
+SCONEX_MODULE(TFTPModule);
 
 //=========================================================================
 TFTPModule::TFTPModule()

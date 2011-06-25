@@ -42,7 +42,7 @@ public:
 		       scx::ScriptObject*& object);
 };
 
-SCONESERVER_MODULE(IP6Module);
+SCONEX_MODULE(IP6Module);
 
 //=========================================================================
 IP6Module::IP6Module(

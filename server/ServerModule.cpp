@@ -31,7 +31,7 @@ Free Software Foundation, Inc.,
 #include <sconex/StreamDebugger.h>
 #include <sconex/ScriptEngine.h>
 
-SCONESERVER_MODULE(ServerModule);
+SCONEX_MODULE(ServerModule);
 
 //=============================================================================
 ServerModule::ServerModule()

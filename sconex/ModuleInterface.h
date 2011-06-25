@@ -2,21 +2,21 @@
 
 SconeServer dynamically loaded module interface
 
-This defines the SCONESERVER_MODULE macro, which expands to provide the
-standard entry point function which must be present in all SconeServer
-modules. You should include this macro in the source file for your module
-class, passing the class name as an argument, eg:
+This defines the SCONEX_MODULE macro, which expands to provide the standard 
+entry point function which must be present in all sconex modules. You should 
+include this macro in the source file for your module class, passing the class
+name as an argument, eg:
 
 --- MyModule.cpp ---
 #include "MyModule.h
 #include <sconex/ModuleInterface.h>
 
-SCONESERVER_MODULE(MyModule);
+SCONEX_MODULE(MyModule);
 
 ... source for MyModule ...
 
 
-Copyright (c) 2000-2004 Andrew Wedgbury <wedge@sconemad.com>
+Copyright (c) 2000-2011 Andrew Wedgbury <wedge@sconemad.com>
 
 This program is free software; you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -34,8 +34,8 @@ Free Software Foundation, Inc.,
 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA */
 
 
-#define SCONESERVER_MODULE(MODULE) \
-   extern "C" scx::Module* SconeServer_module() \
+#define SCONEX_MODULE(MODULE) \
+   extern "C" scx::Module* sconex_module() \
    { \
      return new MODULE(); \
    }

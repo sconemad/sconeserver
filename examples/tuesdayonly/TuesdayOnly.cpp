@@ -30,8 +30,8 @@ public:
 };
 
 // The following must be present to allow the resulting
-// shared object to be used as a SconeServer module.
-SCONESERVER_MODULE(TuesdayOnlyModule);
+// shared object to be used as a sconex module.
+SCONEX_MODULE(TuesdayOnlyModule);
 
 //=============================================================================
 // Constructor

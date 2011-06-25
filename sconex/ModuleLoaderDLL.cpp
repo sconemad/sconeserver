@@ -30,8 +30,8 @@ Free Software Foundation, Inc.,
 
 namespace scx {
 
-typedef Module* (*PROC_SCONESERVER_MODULE) (void);
-const char* SCONESERVER_PROC_NAME = "SconeServer_module";
+typedef Module* (*PROC_SCONEX_MODULE) (void);
+const char* SCONESERVER_PROC_NAME = "sconex_module";
 
 //=============================================================================
 ModuleLoaderDLL::ModuleLoaderDLL(
@@ -99,8 +99,8 @@ bool ModuleLoaderDLL::load_module()
     return false;
   }
 
-  PROC_SCONESERVER_MODULE proc =
-    (PROC_SCONESERVER_MODULE)locate_symbol(SCONESERVER_PROC_NAME);
+  PROC_SCONEX_MODULE proc =
+    (PROC_SCONEX_MODULE)locate_symbol(SCONESERVER_PROC_NAME);
 
   if (proc==0) {
     unload_dll();

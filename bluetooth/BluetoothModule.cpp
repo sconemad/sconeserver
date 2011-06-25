@@ -42,7 +42,7 @@ public:
 		       scx::ScriptObject*& object);
 };
 
-SCONESERVER_MODULE(BluetoothModule);
+SCONEX_MODULE(BluetoothModule);
 
 //=========================================================================
 BluetoothModule::BluetoothModule(

@@ -42,7 +42,7 @@ public:
 		       scx::ScriptObject*& object);
 };
 
-SCONESERVER_MODULE(LocalModule);
+SCONEX_MODULE(LocalModule);
 
 //=========================================================================
 LocalModule::LocalModule(

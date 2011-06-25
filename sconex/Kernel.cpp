@@ -1,8 +1,8 @@
 /* SconeServer (http://www.sconemad.com)
 
-SconeServer kernel
+sconex kernel
 
-Copyright (c) 2000-2005 Andrew Wedgbury <wedge@sconemad.com>
+Copyright (c) 2000-2011 Andrew Wedgbury <wedge@sconemad.com>
 
 This program is free software; you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -50,7 +50,7 @@ Kernel::~Kernel()
 //=============================================================================
 std::string Kernel::info() const
 {
-  return "An object orientated network server framework";
+  return "A modular, scriptable application framework";
 }
 
 //=============================================================================
@@ -179,7 +179,7 @@ ScriptRef* Kernel::script_op(const ScriptAuth& auth,
     }      
 
     // Properties
-    if ("sconeserver" == name) 
+    if ("sconex" == name) 
       return ref.ref_copy();
     if ("jobs" == name) 
       return ScriptString::new_ref(m_spinner.describe());
@@ -327,7 +327,7 @@ const std::string& Kernel::get_system_hardware() const
 
 //=============================================================================
 Kernel::Kernel() 
-  : Module("sconeserver",scx::version()),
+  : Module("sconex",scx::version()),
     m_state(Init)
 {
   struct utsname sysinf;
