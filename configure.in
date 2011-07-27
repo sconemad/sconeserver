@@ -198,6 +198,15 @@ AC_ARG_WITH([rss],
   [RSS="$withval"],
   [RSS="yes"]
 )
+# Need libxml2 library for rss
+if test "x$RSS" == "xyes"; then
+  if test "x$ac_cv_lib_xml2_xmlNewDoc" != "xyes"; then
+    AC_MSG_ERROR([library 'libxml2' is required for the rss module])
+  fi
+  if test "x$ac_cv_header_libxml_parser_h" != "xyes"; then
+    AC_MSG_ERROR([library 'libxml2' is required for the rss module])
+  fi
+fi
 
 # MySql module
 # Include by default if mysqlclient headers are found
