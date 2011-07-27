@@ -51,7 +51,7 @@ void empty_handler(int /*sig*/) { }
 //===========================================================================
 int run()
 {
-  scx::Kernel* kernel = scx::Kernel::create("sconeserver", scx::version());
+  scx::Kernel* kernel = scx::Kernel::get();
 
   // Set paths
   kernel->set_conf_path(conf_path);
@@ -83,6 +83,8 @@ int run()
 //=============================================================================
 int main(int argc,char* argv[])
 {
+  scx::Kernel* kernel = scx::Kernel::create("sconeserver", scx::version());
+
   std::string arg;
   
   // Look for version/help options initially as a special case
@@ -92,7 +94,6 @@ int main(int argc,char* argv[])
     bool opt_help = (arg == "-h" || arg == "--help");
 
     if (opt_version || opt_help) {
-      scx::Kernel* kernel = scx::Kernel::get();
       std::cout << kernel->name()
                 << "-" << kernel->version().get_string()
                 << "\n";
