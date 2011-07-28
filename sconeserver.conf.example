@@ -3,7 +3,7 @@
 
 # Load modules
 
- insmod("router");
+ insmod("server");
 
 # Now the listeners have started we can drop root privileges
  if (root) {
