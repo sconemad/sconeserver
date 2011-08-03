@@ -74,7 +74,7 @@ am__installdirs = "$(DESTDIR)$(pkglibdir)"
 LTLIBRARIES = $(pkglib_LTLIBRARIES)
 am__DEPENDENCIES_1 =
 ui_la_DEPENDENCIES = $(am__DEPENDENCIES_1)
-am_ui_la_OBJECTS = UIModule.lo
+am_ui_la_OBJECTS = UIModule.lo UIDisplay.lo UIWindow.lo
 ui_la_OBJECTS = $(am_ui_la_OBJECTS)
 ui_la_LINK = $(LIBTOOL) --tag=CXX $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) \
 	--mode=link $(CXXLD) $(AM_CXXFLAGS) $(CXXFLAGS) \
@@ -229,10 +229,14 @@ top_srcdir = @top_srcdir@
 AM_CPPFLAGS = -I$(top_srcdir)
 @BUILD_UI_TRUE@pkglib_LTLIBRARIES = ui.la
 ui_la_SOURCES = \
-UIModule.cpp 
+UIModule.cpp \
+UIDisplay.cpp \
+UIWindow.cpp
 
 noinst_HEADERS = \
-UIModule.h
+UIModule.h \
+UIDisplay.h \
+UIWindow.h
 
 ui_la_LDFLAGS = -module -avoid-version
 ui_la_LIBADD = $(UI_LIBADD)
@@ -310,7 +314,9 @@ mostlyclean-compile:
 distclean-compile:
 	-rm -f *.tab.c
 
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/UIDisplay.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/UIModule.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/UIWindow.Plo@am__quote@
 
 .cpp.o:
 @am__fastdepCXX_TRUE@	$(CXXCOMPILE) -MT $@ -MD -MP -MF $(DEPDIR)/$*.Tpo -c -o $@ $<

@@ -1,4 +1,14 @@
 
+2011-08-03 Andrew Wedgbury <wedge@sconemad.com>
+
+	* ui: Refactor into Display and Window objects, event handling.
+
+2011-06-29 Andrew Wedgbury <wedge@sconemad.com>
+
+	* sconex/Module: Remove unused ref() method.
+	* sconex/TermBuffer: Add debug if tc calls fail.
+	* server/ServerModule: Create ConfigStream objects properly.
+
 2011-06-25 Andrew Wedgbury <wedge@sconemad.com>
 
 	* sconex/Kernel: Tidy up kernel interface, pass app name and version.

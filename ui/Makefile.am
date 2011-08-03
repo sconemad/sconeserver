@@ -7,10 +7,14 @@ if BUILD_UI
 endif
 
 ui_la_SOURCES = \
-UIModule.cpp 
+UIModule.cpp \
+UIDisplay.cpp \
+UIWindow.cpp
 
 noinst_HEADERS = \
-UIModule.h
+UIModule.h \
+UIDisplay.h \
+UIWindow.h
 
 ui_la_LDFLAGS = -module -avoid-version
 ui_la_LIBADD = $(UI_LIBADD)

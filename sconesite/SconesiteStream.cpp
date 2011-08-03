@@ -147,7 +147,6 @@ scx::Condition SconesiteStream::event(scx::Stream::Event e)
     }
 
     // Lookup the article and get remaining file path
-    //    m_article = m_profile.get_index()->find_article(pathinfo,m_file);
     log("Lookup article '" + pathinfo + "'");
     m_article = m_profile.lookup_article(pathinfo,m_file);
 
@@ -167,16 +166,6 @@ scx::Condition SconesiteStream::event(scx::Stream::Event e)
     m_context = new RenderMarkupContext::Ref(rmc);
     rmc->set_article(m_article->object());
 
-    /*
-    // Check access is allowed
-    if (!m_article->allow_access(*m_context)) {
-      resp.set_status(http::Status::Unauthorized);
-      if (!m_file.empty()) {
-        return scx::Close;
-      }
-    }
-    */
-    
     if (m_file.empty()) {
       // Article request, check if we need to redirect to correct the path
       std::string href = m_article->object()->get_href_path();
@@ -197,7 +186,6 @@ scx::Condition SconesiteStream::event(scx::Stream::Event e)
       
       if (!scx::FileStat(path).is_file()) {
         resp.set_status(http::Status::NotFound);
-        //        return scx::Close;
       }
     }
     
@@ -219,8 +207,7 @@ scx::Condition SconesiteStream::start_section(const scx::MimeHeaderTable& header
   http::Response& resp = msg->get_response();
   const http::Session* session = req.get_session();
 
-  //  if (m_article->allow_upload(*m_context)) {
-  if (true) {
+  if (session && session->allow_upload()) {
 
     std::string name;
     scx::MimeHeader disp = headers.get_parsed("Content-Disposition");
@@ -326,12 +313,10 @@ scx::Condition SconesiteStream::send_response()
     DEBUG_LOG("EXCEPTION caught in SconesiteStream");
   }
 
-  //---
   scx::Time elapsed = scx::Date::now() - start_time;
   std::ostringstream oss;
   oss << "--- Article rendered in " << elapsed.to_microseconds() << " us ---";
   log(oss.str());
-  //---
 
   // Restore endpoint blocking state and reset timeout
   endpoint().set_blocking(prev_block);

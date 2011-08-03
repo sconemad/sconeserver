@@ -20,110 +20,10 @@ Free Software Foundation, Inc.,
 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA */
 
 
-#include <sconex/ModuleInterface.h>
-#include <sconex/Module.h>
-#include <sconex/Kernel.h>
-#include <sconex/Descriptor.h>
-#include <sconex/Stream.h>
-
 #include "UIModule.h"
-
-#include <X11/Xlib.h>
-
-//=========================================================================
-class UIDisplay : public scx::Descriptor {
-public:
-
-  UIDisplay();
-  ~UIDisplay();
-
-  virtual void close() 
-  {};
-
-  virtual int fd();
-
-  Display* get_dpy();
-
-protected:
-
-  // We read and write to this using Xlib calls
-  virtual scx::Condition endpoint_read(void* buffer,int n,int& na) 
-  { return scx::Error; };
-  virtual scx::Condition endpoint_write(const void* buffer,int n,int& na) 
-  { return scx::Error; };
-
-  Display* m_dpy;
-
-};
-
-//=========================================================================
-UIDisplay::UIDisplay()
-{
-  m_dpy = XOpenDisplay(0);
-  
-}
-
-//=========================================================================
-UIDisplay::~UIDisplay()
-{
-  if (m_dpy) {
-    XCloseDisplay(m_dpy);
-  }
-}
-
-//=========================================================================
-int UIDisplay::fd()
-{
-  return ConnectionNumber(m_dpy);
-}
-
-//=========================================================================
-Display* UIDisplay::get_dpy()
-{
-  return m_dpy;
-}
-
-//=========================================================================
-class UIDispatcher : public scx::Stream {
-public:
-
-  UIDispatcher(UIDisplay& display);
-  ~UIDispatcher();
-
-  virtual scx::Condition event(scx::Stream::Event e);
- 
-protected:
-
-  UIDisplay& m_display;
-};
-
-//=========================================================================
-UIDispatcher::UIDispatcher(UIDisplay& display)
-  : scx::Stream("UI dispatcher"),
-    m_display(display)
-{
-  enable_event(scx::Stream::Readable,true);
-}
-
-//=========================================================================
-UIDispatcher::~UIDispatcher()
-{
-
-}
-
-//=========================================================================
-scx::Condition UIDispatcher::event(scx::Stream::Event e)
-{
-  if (e == scx::Stream::Readable) {
-    Display* dpy = m_display.get_dpy();
-    while (XPending(dpy)) {
-      XEvent xe;
-      XNextEvent(dpy, &xe);
-    }
-  }
-
-  return scx::Ok;
-}
+#include "UIDisplay.h"
+#include "UIWindow.h"
+#include <sconex/Kernel.h>
 
 SCONEX_MODULE(UIModule);
 
@@ -132,13 +32,14 @@ UIModule::UIModule()
   : scx::Module("ui",scx::version()),
     m_display(0)
 {
-
+  XInitThreads();
+  scx::ScriptExpr::register_type("Window",this);
 }
 
 //=========================================================================
 UIModule::~UIModule()
 {
-
+  scx::ScriptExpr::unregister_type("Window",this);
 }
 
 //=========================================================================
@@ -151,14 +52,7 @@ std::string UIModule::info() const
 int UIModule::init()
 {
   m_display = new UIDisplay();
-  if (!m_display->get_dpy()) {
-    delete m_display;
-    std::cerr << "Could not open display\n";
-    return 1;
-  }
-
-  m_display->add_stream(new UIDispatcher(*m_display));
-  scx::Kernel::get()->connect(m_display);
+  m_window = new UIWindow(m_display);
   return 0;
 }
 
@@ -166,6 +60,48 @@ int UIModule::init()
 bool UIModule::close()
 {
   return true;
+}
+
+//=============================================================================
+scx::ScriptRef* UIModule::script_op(const scx::ScriptAuth& auth,
+				    const scx::ScriptRef& ref,
+				    const scx::ScriptOp& op,
+				    const scx::ScriptRef* right)
+{
+  if (scx::ScriptOp::Lookup == op.type()) {
+    std::string name = right->object()->get_string();
+
+    // Methods
+    if ("plot" == name) {
+      return new scx::ScriptMethodRef(ref,name);
+    }
+
+  }
+	
+  return scx::Module::script_op(auth,ref,op,right);
+}
+
+//=============================================================================
+scx::ScriptRef* UIModule::script_method(const scx::ScriptAuth& auth,
+					const scx::ScriptRef& ref,
+					const std::string& name,
+					const scx::ScriptRef* args)
+{
+  if ("plot" == name) {
+    const scx::ScriptRef* a_x = scx::get_method_arg_ref(args,0,"x");
+    const scx::ScriptRef* a_y = scx::get_method_arg_ref(args,1,"y");
+    const scx::ScriptRef* a_val = scx::get_method_arg_ref(args,2,"value");
+    if (!a_x || !a_y) 
+      return scx::ScriptError::new_ref("Must specify x and y");
+      
+    m_window->plot(a_x->object()->get_int(), 
+		   a_y->object()->get_int(),
+		   a_val ? a_val->object()->get_int() : 1);
+
+    return 0;
+  }
+
+  return scx::Module::script_method(auth,ref,name,args);
 }
 
 //=============================================================================

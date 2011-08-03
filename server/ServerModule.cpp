@@ -223,7 +223,7 @@ void ServerModule::provide(const std::string& type,
     object = new scx::StreamBuffer(read_size,write_size);
 
   } else if ("config" == type) {
-    object = new scx::ConfigStream(scx::Kernel::get()->ref());
+    object = new scx::ConfigStream(new scx::ScriptRef(scx::Kernel::get()));
 
   } else if ("term" == type) {
     object = new scx::TermBuffer("term");

@@ -28,6 +28,7 @@ Free Software Foundation, Inc.,
 #include <sconex/ScriptExpr.h>
 
 class UIDisplay;
+class UIWindow;
 
 //=========================================================================
 class UIModule : public scx::Module,
@@ -42,6 +43,17 @@ public:
   virtual int init();
   virtual bool close();
 
+  // ScriptObject methods  
+  virtual scx::ScriptRef* script_op(const scx::ScriptAuth& auth,
+				    const scx::ScriptRef& ref,
+				    const scx::ScriptOp& op,
+				    const scx::ScriptRef* right=0);
+
+  virtual scx::ScriptRef* script_method(const scx::ScriptAuth& auth,
+					const scx::ScriptRef& ref,
+					const std::string& name,
+					const scx::ScriptRef* args);
+
   // Provider<ScriptObject> method
   virtual void provide(const std::string& type,
 		       const scx::ScriptRef* args,
@@ -49,6 +61,7 @@ public:
 private:
 
   UIDisplay* m_display;
+  UIWindow* m_window;
 
 };
 

@@ -59,9 +59,6 @@ public:
   // Close the module
   virtual bool close();
   
-  // Get a reference to ourself
-  ScriptRef* ref();
-
   // Get sub-module
   Module::Ref get_module(const std::string& name);
 

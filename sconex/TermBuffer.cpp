@@ -189,7 +189,9 @@ Condition TermBuffer::event(Stream::Event e)
       int fd = endpoint().fd();
 
       // Save the terminal settings
-      tcgetattr(fd,&m_saved_termios);
+      if (0 != tcgetattr(fd,&m_saved_termios)) {
+	DEBUG_LOG_ERRNO("tcgetattr failed");
+      }
 
       // Setup new terminal settings
       termios new_termios = m_saved_termios;
@@ -197,7 +199,9 @@ Condition TermBuffer::event(Stream::Event e)
       new_termios.c_lflag &= (~ECHO);
       new_termios.c_cc[VTIME] = 0;
       new_termios.c_cc[VMIN] = 1;
-      tcsetattr(fd,TCSANOW,&new_termios);
+      if (0 != tcsetattr(fd,TCSANOW,&new_termios)) {
+	DEBUG_LOG_ERRNO("tcsetattr failed");
+      }
 
       Kernel* k = Kernel::get();
 
