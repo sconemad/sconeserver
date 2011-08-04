@@ -35,7 +35,7 @@ public:
   };
   ~UIDisplaySocket() {};
 
-  virtual void close() {};
+  virtual void close() { m_state = scx::Descriptor::Closed; };
   virtual int fd() { return m_xfd; };
 
 protected:
@@ -49,8 +49,9 @@ protected:
 };
 
 //=========================================================================
-UIDisplay::UIDisplay()
-  : scx::Stream("UI display")
+UIDisplay::UIDisplay(UIModule* module)
+  : scx::Stream("UI display"),
+    m_module(module)
 {
   m_dpy = XOpenDisplay(0);
 
@@ -64,9 +65,8 @@ UIDisplay::UIDisplay()
 //=========================================================================
 UIDisplay::~UIDisplay()
 {
-  if (m_dpy) {
-    XCloseDisplay(m_dpy);
-  }
+  XCloseDisplay(m_dpy);
+  m_module.object()->display_closing(this);
 }
 
 //=========================================================================
@@ -105,4 +105,10 @@ void UIDisplay::register_window(Window xw, UIWindow* uiw)
 void UIDisplay::unregister_window(Window xw)
 {
   m_windows.erase(xw);
+}
+
+//=========================================================================
+void UIDisplay::close()
+{
+  endpoint().close();
 }

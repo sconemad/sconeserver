@@ -33,7 +33,7 @@ Free Software Foundation, Inc.,
 class UIDisplay : public scx::Stream {
 public:
 
-  UIDisplay();
+  UIDisplay(UIModule* module);
   ~UIDisplay();
 
   virtual scx::Condition event(scx::Stream::Event e);
@@ -43,8 +43,11 @@ public:
   void register_window(Window xw, UIWindow* uiw);
   void unregister_window(Window xw);
  
+  void close();
+
 protected:
 
+  scx::ScriptRefTo<UIModule> m_module;
   Display* m_dpy;
 
   typedef std::map<Window,UIWindow*> WindowMap;

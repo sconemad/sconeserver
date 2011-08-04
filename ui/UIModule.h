@@ -43,6 +43,9 @@ public:
   virtual int init();
   virtual bool close();
 
+  // Callback from UIDisplay
+  void display_closing(UIDisplay* display);
+
   // ScriptObject methods  
   virtual scx::ScriptRef* script_op(const scx::ScriptAuth& auth,
 				    const scx::ScriptRef& ref,

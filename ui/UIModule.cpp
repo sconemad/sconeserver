@@ -30,7 +30,8 @@ SCONEX_MODULE(UIModule);
 //=========================================================================
 UIModule::UIModule() 
   : scx::Module("ui",scx::version()),
-    m_display(0)
+    m_display(0),
+    m_window(0)
 {
   XInitThreads();
   scx::ScriptExpr::register_type("Window",this);
@@ -51,7 +52,7 @@ std::string UIModule::info() const
 //=============================================================================
 int UIModule::init()
 {
-  m_display = new UIDisplay();
+  m_display = new UIDisplay(this);
   m_window = new UIWindow(m_display);
   return 0;
 }
@@ -59,7 +60,20 @@ int UIModule::init()
 //=============================================================================
 bool UIModule::close()
 {
+  if (!scx::Module::close()) return false;
+
+  if (m_display) {
+    delete m_window; m_window = 0;
+    m_display->close();
+  }
+
   return true;
+}
+
+//=============================================================================
+void UIModule::display_closing(UIDisplay* display)
+{
+  m_display = 0;
 }
 
 //=============================================================================
