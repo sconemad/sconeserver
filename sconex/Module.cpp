@@ -347,7 +347,7 @@ ScriptRef* Module::script_method(const ScriptAuth& auth,
     }
     
     if (opt_noconfig) {
-      // Surpress autoloading of config during init
+      // Suppress autoloading of config during init
       loader->set_autoload_config(false);
     }
     
