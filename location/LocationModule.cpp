@@ -60,6 +60,8 @@ private:
   bool query(double& latitude, double& longitude, double& speed);
 
   gpsmm m_interface;
+
+  bool m_interface_usable;
 };
 
 SCONEX_MODULE(LocationModule);
@@ -67,7 +69,8 @@ SCONEX_MODULE(LocationModule);
 //=============================================================================
 LocationModule::LocationModule()
   : scx::Module("location",scx::version()),
-    m_interface()
+    m_interface(),
+    m_interface_usable(false)
 {
 }
 
@@ -87,7 +90,9 @@ int LocationModule::init()
   if (NULL != m_interface.open(host.c_str(), port.c_str())) {
 
     // Attempt to enable "watcher mode".
-    if (NULL == m_interface.stream(WATCH_ENABLE)) {
+    if (NULL != m_interface.stream(WATCH_ENABLE)) {
+      m_interface_usable = true;
+    } else {
       DEBUG_LOG("Failed to enable watcher mode on interface.");
     }
 
@@ -156,6 +161,10 @@ bool LocationModule::query(double& latitude, double& longitude, double& speed)
 {
   // Attempt to get a fix.
   const struct gps_data_t* data = NULL;
+
+  if (!m_interface_usable) {
+    return false;
+  }
 
   // Discard the backlog of data.
   m_interface.clear_fix();
