@@ -36,7 +36,6 @@ public:
 
   //---------------------------------------------------------------------------
   // Module overrides.
-  virtual int init();
   virtual std::string info() const;
 
   //---------------------------------------------------------------------------
@@ -56,6 +55,8 @@ private:
   LocationModule(const LocationModule& original);
   LocationModule& operator=(const LocationModule& rhs);
   // Prohibit copy.
+
+  bool initialise_interface();
 
   bool query(double& latitude, double& longitude, double& speed);
 
@@ -77,30 +78,6 @@ LocationModule::LocationModule()
 //=============================================================================
 LocationModule::~LocationModule()
 {
-}
-
-//=============================================================================
-int LocationModule::init()
-{
-  const int base_class_init = Module::init();
-
-  // FIXME: Hard-coded host name and port.
-  const std::string host = "localhost";
-  const std::string port = "gpsd";
-  if (NULL != m_interface.open(host.c_str(), port.c_str())) {
-
-    // Attempt to enable "watcher mode".
-    if (NULL != m_interface.stream(WATCH_ENABLE)) {
-      m_interface_usable = true;
-    } else {
-      DEBUG_LOG("Failed to enable watcher mode on interface.");
-    }
-
-  } else {
-    DEBUG_LOG("Failed to open interface.");
-  }
-
-  return base_class_init;
 }
 
 //=============================================================================
@@ -157,39 +134,63 @@ scx::ScriptRef* LocationModule::script_method(const scx::ScriptAuth& auth,
 }
 
 //=============================================================================
+bool LocationModule::initialise_interface()
+{
+  if (!m_interface_usable) {
+    // FIXME: Hard-coded host name and port.
+    const std::string host = "localhost";
+    const std::string port = "gpsd";
+    if (NULL != m_interface.open(host.c_str(), port.c_str())) {
+
+      // Attempt to enable "watcher mode".
+      if (NULL != m_interface.stream(WATCH_ENABLE)) {
+        m_interface_usable = true;
+      } else {
+        DEBUG_LOG("Failed to enable watcher mode on interface");
+      }
+
+    } else {
+      DEBUG_LOG("Failed to open interface");
+    }
+  }
+
+  return m_interface_usable;
+}
+
+//=============================================================================
 bool LocationModule::query(double& latitude, double& longitude, double& speed)
 {
-  // Attempt to get a fix.
-  const struct gps_data_t* data = NULL;
+  if (initialise_interface()) {
+    // Attempt to get a fix.
+    const struct gps_data_t* data = NULL;
 
-  if (!m_interface_usable) {
-    return false;
-  }
+    // Discard the backlog of data.
+    m_interface.clear_fix();
+    while (m_interface.waiting()) {
+      data = m_interface.poll();
+    }
 
-  // Discard the backlog of data.
-  m_interface.clear_fix();
-  while (m_interface.waiting()) {
-    data = m_interface.poll();
-  }
-
-  if (NULL != data) {
-    const gps_fix_t fix = data->fix;
-    switch (fix.mode) {
-    case MODE_NOT_SEEN:
-      DEBUG_LOG("MODE_NOT_SEEN");
-      break;
-    case MODE_NO_FIX:
-      DEBUG_LOG("MODE_NO_FIX");
-      break;
-    case MODE_2D:
-    case MODE_3D:
-      latitude = fix.latitude;
-      longitude = fix.longitude;
-      speed = fix.speed;
-      return true;
+    if (NULL != data) {
+      const gps_fix_t fix = data->fix;
+      switch (fix.mode) {
+      case MODE_NOT_SEEN:
+        DEBUG_LOG("MODE_NOT_SEEN");
+        break;
+      case MODE_NO_FIX:
+        DEBUG_LOG("MODE_NO_FIX");
+        break;
+      case MODE_2D:
+      case MODE_3D:
+        latitude = fix.latitude;
+        longitude = fix.longitude;
+        speed = fix.speed;
+        return true;
+      }
+    } else {
+      DEBUG_LOG("No data");
     }
   } else {
-    DEBUG_LOG("No data.");
+    DEBUG_LOG("No interface");
   }
 
   return false;
