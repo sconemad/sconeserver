@@ -87,6 +87,14 @@ AC_ARG_WITH([local],
   [LOCAL="yes"]
 )
 
+# location module
+# Include if GPS headers are present
+AC_ARG_WITH([location],
+  [AC_HELP_STRING([--with-location],[Enable location module])],
+  [LOCATION="$withval"],
+  [AC_CHECK_HEADER([libgpsmm.h],[LOCATION="yes"],[LOCATION="no"])]
+)
+
 # bluetooth module
 # Include if bluetooth headers are present
 AC_ARG_WITH([bluetooth],
@@ -332,6 +340,7 @@ AM_CONDITIONAL(BUILD_SERVER, test x$SERVER = xyes)
 AM_CONDITIONAL(BUILD_IP, test x$IP = xyes)
 AM_CONDITIONAL(BUILD_IP6, test x$IP6 = xyes)
 AM_CONDITIONAL(BUILD_LOCAL, test x$LOCAL = xyes)
+AM_CONDITIONAL(BUILD_LOCATION, test x$LOCATION = xyes)
 AM_CONDITIONAL(BUILD_BLUETOOTH, test x$BLUETOOTH = xyes)
 AM_CONDITIONAL(BUILD_SSL, test x$SSL = xyes)
 AM_CONDITIONAL(BUILD_EXAMPLES, test x$EXAMPLES = xyes)
@@ -353,6 +362,7 @@ AC_CONFIG_FILES([server/Makefile])
 AC_CONFIG_FILES([ip/Makefile])
 AC_CONFIG_FILES([ip6/Makefile])
 AC_CONFIG_FILES([local/Makefile])
+AC_CONFIG_FILES([location/Makefile])
 AC_CONFIG_FILES([bluetooth/Makefile])
 AC_CONFIG_FILES([mime/Makefile])
 AC_CONFIG_FILES([simple/Makefile])
@@ -391,6 +401,7 @@ The following modules will be built:
   + ip             $IP
   + ip6            $IP6
   + local          $LOCAL
+  + location       $LOCATION
   + bluetooth      $BLUETOOTH
   + mime           yes
   + simple         yes

@@ -16,6 +16,7 @@ server \
 ip \
 ip6 \
 local \
+location \
 bluetooth \
 http \
 sconesite \
