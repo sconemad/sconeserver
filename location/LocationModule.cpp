@@ -60,6 +60,9 @@ private:
 
   bool query(double& latitude, double& longitude, double& speed);
 
+  std::string m_host;
+  std::string m_port;
+
   gpsmm m_interface;
 
   bool m_interface_usable;
@@ -68,8 +71,11 @@ private:
 SCONEX_MODULE(LocationModule);
 
 //=============================================================================
+// N.B. "Sensible" defaults for host and port.
 LocationModule::LocationModule()
   : scx::Module("location",scx::version()),
+    m_host("localhost"),
+    m_port("gpsd"),
     m_interface(),
     m_interface_usable(false)
 {
@@ -96,7 +102,7 @@ scx::ScriptRef* LocationModule::script_op(const scx::ScriptAuth& auth,
     const std::string name = right->object()->get_string();
 
     // Methods
-    if ("query" == name) {
+    if ("connect" == name ||"query" == name) {
       return new scx::ScriptMethodRef(ref,name);
     }
 
@@ -111,7 +117,39 @@ scx::ScriptRef* LocationModule::script_method(const scx::ScriptAuth& auth,
                                               const std::string& name,
                                               const scx::ScriptRef* args)
 {
-  if ("query" == name) {
+  if ("connect" == name) {
+
+    // Get host specification.
+    const scx::ScriptString* a_host =
+      scx::get_method_arg<scx::ScriptString>(args,0,"host");
+    if (NULL != a_host) {
+      m_host = a_host->get_string();
+    }
+
+    // Get port specification: could be string (service name) or numeric
+    // (port number).
+    const scx::ScriptInt* a_service_num =
+      scx::get_method_arg<scx::ScriptInt>(args,1,"port");
+    const scx::ScriptString* a_service_str =
+      scx::get_method_arg<scx::ScriptString>(args,1,"service");
+
+    if (NULL != a_service_num) {
+      const int p = a_service_num->get_int();
+      if (0 <= p && p <= 65535) {
+        std::stringstream ss;
+        ss << p;
+        m_port = ss.str();
+      } else {
+        return scx::ScriptError::new_ref("Invalid port designation");
+      }
+
+    } else if (NULL != a_service_str) {
+      m_port = a_service_str->get_string();
+    }
+
+    // FIXME: Not sure what to return here...?
+    return scx::ScriptError::new_ref("NOT YET WRITTEN!");
+  } else if ("query" == name) {
     double latitude = 0.0;
     double longitude = 0.0;
     double speed = 0.0;
@@ -137,10 +175,7 @@ scx::ScriptRef* LocationModule::script_method(const scx::ScriptAuth& auth,
 bool LocationModule::initialise_interface()
 {
   if (!m_interface_usable) {
-    // FIXME: Hard-coded host name and port.
-    const std::string host = "localhost";
-    const std::string port = "gpsd";
-    if (NULL != m_interface.open(host.c_str(), port.c_str())) {
+    if (NULL != m_interface.open(m_host.c_str(), m_port.c_str())) {
 
       // Attempt to enable "watcher mode".
       if (NULL != m_interface.stream(WATCH_ENABLE)) {
