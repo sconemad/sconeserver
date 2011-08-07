@@ -767,6 +767,8 @@ BUILD_SSL_FALSE
 BUILD_SSL_TRUE
 BUILD_BLUETOOTH_FALSE
 BUILD_BLUETOOTH_TRUE
+BUILD_LOCATION_FALSE
+BUILD_LOCATION_TRUE
 BUILD_LOCAL_FALSE
 BUILD_LOCAL_TRUE
 BUILD_IP6_FALSE
@@ -916,6 +918,7 @@ enable_valgrind
 with_ip
 with_ip6
 with_local
+with_location
 with_bluetooth
 with_openssl_path
 with_ssl
@@ -1583,6 +1586,7 @@ Optional Packages:
   --with-ip               Enable IP4 sockets
   --with-ip6              Enable IP6 sockets
   --with-local            Enable local (UNIX domain) sockets
+  --with-location         Enable location module
   --with-bluetooth        Enable bluetooth sockets
   --with-openssl-path=PATH
                           Set path to OpenSSL
@@ -15224,6 +15228,25 @@ else
 fi
 
 
+# location module
+# Include if GPS headers are present
+
+# Check whether --with-location was given.
+if test "${with_location+set}" = set; then :
+  withval=$with_location; LOCATION="$withval"
+else
+  ac_fn_cxx_check_header_mongrel "$LINENO" "libgpsmm.h" "ac_cv_header_libgpsmm_h" "$ac_includes_default"
+if test "x$ac_cv_header_libgpsmm_h" = x""yes; then :
+  LOCATION="yes"
+else
+  LOCATION="no"
+fi
+
+
+
+fi
+
+
 # bluetooth module
 # Include if bluetooth headers are present
 
@@ -17395,6 +17418,14 @@ else
   BUILD_LOCAL_FALSE=
 fi
 
+ if test x$LOCATION = xyes; then
+  BUILD_LOCATION_TRUE=
+  BUILD_LOCATION_FALSE='#'
+else
+  BUILD_LOCATION_TRUE='#'
+  BUILD_LOCATION_FALSE=
+fi
+
  if test x$BLUETOOTH = xyes; then
   BUILD_BLUETOOTH_TRUE=
   BUILD_BLUETOOTH_FALSE='#'
@@ -17501,6 +17532,8 @@ ac_config_files="$ac_config_files ip/Makefile"
 ac_config_files="$ac_config_files ip6/Makefile"
 
 ac_config_files="$ac_config_files local/Makefile"
+
+ac_config_files="$ac_config_files location/Makefile"
 
 ac_config_files="$ac_config_files bluetooth/Makefile"
 
@@ -17686,6 +17719,10 @@ Usually this means the macro was only invoked conditionally." "$LINENO" 5
 fi
 if test -z "${BUILD_LOCAL_TRUE}" && test -z "${BUILD_LOCAL_FALSE}"; then
   as_fn_error "conditional \"BUILD_LOCAL\" was never defined.
+Usually this means the macro was only invoked conditionally." "$LINENO" 5
+fi
+if test -z "${BUILD_LOCATION_TRUE}" && test -z "${BUILD_LOCATION_FALSE}"; then
+  as_fn_error $? "conditional \"BUILD_LOCATION\" was never defined.
 Usually this means the macro was only invoked conditionally." "$LINENO" 5
 fi
 if test -z "${BUILD_BLUETOOTH_TRUE}" && test -z "${BUILD_BLUETOOTH_FALSE}"; then
@@ -18688,6 +18725,7 @@ do
     "ip/Makefile") CONFIG_FILES="$CONFIG_FILES ip/Makefile" ;;
     "ip6/Makefile") CONFIG_FILES="$CONFIG_FILES ip6/Makefile" ;;
     "local/Makefile") CONFIG_FILES="$CONFIG_FILES local/Makefile" ;;
+    "location/Makefile") CONFIG_FILES="$CONFIG_FILES location/Makefile" ;;
     "bluetooth/Makefile") CONFIG_FILES="$CONFIG_FILES bluetooth/Makefile" ;;
     "mime/Makefile") CONFIG_FILES="$CONFIG_FILES mime/Makefile" ;;
     "simple/Makefile") CONFIG_FILES="$CONFIG_FILES simple/Makefile" ;;
@@ -20243,6 +20281,7 @@ The following modules will be built:
   + ip             $IP
   + ip6            $IP6
   + local          $LOCAL
+  + location       $LOCATION
   + bluetooth      $BLUETOOTH
   + mime           yes
   + simple         yes
@@ -20280,6 +20319,7 @@ The following modules will be built:
   + ip             $IP
   + ip6            $IP6
   + local          $LOCAL
+  + location       $LOCATION
   + bluetooth      $BLUETOOTH
   + mime           yes
   + simple         yes
