@@ -25,6 +25,8 @@ Free Software Foundation, Inc.,
 #include <sconex/ScriptTypes.h>
 #include <sconex/ScriptExpr.h>
 
+#include <memory>
+
 #include <libgpsmm.h>
 
 //=============================================================================
@@ -63,9 +65,7 @@ private:
   std::string m_host;
   std::string m_port;
 
-  gpsmm m_interface;
-
-  bool m_interface_usable;
+  std::auto_ptr<gpsmm> m_interface;
 };
 
 SCONEX_MODULE(LocationModule);
@@ -76,8 +76,7 @@ LocationModule::LocationModule()
   : scx::Module("location",scx::version()),
     m_host("localhost"),
     m_port("gpsd"),
-    m_interface(),
-    m_interface_usable(false)
+    m_interface()
 {
 }
 
@@ -120,35 +119,50 @@ scx::ScriptRef* LocationModule::script_method(const scx::ScriptAuth& auth,
   if ("connect" == name) {
 
     // Get host specification.
-    const scx::ScriptString* a_host =
-      scx::get_method_arg<scx::ScriptString>(args,0,"host");
-    if (NULL != a_host) {
-      m_host = a_host->get_string();
+    std::string new_host;
+    {
+      const scx::ScriptString* a_host =
+        scx::get_method_arg<scx::ScriptString>(args,0,"host");
+      if (NULL != a_host) {
+        new_host = a_host->get_string();
+      } else {
+        return scx::ScriptError::new_ref("No host specified.");
+      }
     }
 
     // Get port specification: could be string (service name) or numeric
     // (port number).
-    const scx::ScriptInt* a_service_num =
-      scx::get_method_arg<scx::ScriptInt>(args,1,"port");
-    const scx::ScriptString* a_service_str =
-      scx::get_method_arg<scx::ScriptString>(args,1,"service");
+    std::string new_port;
+    {
+      const scx::ScriptInt* a_service_num =
+        scx::get_method_arg<scx::ScriptInt>(args,1,"port");
+      const scx::ScriptString* a_service_str =
+        scx::get_method_arg<scx::ScriptString>(args,1,"service");
 
-    if (NULL != a_service_num) {
-      const int p = a_service_num->get_int();
-      if (0 <= p && p <= 65535) {
-        std::stringstream ss;
-        ss << p;
-        m_port = ss.str();
-      } else {
-        return scx::ScriptError::new_ref("Invalid port designation");
+      if (NULL != a_service_num) {
+        const int p = a_service_num->get_int();
+        if (0 <= p && p <= 65535) {
+          std::stringstream ss;
+          ss << p;
+          new_port = ss.str();
+        } else {
+          return scx::ScriptError::new_ref("Invalid port designation");
+        }
+
+      } else if (NULL != a_service_str) {
+        new_port = a_service_str->get_string();
       }
-
-    } else if (NULL != a_service_str) {
-      m_port = a_service_str->get_string();
+    }
+    if (new_port.empty()) {
+      return scx::ScriptError::new_ref("No port specified.");
     }
 
-    // FIXME: Not sure what to return here...?
-    return scx::ScriptError::new_ref("NOT YET WRITTEN!");
+    // Scrap the existing connection.
+    m_host = new_host;
+    m_port = new_port;
+    m_interface.reset(NULL);
+
+    return 0;
   } else if ("query" == name) {
     double latitude = 0.0;
     double longitude = 0.0;
@@ -174,13 +188,13 @@ scx::ScriptRef* LocationModule::script_method(const scx::ScriptAuth& auth,
 //=============================================================================
 bool LocationModule::initialise_interface()
 {
-  if (!m_interface_usable) {
-    if (NULL != m_interface.open(m_host.c_str(), m_port.c_str())) {
+  if (NULL == m_interface.get()) {
+    m_interface.reset(new gpsmm);
+    if (NULL != m_interface->open(m_host.c_str(), m_port.c_str())) {
 
       // Attempt to enable "watcher mode".
-      if (NULL != m_interface.stream(WATCH_ENABLE)) {
-        m_interface_usable = true;
-      } else {
+      if (NULL == m_interface->stream(WATCH_ENABLE)) {
+        m_interface.reset(NULL);
         DEBUG_LOG("Failed to enable watcher mode on interface");
       }
 
@@ -189,7 +203,7 @@ bool LocationModule::initialise_interface()
     }
   }
 
-  return m_interface_usable;
+  return (NULL != m_interface.get());
 }
 
 //=============================================================================
@@ -200,9 +214,9 @@ bool LocationModule::query(double& latitude, double& longitude, double& speed)
     const struct gps_data_t* data = NULL;
 
     // Discard the backlog of data.
-    m_interface.clear_fix();
-    while (m_interface.waiting()) {
-      data = m_interface.poll();
+    m_interface->clear_fix();
+    while (m_interface->waiting()) {
+      data = m_interface->poll();
     }
 
     if (NULL != data) {
