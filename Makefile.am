@@ -43,9 +43,12 @@ doc_DATA = AUTHORS COPYING ChangeLog INSTALL NEWS README THANKS TODO
 
 sysconf_DATA = sconeserver.conf.example
 
+dist_man_MANS = sconed.1
+
 EXTRA_DIST = \
 $(sysconf_DATA) \
 autogen.sh \
+$(dist_man_MANS) \
 debian/rules \
 debian/control \
 debian/changelog \

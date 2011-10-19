@@ -1263,6 +1263,8 @@ ScriptRef* ScriptSub::call(const ScriptAuth& auth, const ScriptRef* args)
 {
   if (m_body) {
 
+    ScriptRefTo<ScriptStatement>* body = m_body->new_copy();
+
     // Setup the arguments
     int pos = 0;
     for (ScriptSubArgNames::const_iterator it = m_arg_names.begin();
@@ -1276,12 +1278,14 @@ ScriptRef* ScriptSub::call(const ScriptAuth& auth, const ScriptRef* args)
       const ScriptRef* arg = get_method_arg_ref(args,pos++,*it);
       if (arg) {
         v_args->give(arg->ref_copy());
-        m_body->object()->script_method(auth,*args,"var",&v_args_ref);
+        body->object()->script_method(auth,*args,"var",&v_args_ref);
       }
     }
 
     // Execute the subroutine body
-    return m_body->object()->execute(*m_tracer);
+    ScriptRef* ret = body->object()->execute(*m_tracer);
+    delete body;
+    return ret;
   }
   return 0;
 }

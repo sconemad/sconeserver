@@ -108,7 +108,8 @@ ScriptStatement::ScriptStatement(int line)
 
 //=============================================================================
 ScriptStatement::ScriptStatement(const ScriptStatement& c)
-  : m_line(c.m_line)
+  : ScriptObject(c),
+    m_line(c.m_line)
 {
   DEBUG_COUNT_CONSTRUCTOR(ScriptStatement)
 }

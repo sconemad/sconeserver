@@ -1,0 +1,65 @@
+.TH sconed 1 "September 2011" "version 1.0.0" "sconeserver"
+.SH NAME
+sconed \- sconeserver daemon
+.SH SYNOPSIS
+.B sconed
+.RI [ options ]
+.SH DESCRIPTION
+Starts the sconeserver daemon. 
+
+The main configuration file (\fI<config-path>\fP/sconeserver.conf) is
+evaluated, loading the required modules and evaluating their associated
+configuration files. 
+
+The configuration must also set up any required \fIjobs\fP, which typically 
+involve listening for incoming connections, associating each with a series 
+of modules which will be used to handle the connection.
+
+The process then enters the scheduler loop, which waits for jobs to become
+ready to run and runs them. This continues until the server is explicitly 
+shutdown (or there are no more jobs).
+
+The number of threads can be specified using set_thread_pool(n), where the 
+thread pool size defaults to zero. With zero threads, the server operates in 
+multiplexing mode, executing jobs serially. If one or more threads is set, 
+jobs are allocated to threads as they become available and can execute in 
+parallel. Setting the size of the thread pool to at least one thread per CPU 
+core is recommended to get the best performance out of your hardware.
+
+.SH OPTIONS
+
+.TP
+.B \-h, \-\-help
+Print help and exit.
+
+.TP
+.B \-v,  \-\-version
+Print version information and exit.
+
+.TP
+.B \-f
+Launches in foreground with a configuration console. The server is not 
+daemonized and remains attached to the console.
+
+.TP
+.B \-n
+Don't read main configuration file.
+
+.TP
+.B \-c=\fIconfig-path\fP
+Specifies the path in which to look for configuration files.
+
+.TP
+.B \-m=\fImodule-path\fP
+Specifies the path in which to look for modules.
+
+.TP
+.B \-l=\fIlog-path\fP
+Specifies the path where log files should be written.
+
+.SH "SEE ALSO"
+.B http://www.sconemad.com/sconeserver
+for online documentation and latest version.
+
+.SH AUTHOR
+Andrew Wedgbury <wedge@sconemad.com>
