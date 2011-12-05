@@ -23,6 +23,8 @@ Free Software Foundation, Inc.,
 #include "SconesiteModule.h"
 #include "SconesiteStream.h"
 #include "Profile.h"
+#include "XMLArticleBody.h"
+#include "WikiTextArticleBody.h"
 
 #include <sconex/ModuleInterface.h>
 #include <sconex/Module.h>
@@ -59,6 +61,8 @@ SconesiteModule::SconesiteModule()
   : scx::Module("sconesite",scx::version())
 {
   scx::Stream::register_stream("sconesite",this);
+  Article::register_article_type("xml",this);
+  Article::register_article_type("wtx",this);
 
   m_job = scx::Kernel::get()->add_job(
     new SconesiteJob(this,scx::Time(SCONESITE_JOB_PERIOD)));
@@ -68,6 +72,8 @@ SconesiteModule::SconesiteModule()
 SconesiteModule::~SconesiteModule()
 {
   scx::Stream::unregister_stream("sconesite",this);
+  Article::unregister_article_type("xml",this);
+  Article::unregister_article_type("wtx",this);
 }
 
 //=========================================================================
@@ -110,6 +116,33 @@ void SconesiteModule::provide(const std::string& type,
   }
   
   object = new SconesiteStream(this,*profile);
+}
+
+//=========================================================================
+void SconesiteModule::provide(const std::string& type,
+			      const scx::ScriptRef* args,
+			      ArticleBody*& object)
+{
+  const scx::ScriptString* name =
+    scx::get_method_arg<scx::ScriptString>(args,0,"name");
+  if (!name) {
+    log("No article name specified");
+    return;
+  }  
+
+  const scx::ScriptString* root =
+    scx::get_method_arg<scx::ScriptString>(args,1,"root");
+  if (!root) {
+    log("No article root specified");
+    return;
+  }  
+
+  if ("xml" == type) {
+    object = new XMLArticleBody(name->get_string(), root->get_string());
+
+  } else if ("wtx" == type) {
+    object = new WikiTextArticleBody(name->get_string(), root->get_string());
+  }
 }
 
 //=========================================================================

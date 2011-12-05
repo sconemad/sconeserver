@@ -1,8 +1,8 @@
 /* SconeServer (http://www.sconemad.com)
 
-Sconesite XML document
+WikiText Article Body
 
-Copyright (c) 2000-2009 Andrew Wedgbury <wedge@sconemad.com>
+Copyright (c) 2000-2011 Andrew Wedgbury <wedge@sconemad.com>
 
 This program is free software; you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -19,8 +19,8 @@ along with this program (see the file COPYING); if not, write to the
 Free Software Foundation, Inc.,
 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA */
 
-#ifndef sconesiteXMLDoc_h
-#define sconesiteXMLDoc_h
+#ifndef sconesiteWikiTextArticleBody_h
+#define sconesiteWikiTextArticleBody_h
 
 #include "ArticleBody.h"
 
@@ -28,26 +28,19 @@ Free Software Foundation, Inc.,
 #include <sconex/Date.h>
 #include <sconex/Mutex.h>
 
-#include <libxml/parser.h>
-#include <libxml/tree.h>
-#include <libxml/HTMLtree.h>
-
-bool XMLAttr_bool(NodeAttrs& attrs, const std::string& value, bool def=false);
-
 class Context;
 
 //=========================================================================
-// XMLDoc - An article body implementation for XML-based documents, using
-// the libxml2 parser.
+// WikiTextArticleBody - An article body implementation for WikiText 
+// documents
 //
-class XMLDoc : public ArticleBody {
+class WikiTextArticleBody : public ArticleBody {
 public:
 
-  XMLDoc(const std::string& name,
-         const scx::FilePath& root,
-         const std::string& file);
+  WikiTextArticleBody(const std::string& name,
+		      const scx::FilePath& path);
   
-  virtual ~XMLDoc();
+  virtual ~WikiTextArticleBody();
   
   virtual const scx::FilePath& get_root() const;
   virtual const std::string& get_file() const;
@@ -70,25 +63,14 @@ public:
 				    const scx::ScriptOp& op,
 				    const scx::ScriptRef* right=0);
 
-  typedef scx::ScriptRefTo<XMLDoc> Ref;
-
-  static void get_node_text(std::string& txt, xmlNode* node);
+  typedef scx::ScriptRefTo<WikiTextArticleBody> Ref;
 
 protected:
-
-  virtual void process_node(Context& context, xmlNode* node);
-  
-  virtual void handle_open();
-  virtual void handle_close();
-  
-  bool open();
-  void close();  
 
   scx::FilePath m_root;
   std::string m_file;
   scx::Date m_modtime;
 
-  xmlDoc* m_xmldoc;
   std::string m_errors;
   
   scx::Date m_last_access;

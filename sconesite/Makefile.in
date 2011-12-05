@@ -77,7 +77,8 @@ LTLIBRARIES = $(pkglib_LTLIBRARIES)
 sconesite_la_DEPENDENCIES =
 am_sconesite_la_OBJECTS = SconesiteModule.lo SconesiteStream.lo \
 	Article.lo ArticleHeading.lo Context.lo Profile.lo \
-	RenderMarkup.lo Template.lo XMLArticleBody.lo XMLDoc.lo
+	RenderMarkup.lo Template.lo WikiTextArticleBody.lo \
+	XMLArticleBody.lo XMLDoc.lo
 sconesite_la_OBJECTS = $(am_sconesite_la_OBJECTS)
 sconesite_la_LINK = $(LIBTOOL) --tag=CXX $(AM_LIBTOOLFLAGS) \
 	$(LIBTOOLFLAGS) --mode=link $(CXXLD) $(AM_CXXFLAGS) \
@@ -280,6 +281,7 @@ Context.cpp \
 Profile.cpp \
 RenderMarkup.cpp \
 Template.cpp \
+WikiTextArticleBody.cpp \
 XMLArticleBody.cpp \
 XMLDoc.cpp
 
@@ -294,6 +296,7 @@ Context.h \
 Profile.h \
 RenderMarkup.h \
 Template.h \
+WikiTextArticleBody.h \
 XMLArticleBody.h \
 XMLDoc.h
 
@@ -383,6 +386,7 @@ distclean-compile:
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/SconesiteModule.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/SconesiteStream.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/Template.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/WikiTextArticleBody.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/XMLArticleBody.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/XMLDoc.Plo@am__quote@
 

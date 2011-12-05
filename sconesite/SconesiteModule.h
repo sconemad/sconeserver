@@ -25,12 +25,14 @@ Free Software Foundation, Inc.,
 #include <sconex/Module.h>
 #include <sconex/Job.h>
 #include "Profile.h"
+#include "Article.h"
 
 //=============================================================================
 // SconesiteModule - A content management module for SconeServer
 //
 class SconesiteModule : public scx::Module,
-                        public scx::Provider<scx::Stream> {
+                        public scx::Provider<scx::Stream>,
+                        public scx::Provider<ArticleBody> {
 public:
 
   SconesiteModule();
@@ -58,6 +60,11 @@ public:
   virtual void provide(const std::string& type,
 		       const scx::ScriptRef* args,
 		       scx::Stream*& object);
+
+  // Provider<ArticleBody::Ref> method
+  virtual void provide(const std::string& type,
+		       const scx::ScriptRef* args,
+		       ArticleBody*& object);
 
   typedef scx::ScriptRefTo<SconesiteModule> Ref;
 

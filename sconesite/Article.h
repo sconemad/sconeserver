@@ -83,6 +83,11 @@ public:
   const scx::Date& get_access_time() const;
   void reset_access_time();
 
+  static void register_article_type(const std::string& type,
+				    scx::Provider<ArticleBody>* factory);
+  static void unregister_article_type(const std::string& type,
+				      scx::Provider<ArticleBody>* factory);
+
   // ScriptObject methods
   virtual std::string get_string() const;
 
@@ -112,6 +117,10 @@ protected:
   scx::Date m_access_time;
 
   ArticleBody::Ref* m_body;
+
+  static void init();
+
+  static scx::ProviderScheme<ArticleBody>* s_article_providers;
   
 };
 

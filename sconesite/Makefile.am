@@ -16,6 +16,7 @@ Context.cpp \
 Profile.cpp \
 RenderMarkup.cpp \
 Template.cpp \
+WikiTextArticleBody.cpp \
 XMLArticleBody.cpp \
 XMLDoc.cpp
 
@@ -31,6 +32,7 @@ Context.h \
 Profile.h \
 RenderMarkup.h \
 Template.h \
+WikiTextArticleBody.h \
 XMLArticleBody.h \
 XMLDoc.h
 

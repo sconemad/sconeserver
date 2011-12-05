@@ -69,11 +69,10 @@ void ErrorHandler(void* vcx,const char* str,...)
 }
 
 //=========================================================================
-XMLDoc::XMLDoc(
-  const std::string& name,
-  const scx::FilePath& root,
-  const std::string& file
-) : m_name(name),
+XMLDoc::XMLDoc(const std::string& name,
+	       const scx::FilePath& root,
+	       const std::string& file)
+  : ArticleBody(name),
     m_root(root),
     m_file(file),
     m_xmldoc(0),
@@ -89,12 +88,6 @@ XMLDoc::XMLDoc(
 XMLDoc::~XMLDoc()
 {
   close();
-}
-
-//=========================================================================
-const std::string& XMLDoc::get_name() const
-{
-  return m_name;
 }
 
 //=========================================================================

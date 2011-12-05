@@ -24,8 +24,7 @@ Free Software Foundation, Inc.,
 //=========================================================================
 XMLArticleBody::XMLArticleBody(const std::string& name,
                                const scx::FilePath& path
-) : XMLDoc(name,path,"article.xml"),
-    m_headings(1,name,0)
+) : XMLDoc(name,path,"article.xml")
 {
 
 
@@ -35,12 +34,6 @@ XMLArticleBody::XMLArticleBody(const std::string& name,
 XMLArticleBody::~XMLArticleBody()
 {
 
-}
-
-//=========================================================================
-const ArticleHeading& XMLArticleBody::get_headings() const
-{
-  return m_headings;
 }
 
 //=========================================================================

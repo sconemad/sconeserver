@@ -36,8 +36,15 @@ typedef std::map<std::string,std::string> NodeAttrs;
 //
 class ArticleBody : public scx::ScriptObject {
 public:
+
+  ArticleBody(const std::string& name)
+    : m_name(name), m_headings(1,name,0) { }
   
-  virtual const std::string& get_name() const =0;
+  virtual const std::string& get_name() const
+  {
+    return m_name; 
+  }
+
   virtual const scx::FilePath& get_root() const =0;
   virtual const std::string& get_file() const =0;
   virtual scx::FilePath get_filepath() const =0;
@@ -45,9 +52,17 @@ public:
   virtual bool process(Context& context) =0;
   virtual bool purge(const scx::Date& purge_time) =0;
 
-  virtual const ArticleHeading& get_headings() const =0;
+  virtual const ArticleHeading& get_headings() const
+  {
+    return m_headings; 
+  }
 
   typedef scx::ScriptRefTo<ArticleBody> Ref;
+
+protected:
+
+  std::string m_name;
+  ArticleHeading m_headings;
   
 };
 

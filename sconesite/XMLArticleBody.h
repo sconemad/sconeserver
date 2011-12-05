@@ -33,16 +33,12 @@ public:
 
   virtual ~XMLArticleBody();
 
-  virtual const ArticleHeading& get_headings() const;
-  
 protected:
 
   virtual void handle_open();
   virtual void handle_close();
 
   void scan_headings(xmlNode* start,int& index);
-
-  ArticleHeading m_headings;
   
 };
 

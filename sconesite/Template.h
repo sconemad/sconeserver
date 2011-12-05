@@ -39,8 +39,6 @@ public:
 
   ~Template();
 
-  virtual const ArticleHeading& get_headings() const;
-
   typedef scx::ScriptRefTo<Template> Ref;
   
 protected:
@@ -48,8 +46,6 @@ protected:
 private:
   
   Profile& m_profile;
-
-  ArticleHeading m_headings;
 
 };
 

@@ -1,4 +1,13 @@
 
+2011-12-05 Andrew Wedgbury <wedge@sconemad.com>
+
+	* sconesite/ArticleBody: Add ArticleBody provider API, refactor.
+	* sconesite/Template: Refactor.
+	* sconesite/XMLDoc: Refactor.
+	* sconesite/Article: Create ArticleBodies using provider.
+	* sconesite/SconesiteModule: Provide XML and Wiki ArticleBodies.
+	* sconesite/WikiTextArticleBody: New WikiText ArticleBody (outline).
+	
 2011-10-19 Andrew Wedgbury <wedge@sconemad.com>
 
 	* sconed: Add man page.

@@ -69,6 +69,8 @@ public:
   
   void unregister_provider(const std::string& type, ProviderType* factory);
 
+  const ProviderMap& providers() const { return m_providers; }
+
 protected:
 
   ProviderMap m_providers;

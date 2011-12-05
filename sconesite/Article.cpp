@@ -21,7 +21,6 @@ Free Software Foundation, Inc.,
 
 #include "Article.h"
 #include "ArticleBody.h"
-#include "XMLArticleBody.h"
 #include "Profile.h"
 #include "Context.h"
 
@@ -90,6 +89,7 @@ bool ArticleMetaSorter::operator()(const Article* a, const Article* b)
 }
 
 
+scx::ProviderScheme<ArticleBody>* Article::s_article_providers = 0;
 
 //=========================================================================
 Article::Article(Profile& profile,
@@ -112,7 +112,25 @@ Article::Article(Profile& profile,
   if (a_name) {
     m_name = a_name->object()->get_string();
     m_root = m_profile.get_path() + "art" + m_link;
-    m_body = new ArticleBody::Ref(new XMLArticleBody(m_name,m_root));
+
+    scx::ScriptMap::Ref args(new scx::ScriptMap());
+    args.object()->give("name",a_name->ref_copy(scx::ScriptRef::ConstRef));
+    args.object()->give("root",scx::ScriptString::new_ref(m_root.path()));
+
+    for (scx::ProviderScheme<ArticleBody>::ProviderMap::const_iterator it = 
+	   s_article_providers->providers().begin(); 
+	 it != s_article_providers->providers().end(); ++it) {
+      std::string file = "article." + it->first;
+      if (scx::FileStat(m_root + file).is_file()) {
+	ArticleBody* body = s_article_providers->provide(it->first, &args);
+	m_body = new ArticleBody::Ref(body);
+      }
+    }
+    if (!m_body) {
+      DEBUG_LOG("No article body for '" << m_name << "' in '" << m_root.path() << "'");
+    }
+  } else {
+    DEBUG_LOG("No article for id '" << m_id << "'");
   }
 
   delete a_name;
@@ -206,6 +224,22 @@ void Article::reset_access_time()
 }
 
 //=========================================================================
+void Article::register_article_type(const std::string& type,
+				    scx::Provider<ArticleBody>* factory)
+{
+  init();
+  s_article_providers->register_provider(type,factory);
+}
+
+//=========================================================================
+void Article::unregister_article_type(const std::string& type,
+				      scx::Provider<ArticleBody>* factory)
+{
+  init();
+  s_article_providers->unregister_provider(type,factory);
+}
+
+//=========================================================================
 std::string Article::get_string() const
 {
   return m_name;
@@ -268,8 +302,10 @@ scx::ScriptRef* Article::script_op(const scx::ScriptAuth& auth,
       return new scx::ScriptRef(m_access_time.new_copy());
     }
 
-    if ("body" == name)
-      return m_body->ref_copy(ref.reftype());
+    if ("body" == name) {
+      if (m_body) return m_body->ref_copy(ref.reftype());
+      return scx::ScriptError::new_ref("No article body");
+    }
   }
 
   return scx::ScriptObject::script_op(auth,ref,op,right);
@@ -394,3 +430,9 @@ scx::ScriptRef* Article::script_method(const scx::ScriptAuth& auth,
   return scx::ScriptObject::script_method(auth,ref,name,args);
 }
 
+void Article::init()
+{
+  if (!s_article_providers) {
+    s_article_providers = new scx::ProviderScheme<ArticleBody>();
+  }
+}
