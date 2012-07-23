@@ -55,6 +55,13 @@ AC_CHECK_LIB([crypt],[crypt],,
   [AC_MSG_ERROR([library 'libcrypt' is required])]
 )
 
+# Not all C libraries have crypt_r
+AC_CHECK_FUNC(crypt_r, system_crypt_r="yes", system_crypt_r="no")
+AC_CHECK_LIB(crypt, crypt_r, have_crypt_r_lib="yes", have_crypt_r_lib="no")
+if test "$system_crypt_r $have_crypt_r_lib" != "no no"; then
+   AC_DEFINE(HAVE_CRYPT_R, 1, [Have crypt_r function])
+fi
+
 # server module
 # Always include this unless explicitly told not to
 AC_ARG_WITH([ip],

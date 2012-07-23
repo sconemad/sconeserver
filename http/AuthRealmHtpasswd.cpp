@@ -66,12 +66,17 @@ scx::ScriptRef* AuthRealmHtpasswd::authorised(const std::string& username,
     
   } else {
     // Use crypt method
+#ifdef HAVE_CRYPT_R
     struct crypt_data data;
     memset(&data,0,sizeof(data));
     data.initialized = 0;
     std::string check = crypt_r(password.c_str(),
 				pwentry.c_str(),
 				&data);
+#else
+    //NOTE: crypt_r not available:
+    std::string check = crypt(password.c_str(), pwentry.c_str());
+#endif
     auth = (check == pwentry);
   }
   
