@@ -15522,20 +15522,21 @@ if test "x$ac_cv_lib_xml2_xmlNewDoc" = x""yes; then :
 fi
 
 
+# Look for libxml2 headers
+ac_fn_cxx_check_header_mongrel "$LINENO" "libxml/parser.h" "ac_cv_header_libxml_parser_h" "$ac_includes_default"
+if test "x$ac_cv_header_libxml_parser_h" = xyes; then :
+
+fi
+
+
+
 # Sconesite module
 
 # Check whether --with-sconesite was given.
 if test "${with_sconesite+set}" = set; then :
   withval=$with_sconesite; SCONESITE="$withval"
 else
-  ac_fn_cxx_check_header_mongrel "$LINENO" "libxml/parser.h" "ac_cv_header_libxml_parser_h" "$ac_includes_default"
-if test "x$ac_cv_header_libxml_parser_h" = x""yes; then :
   SCONESITE="yes"
-else
-  SCONESITE="no"
-fi
-
-
 
 fi
 

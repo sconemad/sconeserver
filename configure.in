@@ -163,13 +163,14 @@ AC_CHECK_LIB([xml2],[xmlNewDoc],
   [CPPFLAGS="$CPPFLAGS `xml2-config --cflags`"],,
 )
 
+# Look for libxml2 headers
+AC_CHECK_HEADER([libxml/parser.h],,)
+
 # Sconesite module
 AC_ARG_WITH([sconesite],
   [AC_HELP_STRING([--with-sconesite],[Enable Sconesite module])],
   [SCONESITE="$withval"],
-  [AC_CHECK_HEADER([libxml/parser.h],
-    [SCONESITE="yes"],
-    [SCONESITE="no"])]
+  [SCONESITE="yes"]
 )
 
 # Check we have libxml2 if Sconesite is enabled
