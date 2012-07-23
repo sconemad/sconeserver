@@ -66,6 +66,8 @@ private:
   std::string m_port;
 
   std::auto_ptr<gpsmm> m_interface;
+
+  const int m_timeout;
 };
 
 SCONEX_MODULE(LocationModule);
@@ -76,7 +78,8 @@ LocationModule::LocationModule()
   : scx::Module("location",scx::version()),
     m_host("localhost"),
     m_port("gpsd"),
-    m_interface()
+    m_interface(),
+    m_timeout(1)
 {
 }
 
@@ -189,17 +192,12 @@ scx::ScriptRef* LocationModule::script_method(const scx::ScriptAuth& auth,
 bool LocationModule::initialise_interface()
 {
   if (NULL == m_interface.get()) {
-    m_interface.reset(new gpsmm);
-    if (NULL != m_interface->open(m_host.c_str(), m_port.c_str())) {
+    m_interface.reset(new gpsmm(m_host.c_str(), m_port.c_str()));
 
-      // Attempt to enable "watcher mode".
-      if (NULL == m_interface->stream(WATCH_ENABLE)) {
-        m_interface.reset(NULL);
-        DEBUG_LOG("Failed to enable watcher mode on interface");
-      }
-
-    } else {
-      DEBUG_LOG("Failed to open interface");
+    // Attempt to enable "watcher mode".
+    if (NULL == m_interface->stream(WATCH_ENABLE)) {
+      m_interface.reset(NULL);
+      DEBUG_LOG("Failed to enable watcher mode on interface");
     }
   }
 
@@ -215,8 +213,8 @@ bool LocationModule::query(double& latitude, double& longitude, double& speed)
 
     // Discard the backlog of data.
     m_interface->clear_fix();
-    while (m_interface->waiting()) {
-      data = m_interface->poll();
+    while (m_interface->waiting(m_timeout)) {
+      data = m_interface->read();
     }
 
     if (NULL != data) {
