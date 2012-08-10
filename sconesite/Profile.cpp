@@ -298,7 +298,7 @@ Article::Ref* Profile::create_article(int pid,
     return 0;
   }
 
-  std::string link = parent->object()->get_href_path() + name;
+  std::string link = parent->object()->get_href_path() + name + "/";
   scx::FilePath path = parent->object()->get_root() + name;
   delete parent;
 
@@ -342,21 +342,11 @@ Article::Ref* Profile::create_article(int pid,
     return 0;
   }
 
-  scx::RWLocker locker(m_cache_lock,true,scx::RWLock::Write);
-
-  Article* article = load_article(id,pid,link);
-  scx::FilePath apath = article->get_filepath();
-
-  SCONESITEPROFILE_DEBUG_LOG("Article link cache add: " << id << 
-			     " -> '" << link << "'");
-  m_article_links[link] = id;
-
-  locker.unlock();
-
+  path = path + "article.xml";
   scx::File file;
-  if (scx::Ok != file.open(apath,scx::File::Write|scx::File::Create,00660)) {
+  if (scx::Ok != file.open(path,scx::File::Write|scx::File::Create,00660)) {
     DEBUG_LOG_ERRNO("Unable to create new article xml file '" << 
-		    apath.path() << "'");
+		    path.path() << "'");
     return 0;
   }
 
@@ -364,6 +354,16 @@ Article::Ref* Profile::create_article(int pid,
   file.write("\n<p>\nwrite something here...\n</p>\n\n");
   file.write("</article>\n");
   file.close();
+
+  scx::RWLocker locker(m_cache_lock,true,scx::RWLock::Write);
+
+  Article* article = load_article(id,pid,link);
+
+  SCONESITEPROFILE_DEBUG_LOG("Article link cache add: " << id << 
+			     " -> '" << link << "'");
+  m_article_links[link] = id;
+
+  locker.unlock();
 
   return new Article::Ref(article);
 }
