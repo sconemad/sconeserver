@@ -146,14 +146,18 @@ void BluetoothSocketAddress::set_address(
   const std::string& addr
 )
 {
+  // N.B. Using BDADDR_ANY results in "taking address of temporary"
+  // compiler errors. We can squash the errors using -fpermissive, but that
+  // would also mask other, unrelated problems; hence this ugly workaround.
+  const bdaddr_t workaround_bdaddr_any = {0, 0, 0, 0, 0, 0};
   if (addr.length()==0) {
     // Set the address invalid
-    bacpy(&m_addr.rc_bdaddr,BDADDR_ANY);
+    bacpy(&m_addr.rc_bdaddr,&workaround_bdaddr_any);
     m_valid = false;
     
   } else if (addr=="*") {
     // Wildcard address
-    bacpy(&m_addr.rc_bdaddr,BDADDR_ANY);
+    bacpy(&m_addr.rc_bdaddr,&workaround_bdaddr_any);
     m_valid = true;
 		
   } else {
