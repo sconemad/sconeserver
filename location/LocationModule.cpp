@@ -67,7 +67,7 @@ private:
 
   std::auto_ptr<gpsmm> m_interface;
 
-  const int m_timeout;
+  const int m_timeout_us;
 };
 
 SCONEX_MODULE(LocationModule);
@@ -79,7 +79,7 @@ LocationModule::LocationModule()
     m_host("localhost"),
     m_port("gpsd"),
     m_interface(),
-    m_timeout(1)
+    m_timeout_us(1000000)
 {
 }
 
@@ -213,25 +213,33 @@ bool LocationModule::query(double& latitude, double& longitude, double& speed)
 
     // Discard the backlog of data.
     m_interface->clear_fix();
-    while (m_interface->waiting(m_timeout)) {
+    while (m_interface->waiting(m_timeout_us)) {
       data = m_interface->read();
     }
 
     if (NULL != data) {
-      const gps_fix_t fix = data->fix;
-      switch (fix.mode) {
-      case MODE_NOT_SEEN:
-        DEBUG_LOG("MODE_NOT_SEEN");
-        break;
-      case MODE_NO_FIX:
-        DEBUG_LOG("MODE_NO_FIX");
-        break;
-      case MODE_2D:
-      case MODE_3D:
-        latitude = fix.latitude;
-        longitude = fix.longitude;
-        speed = fix.speed;
-        return true;
+      if (data->set & MODE_SET) {
+        const gps_fix_t fix = data->fix;
+        switch (fix.mode) {
+        case MODE_NOT_SEEN:
+          DEBUG_LOG("MODE_NOT_SEEN");
+          break;
+        case MODE_NO_FIX:
+          DEBUG_LOG("MODE_NO_FIX");
+          break;
+        case MODE_2D:
+        case MODE_3D:
+          if ((data->set & LATLON_SET) && (data->set & SPEED_SET)) {
+            latitude = fix.latitude;
+            longitude = fix.longitude;
+            speed = fix.speed;
+            return true;
+          }
+          DEBUG_LOG("Incomplete fix");
+          break;
+        }
+      } else {
+        DEBUG_LOG("No fix mode");
       }
     } else {
       DEBUG_LOG("No data");
