@@ -195,7 +195,7 @@ bool LocationModule::initialise_interface()
     m_interface.reset(new gpsmm(m_host.c_str(), m_port.c_str()));
 
     // Attempt to enable "watcher mode".
-    if (NULL == m_interface->stream(WATCH_ENABLE)) {
+    if (NULL == m_interface->stream(WATCH_ENABLE|WATCH_JSON)) {
       m_interface.reset(NULL);
       DEBUG_LOG("Failed to enable watcher mode on interface");
     }
@@ -209,40 +209,36 @@ bool LocationModule::query(double& latitude, double& longitude, double& speed)
 {
   if (initialise_interface()) {
     // Attempt to get a fix.
-    const struct gps_data_t* data = NULL;
+    if (m_interface->waiting(m_timeout_us)) {
+      const struct gps_data_t* data = m_interface->read();
 
-    // Discard the backlog of data.
-    m_interface->clear_fix();
-    while (m_interface->waiting(m_timeout_us)) {
-      data = m_interface->read();
-    }
-
-    if (NULL != data) {
-      if (data->set & MODE_SET) {
-        const gps_fix_t fix = data->fix;
-        switch (fix.mode) {
-        case MODE_NOT_SEEN:
-          DEBUG_LOG("MODE_NOT_SEEN");
-          break;
-        case MODE_NO_FIX:
-          DEBUG_LOG("MODE_NO_FIX");
-          break;
-        case MODE_2D:
-        case MODE_3D:
-          if ((data->set & LATLON_SET) && (data->set & SPEED_SET)) {
-            latitude = fix.latitude;
-            longitude = fix.longitude;
-            speed = fix.speed;
-            return true;
+      if (NULL != data) {
+        if (data->set & MODE_SET) {
+          const gps_fix_t fix = data->fix;
+          switch (fix.mode) {
+          case MODE_NOT_SEEN:
+            DEBUG_LOG("MODE_NOT_SEEN");
+            break;
+          case MODE_NO_FIX:
+            DEBUG_LOG("MODE_NO_FIX");
+            break;
+          case MODE_2D:
+          case MODE_3D:
+            if ((data->set & LATLON_SET) && (data->set & SPEED_SET)) {
+              latitude = fix.latitude;
+              longitude = fix.longitude;
+              speed = fix.speed;
+              return true;
+            }
+            DEBUG_LOG("Incomplete fix");
+            break;
           }
-          DEBUG_LOG("Incomplete fix");
-          break;
+        } else {
+          DEBUG_LOG("No fix mode");
         }
       } else {
-        DEBUG_LOG("No fix mode");
+        DEBUG_LOG("No data");
       }
-    } else {
-      DEBUG_LOG("No data");
     }
   } else {
     DEBUG_LOG("No interface");
