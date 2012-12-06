@@ -185,7 +185,7 @@ fi
 
 # Look for ImageMagick settings
 AC_CHECK_LIB([Magick++],[InitializeMagick],
-  [CPPFLAGS="$CPPFLAGS `Magick++-config --cppflags`"],,
+  [CPPFLAGS="$CPPFLAGS `pkg-config --cflags Magick++`"],,
 )
 
 # Sconesite:image module
@@ -202,9 +202,9 @@ if test "x$SCONESITE_IMAGE" == "xyes"; then
   if test "x$ac_cv_lib_Magickpp_InitializeMagick" != "xyes"; then
     AC_MSG_ERROR([library 'Magick++' is required for Sconesite:image])
   fi
-  SCONESITE_IMAGE_LIBADD=`Magick++-config --libs`
+  SCONESITE_IMAGE_LIBADD=`pkg-config --libs Magick++`
   AC_SUBST(SCONESITE_IMAGE_LIBADD)
-  SCONESITE_IMAGE_LDFLAGS=`Magick++-config --ldflags`
+  SCONESITE_IMAGE_LDFLAGS=`pkg-config --libs Magick++`
   AC_SUBST(SCONESITE_IMAGE_LDFLAGS)
 fi
 

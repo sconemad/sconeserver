@@ -15589,7 +15589,7 @@ fi
 { $as_echo "$as_me:${as_lineno-$LINENO}: result: $ac_cv_lib_Magickpp_InitializeMagick" >&5
 $as_echo "$ac_cv_lib_Magickpp_InitializeMagick" >&6; }
 if test "x$ac_cv_lib_Magickpp_InitializeMagick" = x""yes; then :
-  CPPFLAGS="$CPPFLAGS `Magick++-config --cppflags`"
+  CPPFLAGS="$CPPFLAGS `pkg-config --cflags Magick++`"
 fi
 
 
@@ -15616,9 +15616,9 @@ if test "x$SCONESITE_IMAGE" == "xyes"; then
   if test "x$ac_cv_lib_Magickpp_InitializeMagick" != "xyes"; then
     as_fn_error "library 'Magick++' is required for Sconesite:image" "$LINENO" 5
   fi
-  SCONESITE_IMAGE_LIBADD=`Magick++-config --libs`
+  SCONESITE_IMAGE_LIBADD=`pkg-config --libs Magick++`
 
-  SCONESITE_IMAGE_LDFLAGS=`Magick++-config --ldflags`
+  SCONESITE_IMAGE_LDFLAGS=`pkg-config --libs Magick++`
 
 fi
 
