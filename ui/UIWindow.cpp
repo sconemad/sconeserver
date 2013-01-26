@@ -23,7 +23,9 @@ Free Software Foundation, Inc.,
 
 //=========================================================================
 UIWindow::UIWindow(UIDisplay* display)
-  : m_display(display)
+  : m_display(display),
+    m_width(400),
+    m_height(400)
 {
   Display* dpy = m_display->get_dpy();
   int screen_num = DefaultScreen(dpy);
@@ -32,8 +34,8 @@ UIWindow::UIWindow(UIDisplay* display)
   
   m_win = XCreateSimpleWindow(dpy,
 			      DefaultRootWindow(dpy),
-			      100,100,
-			      400,400,
+			      0,0,
+			      m_width,m_height,
 			      0,
 			      black_color,white_color);
 
@@ -57,7 +59,7 @@ UIWindow::UIWindow(UIDisplay* display)
   int depth = DefaultDepth(dpy, screen_num);
   
   m_image = XCreateImage(dpy, visual, depth, ZPixmap,
-			 0, 0, 400, 400, BitmapPad(dpy), 0);
+			 0, 0, m_width, m_height, BitmapPad(dpy), 0);
   m_image->data = (char*)malloc(m_image->bytes_per_line * m_image->height);
 }
 
@@ -95,5 +97,5 @@ void UIWindow::plot(int x, int y, unsigned long value)
 void UIWindow::paint()
 {
   Display* dpy = m_display->get_dpy();
-  XPutImage(dpy, m_win, m_gc, m_image, 0, 0, 0, 0, 400, 400);
+  XPutImage(dpy, m_win, m_gc, m_image, 0, 0, 0, 0, m_width, m_height);
 }

@@ -42,9 +42,12 @@ protected:
 
   UIDisplay* m_display;
   Window m_win;
+  int m_width;
+  int m_height;
   GC m_gc;
   XImage* m_image;
 
+  
 };
 
 #endif

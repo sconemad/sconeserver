@@ -76,13 +76,13 @@ scx::Condition UIDisplay::event(scx::Stream::Event e)
     while (XPending(m_dpy)) {
       XEvent xe;
       XNextEvent(m_dpy, &xe);
-      std::cerr << "XEvent type=" << xe.type << 
-	" win=" << xe.xany.window << "\n";
 
       WindowMap::iterator it = m_windows.find(xe.xany.window);
       if (it != m_windows.end()) {
 	it->second->xevent(xe);
-      }
+      } else {
+        std::cerr << "XEvent type=" << xe.type << 
+          " for unknown window " << xe.xany.window << "\n";      }
     }
   }
 
