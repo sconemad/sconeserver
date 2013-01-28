@@ -31,6 +31,7 @@ test \
 testbuilder \
 lettuce \
 mysql \
+sqlite \
 smtp \
 rss \
 maths \

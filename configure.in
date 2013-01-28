@@ -241,6 +241,22 @@ if test "x$MYSQL" == "xyes"; then
   )
 fi
 
+# SQLite module
+# Include by default if sqlite3 headers are found
+AC_ARG_WITH([sqlite],
+  [AC_HELP_STRING([--with-sqlite],[Enable SQLite database module])],
+  [SQLITE="$withval"],
+  [AC_CHECK_HEADER([sqlite3.h],[SQLITE="yes"],[SQLITE="no"])]
+)
+# Need sqlite3 library for sqlite
+if test "x$SQLITE" == "xyes"; then
+  AC_CHECK_LIB([sqlite3],[sqlite3_open_v2],
+    [SQLITE_LIBADD="-lsqlite3"
+     AC_SUBST(SQLITE_LIBADD)],
+    [AC_MSG_ERROR([library 'sqlite3' is required for the sqlite module])]
+  )
+fi
+
 # Maths module 
 # depends on libmpfr and libgmp (libmpfr-dev and libgmp-dev in Debian)
 # Include by default if libmpfr headers are found
@@ -358,6 +374,7 @@ AM_CONDITIONAL(BUILD_SCONESITE, test x$SCONESITE = xyes)
 AM_CONDITIONAL(BUILD_SCONESITE_IMAGE, test x$SCONESITE_IMAGE = xyes)
 AM_CONDITIONAL(BUILD_RSS, test x$RSS = xyes)
 AM_CONDITIONAL(BUILD_MYSQL, test x$MYSQL = xyes)
+AM_CONDITIONAL(BUILD_SQLITE, test x$SQLITE = xyes)
 AM_CONDITIONAL(BUILD_MATHS, test x$MATHS = xyes)
 AM_CONDITIONAL(BUILD_UI, test x$UI = xyes)
 
@@ -389,6 +406,7 @@ AC_CONFIG_FILES([test/Makefile])
 AC_CONFIG_FILES([testbuilder/Makefile])
 AC_CONFIG_FILES([lettuce/Makefile])
 AC_CONFIG_FILES([mysql/Makefile])
+AC_CONFIG_FILES([sqlite/Makefile])
 AC_CONFIG_FILES([smtp/Makefile])
 AC_CONFIG_FILES([rss/Makefile])
 AC_CONFIG_FILES([maths/Makefile])
@@ -401,8 +419,7 @@ AC_MSG_RESULT([
 $PACKAGE-$VERSION is now configured as follows:
   Target:          $target
   Compiler:        $CXX $CXXFLAGS
-  Source path:     $srcdir
-  Install prefix:  $prefix
+  Source path:     $srcdir  Install prefix:  $prefix
 
 The following modules will be built:
   + server         $SERVER
@@ -425,6 +442,7 @@ The following modules will be built:
   + forward        yes   
   + tftp           yes
   + mysql          $MYSQL
+  + sqlite         $SQLITE
   + smtp	   yes
   + rss            $RSS
   + maths          $MATHS

@@ -1,4 +1,8 @@
 
+2013-01-28 Andrew Wedgbury <wedge@sconemad.com>
+
+	* sqlite: New Database provider module supporting SQLite.
+
 2011-12-05 Andrew Wedgbury <wedge@sconemad.com>
 
 	* sconesite/ArticleBody: Add ArticleBody provider API, refactor.
@@ -7,7 +11,7 @@
 	* sconesite/Article: Create ArticleBodies using provider.
 	* sconesite/SconesiteModule: Provide XML and Wiki ArticleBodies.
 	* sconesite/WikiTextArticleBody: New WikiText ArticleBody (outline).
-	
+
 2011-10-19 Andrew Wedgbury <wedge@sconemad.com>
 
 	* sconed: Add man page.
@@ -30,7 +34,7 @@
 	* all: Remove unused second argument from kernel connect() calls.
 	* sconed: Simplify using new kernel interface.
 	* ui: Outline experimental new User Interface module.
-	
+
 2011-06-25 Andrew Wedgbury <wedge@sconemad.com>
 
 	* all: Changes to make libsconex an independent application framework:
@@ -40,7 +44,7 @@
 	* sconex/ModuleLoaderDLL: Change SconeServer_module to sconex_module.
 
 2011-06-25 Andrew Wedgbury <wedge@sconemad.com>
-	
+
 	* sconex/Provider: Allow multiple providers for a particular type,
 	where the last one registered is used.
 	* sconex/ScriptExpr: Allow int and real literal types to be set.
@@ -56,7 +60,7 @@
 	* mysql/MySqlQuery: Treat ScriptNum types as MYSQL_TYPE_DOUBLE.
 	* maths: New module with basic maths functionality.
 	* maths/Num: SconeScript mathematical number using libmpfr & libgmp.
-	
+
 2011-06-02 Andrew Wedgbury <wedge@sconemad.com>
 
 	* sconex/ScriptExpr: Add create_object() method to programatically
@@ -90,7 +94,7 @@
 
 	* sconex/Stream: Remove module refs and add_module_ref() method.
 	* all: Replace use of add_module_ref with explcit module references.
-	* all: Make sure script objects provided by modules hold an explicit 
+	* all: Make sure script objects provided by modules hold an explicit
 	reference to the providing module where appropriate.
 	* sconex/Module: close() now returns bool, where false indicates the
 	module cannot be unloaded right now.
@@ -103,17 +107,17 @@
 	Implement proper locking for article cache using improved RWLock.
 	Purge cached articles after access time exceeds threshold.
 	* sconesite/Article: Store access time, allowing get and reset.
-	
+
 2011-05-09 Andrew Wedgbury <wedge@sconemad.com>
 
 	* all: Include sconex headers with system includes,
 	another big change!
 	* sconesite: Moved from http/sconesite.
 	* sconex/Module: Add run-parts - runs all conf files in a directory.
-	
+
 2011-05-05 Andrew Wedgbury <wedge@sconemad.com>
 
-	* all: Rename SconeScript "Arg..." base classes to "Script...", as 
+	* all: Rename SconeScript "Arg..." base classes to "Script...", as
 	that makes more sense. This is quite a big change!
 	* sconex/ScriptBase: ScriptObject replaces Arg, with ScriptRef as a
 	ref counting smart pointer (ref is held by the ScriptObject).
@@ -139,7 +143,7 @@
 	* ip6: Moved from router/ip6.
 	* local: Moved from router/local.
 	* bluetooth: Moved from router/bluetooth.
-	* rss: Moved from http/sconesite/rss. 
+	* rss: Moved from http/sconesite/rss.
 
 2011-02-29 Andrew Wedgbury <wedge@sconemad.com>
 
@@ -210,7 +214,7 @@
 
 	* smtp/SMTPModule: Pass args to Client constructor.
 	Allow server process/address to be set.
-	* smtp/SMTPClient: Restructure, use buffered write. 
+	* smtp/SMTPClient: Restructure, use buffered write.
 	Support for Subject, From, To, Cc, Bcc, Message Id, etc.
 	* sconex/Process: Add parse_command_line helper.
 	* testbuilder/BuildStep: Use Process::parse_command_line().
@@ -367,7 +371,7 @@
 
 2010-04-01 Andrew Wedgbury <wedge@sconemad.com>
 
-	* sconex/Arg: Expand SconeScript basic object methods: 
+	* sconex/Arg: Expand SconeScript basic object methods:
 	ArgString split, uc, lc; ArgList join, reverse, sort.
 	Plus tests for above. Handle resolve Arg op in ArgMap.
 	* sconex/ArgStatement: Add const declaration.
@@ -598,7 +602,7 @@
 	* sconex/ConfigStream: Display type names.
 	* sconex/ArgObject: Use type names in object strings.
 	Interface classes don't all need name() methods.
-	* sconex/Module: Add close() method to unload modules 
+	* sconex/Module: Add close() method to unload modules
 	before destructor is called.
 	* sconex/Thread: Improve thread shutdown sequence.
 	* sconex/DatagramChannel: Fix possible leaked buffer.
@@ -614,7 +618,7 @@
 	* sconex/ArgStatement: Add ref and const declarations.
 	* sconex/ArgScript: Use dictionary map to match tokens.
 	* all: Update Arg classes to use ref counted storage.
-	Update arg methods to return data structures rather 
+	Update arg methods to return data structures rather
 	than formatted text output.
 
 2009-09-28 Andrew Wedgbury <wedge@sconemad.com>
@@ -625,7 +629,7 @@
 	* sconex/Module: Don't use hierarchical resolution.
 	Allow config filenames to be specified.
 	* sconex/ArgStatement: Lookup before resolve.
-	* all: Add Authority argument to all Arg::op and 
+	* all: Add Authority argument to all Arg::op and
 	ArgObjectInterface::arg_function methods.
 
 2009-09-25 Andrew Wedgbury <wedge@sconemad.com>
@@ -646,7 +650,7 @@
 	Reduce polling and latency by interrupting select.
 	* sconex/Job: New base class Job and JobThread.
 	TimedJob base for periodic jobs.
-	* sconex/Descriptor: Loop Opening/Closing events in 
+	* sconex/Descriptor: Loop Opening/Closing events in
 	dispatch if required to keep things moving.
 	Improve descriptions for debug output.
 	* sconex/Stream: Add event_status() for debug info.
@@ -660,7 +664,7 @@
 	* http/Session: Correct use of *_map::erase in iter loop.
 	* sconesite/SconesiteStream: Check for dodgy paths.
 	* sconex/TermBuffer: Clever command history buffer.
-	
+
 2009-09-22 Andrew Wedgbury <wedge@sconemad.com>
 
 	* sconex/Multiplexer: Make into a generic job scheduler.
@@ -709,7 +713,7 @@
 	Use unordered_map or hash_map where appropriate.
 	define HASH_TYPE to indicate best hash-map type available.
 	* test: Add shell script to auto run all arg test scripts.
-	
+
 2009-09-17 Andrew Wedgbury <wedge@sconemad.com>
 
 	* sconex/ArgProc: Allow binary ops in nx mode, improve logging.
@@ -722,7 +726,7 @@
 	* sconesite/RenderMarkup: Prevent recursive article processing.
 	* sconesite/XMLDoc: Capture and handle xml parser errors.
 	* sconex/ArgStore: Add reset() method.
-	
+
 2009-09-16 Andrew Wedgbury <wedge@sconemad.com>
 
 	* http/Session: New session object and session manager.
@@ -763,12 +767,12 @@
 	* sconex/FileDir: Reset current name at end of iteration.
 	* sconex/Uri: Add Arg properties for scripting.
 	* sconex/MemFile: Set descriptor states properly.
-	
+
 2009-08-28 Andrew Wedgbury <wedge@sconemad.com>
 
 	* sconex/Buffer: Add resize method.
 	* sconesite/Context: Make into Arg class to allow scripting.
-	
+
 2009-08-27 Andrew Wedgbury <wedge@sconemad.com>
 
 	* sconex/MimeHeader: Move line parsing into here from http::Request.
@@ -778,26 +782,26 @@
 	* sconesite/Template: New doc template class.
 	* sconesite/Profile: New site profile, holds templates and articles.
 	* sconesite/Context: New xml processing context base class.
-	
+
 2009-08-12 Andrew Wedgbury <wedge@sconemad.com>
 
 	* http/ResponseStream: Tidy and improve encapsulation, and
 	integrate mime section header parsing.
-	
+
 2009-06-19 Andrew Wedgbury <wedge@sconemad.com>
 
 	* http/MessageStream: Tidy up using request and new response class.
 	Add GET_HTTP_MESSAGE macro and use throughout.
 	* http/Response: New class to encapsulate http response data.
-	
+
 2009-06-17 Andrew Wedgbury <wedge@sconemad.com>
 
 	* http/AuthRealm: Implement basic HTTP authorization realms.
 	* sconex/Base64: Base64 encoding/decoding utility.
 	* ssl: Implement callbacks required for OpenSSL thread safety.
 	* http/DocRoot: Add path -> module mapping.
-	Allow args to be passed through to modules. 
-	Implement basic HTTP authentication via AuthRealms.
+	Allow args to be passed through to modules.
+ 	Implement basic HTTP authentication via AuthRealms.
 	* sconex/StreamTokenizer: Remove unneccecary write() method.
 	Send readable events when there is data in its buffer.
 	* http/ResponseStream: Read multipart mime http messages.
@@ -807,7 +811,7 @@
 	* sconex/FilePath: Add rmdir and rmfile methods.
 	* exec: Set working directory when launching.
 	* sconesite: Experimental new http website module.
-			
+
 2009-03-25 Andrew Wedgbury <wedge@sconemad.com>
 
 	* http: Remove bothersome FS tree, replace with simpler model based
@@ -817,15 +821,15 @@
 	* sconex/ArgProc: Allow copying of ArgProc objects.
 	* sconex/Arg: Copy passed ArgProc when creating ArgSub objects.
 	Fixes issues with recursive calls.
-	* sconex/Descriptor: Fix Opened flag issue when stream returns Close 
+	* sconex/Descriptor: Fix Opened flag issue when stream returns Close
 	immediately when opened (as http::MessageStream can).
 	* lettuce: Update command stream protocol.
-	
+
 2009-01-26 Andrew Wedgbury <wedge@sconemad.com>
 
 	* http: Allow host config files.
-	* lettuce: New module for lettuce project, incl media streaming.  
-	
+	* lettuce: New module for lettuce project, incl media streaming.
+
 2007-10-29 Andrew Wedgbury <wedge@sconemad.com>
 
 	* router/RouterChain: Support "listening" on datagram sockets.
@@ -836,7 +840,7 @@
 	* sconex/Descriptor: Allow "virtual" descriptors with events.
 	* sconex/Multiplexer: Handle virtual descriptors.
 	* sconex/Console: Always set non-blocking.
-	
+
 2007-08-23 Andrew Wedgbury <wedge@sconemad.com>
 
 	* http/FSDirectory: Use mutex when build() is updating dir tree.
@@ -848,11 +852,11 @@
 2007-08-22 Andrew Wedgbury <wedge@sconemad.com>
 
 	* Fix a few trivial compile errors [GCC-4.1.2]
-	
+
 2007-08-03 Andrew Wedgbury <wedge@sconemad.com>
 
 	* http/errorpage: Fix closing stream if no http body is to be sent.
-	
+
 2007-08-01 Andrew Wedgbury <wedge@sconemad.com>
 
 	* http/MessageStream: Set correct status codes for basic errors.
@@ -866,7 +870,7 @@
 	* sconex/ArgProc: Add new lvalue operators.
 	* sconex/Console: Don't set console non-blocking.
 	* test/ArgTest: Read script from file, use error descriptor for errors.
-	
+
 2007-07-25 Andrew Wedgbury <wedge@sconemad.com>
 
 	* sconex/ModuleLoader: Make module ref/load/unloading threadsafe.
@@ -878,7 +882,7 @@
 	* dirindex: Don't write error html, errorpage now does this.
 	Use 'allow_list' param to enable/disable dir listings.
 	* errorpage: Generate error page html based on templates.
-	
+
 2007-07-14 Andrew Wedgbury <wedge@sconemad.com>
 
 	* sconex/Arg: Add missing ops and unit tests.
@@ -898,15 +902,15 @@
 	* sconex/Socket: Determine local addr when connecting.
 	* sconex/StreamSocket: Allow non-blocking connects.
 	* forward: New module - connection forwarding.
-	
+
 2006-10-24 Andrew Wedgbury <wedge@sconemad.com>
 
-	* sconex/Multiplexer: Allow resizing thread pool, and switching back 
-	into single threaded (multiplexed) operation. 
+	* sconex/Multiplexer: Allow resizing thread pool, and switching back
+	into single threaded (multiplexed) operation.
 	* sconex/Kernel: Add thread pool configuration.
 	* sconex/Multiplexer: Do immediate select when send events are present.
 	* doc: Add set_user and set_thread_pool to kernel module docs.
-	
+
 2006-10-12 Andrew Wedgbury <wedge@sconemad.com>
 
 	* exec/ExecStream: Fix leak of m_args.
@@ -916,7 +920,7 @@
 	* sconex/Descriptor: Streamline new event mask system.
 	* sconex/DescriptorThread: New descriptor event dispatch thread.
 	* sconex/Multiplexer: Use new multi-threaded event dispatch system.
-	
+
 2006-06-22 Andrew Wedgbury <wedge@sconemad.com>
 
 	* sconex/VersionTag: Support extra info in version tags.
@@ -927,12 +931,12 @@
 	* sconex/Process: Enforce minimum UID & GID when launching processes.
 	* exec/ExecStream: Set appropriate user for process launch.
 	* configure: Make sure socklen_t is present [Darwin].
-	
+
 2006-06-14 Andrew Wedgbury <wedge@sconemad.com>
 
-	* all: Strip out all Win32 code - this is no longer a supported 
+	* all: Strip out all Win32 code - this is no longer a supported
 	platform.
-	
+
 2006-06-13 Andrew Wedgbury <wedge@sconemad.com>
 
 	* all: Update Win32 project files.
@@ -944,15 +948,15 @@
 2006-06-04 Andrew Wedgbury <wedge@sconemad.com>
 
 	* sconex/Arg: Guard against integer divide by zero in ArgInt.
-	
+
 2006-06-03 Andrew Wedgbury <wedge@sconemad.com>
 
 	* doc: Fix doctype headers and image links.
 	* sconex/Mutex: Add ConditionEvent, ReaderWriterLock (Win32 TODO).
 	* testbuilder: Add testbuilder scripts.
-	
+
 2006-05-27 Andrew Wedgbury <wedge@sconemad.com>
-	
+
 	* sconex/ModuleLoaderDLL: Rationalise module search paths.
 	* sconex/Module: Look in several places for module config file.
 	* sconex/Module: Don't allow resolve calls to descend module trees.
@@ -995,43 +999,43 @@
 2006-05-12 Andrew Wedgbury <wedge@sconemad.com>
 
 	* sconex/Process: Get process proxy to work on solaris, netbsd, etc.
-	
+
 2006-05-11 Andrew Wedgbury <wedge@sconemad.com>
 
-	* sconex/Process: Implement fork+exec process proxy for forking from a 
+	* sconex/Process: Implement fork+exec process proxy for forking from a
 	multithreaded SconeServer process. Process is now a socket.
 	* sconex/Kernel: Init process proxy on startup.
 	* exec: Use new Process interface, move signal handler to proxy.
 	* testbuilder: Outlined new module for implementing test build system.
-	
+
 2006-05-05 Andrew Wedgbury <wedge@sconemad.com>
 
 	* sconex/Process: Factor out code from exec, implement Win32 version.
 	* exec/ExecStream: Use new Process class in sconex.
 	* all: Add sysconf_DATA to EXTRA_DIST in makefiles.
-	
+
 2006-05-03 Andrew Wedgbury <wedge@sconemad.com>
 
 	* all: Migrate project to subversion.
-	
+
 2006-05-03 Andrew Wedgbury <wedge@sconemad.com>
 
 	* getfile: Send Forbidden if file cannot be opened.
 	* sconex/Kernel: Add set_user method to set effective user/group ids.
-	
+
 2006-05-01 Andrew Wedgbury <wedge@sconemad.com>
 
-	* http: Implement "remove" arg methods for Host and HostMapper. 
+	* http: Implement "remove" arg methods for Host and HostMapper.
 	* http/ConnectionStream: Improve logging of requests.
 	* http/ConnectionStream: Check for bad hosts/profiles and log.
-	
+
 2006-04-30 Andrew Wedgbury <wedge@sconemad.com>
 
 	* http/DocRoot: New class to represent an http document root.
 	* http: Add http profiles, which is used to select docroot on host.
 	* http/Request: Set protocol method on Uri (http/https).
 	* sconex: Improve comments in headers.
-	
+
 2006-04-25 Andrew Wedgbury <wedge@sconemad.com>
 
 	* http/FSDirectory: Fix segfault in build() when dir entry deleted.
@@ -1040,7 +1044,7 @@
 
 2006-04-21 Andrew Wedgbury <wedge@sconemad.com>
 
-	* exec/ExecStream: Eliminate framework calls after fork() in child 
+	* exec/ExecStream: Eliminate framework calls after fork() in child
 	process, in an attempt to reduce page copying before exec.
 	* exec/ExecStream: Setup environment for running HTTP CGI programs.
 	* sconex/StreamTransfer: Only enable events when really required.
@@ -1050,7 +1054,7 @@
 	* sconex/SocketAddress: Add Anon socket address.
 	* sconex/StreamSocket: Use Anon addresses for socketpair endpoints.
 	* all: Remove compiler warnings in event selects.
-	
+
 2006-04-05 Andrew Wedgbury <wedge@sconemad.com>
 
 	* sconex/MimeType: new MimeType Arg class and unit test.
@@ -1063,7 +1067,7 @@
 	* exec: add proper exec stream to monitor spawned process.
 	* doc: moved example code to doc/examples to avoid install error.
 	* doc: flatten compiled docs into one directory to be installable.
-	
+
 2006-03-15 Andrew Wedgbury <wedge@sconemad.com>
 
 	* sconex/Buffer: add push_string to simplify buffering std::strings.
@@ -1083,18 +1087,18 @@
 	* http/dirindex: use new MessageStream and StreamTransfer classes.
 	* router: tidied, removed unused parameters from chain and listener.
 	* exec: new external program execution module (*NIX only at present).
-		
+
 2006-01-12 Andrew Wedgbury <wedge@sconemad.com>
 
-	* doc: build example code along with everything else - this should 
+	* doc: build example code along with everything else - this should
 	make sure it stays upto date.
 	* doc: add rot13 example module, demonstrating simple use of streams.
-	
+
 2005-12-19 Andrew Wedgbury <wedge@sconemad.com>
 
 	* sconed: [WIN32] read paths from registry on startup.
 	* doc: improve router docs, add docs for all new router plugins.
-	
+
 2005-12-15 Andrew Wedgbury <wedge@sconemad.com>
 
 	* all: replace ARGx::cast with dynamic_cast.
@@ -1111,7 +1115,7 @@
 	* sconex/Module: check for existing module when loading new one,
 	better default paths for sub-modules.
 	* all: tidy up and add more helpful comments to conf files.
-	* bluetooth: new router protocol module for bluetooth - rfcomm only 
+	* bluetooth: new router protocol module for bluetooth - rfcomm only
 	for now.
 	* test: 'localterm' perl script for testing local sockets.
 	* local: new router protocol module for local (aka UNIX domain).
@@ -1123,12 +1127,12 @@
 2005-11-16 Andrew Wedgbury <wedge@sconemad.com>
 
 	* all: backed up as sconeserver-0.5.9.
-	* sconex: use pointers for complex globals/statics to work around 
+	* sconex: use pointers for complex globals/statics to work around
 	runtime issues on solaris.
 	* sconex: Fix range bug in FilePath::normalize().
 	* all: update win32 build files.
 	* all: portability checks run on all available systems.
-	
+
 2005-11-09 Andrew Wedgbury <wedge@sconemad.com>
 
 	* all: backed up as sconeserver-0.5.8.
@@ -1142,7 +1146,7 @@
 	* http: fix pipelining problems observed with Firefox.
 	* getfile: new http module for transfers, split out from Request.
 	* http: standardise http modules, Request now passed as Arg*.
-	
+
 2005-08-15 Andrew Wedgbury <wedge@sconemad.com>
 
 	* all: backed up as sconeserver-0.5.7.
@@ -1156,7 +1160,7 @@
 	* sconex: improve timezone support, understand names like "PST".
 	* sconex: new unit test for VersionTag.
 	* sconex: unit test framework.
-	
+
 2005-07-05 Andrew Wedgbury <wedge@sconemad.com>
 
 	* all: backed up as sconeserver-0.5.6.
@@ -1168,7 +1172,7 @@
 	* dirindex: new dir/index module for HTTP.
 	* stat: add connection counter.
 	* sconex: make VersionTag an Arg class.
-	
+
 2005-06-05 Andrew Wedgbury <wedge@sconemad.com>
 
 	* all: backed up as sconeserver-0.5.5.
@@ -1178,7 +1182,7 @@
 	* sconex: new directory enumerator - FileDir.
 	* sconex: new file stat class - FileStat.
 	* sconex: proper scope resolution in arg system.
-	
+
 2005-04-07 Andrew Wedgbury <wedge@sconemad.com>
 
 	* all: backed up as sconeserver-0.5.4.
@@ -1188,7 +1192,7 @@
 	* all: win32 build check and support running as a service.
 	* mime: add MIME module - move functionality from scx::File.
 	* ssl: SSL Multiple configuration channels.
-	
+
 2005-01-10 Andrew Wedgbury <wedge@sconemad.com>
 
 	* all: backed up as sconeserver-0.5.3.
@@ -1211,22 +1215,22 @@
 	* sconex: module functions for loading sub-modules.
 	* sconex: remove ConnectionModule, move functionality to Module.
 	* sconex: ConfigStream arg interpreter.
-	
+
 2004-05-22 Andrew Wedgbury <wedge@sconemad.com>
 
 	* sconex: new system for module configuration.
 	* all: remove scx::Node and scx::MappedNode.
-  
+
 2004-04-16 Andrew Wedgbury <wedge@sconemad.com>
 
 	* all: backed up as sconeserver-0.5.0.
-	* general: restructure into a proper GNU style project using  
+	* general: restructure into a proper GNU style project using
 	autoconf, automake and libtool.
 
 2003-12-22 Andrew Wedgbury <wedge@sconemad.com>
 
 	* all: 0.4.0 test release.
-	
+
 2003-10-20 Andrew Wedgbury <wedge@sconemad.com>
 
 	* sconex: new descriptor-stream event system.
@@ -1240,7 +1244,7 @@
 2002-07-05 Andrew Wedgbury <wedge@sconemad.com>
 
 	* all: 0.3.0 test release.
-	
+
 2002-06-24 Andrew Wedgbury <wedge@sconemad.com>
 
 	* sconed: expanded connection mapping to allow multiple modules.
@@ -1250,7 +1254,7 @@
 2002-02-01 Andrew Wedgbury <wedge@sconemad.com>
 
 	* all: 0.2.0 test release.
-	
+
 2002-02-21 Andrew Wedgbury <wedge@sconemad.com>
 
 	* sconed: restructured configuration system, dynamic map building.
@@ -1262,7 +1266,7 @@
 2001-11-15 Andrew Wedgbury <wedge@sconemad.com>
 
 	* all: 0.1.0 test release.
-	
+
 2001-11-14 Andrew Wedgbury <wedge@sconemad.com>
 
 	* http: new HTTP test module working.
@@ -1270,7 +1274,7 @@
 2001-05-07 Andrew Wedgbury <wedge@sconemad.com>
 
 	* sconex: wrote buffered stream transfer manager.
-	
+
 2001-04-12 Andrew Wedgbury <wedge@sconemad.com>
 
 	* sconex: wrote stream tokenizer.
@@ -1282,7 +1286,7 @@
 2001-02-01 Andrew Wedgbury <wedge@sconemad.com>
 
 	* sconex: wrote basic stream classes.
-	
+
 2000-11-26 Andrew Wedgbury <wedge@sconemad.com>
 
 	* sconex: wrote Win32/Linux dynamic module loader.

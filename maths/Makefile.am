@@ -23,6 +23,6 @@ utest_SOURCES = \
 utest.cpp \
 Num_ut.cpp 
 
-utest_LDADD = maths.la $(top_builddir)/sconex/libsconex.la
+utest_LDADD = $(MATHS_LIBADD) maths.la $(top_builddir)/sconex/libsconex.la
 
 TESTS = utest
