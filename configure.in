@@ -187,8 +187,8 @@ fi
 AC_CHECK_PROG([MAGICK], [Magick++-config], [yes], [no])
 if test "x$MAGICK" == "xyes"; then
   MAGICK_CFLAGS=`Magick++-config --cppflags`
-  MAGICK_LIBS=`Magick++-config --ldflags`
-  MAGICK_LIBS="$MAGICK_LIBS `Magick++-config --ldflags`"
+  MAGICK_LDFLAGS=`Magick++-config --ldflags`
+  MAGICK_LIBS=`Magick++-config --libs`
 fi
 
 # Sconesite:image module
@@ -204,8 +204,10 @@ if test "x$SCONESITE_IMAGE" == "xyes"; then
     AC_MSG_ERROR([library 'Magick++' is required for Sconesite:image])
   fi
   CXXFLAGS="$CXXFLAGS $MAGICK_CFLAGS"
-  SCONESITE_IMAGE_LDFLAGS=$MAGICK_LIBS
+  SCONESITE_IMAGE_LDFLAGS=$MAGICK_LDFLAGS
   AC_SUBST(SCONESITE_IMAGE_LDFLAGS)
+  SCONESITE_IMAGE_LDFLAGS=$MAGICK_LIBS
+  AC_SUBST(SCONESITE_IMAGE_LIBS)
 fi
 
 # rss module

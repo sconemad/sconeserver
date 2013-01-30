@@ -787,6 +787,7 @@ UI_LIBADD
 MATHS_LIBADD
 SQLITE_LIBADD
 MYSQL_LIBADD
+SCONESITE_IMAGE_LIBS
 SCONESITE_IMAGE_LDFLAGS
 MAGICK
 SSL_LIBADD
@@ -5516,13 +5517,13 @@ if test "${lt_cv_nm_interface+set}" = set; then :
 else
   lt_cv_nm_interface="BSD nm"
   echo "int some_variable = 0;" > conftest.$ac_ext
-  (eval echo "\"\$as_me:5519: $ac_compile\"" >&5)
+  (eval echo "\"\$as_me:5520: $ac_compile\"" >&5)
   (eval "$ac_compile" 2>conftest.err)
   cat conftest.err >&5
-  (eval echo "\"\$as_me:5522: $NM \\\"conftest.$ac_objext\\\"\"" >&5)
+  (eval echo "\"\$as_me:5523: $NM \\\"conftest.$ac_objext\\\"\"" >&5)
   (eval "$NM \"conftest.$ac_objext\"" 2>conftest.err > conftest.out)
   cat conftest.err >&5
-  (eval echo "\"\$as_me:5525: output\"" >&5)
+  (eval echo "\"\$as_me:5526: output\"" >&5)
   cat conftest.out >&5
   if $GREP 'External.*some_variable' conftest.out > /dev/null; then
     lt_cv_nm_interface="MS dumpbin"
@@ -6717,7 +6718,7 @@ ia64-*-hpux*)
   ;;
 *-*-irix6*)
   # Find out which ABI we are using.
-  echo '#line 6720 "configure"' > conftest.$ac_ext
+  echo '#line 6721 "configure"' > conftest.$ac_ext
   if { { eval echo "\"\$as_me\":${as_lineno-$LINENO}: \"$ac_compile\""; } >&5
   (eval $ac_compile) 2>&5
   ac_status=$?
@@ -8738,11 +8739,11 @@ else
    -e 's:.*FLAGS}\{0,1\} :&$lt_compiler_flag :; t' \
    -e 's: [^ ]*conftest\.: $lt_compiler_flag&:; t' \
    -e 's:$: $lt_compiler_flag:'`
-   (eval echo "\"\$as_me:8741: $lt_compile\"" >&5)
+   (eval echo "\"\$as_me:8742: $lt_compile\"" >&5)
    (eval "$lt_compile" 2>conftest.err)
    ac_status=$?
    cat conftest.err >&5
-   echo "$as_me:8745: \$? = $ac_status" >&5
+   echo "$as_me:8746: \$? = $ac_status" >&5
    if (exit $ac_status) && test -s "$ac_outfile"; then
      # The compiler can only warn and ignore the option if not recognized
      # So say no if there are warnings other than the usual output.
@@ -9077,11 +9078,11 @@ else
    -e 's:.*FLAGS}\{0,1\} :&$lt_compiler_flag :; t' \
    -e 's: [^ ]*conftest\.: $lt_compiler_flag&:; t' \
    -e 's:$: $lt_compiler_flag:'`
-   (eval echo "\"\$as_me:9080: $lt_compile\"" >&5)
+   (eval echo "\"\$as_me:9081: $lt_compile\"" >&5)
    (eval "$lt_compile" 2>conftest.err)
    ac_status=$?
    cat conftest.err >&5
-   echo "$as_me:9084: \$? = $ac_status" >&5
+   echo "$as_me:9085: \$? = $ac_status" >&5
    if (exit $ac_status) && test -s "$ac_outfile"; then
      # The compiler can only warn and ignore the option if not recognized
      # So say no if there are warnings other than the usual output.
@@ -9182,11 +9183,11 @@ else
    -e 's:.*FLAGS}\{0,1\} :&$lt_compiler_flag :; t' \
    -e 's: [^ ]*conftest\.: $lt_compiler_flag&:; t' \
    -e 's:$: $lt_compiler_flag:'`
-   (eval echo "\"\$as_me:9185: $lt_compile\"" >&5)
+   (eval echo "\"\$as_me:9186: $lt_compile\"" >&5)
    (eval "$lt_compile" 2>out/conftest.err)
    ac_status=$?
    cat out/conftest.err >&5
-   echo "$as_me:9189: \$? = $ac_status" >&5
+   echo "$as_me:9190: \$? = $ac_status" >&5
    if (exit $ac_status) && test -s out/conftest2.$ac_objext
    then
      # The compiler can only warn and ignore the option if not recognized
@@ -9237,11 +9238,11 @@ else
    -e 's:.*FLAGS}\{0,1\} :&$lt_compiler_flag :; t' \
    -e 's: [^ ]*conftest\.: $lt_compiler_flag&:; t' \
    -e 's:$: $lt_compiler_flag:'`
-   (eval echo "\"\$as_me:9240: $lt_compile\"" >&5)
+   (eval echo "\"\$as_me:9241: $lt_compile\"" >&5)
    (eval "$lt_compile" 2>out/conftest.err)
    ac_status=$?
    cat out/conftest.err >&5
-   echo "$as_me:9244: \$? = $ac_status" >&5
+   echo "$as_me:9245: \$? = $ac_status" >&5
    if (exit $ac_status) && test -s out/conftest2.$ac_objext
    then
      # The compiler can only warn and ignore the option if not recognized
@@ -11621,7 +11622,7 @@ else
   lt_dlunknown=0; lt_dlno_uscore=1; lt_dlneed_uscore=2
   lt_status=$lt_dlunknown
   cat > conftest.$ac_ext <<_LT_EOF
-#line 11624 "configure"
+#line 11625 "configure"
 #include "confdefs.h"
 
 #if HAVE_DLFCN_H
@@ -11717,7 +11718,7 @@ else
   lt_dlunknown=0; lt_dlno_uscore=1; lt_dlneed_uscore=2
   lt_status=$lt_dlunknown
   cat > conftest.$ac_ext <<_LT_EOF
-#line 11720 "configure"
+#line 11721 "configure"
 #include "confdefs.h"
 
 #if HAVE_DLFCN_H
@@ -13673,11 +13674,11 @@ else
    -e 's:.*FLAGS}\{0,1\} :&$lt_compiler_flag :; t' \
    -e 's: [^ ]*conftest\.: $lt_compiler_flag&:; t' \
    -e 's:$: $lt_compiler_flag:'`
-   (eval echo "\"\$as_me:13676: $lt_compile\"" >&5)
+   (eval echo "\"\$as_me:13677: $lt_compile\"" >&5)
    (eval "$lt_compile" 2>conftest.err)
    ac_status=$?
    cat conftest.err >&5
-   echo "$as_me:13680: \$? = $ac_status" >&5
+   echo "$as_me:13681: \$? = $ac_status" >&5
    if (exit $ac_status) && test -s "$ac_outfile"; then
      # The compiler can only warn and ignore the option if not recognized
      # So say no if there are warnings other than the usual output.
@@ -13772,11 +13773,11 @@ else
    -e 's:.*FLAGS}\{0,1\} :&$lt_compiler_flag :; t' \
    -e 's: [^ ]*conftest\.: $lt_compiler_flag&:; t' \
    -e 's:$: $lt_compiler_flag:'`
-   (eval echo "\"\$as_me:13775: $lt_compile\"" >&5)
+   (eval echo "\"\$as_me:13776: $lt_compile\"" >&5)
    (eval "$lt_compile" 2>out/conftest.err)
    ac_status=$?
    cat out/conftest.err >&5
-   echo "$as_me:13779: \$? = $ac_status" >&5
+   echo "$as_me:13780: \$? = $ac_status" >&5
    if (exit $ac_status) && test -s out/conftest2.$ac_objext
    then
      # The compiler can only warn and ignore the option if not recognized
@@ -13824,11 +13825,11 @@ else
    -e 's:.*FLAGS}\{0,1\} :&$lt_compiler_flag :; t' \
    -e 's: [^ ]*conftest\.: $lt_compiler_flag&:; t' \
    -e 's:$: $lt_compiler_flag:'`
-   (eval echo "\"\$as_me:13827: $lt_compile\"" >&5)
+   (eval echo "\"\$as_me:13828: $lt_compile\"" >&5)
    (eval "$lt_compile" 2>out/conftest.err)
    ac_status=$?
    cat out/conftest.err >&5
-   echo "$as_me:13831: \$? = $ac_status" >&5
+   echo "$as_me:13832: \$? = $ac_status" >&5
    if (exit $ac_status) && test -s out/conftest2.$ac_objext
    then
      # The compiler can only warn and ignore the option if not recognized
@@ -15624,8 +15625,8 @@ fi
 
 if test "x$MAGICK" == "xyes"; then
   MAGICK_CFLAGS=`Magick++-config --cppflags`
-  MAGICK_LIBS=`Magick++-config --ldflags`
-  MAGICK_LIBS="$MAGICK_LIBS `Magick++-config --ldflags`"
+  MAGICK_LDFLAGS=`Magick++-config --ldflags`
+  MAGICK_LIBS=`Magick++-config --libs`
 fi
 
 # Sconesite:image module
@@ -15645,6 +15646,8 @@ if test "x$SCONESITE_IMAGE" == "xyes"; then
     as_fn_error "library 'Magick++' is required for Sconesite:image" "$LINENO" 5
   fi
   CXXFLAGS="$CXXFLAGS $MAGICK_CFLAGS"
+  SCONESITE_IMAGE_LDFLAGS=$MAGICK_LDFLAGS
+
   SCONESITE_IMAGE_LDFLAGS=$MAGICK_LIBS
 
 fi

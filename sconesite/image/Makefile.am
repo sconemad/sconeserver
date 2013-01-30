@@ -11,5 +11,5 @@ image_la_SOURCES = \
 ImageModule.cpp 
 
 image_la_LDFLAGS = $(SCONESITE_IMAGE_LDFLAGS) -module -avoid-version
-
+image_la_LIBS = $(SCONESITE_IMAGE_LIBS)
 
