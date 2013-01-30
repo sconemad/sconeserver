@@ -1,0 +1,4 @@
+usr/lib/sconeserver/sconesite.so
+usr/lib/sconeserver/image.so
+usr/lib/sconeserver/rss.so
+etc/sconeserver/sconesite.conf.example

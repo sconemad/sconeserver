@@ -1,0 +1,6 @@
+usr/lib/lib*.la
+usr/lib/sconeserver/test.so
+usr/lib/sconeserver/tuesdayonly.so
+usr/lib/sconeserver/rot13.so
+usr/lib/sconeserver/*.la
+usr/include/sconeserver/*

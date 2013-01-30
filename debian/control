@@ -7,7 +7,7 @@ Build-Depends: libpcre3-dev, libssl-dev, libxml2-dev, libmagick++-dev, libmysqlc
 
 Package: sconeserver-base
 Architecture: any
-Depends: ${shlibs:Depends}, libpcre3, debconf
+Depends: ${shlibs:Depends}, debconf
 Recommends:
 Description: Modular network server framework
  SconeServer is a modular, object-orientated and extremely versatile network 
@@ -15,7 +15,7 @@ Description: Modular network server framework
 
 Package: sconeserver-dev
 Architecture: any
-Depends: ${shlibs:Depends}, libpcre3, debconf
+Depends: ${shlibs:Depends}
 Recommends:
 Description: Development files for sconeserver
  SconeServer is a modular, object-orientated and extremely versatile network 
@@ -23,7 +23,7 @@ Description: Development files for sconeserver
 
 Package: sconeserver-ssl
 Architecture: any
-Depends: ${shlibs:Depends}, sconeserver-base, libssl
+Depends: ${shlibs:Depends}, sconeserver-base
 Recommends:
 Description: Secure Sockets Layer module for sconeserver
  SconeServer is a modular, object-orientated and extremely versatile network 
@@ -31,7 +31,7 @@ Description: Secure Sockets Layer module for sconeserver
 
 Package: sconeserver-sconesite
 Architecture: any
-Depends: ${shlibs:Depends}, sconeserver-base, libxml2, libmagick++
+Depends: ${shlibs:Depends}, sconeserver-base
 Recommends:
 Description: Sconesite CMS module for sconeserver
  SconeServer is a modular, object-orientated and extremely versatile network 
@@ -39,7 +39,7 @@ Description: Sconesite CMS module for sconeserver
 
 Package: sconeserver-mysql
 Architecture: any
-Depends: ${shlibs:Depends}, sconeserver-base, libmysqlclient
+Depends: ${shlibs:Depends}, sconeserver-base
 Recommends:
 Description: MySQL database module for sconeserver
  SconeServer is a modular, object-orientated and extremely versatile network 
@@ -47,7 +47,7 @@ Description: MySQL database module for sconeserver
 
 Package: sconeserver-sqlite
 Architecture: any
-Depends: ${shlibs:Depends}, sconeserver-base, libsqlite3-0
+Depends: ${shlibs:Depends}, sconeserver-base
 Recommends:
 Description: SQLite database module for sconeserver
  SconeServer is a modular, object-orientated and extremely versatile network 
