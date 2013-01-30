@@ -184,11 +184,12 @@ if test "x$SCONESITE" == "xyes"; then
 fi
 
 # Check for ImageMagick
-PKG_CHECK_MODULES([IMAGEMAGICK],
- [ImageMagick++], 
- [MAGICK="yes"],
- [MAGICK="no"]
-)
+AC_CHECK_PROG([MAGICK], [Magick++-config], [yes], [no])
+if test "x$MAGICK" == "xyes"; then
+  MAGICK_CFLAGS=`Magick++-config --cppflags`
+  MAGICK_LIBS=`Magick++-config --ldflags`
+  MAGICK_LIBS="$MAGICK_LIBS `Magick++-config --ldflags`"
+fi
 
 # Sconesite:image module
 AC_ARG_WITH([sconesite-image],
@@ -202,8 +203,8 @@ if test "x$SCONESITE_IMAGE" == "xyes"; then
   if test "x$MAGICK" != "xyes"; then
     AC_MSG_ERROR([library 'Magick++' is required for Sconesite:image])
   fi
-  CXXFLAGS="$CXXFLAGS $IMAGEMAGICK_CFLAGS"
-  SCONESITE_IMAGE_LDFLAGS=$IMAGEMAGICK_LIBS
+  CXXFLAGS="$CXXFLAGS $MAGICK_CFLAGS"
+  SCONESITE_IMAGE_LDFLAGS=$MAGICK_LIBS
   AC_SUBST(SCONESITE_IMAGE_LDFLAGS)
 fi
 

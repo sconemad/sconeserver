@@ -3,12 +3,60 @@ Section: misc
 Priority: optional
 Maintainer: Andrew Wedgbury <wedge@sconemad.com>
 Standards-Version: 3.2.1
-Build-Depends: libpcre3-dev, libssl-dev, libxml2-dev, libmagick++-dev, libmysqlclient-dev, debhelper (>= 2)
+Build-Depends: libpcre3-dev, libssl-dev, libxml2-dev, libmagick++-dev, libmysqlclient-dev, libsqlite3-dev, debhelper (>= 2)
 
-Package: sconeserver
+Package: sconeserver-base
 Architecture: any
 Depends: ${shlibs:Depends}, libpcre3, debconf
-Recommends: libssl, libxml2, libmagick++, libmysqlclient
+Recommends:
 Description: Modular network server framework
+ SconeServer is a modular, object-orientated and extremely versatile network 
+ server framework for UNIX-like platforms.
+
+Package: sconeserver-dev
+Architecture: any
+Depends: ${shlibs:Depends}, libpcre3, debconf
+Recommends:
+Description: Development files for sconeserver
+ SconeServer is a modular, object-orientated and extremely versatile network 
+ server framework for UNIX-like platforms.
+
+Package: sconeserver-ssl
+Architecture: any
+Depends: ${shlibs:Depends}, sconeserver-base, libssl
+Recommends:
+Description: Secure Sockets Layer module for sconeserver
+ SconeServer is a modular, object-orientated and extremely versatile network 
+ server framework for UNIX-like platforms.
+
+Package: sconeserver-sconesite
+Architecture: any
+Depends: ${shlibs:Depends}, sconeserver-base, libxml2, libmagick++
+Recommends:
+Description: Sconesite CMS module for sconeserver
+ SconeServer is a modular, object-orientated and extremely versatile network 
+ server framework for UNIX-like platforms.
+
+Package: sconeserver-mysql
+Architecture: any
+Depends: ${shlibs:Depends}, sconeserver-base, libmysqlclient
+Recommends:
+Description: MySQL database module for sconeserver
+ SconeServer is a modular, object-orientated and extremely versatile network 
+ server framework for UNIX-like platforms.
+
+Package: sconeserver-sqlite
+Architecture: any
+Depends: ${shlibs:Depends}, sconeserver-base, libsqlite3-0
+Recommends:
+Description: SQLite database module for sconeserver
+ SconeServer is a modular, object-orientated and extremely versatile network 
+ server framework for UNIX-like platforms.
+
+Package: sconeserver-testbuilder
+Architecture: any
+Depends: ${shlibs:Depends}, sconeserver-base
+Recommends:
+Description: TestBuilder system for sconeserver
  SconeServer is a modular, object-orientated and extremely versatile network 
  server framework for UNIX-like platforms.

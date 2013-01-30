@@ -20,7 +20,7 @@ WikiTextArticleBody.cpp \
 XMLArticleBody.cpp \
 XMLDoc.cpp
 
-sconesiteincludedir = $(includedir)/sconex/sconesite
+sconesiteincludedir = $(includedir)/sconesite
 
 sconesiteinclude_HEADERS = \
 SconesiteModule.h \

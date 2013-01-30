@@ -25,7 +25,7 @@ ResponseStream.cpp \
 Session.cpp \
 Status.cpp
 
-httpincludedir = $(includedir)/sconex/http
+httpincludedir = $(includedir)/http
 
 httpinclude_HEADERS = \
 AuthRealm.h \
