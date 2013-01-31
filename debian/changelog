@@ -1,4 +1,10 @@
-sconeserver (0.9.5ubuntu1) precise; urgency=low
+sconeserver (0.9.7) precise; urgency=low
+
+  * Various version number updates for consistency.
+
+ -- Andrew Wedgbury <wedge@sconemad.com>  Thu, 31 Jan 2013 21:56:28 +0000
+
+sconeserver (0.9.6) precise; urgency=low
 
   * Various improvements:
     - sconesite/Profile: Pass dbtype on construction.
