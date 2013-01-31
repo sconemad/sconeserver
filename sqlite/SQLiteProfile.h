@@ -44,7 +44,6 @@ public:
   ~SQLiteProfile();
 
   sqlite3* get_db();
-  void release_db();
   
   // scx::Database methods
   virtual scx::DbQuery* new_query(const std::string& query);
@@ -74,9 +73,6 @@ private:
 
   std::string m_dbfile;
   sqlite3* m_db;
-
-  bool m_used;
-  scx::Mutex m_db_mutex;
 };
 
 };

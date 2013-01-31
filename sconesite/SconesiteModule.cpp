@@ -217,10 +217,16 @@ scx::ScriptRef* SconesiteModule::script_method(const scx::ScriptAuth& auth,
     ProfileMap::const_iterator it = m_profiles.find(s_profile);
     if (it != m_profiles.end())
       return scx::ScriptError::new_ref("Profile already exists");
-        
+
+    std::string s_dbtype = "MySQL";
+    const scx::ScriptString* a_dbtype =
+      scx::get_method_arg<scx::ScriptString>(args,1,"dbtype");
+    if (a_dbtype) s_dbtype = a_dbtype->get_string();
+    
     scx::FilePath path = host->get_path();
-    log("Adding profile '" + s_profile + "' dir '" + path.path() + "'");
-    Profile* profile = new Profile(*this,s_profile,path);
+    log("Adding profile '" + s_profile + "' dir '" + path.path() +
+        "' dbtype '" + s_dbtype + "'");
+    Profile* profile = new Profile(*this,s_profile,path,s_dbtype);
     m_profiles[s_profile] = new Profile::Ref(profile);
 
     return new Profile::Ref(profile);

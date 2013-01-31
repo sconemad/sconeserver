@@ -68,8 +68,6 @@ SQLiteQuery::~SQLiteQuery()
     ::sqlite3_finalize(m_stmt);
   }
 
-  m_profile.object()->release_db();
-
   DEBUG_COUNT_DESTRUCTOR(SQLiteQuery);
 }
 

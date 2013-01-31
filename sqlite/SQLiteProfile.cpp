@@ -42,8 +42,7 @@ SQLiteProfile::SQLiteProfile(
 ) : m_module(module),
     m_name(name),
     m_dbfile(dbfile),
-    m_db(0),
-    m_used(false)
+    m_db(0)
 {
   m_parent = module;
 }
@@ -51,39 +50,19 @@ SQLiteProfile::SQLiteProfile(
 //=========================================================================
 SQLiteProfile::~SQLiteProfile()
 {
-  m_db_mutex.lock();
   if (m_db) {
     ::sqlite3_close(m_db);
-    m_db = 0;
   }
-  m_db_mutex.unlock();
 }
 
 //=============================================================================
 sqlite3* SQLiteProfile::get_db()
 {
-  m_db_mutex.lock();
-
-  if (m_used) {
-    m_db_mutex.unlock();
-    return 0;
+  if (!m_db) {
+    ::sqlite3_open_v2(m_dbfile.c_str(), &m_db,
+                      SQLITE_OPEN_READWRITE | SQLITE_OPEN_CREATE, 0);
   }
-
-  // Not in use, can use it
-  ::sqlite3_open_v2(m_dbfile.c_str(), &m_db,
-                    SQLITE_OPEN_READWRITE | SQLITE_OPEN_CREATE, 0);
-  m_used = true;
-  m_db_mutex.unlock();
   return m_db;
-}
-
-//=============================================================================
-void SQLiteProfile::release_db()
-{
-  m_db_mutex.lock();
-  DEBUG_ASSERT(m_used, "Releasing SQLite DB that isn't in use");
-  m_used = false;
-  m_db_mutex.unlock();
 }
 
 //=============================================================================
@@ -112,8 +91,8 @@ scx::ScriptRef* SQLiteProfile::script_op(const scx::ScriptAuth& auth,
       return new scx::ScriptMethodRef(ref,name);
     }
     
-    if ("used" == name) 
-      return scx::ScriptInt::new_ref((int)m_used);
+    //    if ("used" == name) 
+    //      return scx::ScriptInt::new_ref((int)m_used);
   }
 
   return scx::ScriptObject::script_op(auth,ref,op,right);

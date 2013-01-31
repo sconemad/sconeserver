@@ -42,7 +42,8 @@ public:
 
   Profile(SconesiteModule& module,
           const std::string& name,
-          const scx::FilePath& path);
+          const scx::FilePath& path,
+          const std::string& dbtype);
   
   ~Profile();
 

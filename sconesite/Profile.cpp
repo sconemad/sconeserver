@@ -50,7 +50,8 @@ const char* TPLDIR = "tpl";
 Profile::Profile(
   SconesiteModule& module,
   const std::string& name,
-  const scx::FilePath& path
+  const scx::FilePath& path,
+  const std::string& dbtype
 ) : m_module(module),
     m_name(name),
     m_path(path),
@@ -61,7 +62,7 @@ Profile::Profile(
   // Open article database
   scx::ScriptMap::Ref args(new scx::ScriptMap());
   args.object()->give("profile",scx::ScriptString::new_ref(name));
-  m_db = scx::Database::open("MySQL",&args);
+  m_db = scx::Database::open(dbtype,&args);
 
   refresh();
 }

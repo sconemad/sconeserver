@@ -4,7 +4,7 @@
 AM_CPPFLAGS = \
 -I$(top_srcdir) \
 -DCONF_PATH=\"$(sysconfdir)\" \
--DMOD_PATH=\"$(libdir)\" \
+-DMOD_PATH=\"$(libdir)/sconeserver\" \
 -DVAR_PATH=\"$(localstatedir)\"
 
 bin_PROGRAMS = sconed

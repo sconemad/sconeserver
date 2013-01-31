@@ -163,20 +163,20 @@ void SQLiteModule::provide(const std::string& type,
   if (!profile) {
     // Does not match an existing profile, create a new one
     
-    const scx::ScriptString* a_db =
-      scx::get_method_arg<scx::ScriptString>(args,1,"database");
-    if (!a_db) {
-      DEBUG_LOG("No database specified");
+    const scx::ScriptString* a_dbfile =
+      scx::get_method_arg<scx::ScriptString>(args,1,"dbfile");
+    if (!a_dbfile) {
+      DEBUG_LOG("No database file specified");
       return;
     }
     
     profile = new SQLiteProfile(this,
                                 s_profile,
-                                a_db->get_string());
+                                a_dbfile->get_string());
     
     m_profiles[s_profile] = new SQLiteProfile::Ref(profile);
     log("Adding profile '" + s_profile + 
-	"' db '" + a_db->get_string() + "'");
+	"' dbfile '" + a_dbfile->get_string() + "'");
   }
 
   object = new scx::Database::Ref(profile);

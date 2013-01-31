@@ -1,4 +1,12 @@
 
+2013-01-31 Andrew Wedgbury <wedge@sconemad.com>
+
+	* sconesite/Profile: Pass dbtype on construction.
+	* sqlite/SQLiteProfile: Permit multiple queries on single profile.
+	This may cause problems but will have to test properly.
+	* sconex/ScriptExpr: Reduce log level for standard type registration.
+	* sconed: Attempt to fix modpath/libdir inconsistency with deb pkgs.
+
 2013-01-28 Andrew Wedgbury <wedge@sconemad.com>
 
 	* sqlite: New Database provider module supporting SQLite.

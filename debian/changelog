@@ -1,6 +1,16 @@
-sconeserver (0.9.0) unstable; urgency=low
+sconeserver (0.9.5ubuntu1) precise; urgency=low
+
+  * Various improvements:
+    - sconesite/Profile: Pass dbtype on construction.
+    - sqlite/SQLiteProfile: Permit multiple queries on single profile.
+      This may cause problems but will have to test properly.
+    - sconex/ScriptExpr: Reduce log level for standard type registration.
+    - sconed: Attempt to fix modpath/libdir inconsistency with deb pkgs.
+
+ -- Andrew Wedgbury <wedge@regulus>  Thu, 31 Jan 2013 21:28:55 +0000
+
+sconeserver (0.9.5) precise; urgency=low
 
   * First sconeserver release as Debian package
 
- -- Andrew Wedgbury <wedge@sconemad.com>  Tue, 12 Oct 2010 19:02:14 +0100
-
+ -- Andrew Wedgbury <wedge@sconemad.com>  Wed, 30 Jan 2013 22:08:54 +0000

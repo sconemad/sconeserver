@@ -159,7 +159,7 @@ void ScriptExpr::register_type(const std::string& type,
 			       Provider<ScriptObject>* factory)
 {
   init();
-  DEBUG_LOG("Registering standard type: " << type);
+  ScriptExpr_DEBUG_LOG("Registering standard type: " << type);
   s_standard_context->object()->register_provider(type,factory);
 }
 
@@ -168,7 +168,7 @@ void ScriptExpr::unregister_type(const std::string& type,
 				 Provider<ScriptObject>* factory)
 {
   init();
-  DEBUG_LOG("Unregistering standard type: " << type);
+  ScriptExpr_DEBUG_LOG("Unregistering standard type: " << type);
   s_standard_context->object()->unregister_provider(type,factory);
 }
 
