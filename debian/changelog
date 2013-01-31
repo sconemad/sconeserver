@@ -7,7 +7,7 @@ sconeserver (0.9.5ubuntu1) precise; urgency=low
     - sconex/ScriptExpr: Reduce log level for standard type registration.
     - sconed: Attempt to fix modpath/libdir inconsistency with deb pkgs.
 
- -- Andrew Wedgbury <wedge@regulus>  Thu, 31 Jan 2013 21:28:55 +0000
+ -- Andrew Wedgbury <wedge@sconemad.com>  Thu, 31 Jan 2013 21:28:55 +0000
 
 sconeserver (0.9.5) precise; urgency=low
 
