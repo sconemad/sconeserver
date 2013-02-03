@@ -170,11 +170,14 @@ public:
   // Get the number of ScriptRefs currently referring to this object
   int num_refs() const;
 
-protected:
-
   // Log a message, default implementation passes down to parent
   virtual void log(const std::string& message,
-		   Logger::Level level = Logger::Info);
+		   Logger::Level level = Logger::Info,
+                   const std::string& context = "");
+
+  virtual std::string get_log_context() const;
+
+protected:
 
   // Parent object, if set, used by Resolve operation for scope resolution
   ScriptObject* m_parent;

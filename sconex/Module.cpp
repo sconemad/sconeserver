@@ -561,9 +561,13 @@ bool Module::load_config_dir(FilePath path)
 }
 
 //=============================================================================
-void Module::log(const std::string& message,Logger::Level level)
+void Module::log(const std::string& message,
+                 Logger::Level level,
+                 const std::string& context)
 {
-  log_string("[" + m_name + "] " + message,level);
+  std::string ctx = m_name;
+  if (!context.empty()) ctx += "." + context;
+  log_string("[" + ctx + "] " + message,level);
 }
 
 //=============================================================================

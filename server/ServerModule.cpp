@@ -166,11 +166,11 @@ scx::ScriptRef* ServerModule::script_method(const scx::ScriptAuth& auth,
 
     // Check route doesn't already exist
     if (find(s_name)) {
-      return scx::ScriptError::new_ref("server::add() {CHAIN:" + s_name +
-				       "} already exists");
+      return scx::ScriptError::new_ref("server::add() " + s_name +
+				       " already exists");
     }
 
-    log("Adding {CHAIN:" + s_name + "}");
+    log("Adding " + s_name);
     add(s_name, new ConnectionChain(this, s_name) );
 
     return 0;
@@ -187,11 +187,11 @@ scx::ScriptRef* ServerModule::script_method(const scx::ScriptAuth& auth,
 
     ConnectionChainMap::iterator it = m_chains.find(s_name);
     if (it == m_chains.end()) {
-      return scx::ScriptError::new_ref("server::remove() {CHAIN:" + 
-				       s_name + "} not found");
+      return scx::ScriptError::new_ref("server::remove() " + 
+				       s_name + " not found");
     }
     
-    log("Removing {CHAIN:" + s_name + "}");
+    log("Removing " + s_name);
     delete (*it).second;
     m_chains.erase(it);
 

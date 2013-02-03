@@ -59,7 +59,9 @@ public:
 					const scx::ScriptRef& ref,
 					const std::string& name,
 					const scx::ScriptRef* args);
-
+  
+  virtual std::string get_log_context() const;
+  
   typedef scx::ScriptRefTo<ConnectionChain> Ref;
   
 protected:

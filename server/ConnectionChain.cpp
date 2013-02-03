@@ -198,7 +198,7 @@ scx::ScriptRef* ConnectionChain::script_method(const scx::ScriptAuth& auth,
 	return scx::ScriptError::new_ref("Unable to bind " + sa->get_string());
       }
 
-      //log("Listening on " + sa->get_string());
+      log("Listening on " + sa->get_string());
       
       scx::Kernel::get()->connect(ls);
 
@@ -212,7 +212,7 @@ scx::ScriptRef* ConnectionChain::script_method(const scx::ScriptAuth& auth,
 	return scx::ScriptError::new_ref("Unable to bind " + sa->get_string());
       }
       
-      //log("Listening on " + sa->get_string());
+      log("Listening on " + sa->get_string());
       
       ServerDatagramMultiplexer* mp = 
 	new ServerDatagramMultiplexer(m_module.object(), m_name);
@@ -239,7 +239,7 @@ scx::ScriptRef* ConnectionChain::script_method(const scx::ScriptAuth& auth,
     }
 
     if (connect(ds)) {
-      //log("Listening (all) on " + sa->get_string());
+      log("Listening (all) on " + sa->get_string());
       scx::Kernel::get()->connect(ds);
     } else {
       delete ds;
@@ -248,6 +248,12 @@ scx::ScriptRef* ConnectionChain::script_method(const scx::ScriptAuth& auth,
   }
   
   return scx::ScriptObject::script_method(auth,ref,name,args);
+}
+
+//=============================================================================
+std::string ConnectionChain::get_log_context() const
+{
+  return m_name;
 }
 
 //###---

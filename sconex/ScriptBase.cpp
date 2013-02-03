@@ -165,11 +165,21 @@ int ScriptObject::num_refs() const
 }
 
 //=============================================================================
-void ScriptObject::log(const std::string& message,Logger::Level level)
+void ScriptObject::log(const std::string& message,
+                       Logger::Level level,
+                       const std::string& context)
 {
-  if (m_parent) m_parent->log(message,level);
+  std::string c = get_log_context();
+  if (!context.empty()) c += "." + context;
+  if (m_parent) m_parent->log(message,level,c);
 }
 
+//===========================================================================
+std::string ScriptObject::get_log_context() const
+{
+  return "";
+}
+  
 //===========================================================================
 int ScriptObject::add_ref()
 {

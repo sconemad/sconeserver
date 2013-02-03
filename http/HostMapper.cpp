@@ -209,7 +209,7 @@ scx::ScriptRef* HostMapper::script_method(const scx::ScriptAuth& auth,
       return scx::ScriptError::new_ref("add() Host with this ID already exists");
     }
         
-    log("Adding {HOST:" + s_id + "} hostname '" + s_hostname + "' path '" + a_path->get_string() + "'");
+    log("Adding host '" + s_id + "' hostname '" + s_hostname + "' path '" + a_path->get_string() + "'");
     scx::FilePath path = m_module.get_conf_path() + a_path->get_string();
     Host* host = new Host(m_module, *this, s_id, s_hostname, path.path());
     host->init();

@@ -78,10 +78,9 @@ public:
   FilePath get_var_path() const;
   
   // Log message with module name
-  virtual void log(
-    const std::string& message,
-    Logger::Level level = Logger::Info
-  );
+  virtual void log(const std::string& message,
+                   Logger::Level level = Logger::Info,
+                   const std::string& context = "");
   
   // Set logger to use
   void log_string(const std::string& str,Logger::Level level);

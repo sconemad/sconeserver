@@ -29,7 +29,7 @@ Free Software Foundation, Inc.,
 namespace sqlite {
 
 // Uncomment to enable debug info
-#define SQLiteQuery_DEBUG_LOG(m) DEBUG_LOG(m)
+//#define SQLiteQuery_DEBUG_LOG(m) DEBUG_LOG(m)
 
 #ifndef SQLiteQuery_DEBUG_LOG
 #  define SQLiteQuery_DEBUG_LOG(m)

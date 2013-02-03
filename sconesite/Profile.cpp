@@ -97,7 +97,7 @@ void Profile::refresh()
         if (extn == "xml" && !lookup_template(name)) {
           Template* tpl = new Template(*this,name,dir.root());
           m_templates[name] = new Template::Ref(tpl);
-          m_module.log("Adding template '" + name + "'");
+          log("Adding template '" + name + "'");
         }
       }
     }
@@ -110,7 +110,7 @@ void Profile::refresh()
     Template::Ref* tpl_ref = it_t->second;
     Template* tpl = tpl_ref->object();
     if (!scx::FileStat(tpl->get_filepath()).is_file()) {
-      m_module.log("Removing template '" + tpl->get_name() + "'");
+      log("Removing template '" + tpl->get_name() + "'");
       it_t = m_templates.erase(it_t);
       delete tpl_ref;
     }
@@ -128,7 +128,7 @@ void Profile::refresh()
        it_a != m_articles.end(); ) {
     Article::Ref* article = it_a->second;
     if (article->object()->get_access_time() < purge_time) {
-      m_module.log("Purging article: /" + article->object()->get_href_path());
+      log("Purging article: /" + article->object()->get_href_path());
       m_articles.erase(it_a++);
       delete article;
     } else {

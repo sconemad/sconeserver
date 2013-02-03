@@ -87,6 +87,8 @@ public:
 					const std::string& name,
 					const scx::ScriptRef* args);
 
+  virtual std::string get_log_context() const { return m_name; }
+  
   typedef scx::ScriptRefTo<Profile> Ref;
 
 protected:  

@@ -125,7 +125,7 @@ void SconesiteStream::log(const std::string message, scx::Logger::Level level)
   http::MessageStream* msg = GET_HTTP_MESSAGE();
   if (msg) {
     http::Request& req = const_cast<http::Request&>(msg->get_request());
-    m_module.object()->log(req.get_id() + " " + message,level);
+    m_profile.log(req.get_id() + " " + message,level);
   }
 }
 
