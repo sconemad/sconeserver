@@ -107,12 +107,6 @@ bool WikiTextArticleBody::process(Context& context)
 }
 
 //=========================================================================
-const scx::Date& WikiTextArticleBody::get_modtime() const
-{
-  return m_modtime;
-}
-
-//=========================================================================
 void WikiTextArticleBody::parse_error(const std::string& msg)
 {
   m_errors += msg;
@@ -156,7 +150,7 @@ scx::ScriptRef* WikiTextArticleBody::script_op(const scx::ScriptAuth& auth,
     }
 
     if ("modtime" == name) {
-      return new scx::ScriptRef(m_modtime.new_copy());
+      return new scx::ScriptRef(scx::FileStat(get_filepath()).time().new_copy());
     }
   }
 

@@ -71,7 +71,8 @@ public:
 
   virtual void handle_process(const std::string& name,
 			      const char* data,
-			      int line);
+			      int line,
+                              void* extra);
 
   virtual void handle_text(const char* text);
 

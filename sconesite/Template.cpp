@@ -40,7 +40,7 @@ Template::Template(
 ) : XMLDoc(name,path,name + ".xml"),
     m_profile(profile)
 {
-
+  m_parent = &profile;
 }
 
 //=========================================================================

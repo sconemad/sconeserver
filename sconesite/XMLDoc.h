@@ -27,6 +27,9 @@ Free Software Foundation, Inc.,
 #include <sconex/FilePath.h>
 #include <sconex/Date.h>
 #include <sconex/Mutex.h>
+#include <sconex/MemFile.h>
+#include <sconex/ScriptEngine.h>
+#include <sconex/ScriptStatement.h>
 
 #include <libxml/parser.h>
 #include <libxml/tree.h>
@@ -55,8 +58,6 @@ public:
 
   virtual bool process(Context& context);
 
-  const scx::Date& get_modtime() const;
-
   void parse_error(const std::string& msg);
 
   // Unload the article if it hasn't been accessed since purge_time
@@ -84,12 +85,18 @@ protected:
   bool open();
   void close();  
 
+  void scan_scripts(xmlNode* start);
+  scx::ScriptStatement::Ref* parse_script(char* data, int line);
+
   scx::FilePath m_root;
   std::string m_file;
   scx::Date m_modtime;
 
   xmlDoc* m_xmldoc;
   std::string m_errors;
+
+  typedef std::vector<scx::ScriptStatement::Ref*> Scripts;
+  Scripts m_scripts;
   
   scx::Date m_last_access;
   int m_clients;

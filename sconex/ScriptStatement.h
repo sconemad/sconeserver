@@ -172,8 +172,9 @@ public:
 				   const std::string& name,
 				   const ScriptRef* args);
 
+  void set_env(ScriptMap* env);
   void clear();
-  
+
 protected:
 
   // List of statements in this group

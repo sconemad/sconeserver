@@ -136,12 +136,6 @@ bool XMLDoc::process(Context& context)
 }
 
 //=========================================================================
-const scx::Date& XMLDoc::get_modtime() const
-{
-  return m_modtime;
-}
-
-//=========================================================================
 void XMLDoc::parse_error(const std::string& msg)
 {
   m_errors += msg;
@@ -187,7 +181,7 @@ scx::ScriptRef* XMLDoc::script_op(const scx::ScriptAuth& auth,
     }
 
     if ("modtime" == name) {
-      return new scx::ScriptRef(m_modtime.new_copy());
+      return new scx::ScriptRef(scx::FileStat(get_filepath()).time().new_copy());
     }
   }
 
@@ -224,7 +218,8 @@ void XMLDoc::process_node(Context& context, xmlNode* start)
 	
       case XML_PI_NODE: {
 	std::string name((char*)node->name);
-	context.handle_process(name,(char*)node->content,line);
+	context.handle_process(name,(char*)node->content,line,
+                               node->_private);
       } break;
 	
       case XML_ELEMENT_NODE: {
@@ -269,7 +264,7 @@ void XMLDoc::process_node(Context& context, xmlNode* start)
 //=========================================================================
 void XMLDoc::handle_open()
 {
-
+  scan_scripts(xmlDocGetRootElement(m_xmldoc));
 }
 
 //=========================================================================
@@ -334,9 +329,70 @@ bool XMLDoc::open()
 //=========================================================================
 void XMLDoc::close()
 {
+  for (Scripts::iterator it = m_scripts.begin();
+       it != m_scripts.end(); ++it) {
+    delete (*it);
+  }
+  m_scripts.clear();
+
   if (m_xmldoc) {
     handle_close();
     xmlFreeDoc(m_xmldoc);
   }
   m_xmldoc = 0;
+}
+
+//=========================================================================
+void XMLDoc::scan_scripts(xmlNode* start)
+{
+  for (xmlNode* node = start;
+       node != 0;
+       node = node->next) {
+    
+    if (node->type == XML_ELEMENT_NODE) {
+      scan_scripts(node->children);
+
+    } else if (node->type == XML_PI_NODE) {
+      std::string name((char*)node->name);
+      if (name == "scx") {
+        scx::ScriptStatement::Ref* script =
+          parse_script((char*)node->content, node->line);
+        m_scripts.push_back(script);
+        node->_private = (void*)script;
+      }
+    }
+  }
+}
+
+//=========================================================================
+scx::ScriptStatement::Ref* XMLDoc::parse_script(char* data, int line)
+{
+  int len = strlen(data);
+  scx::MemFileBuffer fbuf(len);
+  fbuf.get_buffer()->push_from(data,len);
+  scx::MemFile mfile(&fbuf);
+
+  scx::ScriptStatement::Ref* root =
+    new scx::ScriptStatement::Ref(new scx::ScriptStatementGroup(0));
+
+  // Create a script parser
+  scx::ScriptEngine* script = new scx::ScriptEngine(root);
+  mfile.add_stream(script);
+  
+  // Parse statements
+  if (script->parse() != scx::End) {
+    std::ostringstream oss;
+    oss << get_filepath().path() << ":" 
+        << (line + script->get_error_line()) << ": Script ";
+    switch (script->get_error_type()) {
+      case scx::ScriptEngine::Tokenization: oss << "tokenization"; break;
+      case scx::ScriptEngine::Syntax: oss << "syntax"; break;
+      case scx::ScriptEngine::Underflow: oss << "underflow"; break;
+      default: oss << "unknown"; break;
+    }
+    oss << " error";
+    log(oss.str(),scx::Logger::Error);
+  }
+  
+  return root;
 }

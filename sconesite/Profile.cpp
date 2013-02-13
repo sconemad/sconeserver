@@ -664,7 +664,7 @@ bool Profile::set_meta(int id,
   args.object()->give(scx::ScriptInt::new_ref(id));
   bool result = query->exec(&args);
 
-  SCONESITEPROFILE_DEBUG_LOG("PROFILE set_meta " << id << 
+  SCONESITEPROFILE_DEBUG_LOG("set_meta " << id << 
    ":" << property << "=" << 
    (value ? value->object()->get_string() : "NULL") <<
    (result?" OK":" FAILED"));
@@ -690,7 +690,7 @@ scx::ScriptRef* Profile::get_meta(int id,
     delete row_ref;
   }
   
-  SCONESITEPROFILE_DEBUG_LOG("PROFILE get_meta " << id << 
+  SCONESITEPROFILE_DEBUG_LOG("get_meta " << id << 
 			     ":" << property << "=" <<
 			     (result?result->object()->get_string():"NULL"));
   return result;

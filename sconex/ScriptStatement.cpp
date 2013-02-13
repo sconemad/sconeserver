@@ -24,6 +24,13 @@ Free Software Foundation, Inc.,
 #include <sconex/ScriptExpr.h>
 namespace scx {
 
+// Uncomment to enable debug info
+//#define ScriptStatement_DEBUG_LOG(m) DEBUG_LOG(m)
+
+#ifndef ScriptStatement_DEBUG_LOG
+#  define ScriptStatement_DEBUG_LOG(m)
+#endif
+
 
 //=============================================================================
 ScriptTracer::ScriptTracer(const ScriptAuth& auth,
@@ -206,6 +213,7 @@ ScriptStatement::ParseResult ScriptStatementExpr::parse(
 //=============================================================================
 ScriptRef* ScriptStatementExpr::run(ScriptTracer& tracer, FlowMode& flow)
 {
+  ScriptStatement_DEBUG_LOG("expr: " << m_expr);
   return tracer.evaluate(m_expr,this);
 }
 
@@ -282,6 +290,8 @@ ScriptStatement::ParseResult ScriptStatementGroup::parse(
 //=============================================================================
 ScriptRef* ScriptStatementGroup::run(ScriptTracer& tracer, FlowMode& flow)
 {
+  ScriptStatement_DEBUG_LOG("{");
+  
   ScriptRef* ret=0;
   for (StatementList::iterator it = m_statements.begin();
        it != m_statements.end();
@@ -289,12 +299,19 @@ ScriptRef* ScriptStatementGroup::run(ScriptTracer& tracer, FlowMode& flow)
     delete ret;
     ret = (*it)->object()->run(tracer,flow);
     if (ret && (typeid(*ret->object()) == typeid(scx::ScriptError))) {
+      ScriptStatement_DEBUG_LOG("error }");
       return ret;
     } else if (flow != Normal) {
+      ScriptStatement_DEBUG_LOG("break }");
       return ret;
     }
   }
-  
+
+  if (ret && ret->object()) {
+    ScriptStatement_DEBUG_LOG("} = " << ret->object()->get_string());
+  } else {
+    ScriptStatement_DEBUG_LOG("}");
+  }
   return ret;
 }
 
@@ -354,6 +371,13 @@ void ScriptStatementGroup::clear()
   m_statements.clear();
 }
 
+//=============================================================================
+void ScriptStatementGroup::set_env(ScriptMap* env)
+{
+  if (m_own_env) delete m_env;
+  m_env = env;
+  m_own_env = false;
+}
 
 //=============================================================================
 ScriptStatementConditional::ScriptStatementConditional(int line, const std::string& condition)
@@ -453,14 +477,18 @@ ScriptStatement::ParseMode ScriptStatementConditional::parse_mode() const
 //=============================================================================
 ScriptRef* ScriptStatementConditional::run(ScriptTracer& tracer, FlowMode& flow)
 {
+  ScriptStatement_DEBUG_LOG("if (" << m_condition << ")");
+
   // Evaluate the condition
   ScriptRef* result = tracer.evaluate(m_condition,this);
   bool cond = (result && 0 != result->object()->get_int());
   delete result;
 
   if (cond) {
+    ScriptStatement_DEBUG_LOG(" true");
     if (m_true_statement) return m_true_statement->object()->run(tracer,flow);
   } else {
+    ScriptStatement_DEBUG_LOG(" false");
     if (m_false_statement) return m_false_statement->object()->run(tracer,flow);
   }
   
@@ -539,8 +567,9 @@ ScriptStatement::ParseMode ScriptStatementWhile::parse_mode() const
 //=============================================================================
 ScriptRef* ScriptStatementWhile::run(ScriptTracer& tracer, FlowMode& flow)
 {
-  ScriptRef* ret=0;
+  ScriptStatement_DEBUG_LOG("while (" << m_condition << ")");
   
+  ScriptRef* ret=0;
   while (true) {
     // Evaluate the condition
     ScriptRef* result = tracer.evaluate(m_condition,this);
@@ -650,8 +679,9 @@ ScriptStatement::ParseMode ScriptStatementFor::parse_mode() const
 //=============================================================================
 ScriptRef* ScriptStatementFor::run(ScriptTracer& tracer, FlowMode& flow)
 {
+  ScriptStatement_DEBUG_LOG("for init: " << m_initialiser);
+
   ScriptRef* ret=0;
-  
   // Evaluate the initialiser
   ScriptRef* result = tracer.evaluate(m_initialiser,this);
   delete result;
@@ -660,6 +690,8 @@ ScriptRef* ScriptStatementFor::run(ScriptTracer& tracer, FlowMode& flow)
     // Evaluate the condition
     result = tracer.evaluate(m_condition,this);
     bool cond = (result && 0 != result->object()->get_int());
+    ScriptStatement_DEBUG_LOG(" cond: " << m_condition <<
+                              " = " << result->object()->get_string());
     delete result;
 
     if (!cond) {
@@ -684,6 +716,8 @@ ScriptRef* ScriptStatementFor::run(ScriptTracer& tracer, FlowMode& flow)
 
     // Evaluate the increment
     result = tracer.evaluate(m_increment,this);
+    ScriptStatement_DEBUG_LOG(" inc: " << m_increment <<
+                              " = " << result->object()->get_string());
     delete result;
   }
 
@@ -752,9 +786,18 @@ ScriptStatement::ParseMode ScriptStatementFlow::parse_mode() const
 //=============================================================================
 ScriptRef* ScriptStatementFlow::run(ScriptTracer& tracer, FlowMode& flow)
 {
+  switch (m_flow) {
+    case Return: ScriptStatement_DEBUG_LOG("return"); break;
+    case Last: ScriptStatement_DEBUG_LOG("last"); break;
+    case Next: ScriptStatement_DEBUG_LOG("next"); break;
+    default: ScriptStatement_DEBUG_LOG("normal?"); break;
+  }
+
   ScriptRef* ret=0;
   if (!m_ret_expr.empty()) {
     ret = tracer.evaluate(m_ret_expr,this);
+    ScriptStatement_DEBUG_LOG(" ret_expr: " << m_ret_expr <<
+                              " = " << ret->object()->get_string());
   }
 
   flow = m_flow;
@@ -843,18 +886,24 @@ ScriptRef* ScriptStatementDecl::run(ScriptTracer& tracer, FlowMode& flow)
   if (initialiser) {
     switch (m_deftype) {
     case Var:
+      ScriptStatement_DEBUG_LOG("var " << m_name << " = " << m_initialiser);
       args.object()->give(initialiser->new_copy(ScriptRef::Ref));
       break;
     case Const:
+      ScriptStatement_DEBUG_LOG("const " << m_name << " = " << m_initialiser);
       args.object()->give(initialiser->new_copy(ScriptRef::ConstRef));
       break;
     case Ref:
+      ScriptStatement_DEBUG_LOG("ref " << m_name << " = " << m_initialiser);
       args.object()->give(initialiser->ref_copy(ScriptRef::Ref));
       break;
     case ConstRef:
+      ScriptStatement_DEBUG_LOG("constref " << m_name << " = " << m_initialiser);
       args.object()->give(initialiser->ref_copy(ScriptRef::ConstRef));
       break;
     }
+    if (initialiser)
+      ScriptStatement_DEBUG_LOG(" = " << initialiser->object()->get_string());
     delete initialiser;
   }
 
@@ -877,6 +926,7 @@ ScriptStatementSub::ScriptStatementSub(const ScriptStatementSub& c)
   : ScriptStatement(c),
     m_seq(c.m_seq),
     m_name(c.m_name),
+    m_arg_names(c.m_arg_names),
     m_body(0)
 {
   if (c.m_body) {
@@ -959,6 +1009,8 @@ ScriptStatement::ParseMode ScriptStatementSub::parse_mode() const
 //=============================================================================
 ScriptRef* ScriptStatementSub::run(ScriptTracer& tracer, FlowMode& flow)
 {
+  ScriptStatement_DEBUG_LOG("sub " << m_name);
+
   ScriptList::Ref args(new ScriptList());
   args.object()->give(ScriptString::new_ref(m_name));
   args.object()->give(new ScriptRef(new ScriptSub(m_name,

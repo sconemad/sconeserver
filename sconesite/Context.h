@@ -49,7 +49,8 @@ public:
 
   virtual void handle_process(const std::string& name, 
 			      const char* data,
-			      int line) =0;
+			      int line,
+                              void* extra) =0;
 
   virtual void handle_text(const char* text) =0;
 

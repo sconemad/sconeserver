@@ -1,4 +1,14 @@
 
+2013-02-13 Andrew Wedgbury <wedge@sconemad.com>
+
+	* sconesite/Template: Set parent element (fixes logging).
+	* sconesite/XMLDoc: Parse scx PI nodes into script statements on open,
+	so we don't have to do this every time the file is processed.
+	* sconesite/RenderMarkup: Support HTML5 output, use parsed script data.
+	* sconex/ScriptStatement: Add debug output when running statements.
+	Allow env to be set on groups. Fix bug when copying subroutines.
+	* sconex/WikiTextArticleBody: Fix modtime handling.
+
 2013-02-03 Andrew Wedgbury <wedge@sconemad.com>
 
 	* sconex/ScriptBase, http, sconesite: Improve context in log output.

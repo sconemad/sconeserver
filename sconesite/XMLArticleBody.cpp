@@ -39,6 +39,8 @@ XMLArticleBody::~XMLArticleBody()
 //=========================================================================
 void XMLArticleBody::handle_open()
 {
+  XMLDoc::handle_open();
+
   m_headings.clear();
   int index = 0;
   scan_headings(xmlDocGetRootElement(m_xmldoc),index);
@@ -47,7 +49,7 @@ void XMLArticleBody::handle_open()
 //=========================================================================
 void XMLArticleBody::handle_close()
 {
-
+  XMLDoc::handle_close();
 }
 
 //=========================================================================

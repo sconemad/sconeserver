@@ -32,16 +32,12 @@ Free Software Foundation, Inc.,
 #include <sconex/Kernel.h>
 #include <sconex/File.h>
 #include <sconex/FileDir.h>
-#include <sconex/ScriptEngine.h>
 #include <sconex/ScriptExpr.h>
-#include <sconex/MemFile.h>
 #include <sconex/Socket.h>
 #include <sconex/StreamSocket.h>
 #include <sconex/utils.h>
 
-const char* XHTML_DOCTYPE = "<!DOCTYPE html PUBLIC '-//W3C//DTD XHTML 1.0 Transitional//EN' 'http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd'>";
-
-const char* XHTML_NAMESPACE = "http://www.w3.org/1999/xhtml";
+const char* HTML_DOCTYPE = "<!doctype html>";
 
 //=========================================================================
 RenderMarkupContext::RenderMarkupContext(
@@ -186,9 +182,8 @@ bool RenderMarkupContext::handle_start(const std::string& name,
       }
       
     } else if (name == "html") {
-      // Setup for valid XHTML output
-      oss << XHTML_DOCTYPE << "\n";
-      attrs["xmlns"] = XHTML_NAMESPACE;
+      // Setup for valid HTML output
+      oss << HTML_DOCTYPE << "\n";
     }
 
     oss << "<" << name;
@@ -245,7 +240,8 @@ bool RenderMarkupContext::handle_end(const std::string& name,
 //=========================================================================
 void RenderMarkupContext::handle_process(const std::string& name,
 					 const char* data,
-					 int line)
+					 int line,
+                                         void* extra)
 {
   if (m_inhibit) return;
     
@@ -281,44 +277,23 @@ void RenderMarkupContext::handle_process(const std::string& name,
     delete result;
 
   } else if (name == "scx") { // Sconescript
+    DEBUG_ASSERT(extra, "Missing parsed script data");
     scx::ScriptRef* ret = 0;
     try {
-      int len = strlen(data);
-      scx::MemFileBuffer fbuf(len);
-      fbuf.get_buffer()->push_from(data,len);
-      scx::MemFile mfile(&fbuf);
-
-      // Create root statement using our environment
       scx::ScriptStatement::Ref* root = 
-	new scx::ScriptStatement::Ref(
-          new scx::ScriptStatementGroup(0, &m_scx_env));
+        (scx::ScriptStatement::Ref*)extra;
+      root = root->new_copy();
       m_old_groups.push_back(root);
-      root->object()->set_parent(this);
+      scx::ScriptStatementGroup* script =
+        (scx::ScriptStatementGroup*)root->object();
+      script->set_env(&m_scx_env);
+      script->set_parent(this);
       
-      // Create a script parser
-      scx::ScriptEngine* script = new scx::ScriptEngine(root);
-      mfile.add_stream(script);
-
-      // Parse statements
-      if (script->parse() != scx::End) {
-        std::ostringstream oss;
-        oss << doc->get_filepath().path() << ":" 
-	    << (line + script->get_error_line()) << ": Script ";
-	switch (script->get_error_type()) {
-	case scx::ScriptEngine::Tokenization: oss << "tokenization"; break;
-	case scx::ScriptEngine::Syntax: oss << "syntax"; break;
-	case scx::ScriptEngine::Underflow: oss << "underflow"; break;
-	default: oss << "unknown"; break;
-	}
-        oss << " error";
-        log(oss.str(),scx::Logger::Error);
-      }
-
       // Run statements
       scx::ScriptTracer tracer(auth, doc->get_filepath().path(),line);
-      ret = root->object()->execute(tracer);
+      ret = script->execute(tracer);
       delete ret;
-      ((scx::ScriptStatementGroup*)root->object())->clear();
+      //      script->clear();
       for (scx::ScriptTracer::ErrorList::iterator it = tracer.errors().begin();
 	   it != tracer.errors().end(); ++it) {
 	log(*it,scx::Logger::Error);

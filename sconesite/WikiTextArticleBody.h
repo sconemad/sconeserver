@@ -48,8 +48,6 @@ public:
 
   virtual bool process(Context& context);
 
-  const scx::Date& get_modtime() const;
-
   void parse_error(const std::string& msg);
 
   // Unload the article if it hasn't been accessed since purge_time
@@ -69,7 +67,6 @@ protected:
 
   scx::FilePath m_root;
   std::string m_file;
-  scx::Date m_modtime;
 
   std::string m_errors;
   
