@@ -18,6 +18,7 @@
 # SconeServer (http://www.sconemad.com)
 
 
+
 VPATH = @srcdir@
 pkgdatadir = $(datadir)/@PACKAGE@
 pkgincludedir = $(includedir)/@PACKAGE@
@@ -70,7 +71,7 @@ am__nobase_list = $(am__nobase_strip_setup); \
 am__base_list = \
   sed '$$!N;$$!N;$$!N;$$!N;$$!N;$$!N;$$!N;s/\n/ /g' | \
   sed '$$!N;$$!N;$$!N;$$!N;s/\n/ /g'
-am__installdirs = "$(DESTDIR)$(pkglibdir)"
+am__installdirs = "$(DESTDIR)$(pkglibdir)" "$(DESTDIR)$(modconfdir)"
 LTLIBRARIES = $(pkglib_LTLIBRARIES)
 ip6_la_LIBADD =
 am_ip6_la_OBJECTS = IP6Module.lo IP6SocketAddress.lo
@@ -94,6 +95,7 @@ CXXLINK = $(LIBTOOL) --tag=CXX $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) \
 	$(LDFLAGS) -o $@
 SOURCES = $(ip6_la_SOURCES)
 DIST_SOURCES = $(ip6_la_SOURCES)
+DATA = $(modconf_DATA)
 HEADERS = $(noinst_HEADERS)
 ETAGS = etags
 CTAGS = ctags
@@ -127,6 +129,8 @@ EGREP = @EGREP@
 EXEEXT = @EXEEXT@
 FGREP = @FGREP@
 GREP = @GREP@
+IMAGE_LDFLAGS = @IMAGE_LDFLAGS@
+IMAGE_LIBS = @IMAGE_LIBS@
 INSTALL = @INSTALL@
 INSTALL_DATA = @INSTALL_DATA@
 INSTALL_PROGRAM = @INSTALL_PROGRAM@
@@ -162,8 +166,6 @@ PACKAGE_URL = @PACKAGE_URL@
 PACKAGE_VERSION = @PACKAGE_VERSION@
 PATH_SEPARATOR = @PATH_SEPARATOR@
 RANLIB = @RANLIB@
-SCONESITE_IMAGE_LDFLAGS = @SCONESITE_IMAGE_LDFLAGS@
-SCONESITE_IMAGE_LIBS = @SCONESITE_IMAGE_LIBS@
 SED = @SED@
 SET_MAKE = @SET_MAKE@
 SHELL = @SHELL@
@@ -239,6 +241,9 @@ noinst_HEADERS = \
 IP6SocketAddress.h
 
 ip6_la_LDFLAGS = -module -avoid-version
+modconfdir = $(sysconfdir)/modules.d
+modconf_DATA = ip6.conf
+EXTRA_DIST = $(modconf_DATA)
 all: all-am
 
 .SUFFIXES:
@@ -342,6 +347,26 @@ mostlyclean-libtool:
 
 clean-libtool:
 	-rm -rf .libs _libs
+install-modconfDATA: $(modconf_DATA)
+	@$(NORMAL_INSTALL)
+	test -z "$(modconfdir)" || $(MKDIR_P) "$(DESTDIR)$(modconfdir)"
+	@list='$(modconf_DATA)'; test -n "$(modconfdir)" || list=; \
+	for p in $$list; do \
+	  if test -f "$$p"; then d=; else d="$(srcdir)/"; fi; \
+	  echo "$$d$$p"; \
+	done | $(am__base_list) | \
+	while read files; do \
+	  echo " $(INSTALL_DATA) $$files '$(DESTDIR)$(modconfdir)'"; \
+	  $(INSTALL_DATA) $$files "$(DESTDIR)$(modconfdir)" || exit $$?; \
+	done
+
+uninstall-modconfDATA:
+	@$(NORMAL_UNINSTALL)
+	@list='$(modconf_DATA)'; test -n "$(modconfdir)" || list=; \
+	files=`for p in $$list; do echo $$p; done | sed -e 's|^.*/||'`; \
+	test -n "$$files" || exit 0; \
+	echo " ( cd '$(DESTDIR)$(modconfdir)' && rm -f" $$files ")"; \
+	cd "$(DESTDIR)$(modconfdir)" && rm -f $$files
 
 ID: $(HEADERS) $(SOURCES) $(LISP) $(TAGS_FILES)
 	list='$(SOURCES) $(HEADERS) $(LISP) $(TAGS_FILES)'; \
@@ -427,9 +452,9 @@ distdir: $(DISTFILES)
 	done
 check-am: all-am
 check: check-am
-all-am: Makefile $(LTLIBRARIES) $(HEADERS)
+all-am: Makefile $(LTLIBRARIES) $(DATA) $(HEADERS)
 installdirs:
-	for dir in "$(DESTDIR)$(pkglibdir)"; do \
+	for dir in "$(DESTDIR)$(pkglibdir)" "$(DESTDIR)$(modconfdir)"; do \
 	  test -z "$$dir" || $(MKDIR_P) "$$dir"; \
 	done
 install: install-am
@@ -480,7 +505,7 @@ info: info-am
 
 info-am:
 
-install-data-am:
+install-data-am: install-modconfDATA
 
 install-dvi: install-dvi-am
 
@@ -526,7 +551,7 @@ ps: ps-am
 
 ps-am:
 
-uninstall-am: uninstall-pkglibLTLIBRARIES
+uninstall-am: uninstall-modconfDATA uninstall-pkglibLTLIBRARIES
 
 .MAKE: install-am install-strip
 
@@ -537,12 +562,13 @@ uninstall-am: uninstall-pkglibLTLIBRARIES
 	install install-am install-data install-data-am install-dvi \
 	install-dvi-am install-exec install-exec-am install-html \
 	install-html-am install-info install-info-am install-man \
-	install-pdf install-pdf-am install-pkglibLTLIBRARIES \
-	install-ps install-ps-am install-strip installcheck \
-	installcheck-am installdirs maintainer-clean \
-	maintainer-clean-generic mostlyclean mostlyclean-compile \
-	mostlyclean-generic mostlyclean-libtool pdf pdf-am ps ps-am \
-	tags uninstall uninstall-am uninstall-pkglibLTLIBRARIES
+	install-modconfDATA install-pdf install-pdf-am \
+	install-pkglibLTLIBRARIES install-ps install-ps-am \
+	install-strip installcheck installcheck-am installdirs \
+	maintainer-clean maintainer-clean-generic mostlyclean \
+	mostlyclean-compile mostlyclean-generic mostlyclean-libtool \
+	pdf pdf-am ps ps-am tags uninstall uninstall-am \
+	uninstall-modconfDATA uninstall-pkglibLTLIBRARIES
 
 
 # Tell versions [3.59,3.63) of GNU make to not export all variables.

@@ -27,6 +27,7 @@ Free Software Foundation, Inc.,
 #include <http/Response.h>
 #include <sconex/ScriptTypes.h>
 #include <sconex/Descriptor.h>
+#include <sconex/Kernel.h>
 namespace http {
 
 //=========================================================================
@@ -210,7 +211,7 @@ scx::ScriptRef* HostMapper::script_method(const scx::ScriptAuth& auth,
     }
         
     log("Adding host '" + s_id + "' hostname '" + s_hostname + "' path '" + a_path->get_string() + "'");
-    scx::FilePath path = m_module.get_conf_path() + a_path->get_string();
+    scx::FilePath path = scx::Kernel::get()->get_conf_path() + a_path->get_string();
     Host* host = new Host(m_module, *this, s_id, s_hostname, path.path());
     host->init();
     m_hosts[s_id] = new Host::Ref(host);

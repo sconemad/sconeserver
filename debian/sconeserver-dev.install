@@ -1,6 +1,13 @@
 usr/lib/lib*.la
-usr/lib/sconeserver/test.so
-usr/lib/sconeserver/tuesdayonly.so
-usr/lib/sconeserver/rot13.so
 usr/lib/sconeserver/*.la
+
+usr/lib/sconeserver/test.so
+etc/sconeserver/modules.d/test.conf
+
+usr/lib/sconeserver/tuesdayonly.so
+etc/sconeserver/modules.d/tuesdayonly.conf
+
+usr/lib/sconeserver/rot13.so
+etc/sconeserver/modules.d/rot13.conf
+
 usr/include/sconeserver/*

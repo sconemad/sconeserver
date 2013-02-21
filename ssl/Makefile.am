@@ -20,6 +20,7 @@ SSLChannel.h
 ssl_la_LDFLAGS = -module -avoid-version
 ssl_la_LIBADD = $(SSL_LIBADD)
 
-sysconf_DATA = ssl.conf.example
+modconfdir = $(sysconfdir)/modules.d
+modconf_DATA = ssl.conf
 
-EXTRA_DIST = $(sysconf_DATA)
+EXTRA_DIST = $(modconf_DATA)

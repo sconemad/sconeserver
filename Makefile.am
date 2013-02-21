@@ -12,37 +12,40 @@ sconed_SOURCES = main.cpp
 sconed_LDADD = $(top_builddir)/sconex/libsconex.la
 
 MODULES = \
-server \
+bluetooth \
+exec \
+forward \
+http \
+image \
 ip \
 ip6 \
 local \
 location \
-bluetooth \
-http \
-sconesite \
+maths \
 mime \
+mysql \
+rss \
+sconesite \
+server \
 simple \
+smtp \
+sqlite \
 ssl \
 stat \
-exec \
-forward \
 tftp \
 test \
-testbuilder \
+testbuilder
+
+EXPERIMENTAL = \
 lettuce \
-mysql \
-sqlite \
-smtp \
-rss \
-maths \
 ui
 
-SUBDIRS = sconex examples $(MODULES)
+SUBDIRS = sconex examples $(MODULES) $(EXPERIMENTAL)
 
 docdir=$(datadir)/doc/$(PACKAGE)
 doc_DATA = AUTHORS COPYING ChangeLog INSTALL NEWS README THANKS TODO
 
-sysconf_DATA = sconeserver.conf.example
+sysconf_DATA = sconeserver.conf
 
 dist_man_MANS = sconed.1
 

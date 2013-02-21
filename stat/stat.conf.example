@@ -1,9 +1,0 @@
-# SconeServer (http://www.sconemad.com)
-# Statistics module configuration file
-
-# Add channels
-
- add("all");
- add("simple");
- add("http");
- add("https");

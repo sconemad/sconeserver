@@ -34,7 +34,6 @@ MimeHeader.cpp \
 MimeType.cpp \
 Module.cpp \
 ModuleLoader.cpp \
-ModuleLoaderDLL.cpp \
 Multiplexer.cpp \
 Mutex.cpp \
 NullFile.cpp \
@@ -95,7 +94,6 @@ MimeType.h \
 Module.h \
 ModuleInterface.h \
 ModuleLoader.h \
-ModuleLoaderDLL.h \
 Multiplexer.h \
 Mutex.h \
 NullFile.h \

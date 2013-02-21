@@ -46,6 +46,11 @@ public:
   virtual int init();
   virtual bool close();
 
+  // Set/get configuration path
+  void set_conf_path(const FilePath& path);
+  FilePath get_conf_path() const;
+  void set_autoload_config(bool autoload);
+
   // Run the kernel event loop.
   // Returns either when the multiplexer runs out of descriptors, or a shutdown
   // or restart is requested.
@@ -92,6 +97,9 @@ private:
 
   Multiplexer m_spinner;
 
+  FilePath m_conf_path;
+  bool m_autoload_config;
+  
   std::string m_system_nodename;
   std::string m_system_version;
   std::string m_system_hardware;

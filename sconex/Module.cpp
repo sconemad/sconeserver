@@ -21,12 +21,12 @@ Free Software Foundation, Inc.,
 
 #include <sconex/Module.h>
 #include <sconex/ModuleLoader.h>
-#include <sconex/ModuleLoaderDLL.h>
 #include <sconex/ConfigFile.h>
 #include <sconex/ScriptExpr.h>
 #include <sconex/Logger.h>
 #include <sconex/FileStat.h>
 #include <sconex/FileDir.h>
+#include <sconex/Kernel.h>
 
 namespace scx {
 
@@ -36,9 +36,7 @@ Module::Module(
   const VersionTag& version
 ) : m_name(name),
     m_version(version),
-    m_autoload_config(true),
     m_mod_path(""),
-    m_conf_path(""),
     m_var_path(""),
     m_parent_module(0),
     m_logger(0)
@@ -76,10 +74,6 @@ std::string Module::copyright() const
 //=============================================================================
 int Module::init()
 {
-  if (m_autoload_config) {
-    load_config_file();
-  }
-  
   return 0;
 }
 
@@ -101,12 +95,6 @@ bool Module::close()
   }
   m_modules.reverse();
   return done;
-}
-
-//=============================================================================
-void Module::set_autoload_config(bool onoff)
-{
-  m_autoload_config = onoff;
 }
 
 //=============================================================================
@@ -137,30 +125,6 @@ FilePath Module::get_mod_path() const
     return FilePath(m_parent_module->get_mod_path() + m_mod_path);
   }
   return m_mod_path;
-}
-
-//=============================================================================
-void Module::set_conf_path(const FilePath& path)
-{
-  if (FileStat(path).is_file()) {
-    std::string pathstr = path.path();
-    std::string::size_type is = pathstr.find_last_of("/");
-    if (is != std::string::npos) {
-      m_conf_path = pathstr.substr(0,is);
-      m_conf_file = pathstr.substr(is+1);
-    }
-  } else {
-    m_conf_path = path;
-  }
-}
-
-//=============================================================================
-FilePath Module::get_conf_path() const
-{
-  if (m_parent_module) {
-    return FilePath(m_parent_module->get_conf_path() + m_conf_path);
-  }
-  return m_conf_path;
 }
 
 //=============================================================================
@@ -199,9 +163,10 @@ ScriptRef* Module::script_op(const ScriptAuth& auth,
 	"insmod" == name ||
 	"rmmod" == name ||
 	"load_config" == name ||
+	"load_config_dir" == name ||
+	"load_module_dir" == name ||
 	"run_parts" == name ||
 	"set_mod_path" == name ||
-	"set_conf_path" == name ||
 	"set_var_path" == name) {
       return new ScriptMethodRef(ref,name);
     }
@@ -219,8 +184,6 @@ ScriptRef* Module::script_op(const ScriptAuth& auth,
       return new ScriptRef(m_loadtime.new_copy());
     if ("mod_path" == name) 
       return ScriptString::new_ref(get_mod_path().path());
-    if ("conf_path" == name) 
-      return ScriptString::new_ref(get_conf_path().path());
     if ("var_path" == name) 
       return ScriptString::new_ref(get_var_path().path());
 
@@ -321,46 +284,19 @@ ScriptRef* Module::script_method(const ScriptAuth& auth,
       remove_module(existing_loader);
     }
 
-    // Parse any options
-    std::string opts;
-    const ScriptString* a_opts = 
-      get_method_arg<ScriptString>(args,1,"options");
-    if (a_opts) {
-      opts = a_opts->get_string();
-    }
-    bool opt_noconfig = (opts.find("noconfig") != opts.npos);
-    bool opt_delay = (opts.find("delay") != opts.npos);
-
-    log(
-      "Adding module [" + name + "]"
-      + (opt_noconfig ? " (no configuration)" : "")
-      + (opt_delay ? " (delayed loading)" : "")
-    );
+    log("Adding module [" + name + "]");
     
-    ModuleLoaderDLL* loader = new ModuleLoaderDLL(name,this);
+    ModuleLoader* loader = new ModuleLoader(name,this);
     add_module(loader);
     
-    const ScriptString* a_conf_path = 
-      get_method_arg<ScriptString>(args,2,"conf_path");
-    if (a_conf_path) {
-      loader->set_conf_path(a_conf_path->get_string());
+    // Load the module and check it's valid
+    Module::Ref mod = loader->get_module();
+    if (!mod.valid()) {
+      remove_module(loader);
+      return ScriptError::new_ref("Cannot load module [" + name + "]");
     }
-    
-    if (opt_noconfig) {
-      // Suppress autoloading of config during init
-      loader->set_autoload_config(false);
-    }
-    
-    if (!opt_delay) {
-      // Cause the module to be loaded immediately
-      Module::Ref mod = loader->get_module();
-      if (!mod.valid()) {
-        remove_module(loader);
-	return ScriptError::new_ref("Cannot load module [" + name + "]");
-      }
-      return mod.ref_copy(ref.reftype());
-    }
-    return 0;
+
+    return mod.ref_copy(ref.reftype());
   }
   
   if ("rmmod" == name) {
@@ -408,7 +344,7 @@ ScriptRef* Module::script_method(const ScriptAuth& auth,
     return 0;
   }
 
-  if ("run_parts" == name) {
+  if ("load_config_dir" == name || "run_parts" == name) {
     if (!auth.admin()) return ScriptError::new_ref("Not permitted");
 
     const ScriptString* a_path = get_method_arg<ScriptString>(args,0,"path");
@@ -422,6 +358,20 @@ ScriptRef* Module::script_method(const ScriptAuth& auth,
     return 0;
   }
 
+  if ("load_module_dir" == name) {
+    if (!auth.admin()) return ScriptError::new_ref("Not permitted");
+
+    const ScriptString* a_path = get_method_arg<ScriptString>(args,0,"path");
+    FilePath path;
+    if (a_path) {
+      path = a_path->get_string();
+    }
+    if (false == load_module_dir(path)) {
+      return ScriptError::new_ref("Error occured");
+    }
+    return 0;
+  }
+
   if ("set_mod_path" == name) {
     if (!auth.admin()) return ScriptError::new_ref("Not permitted");
 
@@ -430,17 +380,6 @@ ScriptRef* Module::script_method(const ScriptAuth& auth,
       return ScriptString::new_ref(get_mod_path().path());
     }
     m_mod_path = a_path->get_string();
-    return 0;
-  }
-
-  if ("set_conf_path" == name) {
-    if (!auth.admin()) return ScriptError::new_ref("Not permitted");
-
-    const ScriptString* a_path = get_method_arg<ScriptString>(args,0,"path");
-    if (!a_path) {
-      return ScriptString::new_ref(get_conf_path().path());
-    }
-    m_conf_path = a_path->get_string();
     return 0;
   }
 
@@ -492,40 +431,6 @@ ModuleLoader* Module::find_module(const std::string& name)
 //=============================================================================
 bool Module::load_config_file(FilePath path)
 {
-  if (path.path().empty()) {
-    // Look for config file in standard locations
-    int i=0;
-    do {
-      switch (++i) {
-        case 1:
-          // confpath/conf_file
-          path = get_conf_path() + m_conf_file;
-          break;
-        case 2:
-          // confpath/module.conf
-          path = get_conf_path() +
-                 FilePath(m_name + ".conf");
-          break;
-        case 3:
-          // confpath/module/module.conf (DEV)
-          path = get_conf_path() +
-                 FilePath(m_name) + 
-                 FilePath(m_name + ".conf");
-          break;
-        case 4:
-          // confpath/parent/module/module.conf (DEV)
-          if (!m_parent_module) continue;
-          path = get_conf_path() +
-                 FilePath(m_parent_module->name()) + 
-                 FilePath(m_name) + 
-                 FilePath(m_name + ".conf");
-          break;
-          
-        default: return false; // Can't find conf file
-      }
-    } while (!FileStat(path).is_file());
-  }
-
   ConfigFile config(path);
   ScriptRef ctx(this);
   return config.load(&ctx);
@@ -536,6 +441,8 @@ bool Module::load_config_dir(FilePath path)
 {
   const char* filepattern =
     "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ1234567890_-";
+
+  path = Kernel::get()->get_conf_path() + path;
 
   FileDir dir(path);
   std::list<std::string> files;
@@ -558,6 +465,100 @@ bool Module::load_config_dir(FilePath path)
     }
   }
   return ok;
+}
+
+//=============================================================================
+bool Module::load_module_dir(FilePath path)
+{
+  const char* filepattern =
+    "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ1234567890_-.";
+
+  path = Kernel::get()->get_conf_path() + path;
+  
+  // Find all the module conf files and order by name
+  FileDir dir(path);
+  std::list<std::string> files;
+  while (dir.next()) {
+    if (dir.stat().is_file() &&
+	dir.name().find_first_not_of(filepattern) == std::string::npos) {
+      files.push_back(dir.name());
+    }
+  }
+  files.sort();
+
+  // Create a module loader for each conf file
+  for (std::list<std::string>::const_iterator it = files.begin();
+       it != files.end(); ++it) {
+    int i = (*it).find_last_of(".");
+    std::string name((*it), 0, i);
+    ModuleLoader* loader = new ModuleLoader(path + (*it), this);
+    if (loader->get_name() == "") {
+      delete loader;
+      continue;
+    }
+    add_module(loader);
+  }
+
+  // Now try and load the modules
+  // Loop until we can't load any more (hopefully because they've all been
+  // loaded), recording any errors that occur for reporting later.
+  std::map<std::string,std::string> errors;
+  int prev_loaded = 0;
+  int loaded = 0;
+  do {
+    prev_loaded = loaded;
+
+    // Loop through and load any modules that have satisfied dependencies
+    for (std::list<ModuleLoader*>::iterator itM = m_modules.begin();
+         itM != m_modules.end(); ++itM) {
+      ModuleLoader* loader = (*itM);
+      if (!loader->is_loaded()) {
+        // Determine if we can we load this module
+        bool loadable = true;
+        const ModuleLoader::Depends& deps = loader->get_depends();
+        for (ModuleLoader::Depends::const_iterator itD = deps.begin();
+             itD != deps.end(); ++itD) {
+          ModuleLoader* dl = find_module(*itD);
+          if (!dl) {
+            errors[loader->get_name()] =
+              std::string("missing dependency [") + (*itD) + "]";
+            loadable = false;
+          } else if (!dl->is_loaded()) {
+            // Module is just not loaded yet
+            errors[loader->get_name()] =
+              std::string("dependency [") + (*itD) + "] not loaded";
+            loadable = false;
+          }
+        }
+
+        if (loadable) {
+          // Try and load the module
+          Module::Ref mod = loader->get_module();
+          if (mod.valid()) {
+            // Module has loaded, great
+            ++loaded;
+            errors.erase(loader->get_name());
+          } else {
+            errors[loader->get_name()] = std::string("failed to load");
+          }
+        }
+      }
+    }
+    
+  } while (loaded > prev_loaded);
+
+  // Log a summary of what happened
+  if (errors.size() == 0) {
+    log("All modules loaded succesfully", Logger::Info);
+  } else {
+    log("Some module(s) failed to load:", Logger::Error);
+    for (std::map<std::string,std::string>::const_iterator it = errors.begin();
+         it != errors.end(); ++it) {
+      log(std::string("Module [") + it->first + "] " + it->second, Logger::Error);
+    }
+  }
+  
+  return true;
 }
 
 //=============================================================================

@@ -1,9 +1,0 @@
-# SconeServer (http://www.sconemad.com)
-# rss module configuration file
-
-# Define RSS feeds
-
- add("sconemad","http://www.sconemad.com/?rss=1");
-
-# Refresh every 30 mins (default is 10 mins)
- sconemad.set_refresh_period(30*60);

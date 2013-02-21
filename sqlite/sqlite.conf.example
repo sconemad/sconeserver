@@ -1,6 +1,0 @@
-# SconeServer (http://www.sconemad.com)
-# sqlite module configuration file
-
-# Define database profiles
-
-# add("id","/path/to/dbfile");

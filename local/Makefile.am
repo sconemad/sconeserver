@@ -15,3 +15,7 @@ LocalSocketAddress.h
 
 local_la_LDFLAGS = -module -avoid-version
 
+modconfdir = $(sysconfdir)/modules.d
+modconf_DATA = local.conf
+
+EXTRA_DIST = $(modconf_DATA)

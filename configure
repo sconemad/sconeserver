@@ -627,8 +627,8 @@ BUILD_MYSQL_FALSE
 BUILD_MYSQL_TRUE
 BUILD_RSS_FALSE
 BUILD_RSS_TRUE
-BUILD_SCONESITE_IMAGE_FALSE
-BUILD_SCONESITE_IMAGE_TRUE
+BUILD_IMAGE_FALSE
+BUILD_IMAGE_TRUE
 BUILD_SCONESITE_FALSE
 BUILD_SCONESITE_TRUE
 BUILD_LETTUCE_FALSE
@@ -656,8 +656,8 @@ UI_LIBADD
 MATHS_LIBADD
 SQLITE_LIBADD
 MYSQL_LIBADD
-SCONESITE_IMAGE_LIBS
-SCONESITE_IMAGE_LDFLAGS
+IMAGE_LIBS
+IMAGE_LDFLAGS
 MAGICK
 SSL_LIBADD
 CXXCPP
@@ -805,7 +805,7 @@ with_examples
 with_testbuilder
 with_lettuce
 with_sconesite
-with_sconesite_image
+with_image
 with_rss
 with_mysql
 with_sqlite
@@ -1478,7 +1478,7 @@ Optional Packages:
   --with-testbuilder      Enable TestBuilder module
   --with-lettuce          Enable Lettuce module
   --with-sconesite        Enable Sconesite module
-  --with-sconesite-image  Enable Sconesite:image module
+  --with-image            Enable image module
   --with-rss              Enable rss module
   --with-mysql            Enable MySQL Database module
   --with-sqlite           Enable SQLite database module
@@ -16268,26 +16268,26 @@ if test "x$MAGICK" == "xyes"; then
   MAGICK_LIBS=`Magick++-config --libs`
 fi
 
-# Sconesite:image module
+# Image module
 
-# Check whether --with-sconesite-image was given.
-if test "${with_sconesite_image+set}" = set; then :
-  withval=$with_sconesite_image; SCONESITE_IMAGE="$withval"
+# Check whether --with-image was given.
+if test "${with_image+set}" = set; then :
+  withval=$with_image; IMAGE="$withval"
 else
-  SCONESITE_IMAGE="$MAGICK"
+  IMAGE="$MAGICK"
 
 fi
 
 
-# Need ImageMagick for Sconesite:image
-if test "x$SCONESITE_IMAGE" == "xyes"; then
+# Need ImageMagick for image
+if test "x$IMAGE" == "xyes"; then
   if test "x$MAGICK" != "xyes"; then
-    as_fn_error $? "library 'Magick++' is required for Sconesite:image" "$LINENO" 5
+    as_fn_error $? "library 'Magick++' is required for image" "$LINENO" 5
   fi
   CXXFLAGS="$CXXFLAGS $MAGICK_CFLAGS"
-  SCONESITE_IMAGE_LDFLAGS=$MAGICK_LDFLAGS
+  IMAGE_LDFLAGS=$MAGICK_LDFLAGS
 
-  SCONESITE_IMAGE_LDFLAGS=$MAGICK_LIBS
+  IMAGE_LDFLAGS=$MAGICK_LIBS
 
 fi
 
@@ -16577,7 +16577,6 @@ else
 fi
 
 fi
-
 
 # Checks for header files.
 { $as_echo "$as_me:${as_lineno-$LINENO}: checking for ANSI C header files" >&5
@@ -18230,12 +18229,12 @@ else
   BUILD_SCONESITE_FALSE=
 fi
 
- if test x$SCONESITE_IMAGE = xyes; then
-  BUILD_SCONESITE_IMAGE_TRUE=
-  BUILD_SCONESITE_IMAGE_FALSE='#'
+ if test x$IMAGE = xyes; then
+  BUILD_IMAGE_TRUE=
+  BUILD_IMAGE_FALSE='#'
 else
-  BUILD_SCONESITE_IMAGE_TRUE='#'
-  BUILD_SCONESITE_IMAGE_FALSE=
+  BUILD_IMAGE_TRUE='#'
+  BUILD_IMAGE_FALSE=
 fi
 
  if test x$RSS = xyes; then
@@ -18311,15 +18310,9 @@ ac_config_files="$ac_config_files ssl/Makefile"
 
 ac_config_files="$ac_config_files http/Makefile"
 
-ac_config_files="$ac_config_files http/getfile/Makefile"
-
-ac_config_files="$ac_config_files http/dirindex/Makefile"
-
-ac_config_files="$ac_config_files http/errorpage/Makefile"
-
 ac_config_files="$ac_config_files sconesite/Makefile"
 
-ac_config_files="$ac_config_files sconesite/image/Makefile"
+ac_config_files="$ac_config_files image/Makefile"
 
 ac_config_files="$ac_config_files exec/Makefile"
 
@@ -18523,8 +18516,8 @@ if test -z "${BUILD_SCONESITE_TRUE}" && test -z "${BUILD_SCONESITE_FALSE}"; then
   as_fn_error $? "conditional \"BUILD_SCONESITE\" was never defined.
 Usually this means the macro was only invoked conditionally." "$LINENO" 5
 fi
-if test -z "${BUILD_SCONESITE_IMAGE_TRUE}" && test -z "${BUILD_SCONESITE_IMAGE_FALSE}"; then
-  as_fn_error $? "conditional \"BUILD_SCONESITE_IMAGE\" was never defined.
+if test -z "${BUILD_IMAGE_TRUE}" && test -z "${BUILD_IMAGE_FALSE}"; then
+  as_fn_error $? "conditional \"BUILD_IMAGE\" was never defined.
 Usually this means the macro was only invoked conditionally." "$LINENO" 5
 fi
 if test -z "${BUILD_RSS_TRUE}" && test -z "${BUILD_RSS_FALSE}"; then
@@ -19547,11 +19540,8 @@ do
     "stat/Makefile") CONFIG_FILES="$CONFIG_FILES stat/Makefile" ;;
     "ssl/Makefile") CONFIG_FILES="$CONFIG_FILES ssl/Makefile" ;;
     "http/Makefile") CONFIG_FILES="$CONFIG_FILES http/Makefile" ;;
-    "http/getfile/Makefile") CONFIG_FILES="$CONFIG_FILES http/getfile/Makefile" ;;
-    "http/dirindex/Makefile") CONFIG_FILES="$CONFIG_FILES http/dirindex/Makefile" ;;
-    "http/errorpage/Makefile") CONFIG_FILES="$CONFIG_FILES http/errorpage/Makefile" ;;
     "sconesite/Makefile") CONFIG_FILES="$CONFIG_FILES sconesite/Makefile" ;;
-    "sconesite/image/Makefile") CONFIG_FILES="$CONFIG_FILES sconesite/image/Makefile" ;;
+    "image/Makefile") CONFIG_FILES="$CONFIG_FILES image/Makefile" ;;
     "exec/Makefile") CONFIG_FILES="$CONFIG_FILES exec/Makefile" ;;
     "forward/Makefile") CONFIG_FILES="$CONFIG_FILES forward/Makefile" ;;
     "tftp/Makefile") CONFIG_FILES="$CONFIG_FILES tftp/Makefile" ;;
@@ -21113,11 +21103,8 @@ The following modules will be built:
   + simple         yes
   + stat           yes
   + http           yes
-    + getfile      yes
-    + dirindex     yes
-    + errorpage    yes
   + sconesite      $SCONESITE
-    + image        $SCONESITE_IMAGE
+  + image          $IMAGE
   + ssl            $SSL
   + exec           yes
   + forward        yes
@@ -21151,11 +21138,8 @@ The following modules will be built:
   + simple         yes
   + stat           yes
   + http           yes
-    + getfile      yes
-    + dirindex     yes
-    + errorpage    yes
   + sconesite      $SCONESITE
-    + image        $SCONESITE_IMAGE
+  + image          $IMAGE
   + ssl            $SSL
   + exec           yes
   + forward        yes

@@ -73,6 +73,10 @@ int Kernel::init()
 
   log("Init " + name() + "-" + version().get_string());
   log("Built for " + scx::build_type() + " on " + scx::build_time().code());
+
+  if (m_autoload_config) {
+    load_config_file(m_conf_path + std::string(name() + ".conf"));
+  }
   
   Module::init();
   
@@ -101,6 +105,24 @@ bool Kernel::close()
   return true;
 }
 
+//=============================================================================
+void Kernel::set_conf_path(const FilePath& path)
+{
+  m_conf_path = path;
+}
+
+//=============================================================================
+FilePath Kernel::get_conf_path() const
+{
+  return m_conf_path;
+}
+
+//=============================================================================
+void Kernel::set_autoload_config(bool autoload)
+{
+  m_autoload_config = autoload;
+}
+  
 //=============================================================================
 int Kernel::run(bool console)
 {

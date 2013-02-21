@@ -72,7 +72,7 @@ am__nobase_list = $(am__nobase_strip_setup); \
 am__base_list = \
   sed '$$!N;$$!N;$$!N;$$!N;$$!N;$$!N;$$!N;s/\n/ /g' | \
   sed '$$!N;$$!N;$$!N;$$!N;s/\n/ /g'
-am__installdirs = "$(DESTDIR)$(pkglibdir)" "$(DESTDIR)$(sysconfdir)"
+am__installdirs = "$(DESTDIR)$(pkglibdir)" "$(DESTDIR)$(modconfdir)"
 LTLIBRARIES = $(pkglib_LTLIBRARIES)
 stat_la_LIBADD =
 am_stat_la_OBJECTS = StatModule.lo StatChannel.lo StatStream.lo
@@ -95,7 +95,7 @@ CXXLINK = $(LIBTOOL) --tag=CXX $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) \
 	$(LDFLAGS) -o $@
 SOURCES = $(stat_la_SOURCES)
 DIST_SOURCES = $(stat_la_SOURCES)
-DATA = $(sysconf_DATA)
+DATA = $(modconf_DATA)
 HEADERS = $(noinst_HEADERS)
 ETAGS = etags
 CTAGS = ctags
@@ -129,6 +129,8 @@ EGREP = @EGREP@
 EXEEXT = @EXEEXT@
 FGREP = @FGREP@
 GREP = @GREP@
+IMAGE_LDFLAGS = @IMAGE_LDFLAGS@
+IMAGE_LIBS = @IMAGE_LIBS@
 INSTALL = @INSTALL@
 INSTALL_DATA = @INSTALL_DATA@
 INSTALL_PROGRAM = @INSTALL_PROGRAM@
@@ -164,8 +166,6 @@ PACKAGE_URL = @PACKAGE_URL@
 PACKAGE_VERSION = @PACKAGE_VERSION@
 PATH_SEPARATOR = @PATH_SEPARATOR@
 RANLIB = @RANLIB@
-SCONESITE_IMAGE_LDFLAGS = @SCONESITE_IMAGE_LDFLAGS@
-SCONESITE_IMAGE_LIBS = @SCONESITE_IMAGE_LIBS@
 SED = @SED@
 SET_MAKE = @SET_MAKE@
 SHELL = @SHELL@
@@ -244,8 +244,9 @@ StatModule.h \
 StatStream.h
 
 stat_la_LDFLAGS = -module -avoid-version
-sysconf_DATA = stat.conf.example
-EXTRA_DIST = $(sysconf_DATA)
+modconfdir = $(sysconfdir)/modules.d
+modconf_DATA = stat.conf
+EXTRA_DIST = $(modconf_DATA)
 all: all-am
 
 .SUFFIXES:
@@ -350,26 +351,26 @@ mostlyclean-libtool:
 
 clean-libtool:
 	-rm -rf .libs _libs
-install-sysconfDATA: $(sysconf_DATA)
+install-modconfDATA: $(modconf_DATA)
 	@$(NORMAL_INSTALL)
-	test -z "$(sysconfdir)" || $(MKDIR_P) "$(DESTDIR)$(sysconfdir)"
-	@list='$(sysconf_DATA)'; test -n "$(sysconfdir)" || list=; \
+	test -z "$(modconfdir)" || $(MKDIR_P) "$(DESTDIR)$(modconfdir)"
+	@list='$(modconf_DATA)'; test -n "$(modconfdir)" || list=; \
 	for p in $$list; do \
 	  if test -f "$$p"; then d=; else d="$(srcdir)/"; fi; \
 	  echo "$$d$$p"; \
 	done | $(am__base_list) | \
 	while read files; do \
-	  echo " $(INSTALL_DATA) $$files '$(DESTDIR)$(sysconfdir)'"; \
-	  $(INSTALL_DATA) $$files "$(DESTDIR)$(sysconfdir)" || exit $$?; \
+	  echo " $(INSTALL_DATA) $$files '$(DESTDIR)$(modconfdir)'"; \
+	  $(INSTALL_DATA) $$files "$(DESTDIR)$(modconfdir)" || exit $$?; \
 	done
 
-uninstall-sysconfDATA:
+uninstall-modconfDATA:
 	@$(NORMAL_UNINSTALL)
-	@list='$(sysconf_DATA)'; test -n "$(sysconfdir)" || list=; \
+	@list='$(modconf_DATA)'; test -n "$(modconfdir)" || list=; \
 	files=`for p in $$list; do echo $$p; done | sed -e 's|^.*/||'`; \
 	test -n "$$files" || exit 0; \
-	echo " ( cd '$(DESTDIR)$(sysconfdir)' && rm -f" $$files ")"; \
-	cd "$(DESTDIR)$(sysconfdir)" && rm -f $$files
+	echo " ( cd '$(DESTDIR)$(modconfdir)' && rm -f" $$files ")"; \
+	cd "$(DESTDIR)$(modconfdir)" && rm -f $$files
 
 ID: $(HEADERS) $(SOURCES) $(LISP) $(TAGS_FILES)
 	list='$(SOURCES) $(HEADERS) $(LISP) $(TAGS_FILES)'; \
@@ -457,7 +458,7 @@ check-am: all-am
 check: check-am
 all-am: Makefile $(LTLIBRARIES) $(DATA) $(HEADERS)
 installdirs:
-	for dir in "$(DESTDIR)$(pkglibdir)" "$(DESTDIR)$(sysconfdir)"; do \
+	for dir in "$(DESTDIR)$(pkglibdir)" "$(DESTDIR)$(modconfdir)"; do \
 	  test -z "$$dir" || $(MKDIR_P) "$$dir"; \
 	done
 install: install-am
@@ -508,13 +509,13 @@ info: info-am
 
 info-am:
 
-install-data-am:
+install-data-am: install-modconfDATA
 
 install-dvi: install-dvi-am
 
 install-dvi-am:
 
-install-exec-am: install-pkglibLTLIBRARIES install-sysconfDATA
+install-exec-am: install-pkglibLTLIBRARIES
 
 install-html: install-html-am
 
@@ -554,7 +555,7 @@ ps: ps-am
 
 ps-am:
 
-uninstall-am: uninstall-pkglibLTLIBRARIES uninstall-sysconfDATA
+uninstall-am: uninstall-modconfDATA uninstall-pkglibLTLIBRARIES
 
 .MAKE: install-am install-strip
 
@@ -565,13 +566,13 @@ uninstall-am: uninstall-pkglibLTLIBRARIES uninstall-sysconfDATA
 	install install-am install-data install-data-am install-dvi \
 	install-dvi-am install-exec install-exec-am install-html \
 	install-html-am install-info install-info-am install-man \
-	install-pdf install-pdf-am install-pkglibLTLIBRARIES \
-	install-ps install-ps-am install-strip install-sysconfDATA \
-	installcheck installcheck-am installdirs maintainer-clean \
-	maintainer-clean-generic mostlyclean mostlyclean-compile \
-	mostlyclean-generic mostlyclean-libtool pdf pdf-am ps ps-am \
-	tags uninstall uninstall-am uninstall-pkglibLTLIBRARIES \
-	uninstall-sysconfDATA
+	install-modconfDATA install-pdf install-pdf-am \
+	install-pkglibLTLIBRARIES install-ps install-ps-am \
+	install-strip installcheck installcheck-am installdirs \
+	maintainer-clean maintainer-clean-generic mostlyclean \
+	mostlyclean-compile mostlyclean-generic mostlyclean-libtool \
+	pdf pdf-am ps ps-am tags uninstall uninstall-am \
+	uninstall-modconfDATA uninstall-pkglibLTLIBRARIES
 
 
 # Tell versions [3.59,3.63) of GNU make to not export all variables.

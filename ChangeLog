@@ -1,4 +1,19 @@
 
+2013-02-21 Andrew Wedgbury <wedge@sconemad.com>
+
+	* sconex/ModuleLoader: Fold ModuleLoaderDLL into here.
+	Parse modconf files and store dependency info.
+	Run conf file on module load.
+	* sconex/Module: Remove conf_path, autoload, and delay load options.
+	Add load_module_dir - run_parts-style module loading using conf
+	directory with dependency information.
+	* sconex/Kernel: Add conf_path and autoload option.
+	* http/getfile: Remove module, move to http/GetFileStream.
+	* http/dirindex: Remove module, move to http/DirIndexStream.
+	* http/errorpage: Remove module, move to http/ErrorPageStream.
+	* sconesite/image: Move module to toplevel.
+	* all: Add module .conf files, installed to conf_path/modules.d.
+
 2013-02-13 Andrew Wedgbury <wedge@sconemad.com>
 
 	* sconesite/Template: Set parent element (fixes logging).

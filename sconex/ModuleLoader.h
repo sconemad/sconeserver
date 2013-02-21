@@ -1,8 +1,8 @@
 /* SconeServer (http://www.sconemad.com)
 
-Module loader base class
+Sconex module loader
 
-Copyright (c) 2000-2004 Andrew Wedgbury <wedge@sconemad.com>
+Copyright (c) 2000-2013 Andrew Wedgbury <wedge@sconemad.com>
 
 This program is free software; you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -33,17 +33,17 @@ class ScriptRef;
 
 //=============================================================================
 class SCONEX_API ModuleLoader {
-
 public:
 
-  ModuleLoader(
-    const std::string& name,
-    Module* parent,
-    Module* mod = 0
-  );
-  // Construct a module loader
-  
-  virtual ~ModuleLoader();
+  // Load module given a modconf file
+  ModuleLoader(const scx::FilePath& conf,
+               Module* parent);
+
+  // Load module given a name
+  ModuleLoader(const std::string& name,
+               Module* parent);
+
+  ~ModuleLoader();
 
   bool close();
 
@@ -53,25 +53,40 @@ public:
   
   Module::Ref get_module();
 
+  typedef std::vector<std::string> Depends;
+  const Depends& get_depends() const;
+  
   bool is_loaded() const;
 
-  void set_autoload_config(bool onoff);
-  void set_conf_path(const FilePath& path);
-  
 protected:
 
-  virtual bool load_module();
-  virtual bool unload_module();
+  bool load_module();
+  bool unload_module();
+
+  void parse_conf();
+  void parse_conf_param(const std::string& param,
+                        const std::string& value);
+  
+  // Load/unload the dll or shared object
+  bool load_dll(const std::string& filename);
+  bool unload_dll();
+
+  // Locate the named symbol, returning a pointer to
+  // its entry point
+  void* locate_symbol(const std::string& name) const;
+
+  void log(const std::string& message);
 
   std::string m_name;
-  FilePath m_config_path;
-  bool m_autoload_config;
+  FilePath m_conf;
+
+  void* m_dll;
 
   Module::Ref* m_module;
 
-  Mutex m_mutex;
+  Depends m_depends;
 
-  void log(const std::string& message);
+  Mutex m_mutex;
 
   Module* m_parent;
 };

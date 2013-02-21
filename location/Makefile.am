@@ -11,3 +11,8 @@ LocationModule.cpp
 
 location_la_LDFLAGS = -module -avoid-version
 location_la_LIBADD = -lgps
+
+modconfdir = $(sysconfdir)/modules.d
+modconf_DATA = location.conf
+
+EXTRA_DIST = $(modconf_DATA)

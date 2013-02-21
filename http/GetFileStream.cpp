@@ -1,8 +1,8 @@
 /* SconeServer (http://www.sconemad.com)
 
-HTTP Get file module
+HTTP Get file stream
 
-Copyright (c) 2000-2011 Andrew Wedgbury <wedge@sconemad.com>
+Copyright (c) 2000-2013 Andrew Wedgbury <wedge@sconemad.com>
 
 This program is free software; you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -20,100 +20,19 @@ Free Software Foundation, Inc.,
 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA */
 
 
-#include <http/HTTPModule.h>
+#include <http/GetFileStream.h>
 #include <http/MessageStream.h>
 #include <http/Request.h>
 #include <http/Status.h>
 
-#include <sconex/ModuleInterface.h>
-#include <sconex/Module.h>
 #include <sconex/File.h>
 #include <sconex/Stream.h>
 #include <sconex/StreamTransfer.h>
 #include <sconex/Date.h>
 #include <sconex/Kernel.h>
 #include <sconex/MimeType.h>
-
-//=========================================================================
-class GetFileModule : public scx::Module,
-		      public scx::Provider<scx::Stream> {
-public:
-
-  GetFileModule();
-  virtual ~GetFileModule();
-
-  virtual std::string info() const;
-
-  virtual int init();
+namespace http {
   
-  // Provider<Stream> method
-  virtual void provide(const std::string& type,
-		       const scx::ScriptRef* args,
-		       scx::Stream*& object);
-};
-
-SCONEX_MODULE(GetFileModule);
-
-//=========================================================================
-class GetFileStream : public scx::Stream {
-public:
-
-  GetFileStream(
-    GetFileModule* module
-  ) : Stream("getfile"),
-      m_module(module)
-  { };
-
-  ~GetFileStream() { };
-  
-protected:
-
-  void log(const std::string message,
-	   scx::Logger::Level level = scx::Logger::Info);
-  
-  virtual scx::Condition event(scx::Stream::Event e);
-
-private:
-
-  scx::ScriptRefTo<GetFileModule> m_module;
-
-};
-
-
-//=========================================================================
-GetFileModule::GetFileModule(
-) : scx::Module("http:getfile",scx::version())
-{
-  scx::Stream::register_stream("getfile",this);
-}
-
-//=========================================================================
-GetFileModule::~GetFileModule()
-{
-  scx::Stream::unregister_stream("getfile",this);
-}
-
-//=========================================================================
-std::string GetFileModule::info() const
-{
-  return "HTTP file transfer";
-}
-
-//=========================================================================
-int GetFileModule::init()
-{
-  return Module::init();
-}
-
-//=========================================================================
-void GetFileModule::provide(const std::string& type,
-			    const scx::ScriptRef* args,
-			    scx::Stream*& object)
-{
-  object = new GetFileStream(this);
-}
-
-
 //=========================================================================
 void GetFileStream::log(const std::string message, scx::Logger::Level level)
 {
@@ -209,3 +128,5 @@ scx::Condition GetFileStream::event(scx::Stream::Event e)
   
   return scx::Ok;
 }
+
+};

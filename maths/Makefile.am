@@ -17,6 +17,9 @@ Num.h
 maths_la_LDFLAGS = -module -avoid-version
 maths_la_LIBADD = $(MATHS_LIBADD)
 
+modconfdir = $(sysconfdir)/modules.d
+modconf_DATA = maths.conf
+
 check_PROGRAMS = utest
 
 utest_SOURCES = \
@@ -26,3 +29,5 @@ Num_ut.cpp
 utest_LDADD = $(MATHS_LIBADD) maths.la $(top_builddir)/sconex/libsconex.la
 
 TESTS = utest
+
+EXTRA_DIST = $(modconf_DATA)

@@ -17,6 +17,7 @@ StatStream.h
 
 stat_la_LDFLAGS = -module -avoid-version
 
-sysconf_DATA = stat.conf.example
+modconfdir = $(sysconfdir)/modules.d
+modconf_DATA = stat.conf
 
-EXTRA_DIST = $(sysconf_DATA)
+EXTRA_DIST = $(modconf_DATA)

@@ -17,4 +17,8 @@ noinst_HEADERS = \
 Rot13Module.h \
 Rot13Stream.h
 
-EXTRA_DIST = Makefile.example
+modconfdir = $(sysconfdir)/modules.d
+modconf_DATA = rot13.conf
+
+EXTRA_DIST = $(modconf_DATA) \
+Makefile.example

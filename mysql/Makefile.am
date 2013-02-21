@@ -19,5 +19,7 @@ MySqlQuery.h
 mysql_la_LDFLAGS = -module -avoid-version
 mysql_la_LIBADD = $(MYSQL_LIBADD)
 
-sysconf_DATA = mysql.conf.example
-EXTRA_DIST = $(sysconf_DATA)
+modconfdir = $(sysconfdir)/modules.d
+modconf_DATA = mysql.conf
+
+EXTRA_DIST = $(modconf_DATA)

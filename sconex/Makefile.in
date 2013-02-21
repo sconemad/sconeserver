@@ -83,13 +83,13 @@ am_libsconex_la_OBJECTS = sconex.lo utils.lo Base64.lo Buffer.lo \
 	Date.lo Debug.lo Descriptor.lo File.lo FileDir.lo FilePath.lo \
 	FileStat.lo Job.lo Kernel.lo LineBuffer.lo ListenerSocket.lo \
 	Logger.lo MemFile.lo MimeHeader.lo MimeType.lo Module.lo \
-	ModuleLoader.lo ModuleLoaderDLL.lo Multiplexer.lo Mutex.lo \
-	NullFile.lo Process.lo RegExp.lo Response.lo ScriptBase.lo \
-	ScriptEngine.lo ScriptExpr.lo ScriptStatement.lo \
-	ScriptTypes.lo Socket.lo SocketAddress.lo Stream.lo \
-	StreamBuffer.lo StreamDebugger.lo StreamSocket.lo \
-	StreamTokenizer.lo StreamTransfer.lo TermBuffer.lo Thread.lo \
-	Time.lo UnitTester.lo Uri.lo User.lo VersionTag.lo
+	ModuleLoader.lo Multiplexer.lo Mutex.lo NullFile.lo Process.lo \
+	RegExp.lo Response.lo ScriptBase.lo ScriptEngine.lo \
+	ScriptExpr.lo ScriptStatement.lo ScriptTypes.lo Socket.lo \
+	SocketAddress.lo Stream.lo StreamBuffer.lo StreamDebugger.lo \
+	StreamSocket.lo StreamTokenizer.lo StreamTransfer.lo \
+	TermBuffer.lo Thread.lo Time.lo UnitTester.lo Uri.lo User.lo \
+	VersionTag.lo
 libsconex_la_OBJECTS = $(am_libsconex_la_OBJECTS)
 libsconex_la_LINK = $(LIBTOOL) --tag=CXX $(AM_LIBTOOLFLAGS) \
 	$(LIBTOOLFLAGS) --mode=link $(CXXLD) $(AM_CXXFLAGS) \
@@ -152,6 +152,8 @@ EGREP = @EGREP@
 EXEEXT = @EXEEXT@
 FGREP = @FGREP@
 GREP = @GREP@
+IMAGE_LDFLAGS = @IMAGE_LDFLAGS@
+IMAGE_LIBS = @IMAGE_LIBS@
 INSTALL = @INSTALL@
 INSTALL_DATA = @INSTALL_DATA@
 INSTALL_PROGRAM = @INSTALL_PROGRAM@
@@ -187,8 +189,6 @@ PACKAGE_URL = @PACKAGE_URL@
 PACKAGE_VERSION = @PACKAGE_VERSION@
 PATH_SEPARATOR = @PATH_SEPARATOR@
 RANLIB = @RANLIB@
-SCONESITE_IMAGE_LDFLAGS = @SCONESITE_IMAGE_LDFLAGS@
-SCONESITE_IMAGE_LIBS = @SCONESITE_IMAGE_LIBS@
 SED = @SED@
 SET_MAKE = @SET_MAKE@
 SHELL = @SHELL@
@@ -285,7 +285,6 @@ MimeHeader.cpp \
 MimeType.cpp \
 Module.cpp \
 ModuleLoader.cpp \
-ModuleLoaderDLL.cpp \
 Multiplexer.cpp \
 Mutex.cpp \
 NullFile.cpp \
@@ -345,7 +344,6 @@ MimeType.h \
 Module.h \
 ModuleInterface.h \
 ModuleLoader.h \
-ModuleLoaderDLL.h \
 Multiplexer.h \
 Mutex.h \
 NullFile.h \
@@ -508,7 +506,6 @@ distclean-compile:
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/MimeType_ut.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/Module.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/ModuleLoader.Plo@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/ModuleLoaderDLL.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/Multiplexer.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/Mutex.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/NullFile.Plo@am__quote@

@@ -62,16 +62,9 @@ public:
   // Get sub-module
   Module::Ref get_module(const std::string& name);
 
-  // Automatically load config or not
-  void set_autoload_config(bool onoff);
-  
   // Set/get path for sub-modules
   void set_mod_path(const FilePath& path);
   FilePath get_mod_path() const;
-
-  // Set/get path for configuration files
-  void set_conf_path(const FilePath& path);
-  FilePath get_conf_path() const;
 
   // Set/get path for variable files  
   void set_var_path(const FilePath& path);
@@ -105,15 +98,15 @@ protected:
   void remove_module(ModuleLoader* loader);
   ModuleLoader* find_module(const std::string& name);
 
-  bool load_config_file(FilePath path = FilePath());
-  bool load_config_dir(FilePath path = FilePath());
+  bool load_config_file(FilePath path);
+  bool load_config_dir(FilePath path);
+  bool load_module_dir(FilePath path);
   
 private:
 
   // Parent module (ModuleLoader can set this)
   void set_parent(Module* parent);
   friend class ModuleLoader;
-  friend class ModuleLoaderDLL;
 
   // Module name
   std::string m_name;
@@ -127,15 +120,8 @@ private:
   // Sub modules
   std::list<ModuleLoader*> m_modules;
 
-  // Automatically load config
-  bool m_autoload_config;
-  
   // Path to locate sub-modules
   FilePath m_mod_path;
-
-  // Path to configuration files
-  FilePath m_conf_path;
-  std::string m_conf_file;
 
   // Path to variable files
   FilePath m_var_path;

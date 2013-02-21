@@ -1,6 +1,0 @@
-# SconeServer (http://www.sconemad.com)
-# TFTP module configuration file
-
-# Define TFTP profiles
-
- add("default");

@@ -11,3 +11,8 @@ tuesdayonly_la_SOURCES = \
 TuesdayOnly.cpp 
 
 tuesdayonly_la_LDFLAGS = -module -avoid-version
+
+modconfdir = $(sysconfdir)/modules.d
+modconf_DATA = tuesdayonly.conf
+
+EXTRA_DIST = $(modconf_DATA)

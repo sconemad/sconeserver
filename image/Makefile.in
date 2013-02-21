@@ -16,7 +16,8 @@
 @SET_MAKE@
 
 # SconeServer (http://www.sconemad.com)
-# automake file for http errorpage module
+# automake file for image module
+
 
 VPATH = @srcdir@
 pkgdatadir = $(datadir)/@PACKAGE@
@@ -38,7 +39,7 @@ POST_UNINSTALL = :
 build_triplet = @build@
 host_triplet = @host@
 target_triplet = @target@
-subdir = http/errorpage
+subdir = image
 DIST_COMMON = $(srcdir)/Makefile.am $(srcdir)/Makefile.in
 ACLOCAL_M4 = $(top_srcdir)/aclocal.m4
 am__aclocal_m4_deps = $(top_srcdir)/configure.in
@@ -69,14 +70,15 @@ am__nobase_list = $(am__nobase_strip_setup); \
 am__base_list = \
   sed '$$!N;$$!N;$$!N;$$!N;$$!N;$$!N;$$!N;s/\n/ /g' | \
   sed '$$!N;$$!N;$$!N;$$!N;s/\n/ /g'
-am__installdirs = "$(DESTDIR)$(pkglibdir)"
+am__installdirs = "$(DESTDIR)$(pkglibdir)" "$(DESTDIR)$(modconfdir)"
 LTLIBRARIES = $(pkglib_LTLIBRARIES)
-errorpage_la_LIBADD =
-am_errorpage_la_OBJECTS = ErrorPageModule.lo
-errorpage_la_OBJECTS = $(am_errorpage_la_OBJECTS)
-errorpage_la_LINK = $(LIBTOOL) --tag=CXX $(AM_LIBTOOLFLAGS) \
+image_la_LIBADD =
+am_image_la_OBJECTS = ImageModule.lo
+image_la_OBJECTS = $(am_image_la_OBJECTS)
+image_la_LINK = $(LIBTOOL) --tag=CXX $(AM_LIBTOOLFLAGS) \
 	$(LIBTOOLFLAGS) --mode=link $(CXXLD) $(AM_CXXFLAGS) \
-	$(CXXFLAGS) $(errorpage_la_LDFLAGS) $(LDFLAGS) -o $@
+	$(CXXFLAGS) $(image_la_LDFLAGS) $(LDFLAGS) -o $@
+@BUILD_IMAGE_TRUE@am_image_la_rpath = -rpath $(pkglibdir)
 DEFAULT_INCLUDES = -I.@am__isrc@ -I$(top_builddir)
 depcomp = $(SHELL) $(top_srcdir)/depcomp
 am__depfiles_maybe = depfiles
@@ -90,8 +92,9 @@ CXXLD = $(CXX)
 CXXLINK = $(LIBTOOL) --tag=CXX $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) \
 	--mode=link $(CXXLD) $(AM_CXXFLAGS) $(CXXFLAGS) $(AM_LDFLAGS) \
 	$(LDFLAGS) -o $@
-SOURCES = $(errorpage_la_SOURCES)
-DIST_SOURCES = $(errorpage_la_SOURCES)
+SOURCES = $(image_la_SOURCES)
+DIST_SOURCES = $(image_la_SOURCES)
+DATA = $(modconf_DATA)
 ETAGS = etags
 CTAGS = ctags
 DISTFILES = $(DIST_COMMON) $(DIST_SOURCES) $(TEXINFOS) $(EXTRA_DIST)
@@ -124,6 +127,8 @@ EGREP = @EGREP@
 EXEEXT = @EXEEXT@
 FGREP = @FGREP@
 GREP = @GREP@
+IMAGE_LDFLAGS = @IMAGE_LDFLAGS@
+IMAGE_LIBS = @IMAGE_LIBS@
 INSTALL = @INSTALL@
 INSTALL_DATA = @INSTALL_DATA@
 INSTALL_PROGRAM = @INSTALL_PROGRAM@
@@ -159,8 +164,6 @@ PACKAGE_URL = @PACKAGE_URL@
 PACKAGE_VERSION = @PACKAGE_VERSION@
 PATH_SEPARATOR = @PATH_SEPARATOR@
 RANLIB = @RANLIB@
-SCONESITE_IMAGE_LDFLAGS = @SCONESITE_IMAGE_LDFLAGS@
-SCONESITE_IMAGE_LIBS = @SCONESITE_IMAGE_LIBS@
 SED = @SED@
 SET_MAKE = @SET_MAKE@
 SHELL = @SHELL@
@@ -227,11 +230,15 @@ top_build_prefix = @top_build_prefix@
 top_builddir = @top_builddir@
 top_srcdir = @top_srcdir@
 AM_CPPFLAGS = -I$(top_srcdir)
-pkglib_LTLIBRARIES = errorpage.la
-errorpage_la_SOURCES = \
-ErrorPageModule.cpp 
+@BUILD_IMAGE_TRUE@pkglib_LTLIBRARIES = image.la
+image_la_SOURCES = \
+ImageModule.cpp 
 
-errorpage_la_LDFLAGS = -module -avoid-version
+image_la_LDFLAGS = $(IMAGE_LDFLAGS) -module -avoid-version
+image_la_LIBS = $(IMAGE_LIBS)
+modconfdir = $(sysconfdir)/modules.d
+modconf_DATA = image.conf
+EXTRA_DIST = $(modconf_DATA)
 all: all-am
 
 .SUFFIXES:
@@ -245,9 +252,9 @@ $(srcdir)/Makefile.in: @MAINTAINER_MODE_TRUE@ $(srcdir)/Makefile.am  $(am__confi
 	      exit 1;; \
 	  esac; \
 	done; \
-	echo ' cd $(top_srcdir) && $(AUTOMAKE) --gnu http/errorpage/Makefile'; \
+	echo ' cd $(top_srcdir) && $(AUTOMAKE) --gnu image/Makefile'; \
 	$(am__cd) $(top_srcdir) && \
-	  $(AUTOMAKE) --gnu http/errorpage/Makefile
+	  $(AUTOMAKE) --gnu image/Makefile
 .PRECIOUS: Makefile
 Makefile: $(srcdir)/Makefile.in $(top_builddir)/config.status
 	@case '$?' in \
@@ -297,8 +304,8 @@ clean-pkglibLTLIBRARIES:
 	  echo "rm -f \"$${dir}/so_locations\""; \
 	  rm -f "$${dir}/so_locations"; \
 	done
-errorpage.la: $(errorpage_la_OBJECTS) $(errorpage_la_DEPENDENCIES) 
-	$(errorpage_la_LINK) -rpath $(pkglibdir) $(errorpage_la_OBJECTS) $(errorpage_la_LIBADD) $(LIBS)
+image.la: $(image_la_OBJECTS) $(image_la_DEPENDENCIES) 
+	$(image_la_LINK) $(am_image_la_rpath) $(image_la_OBJECTS) $(image_la_LIBADD) $(LIBS)
 
 mostlyclean-compile:
 	-rm -f *.$(OBJEXT)
@@ -306,7 +313,7 @@ mostlyclean-compile:
 distclean-compile:
 	-rm -f *.tab.c
 
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/ErrorPageModule.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/ImageModule.Plo@am__quote@
 
 .cpp.o:
 @am__fastdepCXX_TRUE@	$(CXXCOMPILE) -MT $@ -MD -MP -MF $(DEPDIR)/$*.Tpo -c -o $@ $<
@@ -334,6 +341,26 @@ mostlyclean-libtool:
 
 clean-libtool:
 	-rm -rf .libs _libs
+install-modconfDATA: $(modconf_DATA)
+	@$(NORMAL_INSTALL)
+	test -z "$(modconfdir)" || $(MKDIR_P) "$(DESTDIR)$(modconfdir)"
+	@list='$(modconf_DATA)'; test -n "$(modconfdir)" || list=; \
+	for p in $$list; do \
+	  if test -f "$$p"; then d=; else d="$(srcdir)/"; fi; \
+	  echo "$$d$$p"; \
+	done | $(am__base_list) | \
+	while read files; do \
+	  echo " $(INSTALL_DATA) $$files '$(DESTDIR)$(modconfdir)'"; \
+	  $(INSTALL_DATA) $$files "$(DESTDIR)$(modconfdir)" || exit $$?; \
+	done
+
+uninstall-modconfDATA:
+	@$(NORMAL_UNINSTALL)
+	@list='$(modconf_DATA)'; test -n "$(modconfdir)" || list=; \
+	files=`for p in $$list; do echo $$p; done | sed -e 's|^.*/||'`; \
+	test -n "$$files" || exit 0; \
+	echo " ( cd '$(DESTDIR)$(modconfdir)' && rm -f" $$files ")"; \
+	cd "$(DESTDIR)$(modconfdir)" && rm -f $$files
 
 ID: $(HEADERS) $(SOURCES) $(LISP) $(TAGS_FILES)
 	list='$(SOURCES) $(HEADERS) $(LISP) $(TAGS_FILES)'; \
@@ -419,9 +446,9 @@ distdir: $(DISTFILES)
 	done
 check-am: all-am
 check: check-am
-all-am: Makefile $(LTLIBRARIES)
+all-am: Makefile $(LTLIBRARIES) $(DATA)
 installdirs:
-	for dir in "$(DESTDIR)$(pkglibdir)"; do \
+	for dir in "$(DESTDIR)$(pkglibdir)" "$(DESTDIR)$(modconfdir)"; do \
 	  test -z "$$dir" || $(MKDIR_P) "$$dir"; \
 	done
 install: install-am
@@ -472,7 +499,7 @@ info: info-am
 
 info-am:
 
-install-data-am:
+install-data-am: install-modconfDATA
 
 install-dvi: install-dvi-am
 
@@ -518,7 +545,7 @@ ps: ps-am
 
 ps-am:
 
-uninstall-am: uninstall-pkglibLTLIBRARIES
+uninstall-am: uninstall-modconfDATA uninstall-pkglibLTLIBRARIES
 
 .MAKE: install-am install-strip
 
@@ -529,12 +556,13 @@ uninstall-am: uninstall-pkglibLTLIBRARIES
 	install install-am install-data install-data-am install-dvi \
 	install-dvi-am install-exec install-exec-am install-html \
 	install-html-am install-info install-info-am install-man \
-	install-pdf install-pdf-am install-pkglibLTLIBRARIES \
-	install-ps install-ps-am install-strip installcheck \
-	installcheck-am installdirs maintainer-clean \
-	maintainer-clean-generic mostlyclean mostlyclean-compile \
-	mostlyclean-generic mostlyclean-libtool pdf pdf-am ps ps-am \
-	tags uninstall uninstall-am uninstall-pkglibLTLIBRARIES
+	install-modconfDATA install-pdf install-pdf-am \
+	install-pkglibLTLIBRARIES install-ps install-ps-am \
+	install-strip installcheck installcheck-am installdirs \
+	maintainer-clean maintainer-clean-generic mostlyclean \
+	mostlyclean-compile mostlyclean-generic mostlyclean-libtool \
+	pdf pdf-am ps ps-am tags uninstall uninstall-am \
+	uninstall-modconfDATA uninstall-pkglibLTLIBRARIES
 
 
 # Tell versions [3.59,3.63) of GNU make to not export all variables.

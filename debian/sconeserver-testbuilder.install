@@ -1,2 +1,2 @@
 usr/lib/sconeserver/testbuilder.so
-etc/sconeserver/testbuilder.conf.example
+etc/sconeserver/modules.d/testbuilder.conf

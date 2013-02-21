@@ -15,3 +15,7 @@ SimpleStreams.h
 
 simple_la_LDFLAGS = -module -avoid-version
 
+modconfdir = $(sysconfdir)/modules.d
+modconf_DATA = simple.conf
+
+EXTRA_DIST = $(modconf_DATA)

@@ -20,6 +20,7 @@ ServerListener.h
 
 server_la_LDFLAGS = -module -avoid-version
 
-sysconf_DATA = server.conf.example
+modconfdir = $(sysconfdir)/modules.d
+modconf_DATA = server.conf
 
-EXTRA_DIST = $(sysconf_DATA)
+EXTRA_DIST = $(modconf_DATA)

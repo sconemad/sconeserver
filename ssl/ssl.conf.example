@@ -1,7 +1,0 @@
-# SconeServer (http://www.sconemad.com)
-# SSL module configuration file
-
-# Define secure channels
-
- add("default");
- default.load_key("certs/default");

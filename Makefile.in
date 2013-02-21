@@ -182,6 +182,8 @@ EGREP = @EGREP@
 EXEEXT = @EXEEXT@
 FGREP = @FGREP@
 GREP = @GREP@
+IMAGE_LDFLAGS = @IMAGE_LDFLAGS@
+IMAGE_LIBS = @IMAGE_LIBS@
 INSTALL = @INSTALL@
 INSTALL_DATA = @INSTALL_DATA@
 INSTALL_PROGRAM = @INSTALL_PROGRAM@
@@ -217,8 +219,6 @@ PACKAGE_URL = @PACKAGE_URL@
 PACKAGE_VERSION = @PACKAGE_VERSION@
 PATH_SEPARATOR = @PATH_SEPARATOR@
 RANLIB = @RANLIB@
-SCONESITE_IMAGE_LDFLAGS = @SCONESITE_IMAGE_LDFLAGS@
-SCONESITE_IMAGE_LIBS = @SCONESITE_IMAGE_LIBS@
 SED = @SED@
 SET_MAKE = @SET_MAKE@
 SHELL = @SHELL@
@@ -293,34 +293,37 @@ AM_CPPFLAGS = \
 sconed_SOURCES = main.cpp
 sconed_LDADD = $(top_builddir)/sconex/libsconex.la
 MODULES = \
-server \
+bluetooth \
+exec \
+forward \
+http \
+image \
 ip \
 ip6 \
 local \
 location \
-bluetooth \
-http \
-sconesite \
+maths \
 mime \
+mysql \
+rss \
+sconesite \
+server \
 simple \
+smtp \
+sqlite \
 ssl \
 stat \
-exec \
-forward \
 tftp \
 test \
-testbuilder \
+testbuilder
+
+EXPERIMENTAL = \
 lettuce \
-mysql \
-sqlite \
-smtp \
-rss \
-maths \
 ui
 
-SUBDIRS = sconex examples $(MODULES)
+SUBDIRS = sconex examples $(MODULES) $(EXPERIMENTAL)
 doc_DATA = AUTHORS COPYING ChangeLog INSTALL NEWS README THANKS TODO
-sysconf_DATA = sconeserver.conf.example
+sysconf_DATA = sconeserver.conf
 dist_man_MANS = sconed.1
 EXTRA_DIST = \
 $(sysconf_DATA) \

@@ -3,7 +3,6 @@
 AM_CPPFLAGS = -I$(top_srcdir)
 
 if BUILD_SCONESITE
-  SUBDIRS = image
   pkglib_LTLIBRARIES = sconesite.la
 endif
 
@@ -39,6 +38,7 @@ XMLDoc.h
 sconesite_la_LDFLAGS = -module -avoid-version
 sconesite_la_LIBADD = -lxml2
 
-sysconf_DATA = sconesite.conf.example
+modconfdir = $(sysconfdir)/modules.d
+modconf_DATA = sconesite.conf
 
-EXTRA_DIST = $(sysconf_DATA)
+EXTRA_DIST = $(modconf_DATA)

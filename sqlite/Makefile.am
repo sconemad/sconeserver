@@ -19,5 +19,7 @@ SQLiteQuery.h
 sqlite_la_LDFLAGS = -module -avoid-version
 sqlite_la_LIBADD = $(SQLITE_LIBADD)
 
-sysconf_DATA = sqlite.conf.example
-EXTRA_DIST = $(sysconf_DATA)
+modconfdir = $(sysconfdir)/modules.d
+modconf_DATA = sqlite.conf
+
+EXTRA_DIST = $(modconf_DATA)

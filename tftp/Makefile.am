@@ -17,6 +17,7 @@ TFTPProfile.h
 
 tftp_la_LDFLAGS = -module -avoid-version
 
-sysconf_DATA = tftp.conf.example
+modconfdir = $(sysconfdir)/modules.d
+modconf_DATA = tftp.conf
 
-EXTRA_DIST = $(sysconf_DATA)
+EXTRA_DIST = $(modconf_DATA)

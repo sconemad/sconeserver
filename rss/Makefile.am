@@ -16,3 +16,8 @@ rss_la_LIBADD = -lxml2
 noinst_HEADERS = \
 Feed.h \
 RSSModule.h
+
+modconfdir = $(sysconfdir)/modules.d
+modconf_DATA = rss.conf
+
+EXTRA_DIST = $(modconf_DATA)

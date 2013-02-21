@@ -15,6 +15,7 @@ SMTPModule.h
 
 smtp_la_LDFLAGS = -module -avoid-version
 
-sysconf_DATA = smtp.conf.example
+modconfdir = $(sysconfdir)/modules.d
+modconf_DATA = smtp.conf
 
-EXTRA_DIST = $(sysconf_DATA)
+EXTRA_DIST = $(modconf_DATA)

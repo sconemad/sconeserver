@@ -12,3 +12,8 @@ noinst_HEADERS = \
 ForwardModule.h 
 
 forward_la_LDFLAGS = -module -avoid-version
+
+modconfdir = $(sysconfdir)/modules.d
+modconf_DATA = forward.conf
+
+EXTRA_DIST = $(modconf_DATA)

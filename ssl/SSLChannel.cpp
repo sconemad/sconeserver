@@ -24,6 +24,7 @@ Free Software Foundation, Inc.,
 #include "SSLChannel.h"
 #include "SSLModule.h"
 #include <sconex/ScriptTypes.h>
+#include <sconex/Kernel.h>
 
 //=========================================================================
 SSLChannel::SSLChannel(SSLModule& mod,
@@ -93,11 +94,12 @@ scx::ScriptRef* SSLChannel::script_method(const scx::ScriptAuth& auth,
       scx::get_method_arg<scx::ScriptString>(args,0,"key");
     if (!a_key)
       return scx::ScriptError::new_ref("Key name must be supplied");
-    scx::FilePath key = m_mod.get_conf_path() + a_key->get_string();
+    scx::FilePath conf = scx::Kernel::get()->get_conf_path();
+    scx::FilePath key = conf + a_key->get_string();
 
     const scx::ScriptString* a_cert =
       scx::get_method_arg<scx::ScriptString>(args,1,"cert");
-    scx::FilePath cert = m_mod.get_conf_path();
+    scx::FilePath cert = conf;
     if (a_cert) {
       cert = cert + a_cert->get_string();
     } else {

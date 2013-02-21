@@ -15,3 +15,7 @@ IP6SocketAddress.h
 
 ip6_la_LDFLAGS = -module -avoid-version
 
+modconfdir = $(sysconfdir)/modules.d
+modconf_DATA = ip6.conf
+
+EXTRA_DIST = $(modconf_DATA)

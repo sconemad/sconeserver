@@ -25,9 +25,10 @@ BuildStep.h
 
 testbuilder_la_LDFLAGS = -module -avoid-version
 
-sysconf_DATA = testbuilder.conf.example
+modconfdir = $(sysconfdir)/modules.d
+modconf_DATA = testbuilder.conf
 
-EXTRA_DIST = $(sysconf_DATA) \
+EXTRA_DIST = $(modconf_DATA) \
 scripts/cvs \
 scripts/make \
 scripts/remove \

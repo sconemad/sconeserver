@@ -1,8 +1,8 @@
 /* SconeServer (http://www.sconemad.com)
 
-HTTP Directory index module
+HTTP Directory index stream
 
-Copyright (c) 2000-2011 Andrew Wedgbury <wedge@sconemad.com>
+Copyright (c) 2000-2013 Andrew Wedgbury <wedge@sconemad.com>
 
 This program is free software; you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -19,99 +19,16 @@ along with this program (see the file COPYING); if not, write to the
 Free Software Foundation, Inc.,
 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA */
 
-
+#include <http/DirIndexStream.h>
 #include <http/HTTPModule.h>
 #include <http/Request.h>
 #include <http/MessageStream.h>
 #include <http/Status.h>
 #include <http/DocRoot.h>
-#include <http/ResponseStream.h>
 
-#include <sconex/ModuleInterface.h>
 #include <sconex/FileDir.h>
-#include <sconex/Module.h>
-
-//=========================================================================
-class DirIndexModule : public scx::Module,
-		       public scx::Provider<scx::Stream> {
-public:
-
-  DirIndexModule();
-  virtual ~DirIndexModule();
-
-  virtual std::string info() const;
-
-  virtual int init();
+namespace http {
   
-  // Provider<Stream> method
-  virtual void provide(const std::string& type,
-		       const scx::ScriptRef* args,
-		       scx::Stream*& object);
-};
-
-SCONEX_MODULE(DirIndexModule);
-
-//=========================================================================
-class DirIndexStream : public http::ResponseStream {
-public:
-
-  DirIndexStream(
-    DirIndexModule* module
-  ) : http::ResponseStream("dirindex"),
-      m_module(module)
-  { };
-
-  ~DirIndexStream() { };
-
-  
-protected:
-
-  void log(const std::string message,
-	   scx::Logger::Level level = scx::Logger::Info);
-
-  virtual scx::Condition send_response();
-
-private:
-    
-  scx::ScriptRefTo<DirIndexModule> m_module;
-
-};
-
-
-//=========================================================================
-DirIndexModule::DirIndexModule(
-) : scx::Module("http:dirindex",scx::version())
-{
-  scx::Stream::register_stream("dirindex",this);
-}
-
-//=========================================================================
-DirIndexModule::~DirIndexModule()
-{
-  scx::Stream::unregister_stream("dirindex",this);
-}
-
-//=========================================================================
-std::string DirIndexModule::info() const
-{
-  return "HTTP directory and index file redirector";
-}
-
-//=========================================================================
-int DirIndexModule::init()
-{
-  return Module::init();
-}
-
-//=========================================================================
-void DirIndexModule::provide(const std::string& type,
-			     const scx::ScriptRef* args,
-			     scx::Stream*& object)
-{
-  object = new DirIndexStream(this);
-}
-
-
 //=========================================================================
 void DirIndexStream::log(const std::string message, scx::Logger::Level level)
 {
@@ -224,3 +141,5 @@ scx::Condition DirIndexStream::send_response()
   
   return scx::Close;
 }
+
+};

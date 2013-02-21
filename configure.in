@@ -191,23 +191,23 @@ if test "x$MAGICK" == "xyes"; then
   MAGICK_LIBS=`Magick++-config --libs`
 fi
 
-# Sconesite:image module
-AC_ARG_WITH([sconesite-image],
-  [AC_HELP_STRING([--with-sconesite-image],[Enable Sconesite:image module])],
-  [SCONESITE_IMAGE="$withval"],
-  [SCONESITE_IMAGE="$MAGICK"]
+# Image module
+AC_ARG_WITH([image],
+  [AC_HELP_STRING([--with-image],[Enable image module])],
+  [IMAGE="$withval"],
+  [IMAGE="$MAGICK"]
 )
 
-# Need ImageMagick for Sconesite:image
-if test "x$SCONESITE_IMAGE" == "xyes"; then
+# Need ImageMagick for image
+if test "x$IMAGE" == "xyes"; then
   if test "x$MAGICK" != "xyes"; then
-    AC_MSG_ERROR([library 'Magick++' is required for Sconesite:image])
+    AC_MSG_ERROR([library 'Magick++' is required for image])
   fi
   CXXFLAGS="$CXXFLAGS $MAGICK_CFLAGS"
-  SCONESITE_IMAGE_LDFLAGS=$MAGICK_LDFLAGS
-  AC_SUBST(SCONESITE_IMAGE_LDFLAGS)
-  SCONESITE_IMAGE_LDFLAGS=$MAGICK_LIBS
-  AC_SUBST(SCONESITE_IMAGE_LIBS)
+  IMAGE_LDFLAGS=$MAGICK_LDFLAGS
+  AC_SUBST(IMAGE_LDFLAGS)
+  IMAGE_LDFLAGS=$MAGICK_LIBS
+  AC_SUBST(IMAGE_LIBS)
 fi
 
 # rss module
@@ -293,7 +293,6 @@ if test "x$UI" == "xyes"; then
   )
 fi
 
-
 # Checks for header files.
 AC_HEADER_STDC
 AC_HEADER_DIRENT
@@ -373,7 +372,7 @@ AM_CONDITIONAL(BUILD_EXAMPLES, test x$EXAMPLES = xyes)
 AM_CONDITIONAL(BUILD_TESTBUILDER, test x$TESTBUILDER = xyes)
 AM_CONDITIONAL(BUILD_LETTUCE, test x$LETTUCE = xyes)
 AM_CONDITIONAL(BUILD_SCONESITE, test x$SCONESITE = xyes)
-AM_CONDITIONAL(BUILD_SCONESITE_IMAGE, test x$SCONESITE_IMAGE = xyes)
+AM_CONDITIONAL(BUILD_IMAGE, test x$IMAGE = xyes)
 AM_CONDITIONAL(BUILD_RSS, test x$RSS = xyes)
 AM_CONDITIONAL(BUILD_MYSQL, test x$MYSQL = xyes)
 AM_CONDITIONAL(BUILD_SQLITE, test x$SQLITE = xyes)
@@ -396,11 +395,8 @@ AC_CONFIG_FILES([simple/Makefile])
 AC_CONFIG_FILES([stat/Makefile])
 AC_CONFIG_FILES([ssl/Makefile])
 AC_CONFIG_FILES([http/Makefile])
-AC_CONFIG_FILES([http/getfile/Makefile])
-AC_CONFIG_FILES([http/dirindex/Makefile])
-AC_CONFIG_FILES([http/errorpage/Makefile])
 AC_CONFIG_FILES([sconesite/Makefile])
-AC_CONFIG_FILES([sconesite/image/Makefile])
+AC_CONFIG_FILES([image/Makefile])
 AC_CONFIG_FILES([exec/Makefile])
 AC_CONFIG_FILES([forward/Makefile])
 AC_CONFIG_FILES([tftp/Makefile])
@@ -434,11 +430,8 @@ The following modules will be built:
   + simple         yes
   + stat           yes
   + http           yes
-    + getfile      yes
-    + dirindex     yes
-    + errorpage    yes
   + sconesite      $SCONESITE
-    + image        $SCONESITE_IMAGE
+  + image          $IMAGE
   + ssl            $SSL
   + exec           yes   
   + forward        yes   

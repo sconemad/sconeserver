@@ -1,8 +1,6 @@
 # SconeServer (http://www.sconemad.com)
 # automake file for http module
 
-SUBDIRS = dirindex getfile errorpage
-
 AM_CPPFLAGS = -I$(top_srcdir)
 
 pkglib_LTLIBRARIES = http.la
@@ -13,7 +11,10 @@ AuthRealmHtpasswd.cpp \
 AuthRealmDB.cpp \
 Client.cpp \
 ConnectionStream.cpp \
+DirIndexStream.cpp \
 DocRoot.cpp \
+ErrorPageStream.cpp \
+GetFileStream.cpp \
 Host.cpp \
 HostMapper.cpp \
 HTTPModule.cpp \
@@ -33,7 +34,10 @@ AuthRealmHtpasswd.h \
 AuthRealmDB.h \
 Client.h \
 ConnectionStream.h \
+DirIndexStream.h \
 DocRoot.h \
+ErrorPageStream.h \
+GetFileStream.h \
 Host.h \
 HostMapper.h \
 http.h \
@@ -48,6 +52,7 @@ Status.h
 
 http_la_LDFLAGS = -module -avoid-version
 
-sysconf_DATA = http.conf.example
+modconfdir = $(sysconfdir)/modules.d
+modconf_DATA = http.conf
 
-EXTRA_DIST = $(sysconf_DATA)
+EXTRA_DIST = $(modconf_DATA)

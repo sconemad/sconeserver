@@ -16,3 +16,7 @@ BluetoothSocketAddress.h
 bluetooth_la_LDFLAGS = -module -avoid-version
 bluetooth_la_LIBADD = -lbluetooth
 
+modconfdir = $(sysconfdir)/modules.d
+modconf_DATA = bluetooth.conf
+
+EXTRA_DIST = $(modconf_DATA)
