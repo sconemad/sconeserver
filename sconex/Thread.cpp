@@ -112,6 +112,12 @@ bool Thread::current() const
 }
 
 //=============================================================================
+void Thread::set_priority(int prio)
+{
+  pthread_setschedprio(m_thread, prio);
+}
+  
+//=============================================================================
 bool Thread::should_exit() const
 {
   return (m_state == WaitingExit);

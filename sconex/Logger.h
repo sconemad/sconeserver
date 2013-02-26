@@ -23,37 +23,70 @@ Free Software Foundation, Inc.,
 #define scxLogger_h
 
 #include <sconex/sconex.h>
+#include <sconex/Thread.h>
+#include <deque>
 namespace scx {
 
 class File;
 class Mutex;
+class LogThread;
 
 //=============================================================================
 class SCONEX_API Logger {
-
 public:
 
-  Logger(const std::string& name);
   // Construct logger
+  Logger(const std::string& name);
   
   virtual ~Logger();
 
   enum Level { Error, Warning, Info, Debug };
-  
-  virtual void log(
-    const std::string& message,
-    Level level
-  );
-  // Write message to the log
 
+  typedef std::map<std::string,std::string> LogData;
+
+  
+  // Write message to the log
+  virtual void log(const std::string& message,
+                   Level level);
+  
 protected:
 
+  struct LogEntry {
+    timeval time;
+    std::string message;
+    Level level;
+    LogData* data;
+  };
+  
+  friend class LogThread;
+  void process_queue();
+  void log_entry(LogEntry* entry);
+  
   File* m_file;
   Mutex* m_mutex;
+  LogThread* m_thread;
 
-private:
+  typedef std::deque<LogEntry*> LogQueue;
+  LogQueue m_queue;
 	
 };
 
+//=============================================================================
+class SCONEX_API LogThread : public Thread {
+public:
+
+  LogThread(Logger& logger);
+  virtual ~LogThread();
+
+  virtual void* run();
+
+  void awaken();
+
+protected:
+
+  Logger& m_logger;
+  
+};
+  
 };
 #endif

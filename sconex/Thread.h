@@ -34,21 +34,24 @@ public:
   Thread();
   virtual ~Thread();
 
-  bool start();
   // Start the thread
+  bool start();
   
-  bool stop();
   // Stop the thread
+  bool stop();
   
-  bool running() const;
   // Is this thread running?
+  bool running() const;
   
-  bool current() const;
   // Is this the currently running thread?
+  bool current() const;
 
-  virtual void* run() =0;
-  // Thread entry point
+  // Set the thread's priority
+  void set_priority(int prio);
   
+  // Thread entry point
+  virtual void* run() =0;
+
 protected:
 
   bool should_exit() const;

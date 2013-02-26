@@ -1,4 +1,9 @@
 
+2013-02-26 Andrew Wedgbury <wedge@sconemad.com>
+
+	* sconex/Logger: Asynchronous logging - log entries are now queued for
+	writing in a separate thread to avoid blocking the worker thread(s).
+
 2013-02-21 Andrew Wedgbury <wedge@sconemad.com>
 
 	* sconex/ModuleLoader: Fold ModuleLoaderDLL into here.

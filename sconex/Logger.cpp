@@ -22,64 +22,154 @@ Free Software Foundation, Inc.,
 #include <sconex/Logger.h>
 #include <sconex/File.h>
 #include <sconex/Mutex.h>
-#include <sconex/Date.h>
 namespace scx {
+
+// Uncomment this to force synchronous logging
+//#define SYNC_LOGGING
+
 
 //=============================================================================
 Logger::Logger(const std::string& name)
   : m_file(new File()),
-    m_mutex(new Mutex())
+    m_mutex(new Mutex()),
+    m_thread(0)
 {
   DEBUG_COUNT_CONSTRUCTOR(Logger);
   if (m_file->open(name.c_str(),File::Write | File::Append | File::Create) !=
       Ok) {
     std::cerr << "Unable to open log file '" << name
               << "' - will log to stdout\n";
-    return;
+    delete m_file; m_file = 0;
   }
-  log("-----------------------------------------------------------------",
-      Info);
+
+#ifndef SYNC_LOGGING
+  m_thread = new LogThread(*this);
+  m_thread->start();
+#endif
+
+  if (m_file) {
+    log("-----------------------------------------------------------------",
+        Info);
+  }
 }
 
 //=============================================================================
 Logger::~Logger()
 {
-  m_file->close();
-  delete m_file;
+  if (m_thread) {
+    m_thread->stop();
+    delete m_thread;
+  }
+  if (m_file) {
+    m_file->close();
+    delete m_file;
+  }
   delete m_mutex;
   DEBUG_COUNT_DESTRUCTOR(Logger);
 }
 
 //=============================================================================
-void Logger::log(
-  const std::string& message,
-  Level level
-)
+void Logger::log(const std::string& message, Level level)
 {
-  Date now = Date::now(true);
+  LogEntry* entry = new LogEntry();
+  ::gettimeofday(&entry->time,0);
+  entry->message = message;
+  entry->level = level;
+  entry->data = 0;
 
+  m_mutex->lock();
+  m_queue.push_back(entry);
+  m_mutex->unlock();
+
+  if (m_thread) {
+    m_thread->awaken();
+  } else {
+    process_queue();
+  }
+}
+
+//=============================================================================
+void Logger::process_queue()
+{
+  MutexLocker locker(*m_mutex, false);
+  while (true) {
+    locker.lock();
+    if (m_queue.empty()) break;
+    LogEntry* entry = m_queue.front();
+    m_queue.pop_front();
+    locker.unlock();
+
+    log_entry(entry);
+    delete entry;
+  }
+}
+
+//=============================================================================
+void Logger::log_entry(LogEntry* entry)
+{
   int na=0;
   std::string lcode;
-  switch (level) {
+  switch (entry->level) {
     case Logger::Error:    lcode = "E"; break;
     case Logger::Warning:  lcode = "W"; break;
     case Logger::Info:     lcode = "i"; break;
     case Logger::Debug:    lcode = "d"; break;
   }
+  Date date(entry->time, true);
   std::ostringstream oss;
-  oss << now.code() << " " 
-      << std::setfill('0') << std::setw(6) << now.microsecond() << " "
-      << lcode << " " 
-      << message << "\n";
+  oss << date.code() << " " 
+      << std::setfill('0') << std::setw(6) << date.microsecond() << " "
+      << lcode << " "
+      << entry->message << "\n";
   std::string str = oss.str();
 
-  m_mutex->lock();
-  if (m_file->is_open()) {
+  // We only need the lock if not in the logger thread (synchronous)
+  MutexLocker locker(*m_mutex, !m_thread);
+  if (m_file) {
     m_file->write(str.c_str(),str.size(),na);
   } else {
     std::cout << str;
   }
-  m_mutex->unlock();
 }
 
+
+//=============================================================================
+LogThread::LogThread(Logger& logger)
+  : m_logger(logger)
+{
+}
+
+//=============================================================================
+LogThread::~LogThread()
+{
+}
+
+//=============================================================================
+void* LogThread::run()
+{
+  m_mutex.lock();
+  while (true) {
+
+    // Wait to be woken up
+    m_wakeup.wait(m_mutex);
+
+    if (should_exit()) {
+      // Time for the thread to stop
+      break;
+    }
+
+    try {
+      m_logger.process_queue();
+    } catch (...) { }
+
+  }
+  
+  return 0;
+}
+
+void LogThread::awaken()
+{
+  m_wakeup.signal();
+}
+  
 };

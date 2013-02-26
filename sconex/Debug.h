@@ -86,6 +86,7 @@ class Mutex;
  
 #define DEBUG_ASSERT(test,message);
 #define DEBUG_LOG(message);
+#define DEBUG_LOG_ERRNO(message);
 #define DEBUG_COUNT_CONSTRUCTOR(class_name);
 #define DEBUG_COUNT_DESTRUCTOR(class_name);
 
