@@ -30,16 +30,6 @@ Free Software Foundation, Inc.,
 namespace http {
   
 //=========================================================================
-void DirIndexStream::log(const std::string message, scx::Logger::Level level)
-{
-  http::MessageStream* msg = GET_HTTP_MESSAGE();
-  if (msg) {
-    http::Request& req = const_cast<http::Request&>(msg->get_request());
-    m_module.object()->log(req.get_id() + " " + message,level);
-  }
-}
-
-//=========================================================================
 scx::Condition DirIndexStream::send_response()
 {
   http::MessageStream* msg = GET_HTTP_MESSAGE();
@@ -70,7 +60,7 @@ scx::Condition DirIndexStream::send_response()
     if (scx::FileStat(path + s_default_page).exists()) {
       // Redirect to default page
       if (url[url.size()-1] != '/') url += "/";
-      log("Redirect '" + url + "' to '" + url + s_default_page + "'"); 
+      msg->log("Redirect '" + url + "' to '" + url + s_default_page + "'"); 
       url += s_default_page;
       
       msg->get_response().set_status(http::Status::Found);
@@ -83,8 +73,8 @@ scx::Condition DirIndexStream::send_response()
       // Redirect to directory URL ending in '/'
       scx::Uri new_uri = uri;
       new_uri.set_path(uripath + "/");
-      log("Redirect '" + uri.get_string() + 
-	  "' to '" + new_uri.get_string() + "'"); 
+      msg->log("Redirect '" + uri.get_string() + 
+               "' to '" + new_uri.get_string() + "'"); 
       
       msg->get_response().set_status(http::Status::Found);
       msg->get_response().set_header("Content-Type","text/html");
@@ -99,7 +89,7 @@ scx::Condition DirIndexStream::send_response()
     
     if (allow_list) {
       // Send directory listing if allowed
-      log("Listing directory '" + url + "'"); 
+      msg->log("Listing directory '" + url + "'"); 
       
       msg->get_response().set_status(http::Status::Ok);
       msg->get_response().set_header("Content-Type","text/html");

@@ -26,6 +26,7 @@ Free Software Foundation, Inc.,
 #include <sconex/DatagramSocket.h>
 #include <sconex/DatagramChannel.h>
 #include <sconex/Kernel.h>
+#include <sconex/Log.h>
 
 // Uncomment to enable debug info
 //#define TFTPStream_DEBUG_LOG(m) DEBUG_LOG(m)
@@ -94,7 +95,7 @@ scx::Condition TFTPStream::event(scx::Stream::Event e)
       if (op != RRQ && op != WRQ) {
 	std::ostringstream oss;
 	oss << "Unexpected tftp op code: " << op;
-	log(oss.str(),scx::Logger::Error);
+	log(oss.str());
 	//	write_error(IllegalOperation,"Unexpected op code");
 	return scx::Error;
       }
@@ -103,7 +104,7 @@ scx::Condition TFTPStream::event(scx::Stream::Event e)
       int end;
       for (end=start; packet[end] != 0; ++end) {
 	if (end >= TFTP_PACKET_SIZE) {
-	  log("Packet too large",scx::Logger::Error);
+	  log("Packet too large");
 	  write_error(IllegalOperation,"Packet too large");
 	  return scx::Error;
 	}
@@ -111,7 +112,7 @@ scx::Condition TFTPStream::event(scx::Stream::Event e)
 
       TFTPProfile* profile = m_module.object()->find_profile(m_profile);
       if (!profile) {
-	log("No tftp profile specified",scx::Logger::Error);
+	log("No tftp profile specified");
 	write_error(FileNotFound,"File not found");
 	return scx::Error;
       }
@@ -142,7 +143,7 @@ scx::Condition TFTPStream::event(scx::Stream::Event e)
 	if (!open_file(path,scx::File::Read)) {
 	  std::ostringstream oss;
 	  oss << "Unable to open file '" << path.path() << "' for reading - sending FileNotFound";
-	  log(oss.str(),scx::Logger::Error);
+	  log(oss.str());
 	  write_error(FileNotFound,"File not found");
 	  return scx::Error;
 	}
@@ -160,7 +161,7 @@ scx::Condition TFTPStream::event(scx::Stream::Event e)
 	if (!open_file(path,scx::File::Write | scx::File::Create | scx::File::Truncate)) {
 	  std::ostringstream oss;
 	  oss << "Unable to open file '" << path.path() << "' for writing - sending AccessViolation";
-	  log(oss.str(),scx::Logger::Error);
+	  log(oss.str());
 	  write_error(AccessViolation,"Access violation");
 	  return scx::Error;
 	}
@@ -177,7 +178,7 @@ scx::Condition TFTPStream::event(scx::Stream::Event e)
     } else if (m_state == tftp_ReadData) {
 
       if (op != ACK) {
-	log("EXPECTED ACK packet",scx::Logger::Error);
+	log("EXPECTED ACK packet");
 	write_error(IllegalOperation,"Expected ACK");
 	return scx::Error;
       }
@@ -193,7 +194,7 @@ scx::Condition TFTPStream::event(scx::Stream::Event e)
     } else if (m_state == tftp_WriteData) {
       
       if (op != DATA) {
-	log("EXPECTED DATA packet",scx::Logger::Error);
+	log("EXPECTED DATA packet");
 	return scx::Error;
       }
 
@@ -222,7 +223,7 @@ scx::Condition TFTPStream::event(scx::Stream::Event e)
 	std::ostringstream oss;
 	oss << "EXPECTED block=" << m_block;
 	write_error(UnknownTransferID,"Unknown transfer ID");
-	log(oss.str(),scx::Logger::Error);
+	log(oss.str());
       }
     }
     
@@ -335,7 +336,7 @@ bool TFTPStream::write_error(unsigned short code, const std::string& message)
 }
 
 //=============================================================================
-void TFTPStream::log(const std::string& message, scx::Logger::Level level)
+void TFTPStream::log(const std::string& message)
 {
-  m_module.object()->log("{"+m_profile+"} "+message,level);
+  scx::Log("tftp").submit("{"+m_profile+"} "+message);
 }

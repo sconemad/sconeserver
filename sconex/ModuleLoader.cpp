@@ -20,7 +20,7 @@ Free Software Foundation, Inc.,
 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA */
 
 #include <sconex/ModuleLoader.h>
-#include <sconex/Logger.h>
+#include <sconex/Log.h>
 #include <sconex/File.h>
 #include <sconex/FileStat.h>
 #include <sconex/LineBuffer.h>
@@ -32,6 +32,9 @@ namespace scx {
 
 typedef Module* (*PROC_SCONEX_MODULE) (void);
 const char* SCONESERVER_PROC_NAME = "sconex_module";
+
+#define LOG(msg) Log("loader").submit(msg);
+
   
 //=============================================================================
 ModuleLoader::ModuleLoader(const scx::FilePath& conf,
@@ -95,7 +98,7 @@ Module::Ref ModuleLoader::get_module()
 
     if (m_module) {
       Module* m = m_module->object();
-      log("Loaded module [" + m_name + "] " +
+      LOG("Loaded module [" + m_name + "] " +
           m->name() + "-" + m->version().get_string());
       m->set_parent(m_parent);
       m->init();
@@ -165,7 +168,7 @@ bool ModuleLoader::load_module()
         break;
 
       default: // Can't find it anywhere
-	log("Unable to locate module '"+m_name+"'");
+	LOG("Unable to locate module '"+m_name+"'");
 	return false; 
     }
   } while (!FileStat(path).is_file());
@@ -193,14 +196,14 @@ bool ModuleLoader::unload_module()
   
   if (m_module) {
     if (!m_module->object()->close()) {
-      log("Unload '" + m_name + "' failed");
+      LOG("Unload '" + m_name + "' failed");
       return false;
     }
     int refs = m_module->object()->num_refs();
     if (refs > 1) {
       std::ostringstream oss;
       oss << "Deferring unload of '" << m_name <<"' (" << refs << " refs)";
-      log(oss.str());
+      LOG(oss.str());
       return false;
     }
     delete m_module;
@@ -252,7 +255,7 @@ bool ModuleLoader::load_dll(const std::string& filename)
   m_dll = dlopen(filename.c_str(),RTLD_LAZY | RTLD_GLOBAL); //RTLD_NOW);
 
   if (m_dll==0) {
-    log(std::string("dlopen error: ") + dlerror());
+    LOG(std::string("dlopen error: ") + dlerror());
     return false;
   }
 
@@ -281,12 +284,4 @@ void* ModuleLoader::locate_symbol(const std::string& name) const
   return (void*)dlsym(m_dll,name.c_str());
 }
   
-//=============================================================================
-void ModuleLoader::log(const std::string& message)
-{
-  if (m_parent) {
-    m_parent->log(message);
-  }
-}
-
 };

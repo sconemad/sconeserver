@@ -32,6 +32,8 @@ Free Software Foundation, Inc.,
 namespace scx {
 
 ScriptRefTo<Kernel>* Kernel::s_kernel = 0;
+
+#define LOG(msg) Log("kernel").submit(msg);
   
 //=============================================================================
 Kernel* Kernel::create(const std::string& appname,
@@ -67,12 +69,10 @@ std::string Kernel::info() const
 //=============================================================================
 int Kernel::init() 
 {
-  // Set default logger
-  FilePath path = get_var_path() + std::string(name() + ".log");
-  set_logger(new scx::Logger(path.path()));
+  Logger::init(get_var_path());
 
-  log("Init " + name() + "-" + version().get_string());
-  log("Built for " + scx::build_type() + " on " + scx::build_time().code());
+  LOG("Init " + name() + "-" + version().get_string());
+  LOG("Built for " + scx::build_type() + " on " + scx::build_time().code());
 
   if (m_autoload_config) {
     load_config_file(m_conf_path + std::string(name() + ".conf"));
@@ -86,7 +86,7 @@ int Kernel::init()
 //=============================================================================
 bool Kernel::close()
 {
-  log("Stopping threads");
+  LOG("Stopping threads");
   m_spinner.close();
 
   const int max_retries = 10;
@@ -95,9 +95,9 @@ bool Kernel::close()
     if (++retry <= max_retries) {
       std::ostringstream oss;
       oss << "Unloading modules (attempt " << retry << ")";
-      log(oss.str());
+      LOG(oss.str());
     } else {
-      log("Could not unload all modules",Logger::Error);
+      LOG("Could not unload all modules");
       return false;
     }
   } while (!Module::close());
@@ -136,12 +136,12 @@ int Kernel::run(bool console)
   }
 
   m_state = Run;
-  log("Init complete, entering scheduler loop");
+  LOG("Init complete, entering scheduler loop");
   
   while (true) {
 
     if (m_spinner.spin() < 0) {
-      log("Descriptor table empty, shutting down");
+      LOG("Descriptor table empty, shutting down");
       break;
     }
     
@@ -151,13 +151,13 @@ int Kernel::run(bool console)
 
     if (m_state == Restart) {
       close();
-      log("Restarting");
+      LOG("Restarting");
       return 0;
     }
   }
 
   close();
-  log("Exiting");
+  LOG("Exiting");
   return 1;
 }
 
@@ -171,13 +171,6 @@ void Kernel::connect_config_console()
   //  				      new ScriptRef(this),
   //  				      "console") );
   connect(c);
-}
-
-//=============================================================================
-void Kernel::set_logger(Logger* logger)
-{
-  Module::set_logger(logger);
-  Debug::get()->set_logger(logger);
 }
 
 //=============================================================================
@@ -223,6 +216,8 @@ ScriptRef* Kernel::script_op(const ScriptAuth& auth,
     // Properties
     if ("kernel" == name) 
       return ref.ref_copy();
+    if ("logger" == name)
+      return new Logger::Ref(Logger::get());
     if ("jobs" == name) 
       return ScriptString::new_ref(m_spinner.describe());
     if ("root" == name) 
@@ -250,14 +245,14 @@ ScriptRef* Kernel::script_method(const ScriptAuth& auth,
 {
   if ("restart" == name) {
     if (!auth.admin()) return ScriptError::new_ref("Not permitted");
-    log("Restart requested via command");
+    LOG("Restart requested via command");
     m_state = Restart;
     return 0;
   }
 
   if ("shutdown" == name) {
     if (!auth.admin()) return ScriptError::new_ref("Not permitted");
-    log("Shutdown requested via command");
+    LOG("Shutdown requested via command");
     m_state = Shutdown;
     return 0;
   }
@@ -285,7 +280,7 @@ ScriptRef* Kernel::script_method(const ScriptAuth& auth,
     std::ostringstream oss;
     oss << "Setting effective user and group ids to " << 
       user.get_user_id() << ":" << user.get_group_id();
-    log(oss.str());
+    LOG(oss.str());
 
     if (!user.set_effective()) {
       return ScriptError::new_ref("set_user() Unable to set user/group ids");
@@ -305,7 +300,7 @@ ScriptRef* Kernel::script_method(const ScriptAuth& auth,
     std::ostringstream oss;
     oss << "Setting thread pool to " << n_threads
         << (n_threads ? "" : " (multiplexed mode)");
-    log(oss.str());
+    LOG(oss.str());
 
     m_spinner.set_num_threads((unsigned int)n_threads);
     return 0;
@@ -323,7 +318,7 @@ ScriptRef* Kernel::script_method(const ScriptAuth& auth,
 
     std::ostringstream oss;
     oss << "Setting latency to " << n_latency;
-    log(oss.str());
+    LOG(oss.str());
 
     m_spinner.set_latency((long)n_latency);
     return 0;
@@ -336,10 +331,10 @@ ScriptRef* Kernel::script_method(const ScriptAuth& auth,
       return ScriptError::new_ref("enable_jobs() Enable flag not specified");
 
     if (a_enable->get_int()) {
-      log("Enabling non-descriptor jobs");
+      LOG("Enabling non-descriptor jobs");
       m_spinner.enable_jobs(true);
     } else {
-      log("Disabling non-descriptor jobs");
+      LOG("Disabling non-descriptor jobs");
       m_spinner.enable_jobs(false);
     }
     return 0;

@@ -97,8 +97,7 @@ public:
 
 protected:
 
-  void log(const std::string message,
-	   scx::Logger::Level level = scx::Logger::Info);
+  void log(const std::string message);
   
   Profile& m_profile;
   SconesiteStream& m_stream;

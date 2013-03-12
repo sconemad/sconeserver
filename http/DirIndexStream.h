@@ -41,9 +41,6 @@ public:
   
 protected:
 
-  void log(const std::string message,
-	   scx::Logger::Level level = scx::Logger::Info);
-
   virtual scx::Condition send_response();
 
 private:

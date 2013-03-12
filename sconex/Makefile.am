@@ -28,6 +28,7 @@ Job.cpp \
 Kernel.cpp \
 LineBuffer.cpp \
 ListenerSocket.cpp \
+Log.cpp \
 Logger.cpp \
 MemFile.cpp \
 MimeHeader.cpp \

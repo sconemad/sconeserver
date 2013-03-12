@@ -77,7 +77,13 @@ public:
   const std::string& get_file() const;
   int get_line_offset() const;
 
-  typedef std::vector<std::string> ErrorList;
+  struct ErrorEntry {
+    std::string file;
+    int line;
+    std::string error;
+  };
+  
+  typedef std::vector<ErrorEntry> ErrorList;
   ErrorList& errors();
 
 protected:

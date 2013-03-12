@@ -32,6 +32,7 @@ Free Software Foundation, Inc.,
 #include <sconex/VersionTag.h>
 #include <sconex/Date.h>
 #include <sconex/StreamSocket.h>
+#include <sconex/Log.h>
 #include <sconex/utils.h>
 
 namespace http {
@@ -239,9 +240,11 @@ HTTPModule& MessageStream::get_module()
 }
 
 //=============================================================================
-void MessageStream::log(const std::string& message,scx::Logger::Level level)
+void MessageStream::log(const std::string& message)
 {
-  m_module.object()->log(m_request.object()->get_id() + " " + message,level);
+  scx::Log("http").
+    attach("id", m_request.object()->get_id()).
+    submit(message);
 }
 
 //=============================================================================
@@ -259,34 +262,35 @@ Response& MessageStream::get_response()
 //=============================================================================
 bool MessageStream::connect_request_module(bool error)
 {
-  const scx::Uri& uri = m_request.object()->get_uri();
-  
-  // Log request  
-  const scx::StreamSocket* sock =
-    dynamic_cast<const scx::StreamSocket*>(&endpoint());
-  const scx::SocketAddress* addr = sock->get_remote_addr();
-
-  if (!error) {
-    log(addr->get_string() + " " + m_request.object()->get_method() + " " + 
-	uri.get_string());
-
-    const std::string& referer = m_request.object()->get_header("Referer");
-    if (!referer.empty()) {
-      log("Referer: " + referer);
-    }
-    
-    const std::string& useragent = 
-      m_request.object()->get_header("User-Agent");
-    if (!useragent.empty()) {
-      log("User-Agent: " + useragent);
-    }
-  }
-
   // Pass through to host mapper for connection to appropriate host object
   HostMapper& mapper = m_module.object()->get_hosts();
-  return mapper.connect_request(&endpoint(),
-				*m_request.object(),
-				*m_response.object());
+  bool success = mapper.connect_request(&endpoint(),
+                                        *m_request.object(),
+                                        *m_response.object());
+
+  if (!error) {
+    scx::Log log("http");
+    log.attach("profile", m_request.object()->get_profile());
+    log.attach("id", m_request.object()->get_id());
+    log.attach("uri", m_request.object()->get_uri().get_string());
+    
+    const scx::StreamSocket* sock =
+      dynamic_cast<const scx::StreamSocket*>(&endpoint());
+    const scx::SocketAddress* addr = sock->get_remote_addr();
+    log.attach("peer", addr->get_string());
+    
+    log.attach("referer", m_request.object()->get_header("Referer"));
+    log.attach("user-agent", m_request.object()->get_header("User-Agent"));
+    log.attach("host", m_request.object()->get_host()->get_id());
+    Session* session = m_request.object()->get_session();
+    if (session) {
+      log.attach("session", session->get_id());
+    }
+    
+    log.submit(m_request.object()->get_method());
+  }
+
+  return success;
 }
   
 //=============================================================================

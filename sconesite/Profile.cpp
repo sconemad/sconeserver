@@ -33,6 +33,7 @@ Free Software Foundation, Inc.,
 #include <sconex/FileDir.h>
 #include <sconex/ScriptTypes.h>
 #include <sconex/Database.h>
+#include <sconex/Log.h>
 
 #include <memory> // Using auto_ptr
 
@@ -42,6 +43,8 @@ Free Software Foundation, Inc.,
 #ifndef SCONESITEPROFILE_DEBUG_LOG
 #  define SCONESITEPROFILE_DEBUG_LOG(m)
 #endif
+
+#define LOG(msg) scx::Log("sconesite").attach("id",m_name).submit(msg);
 
 const char* ARTDIR = "art";
 const char* TPLDIR = "tpl";
@@ -97,7 +100,7 @@ void Profile::refresh()
         if (extn == "xml" && !lookup_template(name)) {
           Template* tpl = new Template(*this,name,dir.root());
           m_templates[name] = new Template::Ref(tpl);
-          log("Adding template '" + name + "'");
+          LOG("Adding template '" + name + "'");
         }
       }
     }
@@ -110,7 +113,7 @@ void Profile::refresh()
     Template::Ref* tpl_ref = it_t->second;
     Template* tpl = tpl_ref->object();
     if (!scx::FileStat(tpl->get_filepath()).is_file()) {
-      log("Removing template '" + tpl->get_name() + "'");
+      LOG("Removing template '" + tpl->get_name() + "'");
       it_t = m_templates.erase(it_t);
       delete tpl_ref;
     }
@@ -128,7 +131,7 @@ void Profile::refresh()
        it_a != m_articles.end(); ) {
     Article::Ref* article = it_a->second;
     if (article->object()->get_access_time() < purge_time) {
-      log("Purging article: /" + article->object()->get_href_path());
+      LOG("Purging article: /" + article->object()->get_href_path());
       m_articles.erase(it_a++);
       delete article;
     } else {

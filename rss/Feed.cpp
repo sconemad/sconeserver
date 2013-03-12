@@ -28,8 +28,11 @@ Free Software Foundation, Inc.,
 
 #include "Feed.h"
 #include "RSSModule.h"
+#include <sconex/Log.h>
 
 #include "libxml/nanohttp.h"
+
+#define LOG(msg) scx::Log("rss").attach("id",m_id).submit(msg);
 
 //=========================================================================
 void RSSFeed_ErrorHandler(void* vcx,const char* str,...)
@@ -94,7 +97,6 @@ void Feed::refresh(bool force)
     }
 
     std::ostringstream oss;
-    oss << "{"+m_id+"} ";
     if (success) {
       oss << "Refreshed feed, contains " << m_items.object()->size() 
 	  << " items";
@@ -103,7 +105,7 @@ void Feed::refresh(bool force)
     } else {
       oss << "Unable to refresh feed - recieved no data";
     }
-    m_module.log(oss.str(),success ? scx::Logger::Info : scx::Logger::Error);
+    LOG(oss.str());
     
     xmlFreeDoc(xmldoc);
     xmlFreeParserCtxt(cx);

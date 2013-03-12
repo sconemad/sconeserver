@@ -23,7 +23,6 @@ Free Software Foundation, Inc.,
 #include <http/MessageStream.h>
 #include <http/Status.h>
 
-#include <sconex/Logger.h>
 #include <sconex/Response.h>
 #include <sconex/VersionTag.h>
 #include <sconex/utils.h>

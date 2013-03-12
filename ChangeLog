@@ -1,4 +1,12 @@
 
+2013-03-12 Andrew Wedgbury <wedge@sconemad.com>
+
+	* sconex/Logger: Logging improvements - LogChannel provider mechanism
+	allowing new log channel types to be added dynamically.
+	Replace level-based system with categories, and allow attachments.
+	* sconex/Log: New, cleaner interface to logging system.
+	* all: Update to use new Log interface.
+
 2013-02-26 Andrew Wedgbury <wedge@sconemad.com>
 
 	* sconex/Logger: Asynchronous logging - log entries are now queued for

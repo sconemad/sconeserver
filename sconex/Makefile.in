@@ -82,9 +82,9 @@ am_libsconex_la_OBJECTS = sconex.lo utils.lo Base64.lo Buffer.lo \
 	DatagramChannel.lo DatagramMultiplexer.lo DatagramSocket.lo \
 	Date.lo Debug.lo Descriptor.lo File.lo FileDir.lo FilePath.lo \
 	FileStat.lo Job.lo Kernel.lo LineBuffer.lo ListenerSocket.lo \
-	Logger.lo MemFile.lo MimeHeader.lo MimeType.lo Module.lo \
-	ModuleLoader.lo Multiplexer.lo Mutex.lo NullFile.lo Process.lo \
-	RegExp.lo Response.lo ScriptBase.lo ScriptEngine.lo \
+	Log.lo Logger.lo MemFile.lo MimeHeader.lo MimeType.lo \
+	Module.lo ModuleLoader.lo Multiplexer.lo Mutex.lo NullFile.lo \
+	Process.lo RegExp.lo Response.lo ScriptBase.lo ScriptEngine.lo \
 	ScriptExpr.lo ScriptStatement.lo ScriptTypes.lo Socket.lo \
 	SocketAddress.lo Stream.lo StreamBuffer.lo StreamDebugger.lo \
 	StreamSocket.lo StreamTokenizer.lo StreamTransfer.lo \
@@ -279,6 +279,7 @@ Job.cpp \
 Kernel.cpp \
 LineBuffer.cpp \
 ListenerSocket.cpp \
+Log.cpp \
 Logger.cpp \
 MemFile.cpp \
 MimeHeader.cpp \
@@ -497,6 +498,7 @@ distclean-compile:
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/LineBuffer.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/LineBuffer_ut.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/ListenerSocket.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/Log.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/Logger.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/MemFile.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/MemFile_ut.Po@am__quote@

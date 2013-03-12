@@ -20,7 +20,7 @@ Free Software Foundation, Inc.,
 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA */
 
 #include <sconex/Debug.h>
-#include <sconex/Logger.h>
+#include <sconex/Log.h>
 #include <sconex/Mutex.h>
 namespace scx {
 
@@ -115,18 +115,17 @@ void Debug::dbg_assert(
 {
   if (test==false) {
 
-    if (m_logger) {
-      std::string filename(file);
-      std::string::size_type ns = filename.find_last_of("/\\");
-      if (ns != std::string::npos) {
-        filename = filename.substr(ns+1);
-      }
-      std::ostringstream oss;
-      oss << "(" <<  filename << ":" << line << ") "
-          << message << " (ASSERTION)";
-      m_logger->log(oss.str(),Logger::Debug);
+    std::string filename(file);
+    std::string::size_type ns = filename.find_last_of("/\\");
+    if (ns != std::string::npos) {
+      filename = filename.substr(ns+1);
     }
+    std::ostringstream oss;
+    oss << "(" <<  filename << ":" << line << ") "
+        << message << " (ASSERTION)";
 
+    Log("DEBUG").submit(oss.str());
+    
     //DEBUG_BREAKPOINT;
     
     if (m_stop_on_assert) {
@@ -144,18 +143,16 @@ void Debug::log(
   int line
 )
 {
-  if (m_logger) {
-    std::string filename(file);
-    std::string::size_type ns = filename.find_last_of("/\\");
-    if (ns != std::string::npos) {
-      filename = filename.substr(ns+1);
-    }
-    std::ostringstream oss;
-    oss << "(" <<  filename << ":" << line << ") "
-        << message;
-        
-    m_logger->log(oss.str(),Logger::Debug);
+  std::string filename(file);
+  std::string::size_type ns = filename.find_last_of("/\\");
+  if (ns != std::string::npos) {
+    filename = filename.substr(ns+1);
   }
+  std::ostringstream oss;
+  oss << "(" <<  filename << ":" << line << ") "
+      << message;
+
+  Log("DEBUG").submit(oss.str());
 }
 
 //=============================================================================
@@ -210,15 +207,8 @@ void Debug::get_counters(InstanceCounterMap& counters)
 }
 
 //=============================================================================
-void Debug::set_logger(Logger* logger)
-{
-  m_logger = logger;
-}
-
-//=============================================================================
 Debug::Debug()
-  : m_logger(0),
-    m_mutex(new Mutex()),
+  : m_mutex(new Mutex()),
     m_stop_on_assert(false)
 {
 

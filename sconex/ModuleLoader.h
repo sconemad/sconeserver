@@ -75,8 +75,6 @@ protected:
   // its entry point
   void* locate_symbol(const std::string& name) const;
 
-  void log(const std::string& message);
-
   std::string m_name;
   FilePath m_conf;
 

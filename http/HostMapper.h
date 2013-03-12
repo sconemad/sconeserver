@@ -60,8 +60,6 @@ public:
 					const std::string& name,
 					const scx::ScriptRef* args);
 
-  virtual std::string get_log_context() const { return "hosts"; }
-  
   typedef scx::ScriptRefTo<HostMapper> Ref;
   
 protected:

@@ -23,7 +23,6 @@ Free Software Foundation, Inc.,
 #include "smtp/SMTPClient.h"
 
 #include <sconex/ScriptTypes.h>
-#include <sconex/Logger.h>
 #include <sconex/ModuleInterface.h>
 #include <sconex/Process.h>
 #include <sconex/ScriptExpr.h>

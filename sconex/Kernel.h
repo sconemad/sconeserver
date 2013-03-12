@@ -60,8 +60,6 @@ public:
 
   void connect_config_console();
 
-  virtual void set_logger(Logger* logger);
-  
   // Add a descriptor job to the kernel
   virtual bool connect(Descriptor* d);
 

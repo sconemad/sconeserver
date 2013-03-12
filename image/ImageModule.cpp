@@ -26,6 +26,7 @@ Free Software Foundation, Inc.,
 #include <sconex/FilePath.h>
 #include <sconex/FileStat.h>
 #include <sconex/ScriptTypes.h>
+#include <sconex/Log.h>
 
 #include <Magick++.h>
 using namespace Magick;
@@ -140,7 +141,8 @@ scx::ScriptRef* ImageModule::script_method(const scx::ScriptAuth& auth,
 	(dest_stat.time() < source_stat.time())) {
       // Thumbnail needs to be generated
       scx::FilePath::mkdir(root + IMAGE_DIR + size,true,0777);
-      log("Generating " + size + " thumbnail for " + source.path());
+      scx::Log("image").submit("Generating " + size +
+                               " thumbnail for " + source.path());
       try {
 	Image image;
 	image.read(source.path());

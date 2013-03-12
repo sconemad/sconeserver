@@ -28,9 +28,12 @@ Free Software Foundation, Inc.,
 #include <http/AuthRealmDB.h>
 
 #include <sconex/ScriptTypes.h>
+#include <sconex/Log.h>
 
 namespace http {
 
+#define LOG(msg) scx::Log("http").submit(msg);
+  
 //=========================================================================
 AuthRealm::AuthRealm(const std::string name)
   : m_name(name)
@@ -194,7 +197,7 @@ scx::ScriptRef* AuthRealmManager::script_method(const scx::ScriptAuth& auth,
     // Create the realm using the provider scheme
     AuthRealm* realm = m_providers.provide(a_type->get_string(), a_args);
 
-    log("Adding realm '" + s_realm + "'");
+    LOG("Adding realm '" + s_realm + "'");
     m_realms[s_realm] = new AuthRealm::Ref(realm);
 
     return new AuthRealm::Ref(realm);
@@ -213,7 +216,7 @@ scx::ScriptRef* AuthRealmManager::script_method(const scx::ScriptAuth& auth,
       return scx::ScriptError::new_ref("add_realm() Realm does not exist");
     }
     
-    log("Removing realm '" + s_realm + "'");
+    LOG("Removing realm '" + s_realm + "'");
     delete (*it).second;
     m_realms.erase(it);
     
@@ -246,7 +249,7 @@ void AuthRealmManager::provide(const std::string& type,
     const scx::ScriptString* a_path =
       scx::get_method_arg<scx::ScriptString>(args,0,"file");
     if (!a_path) {
-      DEBUG_LOG("No htpasswd file specified");
+      LOG("No htpasswd file specified");
       return;
     }
  

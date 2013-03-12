@@ -28,8 +28,11 @@ Free Software Foundation, Inc.,
 #include <sconex/ScriptTypes.h>
 #include <sconex/Descriptor.h>
 #include <sconex/Kernel.h>
+#include <sconex/Log.h>
 namespace http {
 
+#define LOG(msg) scx::Log("http.hosts").submit(msg);
+  
 //=========================================================================
 HostMapper::HostMapper(HTTPModule& module)
   : m_module(module)
@@ -66,7 +69,7 @@ bool HostMapper::connect_request(scx::Descriptor* endpoint,
 
   } else {
     // This is bad, user should have setup a default host
-    m_module.log("Unknown host '" + hostname + "'",scx::Logger::Error);
+    LOG("Unknown host '" + hostname + "'");
     response.set_status(http::Status::NotFound);
     response.set_header("Content-Type","text/html");
     endpoint->write("<html><head></head><body><h1>Host not found</h1></body></html>");
@@ -75,8 +78,8 @@ bool HostMapper::connect_request(scx::Descriptor* endpoint,
 
   HostMap::const_iterator it = m_hosts.find(mapped_host);
   if (it == m_hosts.end()) {
-    log(std::string("Lookup failure: '") + hostname + 
-	"' maps to unknown host '" + mapped_host + "'");
+    LOG(std::string("Lookup failure: '") + hostname + 
+        "' maps to unknown host '" + mapped_host + "'");
     response.set_status(http::Status::NotFound);
     response.set_header("Content-Type","text/html");
     endpoint->write("<html><head></head><body><h1>Host not found</h1></body></html>");
@@ -88,8 +91,8 @@ bool HostMapper::connect_request(scx::Descriptor* endpoint,
     // Redirect to host's uri
     scx::Uri new_uri = uri;
     new_uri.set_host(host->get_hostname());
-    log("Host redirect '" + uri.get_string() + 
-	"' to '" + new_uri.get_string() + "'"); 
+    LOG("Host redirect '" + uri.get_string() + 
+        "' to '" + new_uri.get_string() + "'"); 
     
     response.set_status(http::Status::Found);
     response.set_header("Content-Type","text/html");
@@ -210,7 +213,8 @@ scx::ScriptRef* HostMapper::script_method(const scx::ScriptAuth& auth,
       return scx::ScriptError::new_ref("add() Host with this ID already exists");
     }
         
-    log("Adding host '" + s_id + "' hostname '" + s_hostname + "' path '" + a_path->get_string() + "'");
+    LOG("Adding host '" + s_id + "' hostname '" + s_hostname +
+        "' path '" + a_path->get_string() + "'");
     scx::FilePath path = scx::Kernel::get()->get_conf_path() + a_path->get_string();
     Host* host = new Host(m_module, *this, s_id, s_hostname, path.path());
     host->init();
@@ -232,7 +236,7 @@ scx::ScriptRef* HostMapper::script_method(const scx::ScriptAuth& auth,
       return scx::ScriptError::new_ref("remove() Host not found");
     }
     
-    log("Removing host '" + s_hostname + "'");
+    LOG("Removing host '" + s_hostname + "'");
     delete it->second;
     m_hosts.erase(it);
     return 0;
@@ -253,7 +257,7 @@ scx::ScriptRef* HostMapper::script_method(const scx::ScriptAuth& auth,
     }
     std::string s_target = a_target->get_string();
 
-    log("Mapping host pattern '" + s_pattern + "' to ID '" + s_target + "'"); 
+    LOG("Mapping host pattern '" + s_pattern + "' to ID '" + s_target + "'"); 
     m_aliases[s_pattern] = s_target;
     return 0;
   }
@@ -273,7 +277,8 @@ scx::ScriptRef* HostMapper::script_method(const scx::ScriptAuth& auth,
     }
     std::string s_target = a_target->get_string();
 
-    log("Redirecting host pattern '" + s_pattern + "' to ID '" + s_target + "'"); 
+    LOG("Redirecting host pattern '" + s_pattern +
+        "' to ID '" + s_target + "'"); 
     m_redirects[s_pattern] = s_target;
     return 0;
   }
@@ -315,10 +320,8 @@ bool HostMapper::lookup(const HostNameMap& map,
     }
     
   }
-  log(std::string("Lookup failure (BAILOUT): '") + pattern + "'");
+  LOG(std::string("Lookup failure (BAILOUT): '") + pattern + "'");
   return false;
 }
-
-
 
 };

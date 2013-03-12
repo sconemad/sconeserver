@@ -30,8 +30,11 @@ Free Software Foundation, Inc.,
 #include <sconex/StreamBuffer.h>
 #include <sconex/StreamDebugger.h>
 #include <sconex/ScriptEngine.h>
+#include <sconex/Log.h>
 
 SCONEX_MODULE(ServerModule);
+
+#define LOG(msg) scx::Log("server").submit(msg);
 
 //=============================================================================
 ServerModule::ServerModule()
@@ -81,7 +84,7 @@ bool ServerModule::connect(scx::Descriptor* endpoint,
   const scx::ScriptString* a_chain =
     scx::get_method_arg<scx::ScriptString>(args,0,"chain");
   if (!a_chain) {
-    log("No connection chain specified");
+    LOG("No connection chain specified");
     return false;
   }
   
@@ -170,7 +173,7 @@ scx::ScriptRef* ServerModule::script_method(const scx::ScriptAuth& auth,
 				       " already exists");
     }
 
-    log("Adding " + s_name);
+    LOG("Adding " + s_name);
     add(s_name, new ConnectionChain(this, s_name) );
 
     return 0;
@@ -191,7 +194,7 @@ scx::ScriptRef* ServerModule::script_method(const scx::ScriptAuth& auth,
 				       s_name + " not found");
     }
     
-    log("Removing " + s_name);
+    LOG("Removing " + s_name);
     delete (*it).second;
     m_chains.erase(it);
 

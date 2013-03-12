@@ -28,7 +28,10 @@ Free Software Foundation, Inc.,
 #include <http/AuthRealm.h>
 #include <http/Session.h>
 #include <sconex/ConfigFile.h>
+#include <sconex/Log.h>
 namespace http {
+
+#define LOG(msg) scx::Log("http.hosts").attach("id", m_id).submit(msg);
 
 //=========================================================================
 Host::Host(
@@ -74,9 +77,7 @@ bool Host::connect_request(scx::Descriptor* endpoint,
   DocRoot* docroot = get_docroot(profile);
   if (docroot == 0) {
     // Unknown profile
-    log("Unknown profile '" + profile +
-        "' for host '" + m_hostname + "'",
-        scx::Logger::Error);
+    LOG("Unknown profile '" + profile + "' for host '" + m_hostname + "'");
     response.set_status(http::Status::NotFound);
     return false;
   }
@@ -198,7 +199,7 @@ scx::ScriptRef* Host::script_method(const scx::ScriptAuth& auth,
     }
         
     scx::FilePath path = m_dir + a_path->get_string();
-    log("Adding profile '" + s_profile + "' dir '" + path.path() + "'");
+    LOG("Adding profile '" + s_profile + "' dir '" + path.path() + "'");
     DocRoot* profile = new DocRoot(m_module,*this,s_profile,path.path());
     m_docroots[s_profile] = new DocRoot::Ref(profile);
     return new DocRoot::Ref(profile);
@@ -217,7 +218,7 @@ scx::ScriptRef* Host::script_method(const scx::ScriptAuth& auth,
       return scx::ScriptError::new_ref("remove() Profile not found");
     }
         
-    log("Removing profile '" + s_profile + "'");
+    LOG("Removing profile '" + s_profile + "'");
     delete (*it).second;
     m_docroots.erase(it);
     return 0;

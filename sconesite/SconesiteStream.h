@@ -40,8 +40,7 @@ public:
 
   virtual std::string stream_status() const;
   
-  void log(const std::string message,
-	   scx::Logger::Level level = scx::Logger::Info);
+  void log(const std::string message);
 
 protected:
 

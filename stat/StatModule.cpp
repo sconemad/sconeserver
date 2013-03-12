@@ -27,6 +27,7 @@ Free Software Foundation, Inc.,
 #include <sconex/Module.h>
 #include <sconex/ScriptTypes.h>
 #include <sconex/Stream.h>
+#include <sconex/Log.h>
 
 SCONEX_MODULE(StatModule);
 
@@ -237,7 +238,7 @@ void StatModule::provide(const std::string& type,
   const scx::ScriptString* s_channel =
     scx::get_method_arg<scx::ScriptString>(args,0,"channel");
   if (!s_channel) {
-    log("No channel specified, stat counter not deployed");
+    scx::Log("stat").submit("No channel specified, stat counter not deployed");
     return;
   }
 

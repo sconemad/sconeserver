@@ -29,9 +29,11 @@ Free Software Foundation, Inc.,
 #include <sconex/StreamTransfer.h>
 #include <sconex/LineBuffer.h>
 #include <sconex/Kernel.h>
+#include <sconex/Log.h>
 
 #define PLS_PATH "/mnt/data/music/lettuce.m3u"
 
+#define LOG(msg) scx::Log("lettuce").submit(msg);
 
 //=========================================================================
 LettuceMediaStream::LettuceMediaStream(LettuceModule* module)
@@ -68,7 +70,7 @@ scx::Condition LettuceMediaStream::next_track()
       scx::FilePath path("/mnt/data/music");
       path += line;
       if (file->open(path,scx::File::Read) == scx::Ok) {
-        m_module.object()->log("--START '" + path.path() + "'"); 
+        LOG("--START '" + path.path() + "'"); 
         
         scx::StreamTransfer* xfer =
           new scx::StreamTransfer(file,1024);
@@ -80,7 +82,7 @@ scx::Condition LettuceMediaStream::next_track()
         return scx::Ok;
       }
 
-      m_module.object()->log("--ERROR opening '" + path.path() + "'"); 
+      LOG("--ERROR opening '" + path.path() + "'"); 
       delete file;
     }
   } while (c == scx::Ok);
@@ -97,10 +99,10 @@ scx::Condition LettuceMediaStream::event(scx::Stream::Event e)
 
     m_pls_file = new scx::File();
     if (m_pls_file->open(PLS_PATH,scx::File::Read) != scx::Ok) {
-      m_module.object()->log("Cannot open playlist '" PLS_PATH "'"); 
+      LOG("Cannot open playlist '" PLS_PATH "'"); 
       return scx::Close;
     }
-    m_module.object()->log("-START playlist '" PLS_PATH "'"); 
+    LOG("-START playlist '" PLS_PATH "'"); 
     
     m_pls_buffer = new scx::LineBuffer("pls");
     m_pls_file->add_stream(m_pls_buffer);
@@ -114,6 +116,6 @@ scx::Condition LettuceMediaStream::event(scx::Stream::Event e)
     }
   }
   
-  m_module.object()->log("-END playlist '" PLS_PATH "'"); 
+  LOG("-END playlist '" PLS_PATH "'"); 
   return scx::Ok;
 }

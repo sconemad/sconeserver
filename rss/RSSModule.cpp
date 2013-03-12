@@ -25,8 +25,11 @@ Free Software Foundation, Inc.,
 #include <sconex/Module.h>
 #include <sconex/Kernel.h>
 #include <sconex/Job.h>
+#include <sconex/Log.h>
 
 SCONEX_MODULE(RSSModule);
+
+#define LOG(msg) scx::Log("rss").submit(msg);
 
 // This is the period for running the RSS feed refresh job, and sets the
 // minumum refresh time for feeds.
@@ -98,7 +101,9 @@ bool RSSModule::close()
 //=========================================================================
 void RSSModule::refresh(bool force)
 {
-  if (force) log("Forcing refresh of all feeds");
+  if (force) {
+    LOG("Forcing refresh of all feeds");
+  }
 
   for (FeedMap::const_iterator it = m_feeds.begin();
        it != m_feeds.end();
@@ -172,7 +177,7 @@ scx::ScriptRef* RSSModule::script_method(const scx::ScriptAuth& auth,
     if (it != m_feeds.end()) 
       return scx::ScriptError::new_ref("Feed already exists");
         
-    log("Adding feed '" + s_id + "' URL '" + s_url + "'");
+    LOG("Adding feed '" + s_id + "' URL '" + s_url + "'");
     Feed* feed = new Feed(*this,s_id,s_url);
     m_feeds[s_id] = new Feed::Ref(feed);
 
@@ -192,7 +197,7 @@ scx::ScriptRef* RSSModule::script_method(const scx::ScriptAuth& auth,
     if (it == m_feeds.end()) 
       return scx::ScriptError::new_ref("Feed not found");
         
-    log("Removing feed '" + s_id + "'");
+    LOG("Removing feed '" + s_id + "'");
     Feed::Ref* fr = it->second;
     m_feeds.erase(it);
     delete fr;

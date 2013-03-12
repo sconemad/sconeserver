@@ -36,6 +36,7 @@ Free Software Foundation, Inc.,
 #include <sconex/Socket.h>
 #include <sconex/StreamSocket.h>
 #include <sconex/utils.h>
+#include <sconex/Log.h>
 
 const char* HTML_DOCTYPE = "<!doctype html>";
 
@@ -270,8 +271,7 @@ void RenderMarkupContext::handle_process(const std::string& name,
       }
     } catch (...) {
       delete result;
-      log("EXCEPTION in RenderMarkup::handle_process(scxp)",
-	  scx::Logger::Error);
+      log("EXCEPTION in RenderMarkup::handle_process(scxp)");
       throw;
     }
     delete result;
@@ -296,13 +296,16 @@ void RenderMarkupContext::handle_process(const std::string& name,
       //      script->clear();
       for (scx::ScriptTracer::ErrorList::iterator it = tracer.errors().begin();
 	   it != tracer.errors().end(); ++it) {
-	log(*it,scx::Logger::Error);
+        scx::ScriptTracer::ErrorEntry& err = *it;
+        scx::Log log("RenderMarkup");
+        log.attach("file", err.file);
+        log.attach("line", scx::ScriptInt::new_ref(err.line));
+        log.submit(err.error);
       }
 
     } catch (...) { 
       delete ret;
-      log("EXCEPTION in RenderMarkup::handle_process(scx)",
-	  scx::Logger::Error); 
+      log("EXCEPTION in RenderMarkup::handle_process(scx)"); 
       throw; 
     }
   }
@@ -571,8 +574,7 @@ scx::ScriptRef* RenderMarkupContext::script_method(const scx::ScriptAuth& auth,
 }
 
 //=========================================================================
-void RenderMarkupContext::log(const std::string message,
-			      scx::Logger::Level level)
+void RenderMarkupContext::log(const std::string message)
 {
-  m_stream.log(message,level);
+  m_stream.log(message);
 }

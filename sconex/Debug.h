@@ -157,12 +157,8 @@ public:
   void get_counters(InstanceCounterMap& counters);
   // Get the instance counters
   
-  void set_logger(Logger* logger);
-  // Set logging class for the debugger to use
-  
 private:
 
-  Logger* m_logger;
   InstanceCounterMap m_inst_counts;
   Mutex* m_mutex;
 

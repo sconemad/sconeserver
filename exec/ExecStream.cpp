@@ -33,6 +33,7 @@ Free Software Foundation, Inc.,
 #include <sconex/StreamDebugger.h>
 #include <sconex/Process.h>
 #include <sconex/User.h>
+#include <sconex/Log.h>
 
 //=========================================================================
 ExecStream::ExecStream(ExecModule* module,
@@ -145,13 +146,13 @@ bool ExecStream::spawn_process()
       m_process->set_env("HTTP_COOKIE",cookie);
     }
     
-    m_module.object()->log("Spawning CGI process '" + prog + "'");
+    msg->log("Spawning CGI process '" + prog + "'");
     
   } else if (m_args->size() > 0) {
 
     prog = m_args->get(0)->object()->get_string();
     m_process = new scx::Process(prog);
-    m_module.object()->log("Spawning process '" + prog + "'");
+    scx::Log("exec").submit("Spawning process '" + prog + "'");
   }
 
   // Set arguments

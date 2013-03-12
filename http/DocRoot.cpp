@@ -30,8 +30,11 @@ Free Software Foundation, Inc.,
 #include <sconex/utils.h>
 #include <sconex/Date.h>
 #include <sconex/FileStat.h>
+#include <sconex/Log.h>
 namespace http {
 
+#define LOG(msg) scx::Log("http.hosts"). \
+  attach("id", m_host.get_id() + "." + m_profile).submit(msg);
 
 //=========================================================================
 StreamMap::StreamMap(
@@ -120,12 +123,12 @@ bool DocRoot::connect_request(scx::Descriptor* endpoint,
     const scx::Uri& uri = request.get_uri();
     const std::string& uripath = scx::Uri::decode(uri.get_path());
     if (uripath.length() > 1 && uripath[0] == '/') {
-      log("Request uri starts with /",scx::Logger::Error);
+      LOG("Request uri starts with /");
       response.set_status(http::Status::Forbidden);
       return false;
 
     } else if (uripath.find("..") != std::string::npos) {
-      log("Request uri contains ..",scx::Logger::Error);
+      LOG("Request uri contains ..");
       response.set_status(http::Status::Forbidden);
       return false;
     }
@@ -183,7 +186,7 @@ bool DocRoot::connect_request(scx::Descriptor* endpoint,
     Session* s = m_module.get_sessions().lookup_session(scxid);
     if (s!=0) {
       // Existing session
-      log("Existing session: " + s->get_id());
+      LOG("Existing session: " + s->get_id());
 
     } else {
       if (!scxid.empty()) {
@@ -193,7 +196,7 @@ bool DocRoot::connect_request(scx::Descriptor* endpoint,
       // Create new session if auto_session enabled
       if (b_auto_session) {
 	s = m_module.get_sessions().new_session();
-	log("New session: " + s->get_id());
+        LOG("New session: " + s->get_id());
       }
     }
 
@@ -210,14 +213,14 @@ bool DocRoot::connect_request(scx::Descriptor* endpoint,
 
   // Check we have a stream map
   if (strmap == 0) {
-    log("No stream map found to handle request",scx::Logger::Error);
+    LOG("No stream map found to handle request");
     response.set_status(http::Status::ServiceUnavailable);
     return false;
   }
 
   // Connect the stream
   if (!strmap->connect(endpoint)) {
-    log("Failed to connect stream to handle request",scx::Logger::Error);
+    LOG("Failed to connect stream to handle request");
     response.set_status(http::Status::ServiceUnavailable);
     return false;
   }
@@ -378,8 +381,9 @@ scx::ScriptRef* DocRoot::script_method(const scx::ScriptAuth& auth,
       logargs += arg->object()->get_string();
     }
     
-    log("Mapping pattern '" + s_pattern + 
-	"' to stream type " + s_stream + "(" + logargs + ")");
+    LOG("Mapping pattern '" + s_pattern + 
+        "' to stream type " + s_stream +
+        "(" + logargs + ")");
     
     StreamMap* strmap = new StreamMap(m_module,s_stream,ml);
     m_extn_mods[s_pattern] = strmap;
@@ -414,8 +418,9 @@ scx::ScriptRef* DocRoot::script_method(const scx::ScriptAuth& auth,
       logargs += arg->object()->get_string();
     }
     
-    log("Mapping path '" + s_pattern + 
-	"' to stream type " + s_stream + "(" + logargs + ")");
+    LOG("Mapping path '" + s_pattern + 
+        "' to stream type " + s_stream +
+        "(" + logargs + ")");
     
     StreamMap* strmap = new StreamMap(m_module,s_stream,ml);
     m_path_mods[s_pattern] = strmap;
@@ -438,7 +443,8 @@ scx::ScriptRef* DocRoot::script_method(const scx::ScriptAuth& auth,
     }
     std::string s_realm = a_realm->get_string();
 
-    log("Mapping path '" + s_pattern + "' to realm " + s_realm);
+    LOG("Mapping path '" + s_pattern +
+        "' to realm " + s_realm);
     m_realm_maps[s_pattern] = s_realm;
 
     return 0;
@@ -486,13 +492,12 @@ bool DocRoot::check_auth(Request& request, Response& response)
     bool passed = !BAD_SCRIPTREF(result);
     delete result;
     if (passed) {
-      log("Auth passed for realm '" + realm_name + 
-	  "' user='" + user + "'",scx::Logger::Info);
+      LOG("Auth passed for realm '" + realm_name + "' user='" + user + "'");
       request.set_auth_user(user);
     } else {
-      log("Auth failed for realm '" + realm_name + 
-	  "' user='" + user + "'",scx::Logger::Info);
-      response.set_header("WWW-AUTHENTICATE","Basic realm=\"" + realm_name + "\"");
+      LOG("Auth failed for realm '" + realm_name + "' user='" + user + "'");
+      response.set_header("WWW-AUTHENTICATE",
+                          "Basic realm=\"" + realm_name + "\"");
       return false;
     }
   }

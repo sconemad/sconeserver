@@ -24,11 +24,14 @@ Free Software Foundation, Inc.,
 #include "SQLiteProfile.h"
 #include "SQLiteQuery.h"
 #include <sconex/ScriptTypes.h>
+#include <sconex/Log.h>
 
 namespace sqlite {
 
 SCONEX_MODULE(SQLiteModule);
 
+#define LOG(msg) scx::Log("sqlite").submit(msg);
+  
 //=========================================================================
 SQLiteModule::SQLiteModule(
 ) : scx::Module("sqlite",scx::version())
@@ -175,7 +178,7 @@ void SQLiteModule::provide(const std::string& type,
                                 a_dbfile->get_string());
     
     m_profiles[s_profile] = new SQLiteProfile::Ref(profile);
-    log("Adding profile '" + s_profile + 
+    LOG("Adding profile '" + s_profile + 
 	"' dbfile '" + a_dbfile->get_string() + "'");
   }
 

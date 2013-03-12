@@ -25,7 +25,6 @@ Free Software Foundation, Inc.,
 #include <sconex/Multiplexer.h>
 #include <sconex/Console.h>
 #include <sconex/File.h>
-#include <sconex/Logger.h>
 #include <sconex/Debug.h>
 using namespace scx;
 
@@ -145,10 +144,6 @@ ScriptRef* ArgTest::script_method(const ScriptAuth& auth,
 //=============================================================================
 int main(int argc,char* argv[])
 {
-  //  Logger* logger = new scx::Logger("scones.log");
-  Logger* logger = new scx::Logger("");
-  Debug::get()->set_logger(logger);
-
   con = new Console();
   std::string filename;
   

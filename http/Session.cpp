@@ -24,6 +24,7 @@ Free Software Foundation, Inc.,
 #include <http/HTTPModule.h>
 #include <sconex/ConfigFile.h>
 #include <sconex/Kernel.h>
+#include <sconex/Log.h>
 namespace http {
 
 class SessionManager;
@@ -236,7 +237,8 @@ int SessionManager::check_sessions()
        it != m_sessions.end(); ) {
     Session* session = it->second->object();
     if (!session->valid() && session->num_refs() == 1) {
-      log("Removing session " + session->get_id() + " due to timeout");
+      scx::Log("http").submit("Removing session " + session->get_id() +
+                              " due to timeout");
       delete session;
       m_sessions.erase(it++);
       ++n;

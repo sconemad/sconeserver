@@ -26,6 +26,7 @@ Free Software Foundation, Inc.,
 #include <sconex/Module.h>
 #include <sconex/ScriptTypes.h>
 #include <sconex/Process.h>
+#include <sconex/Log.h>
 
 SCONEX_MODULE(ExecModule);
 
@@ -152,7 +153,7 @@ void ExecModule::provide(const std::string& type,
 
   const int max_args = 64;
   if (argl->size() >= max_args) {
-    log("Too many arguments to exec call",scx::Logger::Error);
+    scx::Log("exec").submit("Too many arguments to exec call");
     return;
   }
 

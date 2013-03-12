@@ -24,7 +24,6 @@ Free Software Foundation, Inc.,
 
 #include <sconex/Stream.h>
 #include <sconex/File.h>
-#include <sconex/Logger.h>
 
 class TFTPModule;
 
@@ -48,7 +47,7 @@ private:
   bool write_data(unsigned short block);
   bool write_error(unsigned short code, const std::string& message);
 
-  void log(const std::string& message, scx::Logger::Level level = scx::Logger::Info);
+  void log(const std::string& message);
  
   scx::ScriptRefTo<TFTPModule> m_module;
   std::string m_profile;

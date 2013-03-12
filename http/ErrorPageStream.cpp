@@ -94,16 +94,6 @@ private:
 
 
 //=========================================================================
-void ErrorPageStream::log(const std::string message, scx::Logger::Level level)
-{
-  http::MessageStream* msg = GET_HTTP_MESSAGE();
-  if (msg) {
-    http::Request& req = const_cast<http::Request&>(msg->get_request());
-    m_module.object()->log(req.get_id() + " " + message,level);
-  }
-}
-
-//=========================================================================
 scx::Condition ErrorPageStream::event(scx::Stream::Event e) 
 {
   if (e == scx::Stream::Opening) {
@@ -163,12 +153,12 @@ scx::Condition ErrorPageStream::event(scx::Stream::Event e)
         }
       */
       if (m_file_mode == false) {
-	log("Sending '" + status.string() + "' response using basic mode"); 
+	msg->log("Sending '" + status.string() + "' response using basic mode"); 
 	enable_event(scx::Stream::Writeable,true);
       }
       
     } else {
-      log("Sending '" + status.string() + "' header-only response");
+      msg->log("Sending '" + status.string() + "' header-only response");
       return scx::Close;
     }
   }

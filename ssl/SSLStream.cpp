@@ -24,6 +24,7 @@ Free Software Foundation, Inc.,
 #include "SSLChannel.h"
 
 #include <sconex/StreamSocket.h>
+#include <sconex/Log.h>
 
 // Uncomment to enable debug info for the SSL Stream
 //#define SSLStream_DEBUG_LOG(m) DEBUG_LOG(m)
@@ -38,6 +39,8 @@ Free Software Foundation, Inc.,
 #ifndef scxsp_DEBUG_LOG
 #  define scxsp_DEBUG_LOG(m)
 #endif
+
+#define LOG(msg) scx::Log("ssl").submit(msg);
 
 BIO *BIO_new_scxsp(SSLStream* scxsp,int close_flag);
 
@@ -181,12 +184,12 @@ scx::Condition SSLStream::init_ssl()
   
   SSLChannel* channel = m_module.object()->find_channel(m_channel);
   if (!channel) {
-    m_module.object()->log("init_ssl) Invalid SSL channel",scx::Logger::Error);
+    LOG("init_ssl: Invalid SSL channel");
     return scx::Error;
   }
   m_ssl = channel->new_ssl();
   if (m_ssl == 0) {
-    m_module.object()->log("init_ssl) Invalid SSL object",scx::Logger::Error);
+    LOG("init_ssl: Invalid SSL object");
     return scx::Error;
   }
   

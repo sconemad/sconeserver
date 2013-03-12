@@ -23,7 +23,6 @@ Free Software Foundation, Inc.,
 #define ScriptBase_h
 
 #include <sconex/sconex.h>
-#include <sconex/Logger.h>
 namespace scx {
 
 class ScriptStatement;
@@ -169,13 +168,6 @@ public:
 
   // Get the number of ScriptRefs currently referring to this object
   int num_refs() const;
-
-  // Log a message, default implementation passes down to parent
-  virtual void log(const std::string& message,
-		   Logger::Level level = Logger::Info,
-                   const std::string& context = "");
-
-  virtual std::string get_log_context() const;
 
 protected:
 

@@ -28,7 +28,6 @@ Free Software Foundation, Inc.,
 #include <http/Client.h>
 
 #include <sconex/ScriptTypes.h>
-#include <sconex/Logger.h>
 #include <sconex/ModuleInterface.h>
 #include <sconex/StreamDebugger.h>
 #include <sconex/ScriptExpr.h>

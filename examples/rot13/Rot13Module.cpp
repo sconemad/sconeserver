@@ -6,6 +6,7 @@ Copyright (c) 2000-2011 Andrew Wedgbury <wedge@sconemad.com> */
 
 #include "sconex/ModuleInterface.h"
 #include "sconex/ScriptTypes.h"
+#include "sconex/Log.h"
 
 // The following must be present to allow the resulting
 // shared object to be used as a sconex module.
@@ -57,7 +58,7 @@ void Rot13Module::provide(const std::string& type,
     
     // Check arguments
     if (!a_input || !a_output) {
-      log("Invalid options specified");
+      scx::Log("rot13").submit("Invalid options specified");
       return;
     }
     

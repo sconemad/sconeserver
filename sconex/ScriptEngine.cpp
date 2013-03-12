@@ -22,6 +22,7 @@ Free Software Foundation, Inc.,
 #include <sconex/ScriptEngine.h>
 #include <sconex/ScriptStatement.h>
 #include <sconex/Module.h>
+#include <sconex/Log.h>
 namespace scx {
 
 // Uncomment to enable debug info
@@ -468,12 +469,16 @@ bool ScriptEngineExec::event_runnable()
   // Output any errors
   for (ScriptTracer::ErrorList::iterator it = m_tracer.errors().begin();
        it != m_tracer.errors().end(); ++it) {
-    if (m_ctx) {
-      m_ctx->object()->log(*it,scx::Logger::Error);
-    }
+    ScriptTracer::ErrorEntry& err = *it;
+    Log log("ScriptEngine");
+    log.attach("file", err.file);
+    log.attach("line", ScriptInt::new_ref(err.line));
+    log.submit(err.error);
+
     if (m_error_des) {
-      m_error_des->write(*it);
-      m_error_des->write("\n");
+      std::ostringstream oss;
+      oss << err.file << ":" << err.line << ": " << err.error << "\n";
+      m_error_des->write(oss.str());
     }    
   }
   m_tracer.errors().clear();
@@ -499,9 +504,7 @@ bool ScriptEngineExec::event_error()
   default: oss << "unknown"; break;
   }
   oss << " error";
-  if (m_ctx) {
-    m_ctx->object()->log(oss.str(),scx::Logger::Error);
-  }
+  Log("ScriptEngine").submit(oss.str());
   if (m_error_des) {
     oss << "\n";
     m_error_des->write(oss.str());

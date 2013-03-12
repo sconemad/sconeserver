@@ -31,10 +31,13 @@ Free Software Foundation, Inc.,
 #include <sconex/ScriptTypes.h>
 #include <sconex/Stream.h>
 #include <sconex/Kernel.h>
+#include <sconex/Log.h>
 
 SCONEX_MODULE(SconesiteModule);
 
 #define SCONESITE_JOB_PERIOD 7
+
+#define LOG(msg) scx::Log("sconesite").submit(msg);
 
 //=========================================================================
 class SconesiteJob : public scx::PeriodicJob {
@@ -106,12 +109,12 @@ void SconesiteModule::provide(const std::string& type,
   const scx::ScriptString* profile_name =
     scx::get_method_arg<scx::ScriptString>(args,0,"profile");
   if (!profile_name) {
-    log("No profile specified, aborting connection");
+    LOG("No profile specified, aborting connection");
   }
 
   Profile* profile = lookup_profile(profile_name->get_string());
   if (!profile) {
-    log("Unknown profile '"+profile_name->get_string()+
+    LOG("Unknown profile '"+profile_name->get_string()+
 	"' specified, aborting connection");
   }
   
@@ -126,14 +129,14 @@ void SconesiteModule::provide(const std::string& type,
   const scx::ScriptString* name =
     scx::get_method_arg<scx::ScriptString>(args,0,"name");
   if (!name) {
-    log("No article name specified");
+    LOG("No article name specified");
     return;
   }  
 
   const scx::ScriptString* root =
     scx::get_method_arg<scx::ScriptString>(args,1,"root");
   if (!root) {
-    log("No article root specified");
+    LOG("No article root specified");
     return;
   }  
 
@@ -224,7 +227,7 @@ scx::ScriptRef* SconesiteModule::script_method(const scx::ScriptAuth& auth,
     if (a_dbtype) s_dbtype = a_dbtype->get_string();
     
     scx::FilePath path = host->get_path();
-    log("Adding profile '" + s_profile + "' dir '" + path.path() +
+    LOG("Adding profile '" + s_profile + "' dir '" + path.path() +
         "' dbtype '" + s_dbtype + "'");
     Profile* profile = new Profile(*this,s_profile,path,s_dbtype);
     m_profiles[s_profile] = new Profile::Ref(profile);

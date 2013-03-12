@@ -26,6 +26,7 @@ Free Software Foundation, Inc.,
 #include <sconex/SocketAddress.h>
 #include <sconex/Stream.h>
 #include <sconex/ScriptTypes.h>
+#include <sconex/Log.h>
 
 //=========================================================================
 LettuceBuffer::LettuceBuffer(
@@ -210,7 +211,7 @@ LettuceCommandStream::~LettuceCommandStream()
 scx::Condition LettuceCommandStream::event(scx::Stream::Event e) 
 {
   if (e == scx::Stream::Opening) {
-    m_module.object()->log("Opening lettuce command stream");
+    scx::Log("lettuce").submit("Opening lettuce command stream");
     endpoint().set_timeout(scx::Time(125));
   } 
 
@@ -246,7 +247,7 @@ scx::Condition LettuceCommandStream::event(scx::Stream::Event e)
       oss << a_name->get_string();
     }
     oss << ": " << a_data->get_string();
-    m_module.object()->log(oss.str());
+    scx::Log("lettuce").submit(oss.str());
     
     endpoint().reset_timeout();
 

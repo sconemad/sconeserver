@@ -34,16 +34,6 @@ Free Software Foundation, Inc.,
 namespace http {
   
 //=========================================================================
-void GetFileStream::log(const std::string message, scx::Logger::Level level)
-{
-  http::MessageStream* msg = GET_HTTP_MESSAGE();
-  if (msg) {
-    http::Request& req = const_cast<http::Request&>(msg->get_request());
-    m_module.object()->log(req.get_id() + " " + message,level);
-    }
-}
-
-//=========================================================================
 scx::Condition GetFileStream::event(scx::Stream::Event e) 
 {
   if (e == scx::Stream::Opening) {
@@ -62,7 +52,7 @@ scx::Condition GetFileStream::event(scx::Stream::Event e)
     scx::FilePath path = req.get_path();
     scx::File* file = new scx::File();
     if (file->open(path,scx::File::Read) != scx::Ok) {
-      log("Cannot open file '" + path.path() + "'"); 
+      msg->log("Cannot open file '" + path.path() + "'"); 
       resp.set_status(http::Status::Forbidden);
       delete file;
       return scx::Close;
@@ -76,7 +66,7 @@ scx::Condition GetFileStream::event(scx::Stream::Event e)
     if (!mod.empty()) {
       scx::Date dmod = scx::Date(mod);
       if (lastmod <= dmod) {
-	log("File is not modified"); 
+	msg->log("File is not modified"); 
 	resp.set_status(http::Status::NotModified);
 	delete file;
 	return scx::Close;
@@ -108,12 +98,12 @@ scx::Condition GetFileStream::event(scx::Stream::Event e)
 
     if (req.get_method() == "HEAD") {
       // Don't actually send the file, just the headers
-      log("Sending headers for '" + path.path() + "'"); 
+      msg->log("Sending headers for '" + path.path() + "'"); 
       delete file;
       return scx::Close;
     }
     
-    log("Sending '" + path.path() + "'"); 
+    msg->log("Sending '" + path.path() + "'"); 
     
     const int MAX_BUFFER_SIZE = 65536;
     

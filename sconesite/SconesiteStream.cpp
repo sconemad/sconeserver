@@ -41,6 +41,7 @@ Free Software Foundation, Inc.,
 #include <sconex/Kernel.h>
 #include <sconex/StreamDebugger.h>
 #include <sconex/FilePath.h>
+#include <sconex/Log.h>
 
 //=========================================================================
 // ParamReaderStream - Stream for reading parameters in mime headers
@@ -120,12 +121,12 @@ std::string SconesiteStream::stream_status() const
 }
 
 //=========================================================================
-void SconesiteStream::log(const std::string message, scx::Logger::Level level)
+void SconesiteStream::log(const std::string message)
 {
   http::MessageStream* msg = GET_HTTP_MESSAGE();
   if (msg) {
     http::Request& req = const_cast<http::Request&>(msg->get_request());
-    m_profile.log(req.get_id() + " " + message,level);
+    scx::Log("sconesite").attach("id",req.get_id()).submit(message);
   }
 }
 

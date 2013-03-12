@@ -31,6 +31,9 @@ Free Software Foundation, Inc.,
 #include <sconex/Module.h>
 #include <sconex/ScriptTypes.h>
 #include <sconex/Stream.h>
+#include <sconex/Log.h>
+
+#define LOG(msg) scx::Log("server").attach("id", m_name).submit(msg);
 
 //=============================================================================
 ConnectionChain::ConnectionChain(ServerModule* module,
@@ -147,7 +150,7 @@ scx::ScriptRef* ConnectionChain::script_method(const scx::ScriptAuth& auth,
       logargs += arg->object()->get_string();
     }
     
-    log("Adding " + s_type + "(" + logargs + ")");
+    LOG("Adding " + s_type + "(" + logargs + ")");
     add(new ConnectionNode(m_module.object(), s_type, ml));
 
     return 0;
@@ -165,7 +168,7 @@ scx::ScriptRef* ConnectionChain::script_method(const scx::ScriptAuth& auth,
     ConnectionNodeList::iterator it = m_nodes.begin();
     while (it != m_nodes.end()) {
       if (s_type == (*it)->get_name()) {
-        //log("Removing " + s_name);
+        LOG("Removing " + s_type);
         delete (*it);
         m_nodes.erase(it);
         return 0;
@@ -198,7 +201,7 @@ scx::ScriptRef* ConnectionChain::script_method(const scx::ScriptAuth& auth,
 	return scx::ScriptError::new_ref("Unable to bind " + sa->get_string());
       }
 
-      log("Listening on " + sa->get_string());
+      LOG("Listening on " + sa->get_string());
       
       scx::Kernel::get()->connect(ls);
 
@@ -212,7 +215,7 @@ scx::ScriptRef* ConnectionChain::script_method(const scx::ScriptAuth& auth,
 	return scx::ScriptError::new_ref("Unable to bind " + sa->get_string());
       }
       
-      log("Listening on " + sa->get_string());
+      LOG("Listening on " + sa->get_string());
       
       ServerDatagramMultiplexer* mp = 
 	new ServerDatagramMultiplexer(m_module.object(), m_name);
@@ -239,7 +242,7 @@ scx::ScriptRef* ConnectionChain::script_method(const scx::ScriptAuth& auth,
     }
 
     if (connect(ds)) {
-      log("Listening (all) on " + sa->get_string());
+      LOG("Listening (all) on " + sa->get_string());
       scx::Kernel::get()->connect(ds);
     } else {
       delete ds;
@@ -248,12 +251,6 @@ scx::ScriptRef* ConnectionChain::script_method(const scx::ScriptAuth& auth,
   }
   
   return scx::ScriptObject::script_method(auth,ref,name,args);
-}
-
-//=============================================================================
-std::string ConnectionChain::get_log_context() const
-{
-  return m_name;
 }
 
 //###---

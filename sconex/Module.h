@@ -27,7 +27,6 @@ Free Software Foundation, Inc.,
 #include <sconex/ScriptBase.h>
 #include <sconex/FilePath.h>
 #include <sconex/Date.h>
-#include <sconex/Logger.h>
 
 namespace scx {
 
@@ -70,15 +69,6 @@ public:
   void set_var_path(const FilePath& path);
   FilePath get_var_path() const;
   
-  // Log message with module name
-  virtual void log(const std::string& message,
-                   Logger::Level level = Logger::Info,
-                   const std::string& context = "");
-  
-  // Set logger to use
-  void log_string(const std::string& str,Logger::Level level);
-  virtual void set_logger(Logger* logger);
-
   // ScriptObject interface:
   virtual std::string get_string() const;
 
@@ -129,9 +119,6 @@ private:
   // Parent module
   Module* m_parent_module;
   
-  // Logger instance
-  Logger* m_logger;
-
 };
 
 };

@@ -73,10 +73,11 @@ ScriptRef* ScriptTracer::evaluate(const std::string& expr,
   ScriptRef* ret = m_expr->evaluate(expr);
 
   if (ret && BAD_SCRIPTREF(ret)) {
-    std::ostringstream oss;
-    oss << m_file << ":" << (m_line_offset + ctx->get_line()) << ": " 
-	<< ret->object()->get_string() << " (" << expr << ")";
-    m_errors.push_back(oss.str());
+    ErrorEntry e;
+    e.file = m_file;
+    e.line = m_line_offset + ctx->get_line();
+    e.error = ret->object()->get_string();
+    m_errors.push_back(e);
   }
 
   return ret;

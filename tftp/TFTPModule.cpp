@@ -28,6 +28,7 @@ Free Software Foundation, Inc.,
 
 #include <sconex/ModuleInterface.h>
 #include <sconex/ScriptTypes.h>
+#include <sconex/Log.h>
 
 SCONEX_MODULE(TFTPModule);
 
@@ -169,7 +170,7 @@ void TFTPModule::provide(const std::string& type,
   const scx::ScriptString* profile =
     scx::get_method_arg<scx::ScriptString>(args,0,"profile");
   if (!profile) {
-    log("No TFTP profile specified, aborting connection");
+    scx::Log("tftp").submit("No TFTP profile specified, aborting connection");
     return;
   }
 

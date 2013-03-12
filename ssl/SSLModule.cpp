@@ -27,6 +27,7 @@ Free Software Foundation, Inc.,
 #include <sconex/ModuleInterface.h>
 #include <sconex/StreamDebugger.h>
 #include <sconex/ScriptTypes.h>
+#include <sconex/Log.h>
 
 #include <openssl/ssl.h>
 
@@ -228,7 +229,7 @@ void SSLModule::provide(const std::string& type,
   const scx::ScriptString* channel =
     scx::get_method_arg<scx::ScriptString>(args,0,"channel");
   if (!channel) {
-    log("No SSL channel specified, aborting connection");
+    scx::Log("ssl").submit("No SSL channel specified, aborting connection");
     return;
   }
 

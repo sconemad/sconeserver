@@ -65,8 +65,8 @@ public:
 
   HTTPModule& get_module();
 
-  void log(const std::string& message,scx::Logger::Level level = scx::Logger::Info);
   // Log message with id
+  void log(const std::string& message);
 
   // Request:
   const Request& get_request() const;

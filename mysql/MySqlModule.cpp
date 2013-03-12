@@ -24,11 +24,14 @@ Free Software Foundation, Inc.,
 #include "MySqlProfile.h"
 #include "MySqlQuery.h"
 #include <sconex/ScriptTypes.h>
+#include <sconex/Log.h>
 
 namespace mysql {
 
 SCONEX_MODULE(MySqlModule);
 
+#define LOG(msg) scx::Log("mysql").submit(msg);
+  
 //=========================================================================
 MySqlModule::MySqlModule(
 ) : scx::Module("mysql",scx::version())
@@ -152,7 +155,7 @@ void MySqlModule::provide(const std::string& type,
   const scx::ScriptString* a_profile = 
     scx::get_method_arg<scx::ScriptString>(args,0,"profile");
   if (!a_profile) {
-    DEBUG_LOG("No profile specified");
+    LOG("No profile specified");
     return;
   }
   std::string s_profile = a_profile->get_string();
@@ -166,21 +169,21 @@ void MySqlModule::provide(const std::string& type,
     const scx::ScriptString* a_db =
       scx::get_method_arg<scx::ScriptString>(args,1,"database");
     if (!a_db) {
-      DEBUG_LOG("No database specified");
+      LOG("No database specified");
       return;
     }
     
     const scx::ScriptString* a_user =
       scx::get_method_arg<scx::ScriptString>(args,2,"username");
     if (!a_user) {
-      DEBUG_LOG("No username specified");
+      LOG("No username specified");
       return;
     }
     
     const scx::ScriptString* a_pass =
       scx::get_method_arg<scx::ScriptString>(args,3,"password");
     if (!a_pass) {
-      DEBUG_LOG("No password specified");
+      LOG("No password specified");
       return;
     }
 
@@ -191,7 +194,7 @@ void MySqlModule::provide(const std::string& type,
 			       a_pass->get_string());
 
     m_profiles[s_profile] = new MySqlProfile::Ref(profile);
-    log("Adding profile '" + s_profile + 
+    LOG("Adding profile '" + s_profile + 
 	"' db '" + a_db->get_string() + 
 	"' user '" + a_user->get_string() + "'");
   }

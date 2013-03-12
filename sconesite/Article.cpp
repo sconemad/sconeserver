@@ -32,6 +32,9 @@ Free Software Foundation, Inc.,
 #include <sconex/FilePath.h>
 #include <sconex/ScriptExpr.h>
 #include <sconex/ScriptStatement.h>
+#include <sconex/Log.h>
+
+#define LOG(msg) scx::Log("sconesite").submit(msg);
 
 //=========================================================================
 bool ArticleSortDate(const Article* a, const Article* b)
@@ -328,7 +331,7 @@ scx::ScriptRef* Article::script_method(const scx::ScriptAuth& auth,
     const scx::FilePath& srcpath = a_file->get_path();
 
     scx::FilePath dstpath = get_filepath();
-    log("Update article moving '" + srcpath.path() + 
+    LOG("Update article moving '" + srcpath.path() + 
 	"' to '" + dstpath.path() + "'");
     if (!scx::FilePath::move(srcpath,dstpath))
       return scx::ScriptError::new_ref("Could not replace article");
@@ -346,7 +349,7 @@ scx::ScriptRef* Article::script_method(const scx::ScriptAuth& auth,
     const scx::FilePath& srcpath = a_file->get_path();
 
     scx::FilePath dstpath = get_root() + a_file->get_filename();
-    log("Add file moving '" + srcpath.path() + 
+    LOG("Add file moving '" + srcpath.path() + 
 	"' to '" + dstpath.path() + "'");
     if (!scx::FilePath::move(srcpath,dstpath)) 
       return scx::ScriptError::new_ref("Could not move file");

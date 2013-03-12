@@ -21,7 +21,7 @@ Free Software Foundation, Inc.,
 
 #include "smtp/SMTPClient.h"
 
-#include <sconex/Logger.h>
+#include <sconex/Log.h>
 #include <sconex/VersionTag.h>
 #include <sconex/utils.h>
 #include <sconex/Kernel.h>
@@ -31,6 +31,8 @@ Free Software Foundation, Inc.,
 #include <sconex/ScriptTypes.h>
 namespace smtp {
 
+#define LOG(msg) scx::Log("smtp").submit(msg);
+  
 //=============================================================================
 MessageHeader::MessageHeader()
 {
@@ -214,12 +216,9 @@ scx::ScriptRef* SMTPClient::send(const std::string& message)
 
   // Log result
   if (m_result != Success) {
-    m_module.object()->log("SMTP session completed with error:" + 
-			   m_result_str,
-			   scx::Logger::Error);
+    LOG("SMTP session completed with error:" + m_result_str);
   } else {
-    m_module.object()->log("SMTP session completed succesfully: " + 
-			   m_result_str);
+    LOG("SMTP session completed succesfully: " + m_result_str);
   }
   
   return scx::ScriptInt::new_ref(m_result == Success); 

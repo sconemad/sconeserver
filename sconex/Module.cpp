@@ -23,7 +23,7 @@ Free Software Foundation, Inc.,
 #include <sconex/ModuleLoader.h>
 #include <sconex/ConfigFile.h>
 #include <sconex/ScriptExpr.h>
-#include <sconex/Logger.h>
+#include <sconex/Log.h>
 #include <sconex/FileStat.h>
 #include <sconex/FileDir.h>
 #include <sconex/Kernel.h>
@@ -38,8 +38,7 @@ Module::Module(
     m_version(version),
     m_mod_path(""),
     m_var_path(""),
-    m_parent_module(0),
-    m_logger(0)
+    m_parent_module(0)
 {
   DEBUG_COUNT_CONSTRUCTOR(Module);
   m_loadtime = Date::now();
@@ -48,8 +47,6 @@ Module::Module(
 //=============================================================================
 Module::~Module()
 {
-  delete m_logger;
-
   DEBUG_COUNT_DESTRUCTOR(Module);
 }
 
@@ -158,8 +155,7 @@ ScriptRef* Module::script_op(const ScriptAuth& auth,
     std::string name = right->object()->get_string();
 
     // See if its a method
-    if ("set_log" == name ||
-	"log" == name ||
+    if ("log" == name ||
 	"insmod" == name ||
 	"rmmod" == name ||
 	"load_config" == name ||
@@ -235,34 +231,16 @@ ScriptRef* Module::script_method(const ScriptAuth& auth,
 				 const std::string& name,
 				 const ScriptRef* args)
 {
-  if ("set_log" == name) {
-    if (!auth.admin()) return ScriptError::new_ref("Not permitted");
-
-    const ScriptString* file = get_method_arg<ScriptString>(args,0,"file");
-    if (file) {
-      FilePath path = get_var_path() + file->get_string();
-      log("Setting log file to '" + path.path() + "'");
-      set_logger(new scx::Logger(path.path()));
-    } else {
-      log("Closing log file");
-      set_logger(0);
-    }
-    return 0;
-  }
-
   if ("log" == name) {
     const ScriptString* message = 
       get_method_arg<ScriptString>(args,0,"message");
-    const ScriptInt* a_level = 
-      get_method_arg<ScriptInt>(args,1,"level");
-    Logger::Level level = a_level ?
-      (Logger::Level)a_level->get_int() : Logger::Info;
     if (message) {
-      log(message->get_string(),level);
+      // Use the module name as the category
+      Log(m_name).submit(message->get_string());
     }
     return 0;
   }
-
+  
   if ("insmod" == name) {
     if (!auth.admin()) return ScriptError::new_ref("Not permitted");
 
@@ -284,7 +262,7 @@ ScriptRef* Module::script_method(const ScriptAuth& auth,
       remove_module(existing_loader);
     }
 
-    log("Adding module [" + name + "]");
+    Log("loader").submit("Adding module [" + name + "]");
     
     ModuleLoader* loader = new ModuleLoader(name,this);
     add_module(loader);
@@ -325,7 +303,7 @@ ScriptRef* Module::script_method(const ScriptAuth& auth,
       }
     }
     
-    log("Removing module [" + name + "]");
+    Log("loader").submit("Removing module [" + name + "]");
     remove_module(loader);
     return 0;
   }
@@ -549,43 +527,17 @@ bool Module::load_module_dir(FilePath path)
 
   // Log a summary of what happened
   if (errors.size() == 0) {
-    log("All modules loaded succesfully", Logger::Info);
+    Log("loader").submit("All modules loaded succesfully");
   } else {
-    log("Some module(s) failed to load:", Logger::Error);
+    Log("loader").submit("Some module(s) failed to load:");
     for (std::map<std::string,std::string>::const_iterator it = errors.begin();
          it != errors.end(); ++it) {
-      log(std::string("Module [") + it->first + "] " + it->second, Logger::Error);
+      Log("loader").submit(std::string("Module [") + it->first + "] " +
+                           it->second);
     }
   }
   
   return true;
-}
-
-//=============================================================================
-void Module::log(const std::string& message,
-                 Logger::Level level,
-                 const std::string& context)
-{
-  std::string ctx = m_name;
-  if (!context.empty()) ctx += "." + context;
-  log_string("[" + ctx + "] " + message,level);
-}
-
-//=============================================================================
-void Module::log_string(const std::string& str,Logger::Level level)
-{
-  if (m_logger) {
-    m_logger->log(str,level);
-  } else if (m_parent_module && m_parent_module != this) {
-    m_parent_module->log_string(str,level);
-  }
-}
-
-//=============================================================================
-void Module::set_logger(Logger* logger)
-{
-  delete m_logger;
-  m_logger = logger;
 }
 
 //=============================================================================

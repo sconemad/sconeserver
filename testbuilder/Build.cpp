@@ -26,6 +26,7 @@ Free Software Foundation, Inc.,
 #include <sconex/LineBuffer.h>
 #include <sconex/Process.h>
 #include <sconex/File.h>
+#include <sconex/Log.h>
 
 const char TESTBUILDER_STAT_FILE[] = "testbuilder.stat";
 
@@ -251,5 +252,5 @@ std::string Build::get_state_str(State state)
 //=========================================================================
 void Build::log(const std::string& message)
 {
-  m_module.log("{BUILD:" + m_id + "} " + message);
+  scx::Log("testbuilder").submit("{BUILD:" + m_id + "} " + message);
 }

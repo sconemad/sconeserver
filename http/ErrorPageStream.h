@@ -40,9 +40,6 @@ public:
 
 protected:
 
-  void log(const std::string message,
-	   scx::Logger::Level level = scx::Logger::Info);
-
   virtual scx::Condition event(scx::Stream::Event e);
 
   void send_basic_page();

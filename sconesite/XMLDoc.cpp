@@ -29,6 +29,7 @@ Free Software Foundation, Inc.,
 #include <sconex/FileStat.h>
 #include <sconex/utils.h>
 #include <sconex/ScriptTypes.h>
+#include <sconex/Log.h>
 
 scx::Mutex* XMLDoc::m_clients_mutex = 0;
 
@@ -391,7 +392,7 @@ scx::ScriptStatement::Ref* XMLDoc::parse_script(char* data, int line)
       default: oss << "unknown"; break;
     }
     oss << " error";
-    log(oss.str(),scx::Logger::Error);
+    scx::Log("sconesite").submit(oss.str());
   }
   
   return root;
