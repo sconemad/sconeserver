@@ -20,6 +20,7 @@ Free Software Foundation, Inc.,
 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA */
 
 #include <sconex/Kernel.h>
+#include <sconex/File.h>
 
 #ifdef HAVE_GETOPT_H
 #  include <getopt.h>
@@ -43,9 +44,41 @@ static bool opt_load_config = true;
 static std::string conf_path = CONF_PATH;
 static std::string mod_path = MOD_PATH;
 static std::string var_path = VAR_PATH;
+static std::string pid_file;
+
 
 //===========================================================================
-void empty_handler(int /*sig*/) { }
+// PidFile - Creates a locked file containing the process ID, which is
+// removed on destruction.
+class PidFile {
+public:
+  PidFile() {}
+  
+  bool create(const scx::FilePath& path) {
+    m_path = path;
+    if (m_path.path().empty()) return true;
+    if (scx::Ok != m_file.open(m_path, scx::File::Write | scx::File::Create |
+                               scx::File::Truncate | scx::File::Lock, 0644)) {
+      // Failed to open or lock the pidfile
+      return false;
+    }
+    std::ostringstream oss;
+    oss << getpid() << "\n";
+    m_file.write(oss.str());
+    return true;
+  }
+  
+  ~PidFile() {
+    if (m_file.is_open()) {
+      m_file.close();
+      scx::FilePath::rmfile(m_path);
+    }
+  }
+
+private:
+  scx::FilePath m_path;
+  scx::File m_file;
+};
 
 
 //===========================================================================
@@ -114,6 +147,7 @@ int main(int argc,char* argv[])
           << " -c=PATH    Set configuration path\n"
           << " -m=PATH    Set module path\n"
           << " -l=PATH    Set var (log) path\n"
+          << " -p=FILE    Set file to which the process ID is written\n"
           << "\n";
       }
       // Exit if version/help was provided
@@ -124,14 +158,15 @@ int main(int argc,char* argv[])
 
   int c;
   extern char* optarg;
-  while ((c = getopt(argc,argv,"fnc:m:l:")) >= 0) {
+  while ((c = getopt(argc,argv,"fnc:m:l:p:")) >= 0) {
     switch (c) {
       case '?': return 1;
       case 'f': opt_foreground = true;  break;
       case 'n': opt_load_config = false; break;
-      case 'c': conf_path = optarg;  break;
-      case 'm': mod_path = optarg;   break;
-      case 'l': var_path = optarg;   break;
+      case 'c': conf_path = optarg; break;
+      case 'm': mod_path = optarg; break;
+      case 'l': var_path = optarg; break;
+      case 'p': pid_file = optarg; break;
     }
   }
 
@@ -148,12 +183,15 @@ int main(int argc,char* argv[])
     umask(0);
   }
 
+  // Create PID file
+  PidFile pf;
+  if (!pf.create(pid_file)) {
+    std::cout << "ERROR: Server is already running!\n";
+    exit(1);
+  }
+  
   // Don't terminate on silly signals
-  signal(SIGHUP,SIG_IGN);
   signal(SIGPIPE,SIG_IGN);
-
-  // Use this for interrupting system calls
-  signal(SIGUSR1,empty_handler);
 
   // Seed the basic random number generator
   timeval tv;

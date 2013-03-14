@@ -69,6 +69,12 @@ public:
   // End a job
   bool end_job(JobID jobid);
 
+  // Request a restart
+  void restart();
+
+  // Request shutdown
+  void shutdown();
+  
   virtual ScriptRef* script_op(const ScriptAuth& auth,
 			       const ScriptRef& ref,
 			       const ScriptOp& op,

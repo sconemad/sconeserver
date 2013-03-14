@@ -118,6 +118,30 @@ protected:
   
 };
 
+
+//=============================================================================
+// CacheLogChannel - Caches recent log entries for inspection
+//
+class SCONEX_API CacheLogChannel : public LogChannel {
+public:
+
+  CacheLogChannel(const std::string& name, int max=100);
+  ~CacheLogChannel();
+
+  virtual void log_entry(LogEntry* entry);
+
+  virtual ScriptRef* script_op(const ScriptAuth& auth,
+                               const ScriptRef& ref,
+                               const ScriptOp& op,
+                               const ScriptRef* right=0);
+
+protected:  
+
+  std::list<std::string> m_cache;
+  int m_max;
+  
+};
+
   
 //=============================================================================
 // Logger - Manages queuing of log entries and sending to channels for output

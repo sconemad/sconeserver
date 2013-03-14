@@ -1,4 +1,16 @@
 
+2013-03-14 Andrew Wedgbury <wedge@sconemad.com>
+
+	* configure: Update version to 0.9.8.
+	* main: Add PidFile mechanism (-p command line option).
+	Move signal handlers to where they are used.
+	* sconex/Kernel: Handle SIGTERM (shutdown) and SIGHUP (restart).
+	* sxonex/Multiplexer: Handle SIGUSR1 (ignore, used for interrupt).
+	* sconex/File: Add Lock flag to lockf(3) file when opening.
+	* sconex/Logger: Add CacheLogChannel for cacheing recent log entries.
+	Attempt to create default log directory on init.
+	* debian: Add system init and default scripts.
+
 2013-03-12 Andrew Wedgbury <wedge@sconemad.com>
 
 	* sconex/Logger: Logging improvements - LogChannel provider mechanism

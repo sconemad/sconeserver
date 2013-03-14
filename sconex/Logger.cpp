@@ -194,6 +194,81 @@ void FileLogChannel::log_entry(LogEntry* entry)
 }
 
 
+//=============================================================================
+CacheLogChannel::CacheLogChannel(const std::string& name, int max)
+  : LogChannel(name),
+    m_max(max)
+{
+}
+
+//=============================================================================
+CacheLogChannel::~CacheLogChannel()
+{
+}
+
+//=============================================================================
+void CacheLogChannel::log_entry(LogEntry* entry)
+{
+  Date date(entry->m_time, true);
+  std::ostringstream oss;
+  oss << date.code() << " " 
+      << std::setfill('0') << std::setw(6) << date.microsecond() << " "
+      << "[" << entry->m_category;
+
+  if (entry->m_data) {
+    LogData::const_iterator it = entry->m_data->find("id");
+    if (it != entry->m_data->end()) {
+      oss << "/" << it->second->object()->get_string();
+    }
+  }
+  
+  oss << "] " << entry->m_message;
+
+  if (entry->m_data) {
+    oss << " {";
+    bool first = true;
+    for (LogData::const_iterator it = entry->m_data->begin();
+         it != entry->m_data->end(); ++it) {
+      oss << (first ? "" : ", ")
+          << it->first << ":\""
+          << it->second->object()->get_string() << "\"";
+      first = false;
+    }
+    oss << "}";
+  }
+
+  if ((int)m_cache.size() == m_max) {
+    m_cache.erase(m_cache.begin());
+  }
+
+  m_cache.push_back(oss.str());
+}
+
+//=============================================================================
+ScriptRef* CacheLogChannel::script_op(const ScriptAuth& auth,
+                                      const ScriptRef& ref,
+                                      const ScriptOp& op,
+                                      const ScriptRef* right)
+{
+  if (op.type() == ScriptOp::Lookup) {
+    const std::string name = right->object()->get_string();
+
+    // Properties
+    if ("entries" == name) {
+      ScriptList* list = new ScriptList();
+      for (std::list<std::string>::const_iterator it = m_cache.begin();
+	   it != m_cache.end();
+	   ++it) {
+	list->give(ScriptString::new_ref(*it));
+      }
+      return new ScriptRef(list);
+    }
+  }
+
+  return ScriptObject::script_op(auth,ref,op,right);
+}
+
+
 ScriptRefTo<Logger>* Logger::s_logger = 0;
 
 //=============================================================================
@@ -404,6 +479,18 @@ void Logger::provide(const std::string& type,
       }
       object = new LogChannel::Ref(new FileLogChannel(s_name, path));
     }
+    
+  } else if ("cache" == type) {
+    const ScriptString* a_name = 
+      get_method_arg<ScriptString>(args,0,"name");
+    if (a_name) {
+      std::string s_name = a_name->get_string();
+      int max = 100;
+      const ScriptInt* a_max = 
+        get_method_arg<ScriptInt>(args,2,"max");
+      if (a_max) max = a_max->get_int();
+      object = new LogChannel::Ref(new CacheLogChannel(s_name, max));
+    }
   }
 }
 
@@ -414,7 +501,9 @@ Logger::Logger(const FilePath& path)
     m_thread(0)
 {
   LogChannel::register_provider("file", this);
+  LogChannel::register_provider("cache", this);
 
+  FilePath::mkdir(path,false,0755);
   FilePath defaultPath = path + "sconeserver.log";
   m_channels["default"] =
     new LogChannel::Ref(new FileLogChannel("default",defaultPath,true));

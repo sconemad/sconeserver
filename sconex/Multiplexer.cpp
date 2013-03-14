@@ -23,6 +23,8 @@ Free Software Foundation, Inc.,
 #include <sconex/Descriptor.h>
 #include <sconex/Stream.h>
 
+void empty_handler(int /*sig*/) { }
+
 namespace scx {
 
 //=============================================================================
@@ -36,7 +38,9 @@ Multiplexer::Multiplexer()
     m_job_waits(0),
     m_job_waits_acc(0)
 {
-
+  // Install an empty handler for SIGUSR1 signals, which we use for
+  // interrupting system calls.
+  signal(SIGUSR1,empty_handler);
 }
 
 //=============================================================================

@@ -1,3 +1,12 @@
+sconeserver (0.9.8) precise; urgency=low
+
+  * Efficiency improvements with sconesite embedded scripts.
+  * New debianised module loading, dependency and config system.
+  * New asynchronous extensible logging subsytem.
+  * Install init scripts with package.
+
+ -- Andrew Wedgbury <wedge@sconemad.com>  Thu, 14 Mar 2013 21:54:12 +0000
+
 sconeserver (0.9.7) precise; urgency=low
 
   * Various version number updates for consistency.

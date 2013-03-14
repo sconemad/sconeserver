@@ -34,7 +34,21 @@ namespace scx {
 ScriptRefTo<Kernel>* Kernel::s_kernel = 0;
 
 #define LOG(msg) Log("kernel").submit(msg);
-  
+
+//===========================================================================
+void signal_restart(int sig)
+{
+  LOG(std::string("Restarting due to signal: ") + strsignal(sig));
+  Kernel::get()->restart();
+}
+
+//===========================================================================
+void signal_shutdown(int sig)
+{
+  LOG(std::string("Shutting down due to signal: ") + strsignal(sig));
+  Kernel::get()->shutdown();
+}
+
 //=============================================================================
 Kernel* Kernel::create(const std::string& appname,
 		       const VersionTag& version)
@@ -71,6 +85,10 @@ int Kernel::init()
 {
   Logger::init(get_var_path());
 
+  // Install signal handlers for restart and shutdown
+  signal(SIGHUP,signal_restart);
+  signal(SIGTERM,signal_shutdown);
+
   LOG("Init " + name() + "-" + version().get_string());
   LOG("Built for " + scx::build_type() + " on " + scx::build_time().code());
 
@@ -86,6 +104,8 @@ int Kernel::init()
 //=============================================================================
 bool Kernel::close()
 {
+  Logger::get()->set_async(false);
+
   LOG("Stopping threads");
   m_spinner.close();
 
@@ -195,6 +215,22 @@ bool Kernel::end_job(JobID jobid)
 }
 
 //=============================================================================
+void Kernel::restart()
+{
+  if (m_state == Run) {
+    m_state = Restart;
+  }
+}
+
+//=============================================================================
+void Kernel::shutdown()
+{
+  if (m_state == Run) {
+    m_state = Shutdown;
+  }
+}
+
+//=============================================================================
 ScriptRef* Kernel::script_op(const ScriptAuth& auth,
 			     const ScriptRef& ref,
 			     const ScriptOp& op,
@@ -246,14 +282,14 @@ ScriptRef* Kernel::script_method(const ScriptAuth& auth,
   if ("restart" == name) {
     if (!auth.admin()) return ScriptError::new_ref("Not permitted");
     LOG("Restart requested via command");
-    m_state = Restart;
+    restart();
     return 0;
   }
 
   if ("shutdown" == name) {
     if (!auth.admin()) return ScriptError::new_ref("Not permitted");
     LOG("Shutdown requested via command");
-    m_state = Shutdown;
+    shutdown();
     return 0;
   }
 
@@ -363,7 +399,7 @@ const std::string& Kernel::get_system_hardware() const
 
 
 //=============================================================================
-  Kernel::Kernel(const std::string& appname, const VersionTag& version)
+Kernel::Kernel(const std::string& appname, const VersionTag& version)
   : Module(appname,version),
     m_state(Init)
 {

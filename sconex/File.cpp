@@ -27,6 +27,7 @@ const int File::Write = 2;
 const int File::Create = 4;
 const int File::Truncate = 8;
 const int File::Append = 16;
+const int File::Lock = 32;
   
 //=============================================================================
 File::File()
@@ -84,6 +85,14 @@ Condition File::open(
   // Try to open the file
   if ((m_file = ::open(filepath.path().c_str(),f_flags,create_perms)) < 0) {
     return scx::Error;
+  }
+
+  if (flags & Lock) {
+    if (lockf(m_file,F_TLOCK,0) < 0) {
+      ::close(m_file);
+      m_file = -1;
+      return scx::Error;
+    }
   }
   
   m_filepath = filepath;

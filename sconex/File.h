@@ -42,6 +42,7 @@ public:
   static const int Create;
   static const int Truncate;
   static const int Append;
+  static const int Lock;
   
   Condition open(
     const FilePath& filepath,

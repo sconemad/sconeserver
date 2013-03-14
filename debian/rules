@@ -55,8 +55,9 @@ binary-arch: build
 	$(MAKE) prefix=$(prefix)/usr sysconfdir=$(prefix)/etc/sconeserver libdir=$(prefix)/usr/lib localstatedir=$(prefix)/var/log/sconeserver includedir=$(prefix)/usr/include/sconeserver install
 
 	dh_install --sourcedir=$(prefix)
-	dh_installdebconf	
+	dh_installdebconf
 	dh_installchangelogs ChangeLog
+	dh_installinit --name=sconeserver
 	dh_link
 	dh_strip
 	dh_compress
