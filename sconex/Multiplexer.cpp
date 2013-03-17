@@ -31,7 +31,6 @@ namespace scx {
 Multiplexer::Multiplexer()
   : m_num_threads(0),
     m_main_thread(pthread_self()),
-    m_latency(1000000),
     m_enable_jobs(true),
     m_loops(0),
     m_jobs_run(0),
@@ -40,7 +39,12 @@ Multiplexer::Multiplexer()
 {
   // Install an empty handler for SIGUSR1 signals, which we use for
   // interrupting system calls.
-  signal(SIGUSR1,empty_handler);
+  struct sigaction sa;
+  memset(&sa, 0, sizeof(sa));
+  sa.sa_handler = empty_handler;
+  sigaction(SIGUSR1,&sa,0);
+
+  set_latency(1000000);
 }
 
 //=============================================================================
@@ -188,14 +192,16 @@ int Multiplexer::spin()
   timeval time;
   if (immediate) {
     // * Immediate mode select *
-    // Perform a non-blocking select, this checks for descriptor events and returns straight away.
+    // Perform a non-blocking select, this checks for descriptor events and 
+    // returns straight away.
     time.tv_usec = 0; time.tv_sec = 0;
 
   } else {
     // * Normal mode select *
-    // Perform a blocking select, returning only when an event occurs, or the specified timeout is
-    // reached, unless we are interrupted by a signal sent from another thread.
-    time.tv_usec = m_latency; time.tv_sec = 0;
+    // Perform a blocking select, returning only when an event occurs, or the 
+    // specified timeout is reached, unless we are interrupted by a signal 
+    // sent from another thread.
+    time.tv_usec = m_latency.tv_usec; time.tv_sec = m_latency.tv_sec;
   }
 
   // Make the select call
@@ -364,13 +370,14 @@ unsigned int Multiplexer::get_num_threads() const
 //=============================================================================
 void Multiplexer::set_latency(long latency)
 {
-  m_latency = latency;
+  m_latency.tv_usec = latency % 1000000;
+  m_latency.tv_sec = latency / 1000000;
 }
 
 //=============================================================================
 long Multiplexer::get_latency() const
 {
-  return m_latency;
+  return (m_latency.tv_sec * 1000000) + m_latency.tv_usec;
 }
 
 //=============================================================================
@@ -472,9 +479,9 @@ void Multiplexer::check_thread_pool()
 void Multiplexer::interrupt_select()
 {
   if (m_num_threads > 0) {
-    // Interrupt the main thread's select() call by sending it a signal, this is
-    // because we don't want to wait for select to timeout when we know that there
-    // is a new job waiting to be actioned.
+    // Interrupt the main thread's select() call by sending it a signal, this 
+    // is because we don't want to wait for select to timeout when we know 
+    // that there is a new job waiting to be actioned.
     pthread_kill(m_main_thread,SIGUSR1);
   }
 }

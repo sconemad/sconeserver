@@ -81,7 +81,8 @@ Date::Date(int year, int month, int mday, int hour, int minute, int second,
     m_time.tv_sec -= m_timezone.seconds();
     
   } else {
-    m_time.tv_sec = timegm(&tms);
+    m_time.tv_sec = mktime(&tms);
+    m_time.tv_sec += TimeZone::local(m_time.tv_sec).seconds();
   }
 }
 
@@ -704,7 +705,8 @@ void Date::parse_string(const std::string& str, bool local)
   if (local && !got_zone) {
     m_time.tv_sec = mktime(&tms);
   } else {
-    m_time.tv_sec = timegm(&tms);
+    m_time.tv_sec = mktime(&tms);
+    m_time.tv_sec += TimeZone::local(m_time.tv_sec).seconds();
   }
 
   // Adjust to UTC from given timezone

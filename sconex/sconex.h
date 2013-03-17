@@ -196,6 +196,10 @@ Free Software Foundation, Inc.,
 
 #ifdef HAVE_PCRE_H
 #  include <pcre.h>
+#else
+#  ifdef HAVE_PCRE_PCRE_H
+#    include <pcre/pcre.h>
+#  endif
 #endif
 
 // RTTI

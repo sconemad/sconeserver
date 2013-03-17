@@ -86,8 +86,13 @@ int Kernel::init()
   Logger::init(get_var_path());
 
   // Install signal handlers for restart and shutdown
-  signal(SIGHUP,signal_restart);
-  signal(SIGTERM,signal_shutdown);
+  struct sigaction sa;
+  memset(&sa, 0, sizeof(sa));
+  sa.sa_handler = signal_restart;
+  sigaction(SIGHUP,&sa,0);
+  memset(&sa, 0, sizeof(sa));
+  sa.sa_handler = signal_shutdown;
+  sigaction(SIGTERM,&sa,0);
 
   LOG("Init " + name() + "-" + version().get_string());
   LOG("Built for " + scx::build_type() + " on " + scx::build_time().code());

@@ -281,7 +281,10 @@ bool MessageStream::connect_request_module(bool error)
     
     log.attach("referer", m_request.object()->get_header("Referer"));
     log.attach("user-agent", m_request.object()->get_header("User-Agent"));
-    log.attach("host", m_request.object()->get_host()->get_id());
+    const Host* host = m_request.object()->get_host();
+    if (host) {
+      log.attach("host", host->get_id());
+    }
     Session* session = m_request.object()->get_session();
     if (session) {
       log.attach("session", session->get_id());

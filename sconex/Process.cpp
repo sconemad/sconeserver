@@ -446,7 +446,6 @@ void handleSIGCHLD(int i)
     PROCESS_DEBUG_LOG("SIGCHLD PID " << pid << " TERMINATED");
     if (s_proxy) s_proxy->process_terminated(pid,stat/256);
   }
-  signal(SIGCHLD, handleSIGCHLD);
 }
 
 //============================================================================
@@ -466,7 +465,10 @@ Proxy::Proxy()
 int Proxy::run()
 {
   // Install signal handler to catch exiting processes
-  signal(SIGCHLD, handleSIGCHLD);
+  struct sigaction sa;
+  memset(&sa, 0, sizeof(sa));
+  sa.sa_handler = handleSIGCHLD;
+  sigaction(SIGCHLD,&sa,0);
 
   while (true) {
 

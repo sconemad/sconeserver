@@ -1,4 +1,12 @@
 
+2013-03-15 Andrew Wedgbury <wedge@sconemad.com>
+
+	* http/MessageStream: Check host is not NULL when logging host id.
+	* all: Fix various issues found on Solaris:
+	* sconex/Multiplexer: Keep select timeout in range.
+	* sconex/Date: Replace use of non-POSIX timegm().
+	* all: Set signal handlers using sigaction() and not signal().
+
 2013-03-14 Andrew Wedgbury <wedge@sconemad.com>
 
 	* configure: Update version to 0.9.8.

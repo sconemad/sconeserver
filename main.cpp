@@ -191,7 +191,10 @@ int main(int argc,char* argv[])
   }
   
   // Don't terminate on silly signals
-  signal(SIGPIPE,SIG_IGN);
+  struct sigaction sa;
+  memset(&sa, 0, sizeof(sa));
+  sa.sa_handler = SIG_IGN;
+  sigaction(SIGPIPE,&sa,0);
 
   // Seed the basic random number generator
   timeval tv;

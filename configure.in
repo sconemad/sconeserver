@@ -305,7 +305,7 @@ AC_CHECK_HEADERS([tr1/unordered_map ext/hash_map])
 AC_CHECK_HEADERS([sys/utsname.h typeinfo cxxabi.h])
 AC_CHECK_HEADERS([crypt.h shadow.h])
 AC_CHECK_HEADERS([math.h limits.h])
-AC_CHECK_HEADERS([pcre.h])
+AC_CHECK_HEADERS([pcre.h pcre/pcre.h])
 
 # Checks for typedefs, structures, and compiler characteristics.
 AC_HEADER_STDBOOL

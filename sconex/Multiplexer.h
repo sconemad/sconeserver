@@ -103,7 +103,7 @@ private:
 
   pthread_t m_main_thread;
 
-  long m_latency;
+  timeval m_latency;
   bool m_enable_jobs;
   
   // Statistics:
