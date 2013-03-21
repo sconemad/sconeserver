@@ -39,14 +39,30 @@ namespace mysql {
 MySqlArg::MySqlArg()
   : m_str_data(0)
 {
-    
-};
+  DEBUG_COUNT_CONSTRUCTOR(MySqlArg);
+}
+
+//=========================================================================
+MySqlArg::MySqlArg(const MySqlArg& c)
+  : m_type(c.m_type),
+    m_length(c.m_length),
+    m_is_null(c.m_is_null),
+    m_name(c.m_name),
+    m_str_data(0),
+    m_data(c.m_data)
+{
+  DEBUG_COUNT_CONSTRUCTOR(MySqlArg);
+  if (c.m_str_data) {
+    m_str_data = scx::new_c_str(c.m_str_data);
+  }
+}
 
 //=========================================================================
 MySqlArg::~MySqlArg()
 {
   delete[] m_str_data;
-};
+  DEBUG_COUNT_DESTRUCTOR(MySqlArg);
+}
   
 //=========================================================================
 void MySqlArg::init_param(MYSQL_BIND& bind, const scx::ScriptRef* arg)
@@ -68,6 +84,7 @@ void MySqlArg::init_param(MYSQL_BIND& bind, const scx::ScriptRef* arg)
     if (typeid(scx::ScriptString) == ti) {
       m_type = MYSQL_TYPE_STRING;
       const std::string value = obj->get_string();
+      delete m_str_data;
       m_str_data = scx::new_c_str(value);
       m_length = value.size();
       bind.buffer = (void*)m_str_data;

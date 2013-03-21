@@ -1,0 +1,13 @@
+This package was debianized by Andrew Wedgbury <wedge@sconemad.com> on
+Mon, 18 Mar 2013 20:51:09 +0000.
+
+It was downloaded from http://www.sconemad.com/sconeserver/
+
+Upstream Author: Andrew Wedgbury <wedge@sconemad.com>
+
+Files: *
+Copyright:
+  Copyright (C) 2000-2013 Andrew Wedgbury
+License: GPL-2+
+ On Debian systems, the complete text of the GPL-2 can be found in
+ /usr/share/common-licenses/GPL-2

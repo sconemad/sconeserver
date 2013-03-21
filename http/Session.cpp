@@ -239,7 +239,7 @@ int SessionManager::check_sessions()
     if (!session->valid() && session->num_refs() == 1) {
       scx::Log("http").submit("Removing session " + session->get_id() +
                               " due to timeout");
-      delete session;
+      delete it->second;
       m_sessions.erase(it++);
       ++n;
     } else {

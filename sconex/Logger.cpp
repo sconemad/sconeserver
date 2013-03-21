@@ -136,7 +136,8 @@ FileLogChannel::FileLogChannel(const std::string& name,
   : LogChannel(name),
     m_fallback(fallback)
 {
-  if (Ok != m_file.open(path, File::Write | File::Append | File::Create)) {
+  if (Ok != m_file.open(path, File::Write | File::Append | File::Create,
+                        0640)) {
     if (m_fallback) {
       std::cerr << "Unable to open log file '"
                 << path.path() << "' - will log to stdout\n";

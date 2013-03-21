@@ -1,0 +1,33 @@
+#!/usr/bin/perl -w
+
+my $prev_mem = 0;
+my $prev_pid = 0;
+
+while (1) {
+  my ($sec,$min,$hour,$mday,$mon,$year,$wday,$yday,$isdst) = gmtime();
+  foreach $line (`ps -ef`) {
+    my ($user,$pid,$ppid,$c,$stime,$tty,$time,$cmd) = split(' ',$line);
+    if ($cmd =~ /^[^ ]+sconed\b/ && $user ne "root") {
+      foreach $line (`pmap -d $pid`) {
+        if ($line =~ /^mapped: (.+)K +writeable\/private: (.+)K +shared: (.+)K *$/) {
+          my ($mapped,$mem,$shared) = ($1,$2,$3);
+
+          if ($mem != $prev_mem ||
+              $pid != $prev_pid) {
+            my $delta = $mem - $prev_mem;
+            printf("%04d-%02d-%02dT%02d:%02d:%02dZ %d %s %d %+d\n",
+                   1900+$year,1+$mon,$mday,$hour,$min,$sec,
+                   $pid,$time,$mem,$delta);
+
+            $prev_mem = $mem;
+            $prev_pid = $pid;
+          }
+
+          last;
+        }
+      }
+      last;
+    }
+  }
+  sleep(1);
+}

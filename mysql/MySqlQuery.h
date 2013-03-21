@@ -33,6 +33,7 @@ class MySqlArg {
 public:
 
   MySqlArg();
+  MySqlArg(const MySqlArg& c);
   ~MySqlArg();
 
   void init_param(MYSQL_BIND& bind, const scx::ScriptRef* arg);

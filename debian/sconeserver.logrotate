@@ -1,0 +1,8 @@
+/var/log/sconeserver/sconeserver.log {
+	daily
+        size=10M
+        rotate 7
+        notifempty
+        copytruncate
+        missingok
+}

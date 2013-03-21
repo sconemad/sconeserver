@@ -1,4 +1,15 @@
 
+2013-03-21 Andrew Wedgbury <wedge@sconemad.com>
+
+	* sconex/Logger: Correct permissions when creating log files.
+	* http/Session: Fix leaked ScriptRef.
+	* sconex/Log: Fix potential leak of LogData.
+	* mysql/MySqlQuery: Fix potential leak of char[].
+	* test: Add useful script to monitor memory usage over time.
+	Update http-robust script to be less verbose.
+	* sconed: Update manpage to include -p <pidfile> argument.
+	* debian: Add logrotate conf, copyright file and tidy up.
+
 2013-03-15 Andrew Wedgbury <wedge@sconemad.com>
 
 	* http/MessageStream: Check host is not NULL when logging host id.

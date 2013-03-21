@@ -33,7 +33,12 @@ Log::Log(const std::string& category)
 //=============================================================================
 Log::~Log()
 {
-  delete m_data;
+  if (m_data) {
+    for (LogData::iterator it = m_data->begin(); it != m_data->end(); ++it) {
+      delete it->second;
+    }
+    delete m_data;
+  }
 }
 
 //=============================================================================

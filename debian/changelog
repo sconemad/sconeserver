@@ -1,4 +1,11 @@
-sconeserver (0.9.8) precise; urgency=low
+sconeserver (0.9.8ppa2) precise; urgency=low
+
+  * Install logrotate config file for sconeserver.log.
+  * Install copyright file.
+
+ -- Andrew Wedgbury <wedge@sconemad.com>  Mon, 18 Mar 2013 20:51:09 +0000
+
+sconeserver (0.9.8ppa1) precise; urgency=low
 
   * Efficiency improvements with sconesite embedded scripts.
   * New debianised module loading, dependency and config system.
