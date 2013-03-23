@@ -26,8 +26,7 @@ test_req(
   "GET / HTTP/1.1",
   "User-Agent: scx-test",
   "Host: localhost",
-  "If-Modified-Since: Wed, 16 Nov 2005 18:36:41 +0000",
-  ""
+  "If-Modified-Since: Wed, 16 Nov 2005 18:36:41 +0000"
 );
 
 $scd->close();
@@ -36,11 +35,16 @@ $scd->close();
 sub test_req
 {
   my $i = 0;
-  for ($i=0; $i<1000; ++$i) {
+  my $max = 1000;
+  for ($i=0; $i<$max; ++$i) {
     printf("SEND(%d): %s\n", $i, $_[0]);
     foreach my $line (@_) {
-	print $scd "$line\r\n";
+      print $scd "$line\r\n";
     }
+    if ($i == $max-1) {
+      print $scd "Connection: close\r\n";
+    }
+    print $scd "\r\n";
   }
 
   $i = 0;

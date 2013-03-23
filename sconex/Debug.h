@@ -25,6 +25,10 @@ Free Software Foundation, Inc.,
 // THIS TURNS DEBUGGING ON AND OFF
 #define _DEBUG
 
+// THIS TURNS INSTANCE COUNTING ON AND OFF
+//#define _DEBUG_INSTANCE_COUNTING
+
+
 #include <sconex/sconex.h>
 namespace scx {
 
@@ -35,18 +39,19 @@ class Mutex;
 
 // Debugging macros
   
+// Log debug message if test fails
 #define DEBUG_ASSERT(test,message) \
   scx::Debug::get()->dbg_assert(test,message,__FILE__,__LINE__);
-// Log debug message if test fails
 
+// Log debug message
 #define DEBUG_LOG(message) \
   { \
     std::ostringstream scxDebug_oss; \
     scxDebug_oss << message; \
     scx::Debug::get()->log(scxDebug_oss.str().c_str(),__FILE__,__LINE__); \
   }                                                            
-// Log debug message
 
+// Log debug message with errno
 #define DEBUG_LOG_ERRNO(message) \
   { \
     std::ostringstream scxDebug_oss; \
@@ -54,32 +59,41 @@ class Mutex;
     scxDebug_oss << message << " (errno=" << errno << " " << strerror_r(errno,buf,128) << ")"; \
     scx::Debug::get()->log(scxDebug_oss.str().c_str(),__FILE__,__LINE__); \
   }                                                            
-// Log debug message with errno
 
-#define DEBUG_COUNT_CONSTRUCTOR(class_name) \
-  scx::Debug::get()->count_constuctor(#class_name,this);
-// Increment nstance count for this class
-  
-#define DEBUG_COUNT_DESTRUCTOR(class_name) \
-  scx::Debug::get()->count_destuctor(#class_name,this);
-// Decrement instance count for this class
-
+// Log debug message with descriptor uid
 #define DESCRIPTOR_DEBUG_LOG(message) \
   { \
     std::ostringstream scxDebug_oss; \
     scxDebug_oss << "[" << uid() << "] " << message; \
     scx::Debug::get()->log(scxDebug_oss.str().c_str(),__FILE__,__LINE__); \
   }                                                            
-// Log debug message with descriptor uid
 
+// Log debug message with descriptor uid
 #define STREAM_DEBUG_LOG(message) \
   { \
     std::ostringstream scxDebug_oss; \
     scxDebug_oss << "[" << endpoint().uid() << "] " << message; \
     scx::Debug::get()->log(scxDebug_oss.str().c_str(),__FILE__,__LINE__); \
   }                                                            
-// Log debug message with descriptor uid
   
+#ifdef _DEBUG_INSTANCE_COUNTING
+  
+// Increment instance count for this class
+#define DEBUG_COUNT_CONSTRUCTOR(class_name) \
+  scx::Debug::get()->count_constuctor(#class_name,this);
+  
+// Decrement instance count for this class
+#define DEBUG_COUNT_DESTRUCTOR(class_name) \
+  scx::Debug::get()->count_destuctor(#class_name,this);
+
+#else
+
+#define DEBUG_COUNT_CONSTRUCTOR(class_name);
+#define DEBUG_COUNT_DESTRUCTOR(class_name);
+  
+#endif
+  
+
 #else
 
 // Evaluate to nothing outside debug mode
@@ -87,11 +101,11 @@ class Mutex;
 #define DEBUG_ASSERT(test,message);
 #define DEBUG_LOG(message);
 #define DEBUG_LOG_ERRNO(message);
-#define DEBUG_COUNT_CONSTRUCTOR(class_name);
-#define DEBUG_COUNT_DESTRUCTOR(class_name);
-
 #define DESCRIPTOR_DEBUG_LOG(message);
 #define STREAM_DEBUG_LOG(message);
+
+#define DEBUG_COUNT_CONSTRUCTOR(class_name);
+#define DEBUG_COUNT_DESTRUCTOR(class_name);
 
 #endif
 

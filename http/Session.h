@@ -95,10 +95,10 @@ public:
   virtual ~SessionManager();
 
   // Lookup an existing session by ID
-  Session* lookup_session(const std::string& id);
+  Session::Ref* lookup_session(const std::string& id);
 
   // Create a new session
-  Session* new_session();
+  Session::Ref* new_session();
 
   // Check through sessions, removing any that have timed-out
   int check_sessions();

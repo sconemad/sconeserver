@@ -5,29 +5,39 @@ my $prev_pid = 0;
 
 while (1) {
   my ($sec,$min,$hour,$mday,$mon,$year,$wday,$yday,$isdst) = gmtime();
+  my $timestamp = sprintf("%04d-%02d-%02dT%02d:%02d:%02dZ",
+                          1900+$year,1+$mon,$mday,$hour,$min,$sec);
+  my $running = 0;
   foreach $line (`ps -ef`) {
     my ($user,$pid,$ppid,$c,$stime,$tty,$time,$cmd) = split(' ',$line);
     if ($cmd =~ /^[^ ]+sconed\b/ && $user ne "root") {
+      $running = 1;
       foreach $line (`pmap -d $pid`) {
         if ($line =~ /^mapped: (.+)K +writeable\/private: (.+)K +shared: (.+)K *$/) {
           my ($mapped,$mem,$shared) = ($1,$2,$3);
 
-          if ($mem != $prev_mem ||
-              $pid != $prev_pid) {
-            my $delta = $mem - $prev_mem;
-            printf("%04d-%02d-%02dT%02d:%02d:%02dZ %d %s %d %+d\n",
-                   1900+$year,1+$mon,$mday,$hour,$min,$sec,
-                   $pid,$time,$mem,$delta);
+          if ($pid != $prev_pid) {
+            # Program has started/restarted
+            printf("%s %d -START-- %d\n",$timestamp,$pid,$mem);
 
-            $prev_mem = $mem;
-            $prev_pid = $pid;
+          } elsif ($mem != $prev_mem) {
+            my $delta = $mem - $prev_mem;
+            printf("%s %d %s %d %+d\n",$timestamp,$pid,$time,$mem,$delta);
           }
 
+          $prev_mem = $mem;
+          $prev_pid = $pid;
           last;
         }
       }
       last;
     }
   }
+
+  if (!$running && $prev_pid) {
+    printf("%s %d --EXIT--\n\n",$timestamp,$prev_pid);
+    $prev_pid = 0;
+  }
+
   sleep(1);
 }

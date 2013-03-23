@@ -71,7 +71,7 @@ public:
   void set_docroot(DocRoot* docroot);
   const DocRoot* get_docroot() const;
 
-  void set_session(Session* session);
+  void give_session(Session::Ref* session);
   const Session* get_session() const;
   Session* get_session();
 

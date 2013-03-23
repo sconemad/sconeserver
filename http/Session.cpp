@@ -203,28 +203,24 @@ SessionManager::~SessionManager()
 }
 
 //=========================================================================
-Session* SessionManager::lookup_session(const std::string& id)
+Session::Ref* SessionManager::lookup_session(const std::string& id)
 {
-  check_sessions();
-
   scx::MutexLocker locker(m_mutex);
   SessionMap::iterator it = m_sessions.find(id);
   if (it != m_sessions.end()) {
-    return it->second->object();
+    return new Session::Ref(it->second->object());
   }
   return 0;
 }
 
 //=========================================================================
-Session* SessionManager::new_session()
+Session::Ref* SessionManager::new_session()
 {
-  check_sessions();
-
   Session* session = new Session(m_module);
 
   scx::MutexLocker locker(m_mutex);
   m_sessions[session->get_id()] = new Session::Ref(session);
-  return session;
+  return new Session::Ref(session);
 }
 
 //=========================================================================

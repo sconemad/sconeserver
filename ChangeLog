@@ -1,4 +1,11 @@
 
+2013-03-23 Andrew Wedgbury <wedge@sconemad.com>
+
+	* http/Session: Don't check sessions during lookup/create.
+	* http/DocRoot: Tidy session handling.
+	* sconex/Debug: Turn off instance counting by default.
+	* test: Improve memusage and http-robust script.
+
 2013-03-21 Andrew Wedgbury <wedge@sconemad.com>
 
 	* sconex/Logger: Correct permissions when creating log files.

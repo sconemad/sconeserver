@@ -183,11 +183,12 @@ bool DocRoot::connect_request(scx::Descriptor* endpoint,
       (a_auto_session && a_auto_session->object()->get_int());
 
     // Lookup the session
-    Session* s = m_module.get_sessions().lookup_session(scxid);
-    if (s!=0) {
+    Session::Ref* s = m_module.get_sessions().lookup_session(scxid);
+    if (s != 0) {
       // Existing session
-      LOG("Existing session: " + s->get_id());
-
+      LOG("Existing session: " + scxid);
+      s->object()->reset_timeout();
+      
     } else {
       if (!scxid.empty()) {
 	// Timed-out session
@@ -196,18 +197,18 @@ bool DocRoot::connect_request(scx::Descriptor* endpoint,
       // Create new session if auto_session enabled
       if (b_auto_session) {
 	s = m_module.get_sessions().new_session();
-        LOG("New session: " + s->get_id());
+        scxid = s->object()->get_id();
+        LOG("New session: " + scxid);
       }
     }
 
     if (s) {
       // Update cookie
-      s->reset_timeout();
-      std::string cookie = "scxid="+s->get_id() +
-        "; expires=" + s->get_timeout().string() +
+      std::string cookie = "scxid=" + scxid +
+        "; expires=" + s->object()->get_timeout().string() +
         "; path=/";
       response.set_header("Set-Cookie",cookie);
-      request.set_session(s);
+      request.give_session(s);
     }
   }
 

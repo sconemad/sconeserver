@@ -221,10 +221,10 @@ const DocRoot* Request::get_docroot() const
 }
 
 //=============================================================================
-void Request::set_session(Session* session)
+void Request::give_session(Session::Ref* session)
 {
   delete m_session;
-  m_session = new Session::Ref(session);
+  m_session = session;
 }
 
 //=============================================================================
