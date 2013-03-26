@@ -40,17 +40,20 @@ const scx::Time DEFAULT_SESSION_TIMEOUT = scx::Time(60 * 60);
 class HTTP_API Session : public scx::ScriptMap {
 public:
 
-  Session(
-    HTTPModule& module,
-    const std::string& id = ""
-  );
+  Session(HTTPModule& module,
+          const std::string& id = "");
 
   virtual ~Session();
 
   const std::string get_id() const;
 
-  void reset_timeout(const scx::Time& time = DEFAULT_SESSION_TIMEOUT);
-  const scx::Date& get_timeout() const;
+  void set_timeout(const scx::Time& time);
+  const scx::Time& get_timeout() const;
+
+  void set_last_used(const scx::Date& used = scx::Date::now());
+  const scx::Date& get_last_used() const;
+  
+  scx::Date get_expiry() const;
   bool valid() const;
 
   bool allow_upload() const;
@@ -80,7 +83,8 @@ private:
   std::string m_id;
   static unsigned long long int m_next_id;
 
-  scx::Date m_timeout;
+  scx::Time m_timeout;
+  scx::Date m_last_used;
 
 };
 

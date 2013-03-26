@@ -59,7 +59,10 @@ public:
 
   void set_last_read_cond(scx::Condition c);
   void set_last_write_cond(scx::Condition c);
-
+  
+  static int sni_callback(SSL* ssl, int* ad, void* arg);
+  void got_hostname(const std::string& host);
+  
 protected:
 
   scx::ScriptRefTo<SSLModule> m_module;

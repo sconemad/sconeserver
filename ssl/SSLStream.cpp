@@ -24,6 +24,7 @@ Free Software Foundation, Inc.,
 #include "SSLChannel.h"
 
 #include <sconex/StreamSocket.h>
+#include <sconex/ScriptTypes.h>
 #include <sconex/Log.h>
 
 // Uncomment to enable debug info for the SSL Stream
@@ -40,7 +41,9 @@ Free Software Foundation, Inc.,
 #  define scxsp_DEBUG_LOG(m)
 #endif
 
-#define LOG(msg) scx::Log("ssl").submit(msg);
+#define LOG(msg) scx::Log("ssl").                               \
+  attach("id",scx::ScriptInt::new_ref(endpoint().uid())).       \
+  submit(msg);
 
 BIO *BIO_new_scxsp(SSLStream* scxsp,int close_flag);
 
@@ -197,7 +200,7 @@ scx::Condition SSLStream::init_ssl()
   SSL_set_bio(m_ssl,m_bio,m_bio);
   BIO_set_ssl(m_bio,m_ssl,BIO_CLOSE);
   BIO_set_nbio(m_bio,1);
-  
+
   m_seq = Connecting;
   return scx::Wait;
 }
@@ -234,7 +237,7 @@ scx::Condition SSLStream::connect_ssl(scx::Stream::Event e)
   }
   
   SSLStream_DEBUG_LOG("Opened SSL connection using " << SSL_get_cipher(m_ssl));
-  
+
   m_seq = Connected;
   enable_event(scx::Stream::Opening,true);
   enable_event(scx::Stream::Readable,false);
@@ -262,6 +265,34 @@ void SSLStream::set_last_write_cond(scx::Condition c)
   m_last_write_cond=c;
 }
 
+//=============================================================================
+int SSLStream::sni_callback(SSL *ssl, int *ad, void *arg)
+{
+  const char* host = SSL_get_servername(ssl, TLSEXT_NAMETYPE_host_name);
+  SSLStream_DEBUG_LOG("SSL SNI hostname=" << (host ? host : "NULL"));
+  if (host) {
+    BIO* b = SSL_get_rbio(ssl);
+    SSLStream* scxsp = (SSLStream*)b->ptr;
+    scxsp->got_hostname(host);
+  }
+  return SSL_TLSEXT_ERR_OK;
+}
+
+//=============================================================================
+void SSLStream::got_hostname(const std::string& host)
+{
+  SSLChannel* c = m_module.object()->lookup_channel_for_host(host);
+  if (c) {
+    std::string cn = c->get_string();
+    if (cn != m_channel) {
+      // Change to the new channel
+      LOG("Changing channel to '" + cn +
+          "' due to SNI hostname '" + host + "'");
+      m_channel = cn;
+      c->change_ssl(m_ssl);
+    }
+  }
+}
 
 //=============================================================================
 // SSLStream BIO - OpenSSL callback interface
@@ -314,7 +345,7 @@ static int scxsp_new(BIO *b)
   b->ptr=0;
   b->flags=0;
 
-  scxsp_DEBUG_LOG("scxsp_new(" << (int)b << ")");
+  scxsp_DEBUG_LOG("scxsp_new(" << (void*)b << ")");
 
   return 1;
 }
@@ -322,7 +353,7 @@ static int scxsp_new(BIO *b)
 //=============================================================================
 static int scxsp_free(BIO *b)
 {
-  scxsp_DEBUG_LOG("scxsp_free(" << (int)b << ")");
+  scxsp_DEBUG_LOG("scxsp_free(" << (void*)b << ")");
 
   return 0;
 }
@@ -337,7 +368,7 @@ static int scxsp_read(BIO *b,char *buffer,int n)
   int na=0;
   scx::Condition c = scxsp->Stream::read((void*)buffer,n,na);
 
-  scxsp_DEBUG_LOG("scxsp_read(" << (int)b << ",buff,"<< n << ") read " << na);
+  scxsp_DEBUG_LOG("scxsp_read(" << (void*)b << ",buff,"<< n << ") read " << na);
 
   BIO_clear_retry_flags(b);
   scxsp->set_last_read_cond(c);
@@ -363,7 +394,7 @@ static int scxsp_write(BIO *b, const char *buffer, int n)
   int na=0;
   scx::Condition c = scxsp->Stream::write((const void*)buffer,n,na);
 
-  scxsp_DEBUG_LOG("scxsp_write(" << (int)b << ",buff," << n << ") wrote "
+  scxsp_DEBUG_LOG("scxsp_write(" << (void*)b << ",buff," << n << ") wrote "
                   << na);
 
   BIO_clear_retry_flags(b);
@@ -439,8 +470,8 @@ static long scxsp_ctrl(BIO *b, int cmd, long num, void *ptr)
     break;
   }
 
-  scxsp_DEBUG_LOG("scxsp_ctrl(" << (int)b << "," << cmd << "," << num
-                  << "," << (int)ptr << ") returning " << ret);
+  scxsp_DEBUG_LOG("scxsp_ctrl(" << (void*)b << "," << cmd << "," << num
+                  << "," << (void*)ptr << ") returning " << ret);
 
   return(ret);
 }

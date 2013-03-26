@@ -23,6 +23,7 @@ Free Software Foundation, Inc.,
 
 #include "SSLChannel.h"
 #include "SSLModule.h"
+#include "SSLStream.h"
 #include <sconex/ScriptTypes.h>
 #include <sconex/Kernel.h>
 
@@ -39,6 +40,7 @@ SSLChannel::SSLChannel(SSLModule& mod,
     m_ctx = SSL_CTX_new( SSLv23_client_method() );
   } else {
     m_ctx = SSL_CTX_new( SSLv23_server_method() );
+    SSL_CTX_set_tlsext_servername_callback(m_ctx, SSLStream::sni_callback);
   }
 
   DEBUG_ASSERT(0 != m_ctx,"SSLChannel() Bad SSL context");
@@ -54,6 +56,12 @@ SSLChannel::~SSLChannel()
 SSL* SSLChannel::new_ssl()
 {
   return SSL_new(m_ctx);
+}
+
+//=========================================================================
+void SSLChannel::change_ssl(SSL* ssl)
+{
+  SSL_set_SSL_CTX(ssl, m_ctx);
 }
 
 //=============================================================================

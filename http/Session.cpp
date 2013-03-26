@@ -62,7 +62,8 @@ Session::Session(
   HTTPModule& module,
   const std::string& id
 ) : m_module(module),
-    m_id(id)
+    m_id(id),
+    m_timeout(DEFAULT_SESSION_TIMEOUT)
 {
   DEBUG_COUNT_CONSTRUCTOR(Session);
 
@@ -87,7 +88,7 @@ Session::Session(
     m_id = oss.str();
   }
 
-  reset_timeout();
+  set_last_used();
 }
 
 //=========================================================================
@@ -103,21 +104,39 @@ const std::string Session::get_id() const
 }
 
 //=========================================================================
-void Session::reset_timeout(const scx::Time& time)
+void Session::set_timeout(const scx::Time& time)
 {
-  m_timeout = scx::Date::now() + time;
+  m_timeout = time;
 }
 
 //=========================================================================
-const scx::Date& Session::get_timeout() const
+const scx::Time& Session::get_timeout() const
 {
   return m_timeout;
 }
-  
+
+//=========================================================================
+void Session::set_last_used(const scx::Date& used)
+{
+  m_last_used = used;
+}
+
+//=========================================================================
+const scx::Date& Session::get_last_used() const
+{
+  return m_last_used;
+}
+
+//=========================================================================
+scx::Date Session::get_expiry() const
+{
+  return m_last_used + m_timeout;
+}
+
 //=========================================================================
 bool Session::valid() const
 {
-  return (scx::Date::now() <= m_timeout);
+  return scx::Date::now() <= get_expiry();
 }
 
 //=========================================================================
@@ -149,7 +168,8 @@ scx::ScriptRef* Session::script_op(const scx::ScriptAuth& auth,
     const std::string name = right->object()->get_string();
 
     // Methods
-    if ("reset" == name) {
+    if ("reset" == name ||
+        "set_timeout" == name) {
       return new scx::ScriptMethodRef(ref,name);
     }
     
@@ -157,7 +177,10 @@ scx::ScriptRef* Session::script_op(const scx::ScriptAuth& auth,
     if ("id" == name) return scx::ScriptString::new_ref(m_id);
     if ("timeout" == name) 
       return new scx::ScriptRef(m_timeout.new_copy());
-
+    if ("last_used" == name) 
+      return new scx::ScriptRef(m_last_used.new_copy());
+    if ("expiry" == name) 
+      return new scx::ScriptRef(get_expiry().new_copy());
   }
     
   return scx::ScriptMap::script_op(auth,ref,op,right);
@@ -170,9 +193,25 @@ scx::ScriptRef* Session::script_method(const scx::ScriptAuth& auth,
 				       const scx::ScriptRef* args)
 {
   if ("reset" == name) {
-    m_timeout = scx::Date(0);
+    m_last_used = scx::Date(0);
     clear();
     return 0;
+  }
+
+  if ("set_timeout" == name) {
+    const scx::ScriptInt* a_timeout_int =
+      scx::get_method_arg<scx::ScriptInt>(args,0,"timeout");
+    if (a_timeout_int) {
+      m_timeout = scx::Time(a_timeout_int->get_int());
+      return 0;
+    }
+    const scx::Time* a_timeout_time =
+      scx::get_method_arg<scx::Time>(args,0,"timeout");
+    if (a_timeout_time) {
+      m_timeout = *a_timeout_time;
+      return 0;
+    }    
+    return scx::ScriptError::new_ref("set_timeout() Must specify timeout");
   }
 
   return scx::ScriptMap::script_method(auth,ref,name,args);
@@ -260,6 +299,10 @@ scx::ScriptRef* SessionManager::script_op(const scx::ScriptAuth& auth,
     }
     
     // Properties
+    if ("count" == name) {
+      scx::MutexLocker locker(m_mutex);
+      return scx::ScriptInt::new_ref(m_sessions.size());
+    }
     if ("list" == name) {
       scx::ScriptList* list = new scx::ScriptList();
       scx::ScriptRef* list_ref = new scx::ScriptRef(list);

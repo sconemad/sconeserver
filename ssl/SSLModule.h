@@ -43,6 +43,7 @@ public:
   virtual bool close();
 
   SSLChannel* find_channel(const std::string& name);
+  SSLChannel* lookup_channel_for_host(const std::string& host);
   
   virtual scx::ScriptRef* script_op(const scx::ScriptAuth& auth,
 				    const scx::ScriptRef& ref,
@@ -66,6 +67,9 @@ private:
 
   typedef std::map<std::string,SSLChannel::Ref*> ChannelMap;
   ChannelMap m_channels;
+
+  typedef std::map<std::string,std::string> HostMap;
+  HostMap m_hostmap;
   
 };
 

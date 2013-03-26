@@ -263,6 +263,8 @@ ScriptRef* Kernel::script_op(const ScriptAuth& auth,
       return ScriptString::new_ref(m_spinner.describe());
     if ("root" == name) 
       return ScriptInt::new_ref(geteuid() == 0);
+    if ("pid" == name) 
+      return ScriptInt::new_ref(getpid());
     if ("thread_pool" == name) 
       return ScriptInt::new_ref(m_spinner.get_num_threads());
     if ("latency" == name) 

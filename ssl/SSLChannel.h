@@ -43,7 +43,11 @@ public:
 
   ~SSLChannel();
 
+  // Create an SSL connection object for this channel
   SSL* new_ssl();
+
+  // Modify an existing SSL connection object to use this channel
+  void change_ssl(SSL* ssl);
   
   // ScriptObject methods
   virtual std::string get_string() const;

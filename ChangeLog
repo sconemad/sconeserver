@@ -1,4 +1,11 @@
 
+2013-03-26 Andrew Wedgbury <wedge@sconemad.com>
+
+	* sconex/Kernel: Add pid property to report process id.
+	* http/Session: Add count property to SessionManager.
+	Rework timeout handling, allow timeout to be adjusted.
+	* ssl: Support for SSL/TLS Server Name Indication (SNI).
+
 2013-03-23 Andrew Wedgbury <wedge@sconemad.com>
 
 	* http/Session: Don't check sessions during lookup/create.

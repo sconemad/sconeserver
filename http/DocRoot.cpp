@@ -187,7 +187,7 @@ bool DocRoot::connect_request(scx::Descriptor* endpoint,
     if (s != 0) {
       // Existing session
       LOG("Existing session: " + scxid);
-      s->object()->reset_timeout();
+      s->object()->set_last_used();
       
     } else {
       if (!scxid.empty()) {
@@ -205,7 +205,7 @@ bool DocRoot::connect_request(scx::Descriptor* endpoint,
     if (s) {
       // Update cookie
       std::string cookie = "scxid=" + scxid +
-        "; expires=" + s->object()->get_timeout().string() +
+        "; expires=" + s->object()->get_expiry().string() +
         "; path=/";
       response.set_header("Set-Cookie",cookie);
       request.give_session(s);

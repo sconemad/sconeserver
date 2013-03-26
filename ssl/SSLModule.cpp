@@ -134,6 +134,16 @@ SSLChannel* SSLModule::find_channel(const std::string& name)
 }
 
 //=============================================================================
+SSLChannel* SSLModule::lookup_channel_for_host(const std::string& host)
+{
+  HostMap::const_iterator it = m_hostmap.find(host);
+  if (it != m_hostmap.end()) {
+    return find_channel(it->second);
+  }
+  return 0;
+}
+
+//=============================================================================
 scx::ScriptRef* SSLModule::script_op(const scx::ScriptAuth& auth,
 				     const scx::ScriptRef& ref,
 				     const scx::ScriptOp& op,
@@ -144,7 +154,8 @@ scx::ScriptRef* SSLModule::script_op(const scx::ScriptAuth& auth,
 
     // Methods
     if ("add" == name ||
-	"remove" == name) {
+	"remove" == name ||
+        "map" == name) {
       return new scx::ScriptMethodRef(ref,name);
     }      
 
@@ -218,6 +229,22 @@ scx::ScriptRef* SSLModule::script_method(const scx::ScriptAuth& auth,
     return 0;
   }
 
+  if ("map" == name) {
+    const scx::ScriptString* a_host = 
+      scx::get_method_arg<scx::ScriptString>(args,0,"host");
+    if (!a_host) 
+      return scx::ScriptError::new_ref("Host pattern must be specified");
+    std::string s_host = a_host->get_string();
+
+    const scx::ScriptString* a_channel = 
+      scx::get_method_arg<scx::ScriptString>(args,1,"channel");
+    if (!a_channel) 
+      return scx::ScriptError::new_ref("Channel name must be specified");
+    std::string s_channel = a_channel->get_string();
+
+    m_hostmap[s_host] = s_channel;
+  }
+  
   return scx::Module::script_method(auth,ref,name,args);
 }
 
