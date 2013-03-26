@@ -243,6 +243,7 @@ scx::ScriptRef* SSLModule::script_method(const scx::ScriptAuth& auth,
     std::string s_channel = a_channel->get_string();
 
     m_hostmap[s_host] = s_channel;
+    return 0;
   }
   
   return scx::Module::script_method(auth,ref,name,args);
