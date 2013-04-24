@@ -1,4 +1,8 @@
 
+2013-04-24 Andrew Wedgbury <wedge@sconemad.com>
+
+	* debian: Create packages for bluetooth and location.
+
 2013-03-26 Andrew Wedgbury <wedge@sconemad.com>
 
 	* sconex/Kernel: Add pid property to report process id.

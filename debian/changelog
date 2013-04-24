@@ -1,3 +1,16 @@
+sconeserver (0.9.8ppa4) precise; urgency=low
+
+  * Fix build-depends for location.
+
+ -- Andrew Wedgbury <wedge@sconemad.com>  Thu, 11 Apr 2013 23:45:25 +0000
+
+sconeserver (0.9.8ppa3) precise; urgency=low
+
+  * Update AUTHORS.
+  * Create packages for bluetooth and location modules.
+
+ -- Andrew Wedgbury <wedge@sconemad.com>  Thu, 11 Apr 2013 19:18:10 +0000
+
 sconeserver (0.9.8ppa2) precise; urgency=low
 
   * Install logrotate config file for sconeserver.log.
