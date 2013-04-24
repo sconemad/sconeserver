@@ -1,6 +1,11 @@
 
 2013-04-24 Andrew Wedgbury <wedge@sconemad.com>
 
+	* sconex/ScriptBase: Protect ScriptRef ref counting with global mutex.
+	* http/Session: Implement session locking (needs improvement).
+
+2013-04-24 Andrew Wedgbury <wedge@sconemad.com>
+
 	* debian: Create packages for bluetooth and location.
 
 2013-03-26 Andrew Wedgbury <wedge@sconemad.com>

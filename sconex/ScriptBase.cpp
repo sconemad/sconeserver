@@ -24,6 +24,7 @@ Free Software Foundation, Inc.,
 #include <sconex/ScriptExpr.h>
 #include <sconex/ScriptStatement.h>
 #include <sconex/IOBase.h>
+#include <sconex/Mutex.h>
 #include <sconex/utils.h>
 namespace scx {
 
@@ -178,12 +179,17 @@ int ScriptObject::remove_ref()
 
 // ### ScriptRef ###
 
+scx::Mutex* ScriptRef::s_ref_mutex = 0;
+  
 //===========================================================================
 ScriptRef::ScriptRef(ScriptObject* object, RefType ref)
   : m_object(object),
     m_reftype(ref)
 {
   DEBUG_COUNT_CONSTRUCTOR(ScriptRef);
+  if (!s_ref_mutex) {
+    s_ref_mutex = new scx::Mutex();
+  }
   if (!m_object) {
     // Ensure the ref always refers to an object
     m_object = new ScriptError("NULL");
@@ -275,15 +281,20 @@ ScriptRef* ScriptRef::script_op(const ScriptAuth& auth,
 //===========================================================================
 void ScriptRef::add_ref()
 {
+  scx::MutexLocker locker(*s_ref_mutex);
   if (m_object) m_object->add_ref();
 }
 
 //===========================================================================
 void ScriptRef::remove_ref()
 {
+  scx::MutexLocker locker(*s_ref_mutex);
   if (m_object && 0 == m_object->remove_ref()) {
-    delete m_object;
+    ScriptObject* object = m_object;
     m_object = 0;
+    locker.unlock();
+
+    delete object;
   }
 }
 

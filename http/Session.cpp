@@ -58,16 +58,16 @@ protected:
 unsigned long long int Session::m_next_id = 0;
 
 //=========================================================================
-Session::Session(
-  HTTPModule& module,
-  const std::string& id
-) : m_module(module),
+Session::Session(SessionManager& manager,
+                 const std::string& id)
+  : m_manager(manager),
     m_id(id),
-    m_timeout(DEFAULT_SESSION_TIMEOUT)
+    m_timeout(DEFAULT_SESSION_TIMEOUT),
+    m_locked(false)
 {
   DEBUG_COUNT_CONSTRUCTOR(Session);
 
-  m_parent = &m_module;
+  m_parent = &m_manager;
 
   if (m_next_id == 0) {
     // Seed the id counter with a big random-ish value.
@@ -140,10 +140,28 @@ bool Session::valid() const
 }
 
 //=========================================================================
+void Session::set_locked(bool locked)
+{
+  m_locked = locked;
+}
+
+//=========================================================================
+bool Session::is_locked() const
+{
+  return m_locked;
+}
+
+//=========================================================================
 bool Session::allow_upload() const
 {
   const scx::ScriptRef* a = lookup("allow_upload");
   return (a && a->object()->get_int());
+}
+
+//=========================================================================
+SessionManager& Session::get_manager() const
+{
+  return m_manager;
 }
 
 //=========================================================================
@@ -246,22 +264,43 @@ Session::Ref* SessionManager::lookup_session(const std::string& id)
 {
   scx::MutexLocker locker(m_mutex);
   SessionMap::iterator it = m_sessions.find(id);
-  if (it != m_sessions.end()) {
-    return new Session::Ref(it->second->object());
+  if (it == m_sessions.end()) {
+    return 0;
   }
-  return 0;
+  
+  Session* session = it->second->object();
+  if (session->is_locked()) {
+    DEBUG_LOG("*** Waiting for session release ***");
+    do {
+      m_release.wait(m_mutex);
+    } while (session->is_locked());
+    DEBUG_LOG("*** Session has been released ***"); 
+  }
+    
+  session->set_locked(true);
+  return new Session::Ref(session);
 }
 
 //=========================================================================
 Session::Ref* SessionManager::new_session()
 {
-  Session* session = new Session(m_module);
+  Session* session = new Session(*this);
 
   scx::MutexLocker locker(m_mutex);
   m_sessions[session->get_id()] = new Session::Ref(session);
+  session->set_locked(true);
   return new Session::Ref(session);
 }
 
+//=========================================================================
+void SessionManager::release_session(Session::Ref* session)
+{
+  scx::MutexLocker locker(m_mutex);
+  session->object()->set_locked(false);
+  delete session;
+  m_release.broadcast();
+}
+  
 //=========================================================================
 int SessionManager::check_sessions()
 {

@@ -30,6 +30,7 @@ class ScriptProc;
 class ScriptRef;
 class ScriptError;
 class IOBase;
+class Mutex;
 
 // Macro to help determine if a ScriptRef is 'bad' -
 // meaning it is NULL or refers to a ScriptError object.
@@ -230,6 +231,8 @@ protected:
   ScriptObject* m_object;
   RefType m_reftype;
 
+  static scx::Mutex* s_ref_mutex;
+  
 };
 
 

@@ -29,7 +29,8 @@ Free Software Foundation, Inc.,
 namespace http {
 
 class HTTPModule;
-
+class SessionManager;
+  
 const scx::Time DEFAULT_SESSION_TIMEOUT = scx::Time(60 * 60);
 
 //=============================================================================
@@ -40,7 +41,7 @@ const scx::Time DEFAULT_SESSION_TIMEOUT = scx::Time(60 * 60);
 class HTTP_API Session : public scx::ScriptMap {
 public:
 
-  Session(HTTPModule& module,
+  Session(SessionManager& manager,
           const std::string& id = "");
 
   virtual ~Session();
@@ -56,7 +57,12 @@ public:
   scx::Date get_expiry() const;
   bool valid() const;
 
+  void set_locked(bool locked);
+  bool is_locked() const;
+  
   bool allow_upload() const;
+
+  SessionManager& get_manager() const;
   
   // ScriptObject methods
   virtual std::string get_string() const;
@@ -78,14 +84,15 @@ protected:
 
 private:
 
-  HTTPModule& m_module;
+  SessionManager& m_manager;
 
   std::string m_id;
   static unsigned long long int m_next_id;
 
   scx::Time m_timeout;
   scx::Date m_last_used;
-
+  bool m_locked;
+  
 };
 
 //=============================================================================
@@ -104,6 +111,9 @@ public:
   // Create a new session
   Session::Ref* new_session();
 
+  // Release a locked session
+  void release_session(Session::Ref* session);
+  
   // Check through sessions, removing any that have timed-out
   int check_sessions();
 
@@ -124,11 +134,12 @@ public:
   
   HTTPModule& m_module;
   scx::Mutex m_mutex;
-
+  scx::ConditionEvent m_release;
+  
   typedef HASH_TYPE<std::string,Session::Ref*> SessionMap;
   SessionMap m_sessions;
   scx::JobID m_job;
-
+  
 };
  
 };

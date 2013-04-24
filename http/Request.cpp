@@ -43,7 +43,11 @@ Request::Request(const std::string& profile, const std::string& id)
 //===========================================================================
 Request::~Request()
 {
-  delete m_session;
+  if (m_session) {
+    SessionManager& manager = m_session->object()->get_manager();
+    manager.release_session(m_session);
+    m_session = 0;
+  }
 }
 
 //===========================================================================
@@ -223,7 +227,7 @@ const DocRoot* Request::get_docroot() const
 //=============================================================================
 void Request::give_session(Session::Ref* session)
 {
-  delete m_session;
+  DEBUG_ASSERT(m_session == 0,"Request should not already have a session");
   m_session = session;
 }
 
