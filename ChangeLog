@@ -1,4 +1,9 @@
 
+2013-05-09 Andrew Wedgbury <wedge@sconemad.com>
+
+	* sconex/utils: Add random number utils (uses /dev/urandom).
+	* http/Session: Improve session ID generation using new random utils.
+
 2013-04-24 Andrew Wedgbury <wedge@sconemad.com>
 
 	* sconex/ScriptBase: Protect ScriptRef ref counting with global mutex.

@@ -84,5 +84,14 @@ void utils_ut()
   UTSEC("escape_html");
 
   UTEST(escape_html("One & One & One is > two, but < four") == "One &amp; One &amp; One is &gt; two, but &lt; four");
+
+
+  UTSEC("random_hex_string");
+
+  for (int i=0; i<100; ++i) {
+    std::string str = random_hex_string(i);
+    std::cout << "random_hex_string(" << i << ") = " << str << "\n";
+    UTEST((int)str.length() == i);
+  }
   
 }

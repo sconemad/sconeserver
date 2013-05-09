@@ -25,6 +25,7 @@ Free Software Foundation, Inc.,
 #include <sconex/ConfigFile.h>
 #include <sconex/Kernel.h>
 #include <sconex/Log.h>
+#include <sconex/utils.h>
 namespace http {
 
 class SessionManager;
@@ -55,8 +56,6 @@ protected:
   SessionManager& m_manager;
 };
 
-unsigned long long int Session::m_next_id = 0;
-
 //=========================================================================
 Session::Session(SessionManager& manager,
                  const std::string& id)
@@ -69,22 +68,17 @@ Session::Session(SessionManager& manager,
 
   m_parent = &m_manager;
 
-  if (m_next_id == 0) {
-    // Seed the id counter with a big random-ish value.
-    for (int i=0; i<100; ++i) {
-      m_next_id += rand();
-      m_next_id *= rand();
-    }
-  }
-
   if (id.empty()) {
-    // Create a new session ID
+    // Create a new session ID, consisting of 48 chars as follows:
+    //  [8 chars] Current epoch time in hex
+    //  [6 chars] Server process ID in hex
+    //  [34 chars] Random bytes in hex
+    //  
     std::ostringstream oss;
-    for (int i=0; i<16; ++i) {
-      int c = rand() % 256;
-      oss << std::setw(2) << std::setfill('0') << std::hex << c;
-    }
-    oss << std::setw(16) << std::setfill('0') << std::hex << (m_next_id++);
+    unsigned long t = scx::Date::now().epoch_seconds();
+    oss << std::setw(8) << std::setfill('0') << std::hex << t;
+    oss << std::setw(6) << std::setfill('0') << std::hex << getpid();
+    oss << scx::random_hex_string(34);
     m_id = oss.str();
   }
 
@@ -284,12 +278,26 @@ Session::Ref* SessionManager::lookup_session(const std::string& id)
 //=========================================================================
 Session::Ref* SessionManager::new_session()
 {
-  Session* session = new Session(*this);
+  Session* session = 0;
+  while (true) {
+    session = new Session(*this);
+    
+    scx::MutexLocker locker(m_mutex);
 
-  scx::MutexLocker locker(m_mutex);
-  m_sessions[session->get_id()] = new Session::Ref(session);
-  session->set_locked(true);
-  return new Session::Ref(session);
+    // Check that a session with this ID doesn't already exist, and if it does,
+    // try again (the chances of this happening are almost infinitely small!)
+    if (m_sessions.count(session->get_id())) {
+      DEBUG_LOG("Session ID clash!");
+      delete session;
+      continue;
+    }
+
+    // Add the session, lock it and return
+    m_sessions[session->get_id()] = new Session::Ref(session);
+    session->set_locked(true);
+    return new Session::Ref(session);
+  }
+  return 0;
 }
 
 //=========================================================================

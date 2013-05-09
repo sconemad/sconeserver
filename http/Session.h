@@ -87,7 +87,6 @@ private:
   SessionManager& m_manager;
 
   std::string m_id;
-  static unsigned long long int m_next_id;
 
   scx::Time m_timeout;
   scx::Date m_last_used;

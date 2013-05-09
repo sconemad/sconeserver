@@ -25,24 +25,33 @@ Free Software Foundation, Inc.,
 #include <sconex/sconex.h>
 namespace scx {
 
-void SCONEX_API strup(std::string& s);
 // Convert string to uppercase
+void SCONEX_API strup(std::string& s);
 
-void SCONEX_API strlow(std::string& s);
 // Convert string to lowercase
+void SCONEX_API strlow(std::string& s);
 
-std::string SCONEX_API escape_quotes(const std::string& s);
 // Escape string to remove quotes
+std::string SCONEX_API escape_quotes(const std::string& s);
 
-std::string SCONEX_API escape_html(const std::string& s);
 // Escape string to remove html control chars
+std::string SCONEX_API escape_html(const std::string& s);
 
-char* SCONEX_API new_c_str(const std::string& str);
 // New up a c style string from a c++ string
+char* SCONEX_API new_c_str(const std::string& str);
 
-std::string SCONEX_API type_name(const std::type_info& ti);
 // Get demangled type name from a type_info
+std::string SCONEX_API type_name(const std::type_info& ti);
 
+// Get a random byte [0-255]
+unsigned char SCONEX_API random_byte();
+
+// Get a random integer [0-RAND_MAX]
+unsigned int SCONEX_API random_int();
+
+// Get a random hex string
+std::string random_hex_string(int len);
+  
 };
 
 #endif

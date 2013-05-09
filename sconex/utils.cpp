@@ -20,6 +20,7 @@ Free Software Foundation, Inc.,
 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA */
 
 #include <sconex/utils.h>
+#include <sconex/File.h>
 namespace scx {
 
 //===========================================================================
@@ -109,4 +110,60 @@ std::string type_name(const std::type_info& ti)
   return ret;
 }
 
+
+//============================================================================
+static File* get_random()
+{
+  static File* s_random = 0;
+  if (!s_random) {
+    s_random = new File();
+    if (Ok != s_random->open("/dev/urandom", File::Read)) {
+      DEBUG_LOG("/dev/random not available, falling back to rand()");
+    }
+  }
+  return s_random;
+}
+  
+//============================================================================
+unsigned char random_byte()
+{
+  File* random = get_random();
+
+  unsigned char c;
+  if (random->is_open()) {
+    int na = 0;
+    random->read(&c, 1, na);
+  } else {
+    c = rand() % 256;
+  }
+  return c;
+}
+
+//============================================================================
+unsigned int random_int()
+{
+  File* random = get_random();
+
+  unsigned int v;
+  if (random->is_open()) {
+    int na = 0;
+    random->read(&v, sizeof(unsigned int), na);
+    v = v % RAND_MAX;
+  } else {
+    v = rand();
+  }
+  return v;
+}
+  
+//============================================================================
+std::string random_hex_string(int len)
+{
+  std::ostringstream oss;
+  for (int i=0; i<(len+1)/2; ++i) {
+    int c = random_byte();
+    oss << std::setw(2) << std::setfill('0') << std::hex << c;
+  }
+  return oss.str().substr(0,len);
+}
+  
 };
