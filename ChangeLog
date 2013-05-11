@@ -1,4 +1,11 @@
 
+2013-05-11 Andrew Wedgbury <wedge@sconemad.com>
+
+	* http/Host: Factor out method for adding docroot.
+	* http/DocRoot: Factor out methods for adding mappings.
+	* sconesite/Profile: Store reference to http::Host.
+	Automatically setup docroots for host if not present.
+
 2013-05-09 Andrew Wedgbury <wedge@sconemad.com>
 
 	* sconex/utils: Add random number utils (uses /dev/urandom).

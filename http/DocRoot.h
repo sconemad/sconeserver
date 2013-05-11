@@ -88,14 +88,28 @@ public:
 		       Request& request,
 		       Response& response);
 
+  // Map a file extension to a stream type and arguments
+  void add_extn_map(const std::string& pattern,
+                    const std::string& stream,
+                    scx::ScriptRef* args);
+  
   // Lookup stream map to use for a particular file extension
   StreamMap* lookup_extn_map(const std::string& name) const;
+
+  // Map a path to a stream type and arguments
+  void add_path_map(const std::string& pattern,
+                    const std::string& stream,
+                    scx::ScriptRef* args);
 
   // Lookup stream map to use for a path
   StreamMap* lookup_path_map(const std::string& name,
 			     std::string& pathinfo) const;
 
-  // Lookup realm to use for path
+  // Map a path to an authentication realm
+  void add_realm_map(const std::string& pattern,
+                     const std::string& realm);
+
+  // Lookup authentication realm to use for path
   std::string lookup_realm_map(const std::string& name) const;
   
   // Get/set parameter stored with this profile

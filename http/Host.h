@@ -66,6 +66,9 @@ public:
 
   DocRoot* get_docroot(const std::string& profile);
 
+  DocRoot::Ref add_docroot(const std::string& profile,
+                           const scx::FilePath& path);
+
   // ScriptObject methods
   virtual std::string get_string() const;
 

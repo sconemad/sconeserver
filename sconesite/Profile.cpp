@@ -53,15 +53,18 @@ const char* TPLDIR = "tpl";
 Profile::Profile(
   SconesiteModule& module,
   const std::string& name,
-  const scx::FilePath& path,
+  http::Host* host,
   const std::string& dbtype
 ) : m_module(module),
     m_name(name),
-    m_path(path),
+    m_host(new http::Host::Ref(host)),
     m_db(0)
 {
   m_parent = &m_module;
 
+  configure_docroot("default");
+  configure_docroot("secure");
+  
   // Open article database
   scx::ScriptMap::Ref args(new scx::ScriptMap());
   args.object()->give("profile",scx::ScriptString::new_ref(name));
@@ -83,13 +86,14 @@ Profile::~Profile()
   }
 
   delete m_db;
+  delete m_host;
 }
 
 //=========================================================================
 void Profile::refresh()
 {
   // Add new templates
-  scx::FileDir dir(m_path + TPLDIR);
+  scx::FileDir dir(get_path() + TPLDIR);
   while (dir.next()) {
     std::string file = dir.name();
     if (file != "." && file != "..") {
@@ -147,9 +151,9 @@ SconesiteModule& Profile::get_module()
 }
 
 //=========================================================================
-scx::FilePath& Profile::get_path()
+const scx::FilePath& Profile::get_path()
 {
-  return m_path;
+  return m_host->object()->get_path();
 }
 
 //=========================================================================
@@ -324,16 +328,22 @@ Article::Ref* Profile::create_article(int pid,
   scx::ScriptList::Ref args(new scx::ScriptList());
   args.object()->give(scx::ScriptInt::new_ref(pid));
   args.object()->give(scx::ScriptString::new_ref(name));
-  bool result = query->exec(&args);
+  if (!query->exec(&args)) {
+    SCONESITEPROFILE_DEBUG_LOG("Failed to insert article metadata into db");
+    return 0;
+  }
 
   int id = -1;
   std::auto_ptr<scx::DbQuery> query2(m_db->object()->new_query(
     "SELECT id FROM article where parent = ? AND path = ?"));
 
-  result = query2->exec(&args);
+  if (!query2->exec(&args)) {
+    SCONESITEPROFILE_DEBUG_LOG("Failed to query new article in db");
+    return 0;
+  }
+  
   if (query2->next_result()) {
     scx::ScriptRef* row_ref = query2->result_list();
-    std::cerr << "LII: " << row_ref->object()->get_string() << "\n";
     scx::ScriptList* row = dynamic_cast<scx::ScriptList*>(row_ref->object());
     scx::ScriptRef* a_id = row->get(0);
     if (a_id) id = a_id->object()->get_int();
@@ -342,15 +352,13 @@ Article::Ref* Profile::create_article(int pid,
 
   if (id <= 0) {
     SCONESITEPROFILE_DEBUG_LOG("Could not determine id for new article");
-    delete parent;
     return 0;
   }
 
   path = path + "article.xml";
   scx::File file;
   if (scx::Ok != file.open(path,scx::File::Write|scx::File::Create,00660)) {
-    DEBUG_LOG_ERRNO("Unable to create new article xml file '" << 
-		    path.path() << "'");
+    DEBUG_LOG_ERRNO("Unable to create new article '" << path.path() << "'");
     return 0;
   }
 
@@ -530,7 +538,7 @@ scx::ScriptRef* Profile::script_op(const scx::ScriptAuth& auth,
       return new scx::ScriptRef(m_purge_threshold.new_copy());
 
     if ("path" == name) 
-      return scx::ScriptString::new_ref(m_path.path());
+      return scx::ScriptString::new_ref(get_path().path());
 
     if ("article_cache" == name) {
       scx::ScriptList::Ref* list = 
@@ -708,4 +716,21 @@ Article* Profile::load_article(int id, int pid, const std::string& link)
   // Article cache must be locked for writing before calling this method!
   m_articles[id] = new Article::Ref(art);
   return art;
+}
+
+//=============================================================================
+void Profile::configure_docroot(const std::string& docroot)
+{
+  if (0 == m_host->object()->get_docroot(docroot)) {
+    LOG("Autoconfiguring docroot '" + docroot + "' for http host");
+    http::DocRoot::Ref dr = m_host->object()->add_docroot(docroot,ARTDIR);
+
+    // Map everything in this docroot to the sconesite module
+    scx::ScriptList* ml = new scx::ScriptList();
+    ml->give(scx::ScriptString::new_ref(m_name));
+    dr.object()->add_path_map("/",m_module.name(),new scx::ScriptRef(ml));
+
+    // Enable automation session allocation
+    dr.object()->set_param("auto_session", scx::ScriptInt::new_ref(1));
+  }
 }

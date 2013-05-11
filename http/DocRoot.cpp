@@ -92,9 +92,9 @@ DocRoot::DocRoot(
 
   // A bit of a hack really, but set up default module mappings so it will
   // do something sensible if there is no host config file present.
-  m_extn_mods["."] = new StreamMap(m_module,"dirindex",0);
-  m_extn_mods["!"] = new StreamMap(m_module,"errorpage",0);
-  m_extn_mods["*"] = new StreamMap(m_module,"getfile",0);
+  add_extn_map(".","dirindex",0);
+  add_extn_map("!","errorpage",0);
+  add_extn_map("*","getfile",0);
 }
 
 //=========================================================================
@@ -231,6 +231,20 @@ bool DocRoot::connect_request(scx::Descriptor* endpoint,
 }
 
 //=========================================================================
+void DocRoot::add_extn_map(const std::string& pattern,
+                           const std::string& stream,
+                           scx::ScriptRef* args)
+{
+  LOG("Mapping extension '" + pattern + 
+      "' to stream type " + stream +
+      " " + (args ? args->object()->get_string() : "NULL"));
+
+  PatternMap::iterator it = m_extn_mods.find(pattern);
+  if (it != m_extn_mods.end()) delete it->second;
+  m_extn_mods[pattern] = new StreamMap(m_module,stream,args);
+}
+
+//=========================================================================
 StreamMap* DocRoot::lookup_extn_map(const std::string& name) const
 {
   int bailout=100;
@@ -265,6 +279,20 @@ StreamMap* DocRoot::lookup_extn_map(const std::string& name) const
 }
 
 //=========================================================================
+void DocRoot::add_path_map(const std::string& pattern,
+                           const std::string& stream,
+                           scx::ScriptRef* args)
+{
+  LOG("Mapping path '" + pattern + 
+      "' to stream type " + stream +
+      " " + (args ? args->object()->get_string() : "NULL"));
+  
+  PatternMap::iterator it = m_path_mods.find(pattern);
+  if (it != m_path_mods.end()) delete it->second;
+  m_path_mods[pattern] = new StreamMap(m_module,stream,args);
+}
+
+//=========================================================================
 StreamMap* DocRoot::lookup_path_map(const std::string& name,
 				    std::string& pathinfo) const
 {
@@ -280,6 +308,14 @@ StreamMap* DocRoot::lookup_path_map(const std::string& name,
     }
   }
   return 0;
+}
+
+//=========================================================================
+void DocRoot::add_realm_map(const std::string& pattern,
+                            const std::string& realm)
+{
+  LOG("Mapping path '" + pattern + "' to realm " + realm);
+  m_realm_maps[pattern] = realm;
 }
 
 //=========================================================================
@@ -372,23 +408,14 @@ scx::ScriptRef* DocRoot::script_method(const scx::ScriptAuth& auth,
 
     // Transfer the remaining arguments to a new list, to be stored with
     // the module map.
-    std::string logargs;
     scx::ScriptList::Ref* ml = new scx::ScriptList::Ref(new scx::ScriptList());
     int pos=2;
     const scx::ScriptRef* arg = 0;
     while (0 != (arg = scx::get_method_arg_ref(args,pos++))) {
       ml->object()->give(arg->ref_copy());
-      if (!logargs.empty()) logargs += ",";
-      logargs += arg->object()->get_string();
     }
-    
-    LOG("Mapping pattern '" + s_pattern + 
-        "' to stream type " + s_stream +
-        "(" + logargs + ")");
-    
-    StreamMap* strmap = new StreamMap(m_module,s_stream,ml);
-    m_extn_mods[s_pattern] = strmap;
 
+    add_extn_map(s_pattern,s_stream,ml);
     return 0;
   }
 
@@ -409,23 +436,14 @@ scx::ScriptRef* DocRoot::script_method(const scx::ScriptAuth& auth,
 
     // Transfer the remaining arguments to a new list, to be stored with
     // the module map.
-    std::string logargs;
     scx::ScriptList::Ref* ml = new scx::ScriptList::Ref(new scx::ScriptList());
     int pos=2;
     const scx::ScriptRef* arg = 0;
     while (0 != (arg = scx::get_method_arg_ref(args,pos++))) {
       ml->object()->give(arg->ref_copy());
-      if (!logargs.empty()) logargs += ",";
-      logargs += arg->object()->get_string();
     }
-    
-    LOG("Mapping path '" + s_pattern + 
-        "' to stream type " + s_stream +
-        "(" + logargs + ")");
-    
-    StreamMap* strmap = new StreamMap(m_module,s_stream,ml);
-    m_path_mods[s_pattern] = strmap;
 
+    add_path_map(s_pattern,s_stream,ml);
     return 0;
   }
 
@@ -444,10 +462,7 @@ scx::ScriptRef* DocRoot::script_method(const scx::ScriptAuth& auth,
     }
     std::string s_realm = a_realm->get_string();
 
-    LOG("Mapping path '" + s_pattern +
-        "' to realm " + s_realm);
-    m_realm_maps[s_pattern] = s_realm;
-
+    add_realm_map(s_pattern,s_realm);
     return 0;
   }
 

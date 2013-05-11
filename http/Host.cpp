@@ -116,6 +116,23 @@ DocRoot* Host::get_docroot(const std::string& profile)
 }
 
 //=========================================================================
+DocRoot::Ref Host::add_docroot(const std::string& profile,
+                               const scx::FilePath& path)
+{
+  DocRootMap::iterator it = m_docroots.find(profile);
+  if (it != m_docroots.end()) {
+    // Already exists, return it
+    return *it->second;
+  }
+
+  scx::FilePath fullpath = m_dir + path;
+  LOG("Adding docroot for '" + profile + "' path '" + fullpath.path() + "'");
+  DocRoot* docroot = new DocRoot(m_module,*this,profile,fullpath);
+  m_docroots[profile] = new DocRoot::Ref(docroot);
+  return DocRoot::Ref(docroot);
+}
+  
+//=========================================================================
 std::string Host::get_string() const
 {
   return get_id();
@@ -187,22 +204,18 @@ scx::ScriptRef* Host::script_method(const scx::ScriptAuth& auth,
     }
     std::string s_profile = a_profile->get_string();
     
+    DocRootMap::const_iterator it = m_docroots.find(s_profile);
+    if (it != m_docroots.end()) {
+      return scx::ScriptError::new_ref("add() Profile already exists");
+    }
+        
     const scx::ScriptString* a_path =
       scx::get_method_arg<scx::ScriptString>(args,1,"path");
     if (!a_path) {
       return scx::ScriptError::new_ref("add() No path specified");
     }
 
-    DocRootMap::const_iterator it = m_docroots.find(s_profile);
-    if (it != m_docroots.end()) {
-      return scx::ScriptError::new_ref("add() Profile already exists");
-    }
-        
-    scx::FilePath path = m_dir + a_path->get_string();
-    LOG("Adding profile '" + s_profile + "' dir '" + path.path() + "'");
-    DocRoot* profile = new DocRoot(m_module,*this,s_profile,path.path());
-    m_docroots[s_profile] = new DocRoot::Ref(profile);
-    return new DocRoot::Ref(profile);
+    return add_docroot(s_profile, a_path->get_string()).ref_copy(ref.reftype());
   }
 
   if ("remove" == name) {

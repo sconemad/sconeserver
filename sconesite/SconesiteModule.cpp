@@ -63,7 +63,7 @@ protected:
 SconesiteModule::SconesiteModule()
   : scx::Module("sconesite",scx::version())
 {
-  scx::Stream::register_stream("sconesite",this);
+  scx::Stream::register_stream(name(),this);
   Article::register_article_type("xml",this);
   Article::register_article_type("wtx",this);
 
@@ -74,7 +74,7 @@ SconesiteModule::SconesiteModule()
 //=========================================================================
 SconesiteModule::~SconesiteModule()
 {
-  scx::Stream::unregister_stream("sconesite",this);
+  scx::Stream::unregister_stream(name(),this);
   Article::unregister_article_type("xml",this);
   Article::unregister_article_type("wtx",this);
 }
@@ -211,6 +211,8 @@ scx::ScriptRef* SconesiteModule::script_method(const scx::ScriptAuth& auth,
     }
     std::string s_profile = a_profile->get_string();
 
+    // There must be a corresponding http Host with the same name as the
+    // sconesite profile.
     scx::Module::Ref httpmod = scx::Kernel::get()->get_module("http");
     http::HTTPModule* http = dynamic_cast<http::HTTPModule*>(httpmod.object());
     http::Host* host = http ? http->get_hosts().lookup_host(s_profile) : 0;
@@ -226,10 +228,8 @@ scx::ScriptRef* SconesiteModule::script_method(const scx::ScriptAuth& auth,
       scx::get_method_arg<scx::ScriptString>(args,1,"dbtype");
     if (a_dbtype) s_dbtype = a_dbtype->get_string();
     
-    scx::FilePath path = host->get_path();
-    LOG("Adding profile '" + s_profile + "' dir '" + path.path() +
-        "' dbtype '" + s_dbtype + "'");
-    Profile* profile = new Profile(*this,s_profile,path,s_dbtype);
+    LOG("Adding profile '" + s_profile + "' dbtype '" + s_dbtype + "'");
+    Profile* profile = new Profile(*this,s_profile,host,s_dbtype);
     m_profiles[s_profile] = new Profile::Ref(profile);
 
     return new Profile::Ref(profile);

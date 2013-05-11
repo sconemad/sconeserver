@@ -27,6 +27,7 @@ Free Software Foundation, Inc.,
 #include <sconex/ScriptBase.h>
 #include <sconex/Database.h>
 #include <sconex/Mutex.h>
+#include <http/Host.h>
 
 #include "Article.h"
 #include "Template.h"
@@ -42,7 +43,7 @@ public:
 
   Profile(SconesiteModule& module,
           const std::string& name,
-          const scx::FilePath& path,
+          http::Host* host,
           const std::string& dbtype);
   
   ~Profile();
@@ -50,7 +51,7 @@ public:
   void refresh();
 
   SconesiteModule& get_module();
-  scx::FilePath& get_path();
+  const scx::FilePath& get_path();
 
   // Find an article by id or name
   // the article is loaded into the cache if it is not already cached
@@ -104,12 +105,15 @@ protected:
   Article* load_article(int id,
 			int pid,
 			const std::string& link);
+
+  void configure_docroot(const std::string& docroot);
+  
 private:
   
   SconesiteModule& m_module;
 
   std::string m_name;
-  scx::FilePath m_path;
+  http::Host::Ref* m_host;
 
   scx::Database::Ref* m_db;
 
@@ -131,7 +135,5 @@ private:
   scx::Time m_purge_threshold;
   
 };
-
-
 
 #endif
