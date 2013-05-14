@@ -189,11 +189,16 @@ if test "x$SCONESITE" == "xyes"; then
 fi
 
 # Check for ImageMagick
-AC_CHECK_PROG([MAGICK], [Magick++-config], [yes], [no])
+AC_ARG_WITH([Magick++-config],
+  [AC_HELP_STRING([--with-Magick++-config=PATH],[Set path to Magick++-config])],
+  [MAGICK_CONFIG="$withval"],
+  [MAGICK_CONFIG="Magick++-config"]
+)
+AC_CHECK_PROG([MAGICK], ["$MAGICK_CONFIG"], [yes], [no])
 if test "x$MAGICK" == "xyes"; then
-  MAGICK_CFLAGS=`Magick++-config --cppflags`
-  MAGICK_LDFLAGS=`Magick++-config --ldflags`
-  MAGICK_LIBS=`Magick++-config --libs`
+  MAGICK_CFLAGS=`$MAGICK_CONFIG --cppflags`
+  MAGICK_LDFLAGS=`$MAGICK_CONFIG --ldflags`
+  MAGICK_LIBS=`$MAGICK_CONFIG --libs`
 fi
 
 # Image module
