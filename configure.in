@@ -159,8 +159,13 @@ AC_ARG_WITH([lettuce],
 )
 
 # Look for libxml2 settings
+AC_ARG_WITH([xml2-config],
+  [AC_HELP_STRING([--with-xml2-config=PATH],[Set path to xml2-config])],
+  [XML2_CONFIG="$withval"],
+  [XML2_CONFIG="xml2-config"]
+)
 AC_CHECK_LIB([xml2],[xmlNewDoc],
-  [CPPFLAGS="$CPPFLAGS `xml2-config --cflags`"],,
+  [CPPFLAGS="$CPPFLAGS `$XML2_CONFIG --cflags`"],,
 )
 
 # Look for libxml2 headers
@@ -228,6 +233,11 @@ fi
 
 # MySql module
 # Include by default if mysqlclient headers are found
+AC_ARG_WITH([mysql_config],
+  [AC_HELP_STRING([--with-mysql_config=PATH],[Set path to mysql_config])],
+  [MYSQL_CONFIG="$withval"],
+  [MYSQL_CONFIG="mysql_config"]
+)
 AC_ARG_WITH([mysql],
   [AC_HELP_STRING([--with-mysql],[Enable MySQL Database module])],
   [MYSQL="$withval"],
@@ -236,8 +246,8 @@ AC_ARG_WITH([mysql],
 # Need mysqlclient library for mysql
 if test "x$MYSQL" == "xyes"; then
   AC_CHECK_LIB([mysqlclient],[mysql_init],
-    [CXXFLAGS="$CXXFLAGS -I/usr/include/mysql"
-     MYSQL_LIBADD="-lmysqlclient"
+    [CXXFLAGS="$CXXFLAGS `$MYSQL_CONFIG --cflags`"
+     MYSQL_LIBADD=`$MYSQL_CONFIG --libs`
      AC_SUBST(MYSQL_LIBADD)],
     [AC_MSG_ERROR([library 'mysqlclient' is required for the mysql module])]
   )
