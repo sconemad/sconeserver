@@ -16019,7 +16019,7 @@ fi
 
 fi
 
-if test "x$SSL" == "xyes"; then
+if test "x$SSL" = "xyes"; then
   ac_fn_cxx_check_header_mongrel "$LINENO" "openssl/ssl.h" "ac_cv_header_openssl_ssl_h" "$ac_includes_default"
 if test "x$ac_cv_header_openssl_ssl_h" = xyes; then :
 
@@ -16214,7 +16214,7 @@ fi
 
 
 # Check we have libxml2 if Sconesite is enabled
-if test "x$SCONESITE" == "xyes"; then
+if test "x$SCONESITE" = "xyes"; then
   if test "x$ac_cv_lib_xml2_xmlNewDoc" != "xyes"; then
     as_fn_error $? "library 'libxml2' is required for Sconesite" "$LINENO" 5
   fi
@@ -16262,7 +16262,7 @@ $as_echo "no" >&6; }
 fi
 
 
-if test "x$MAGICK" == "xyes"; then
+if test "x$MAGICK" = "xyes"; then
   MAGICK_CFLAGS=`Magick++-config --cppflags`
   MAGICK_LDFLAGS=`Magick++-config --ldflags`
   MAGICK_LIBS=`Magick++-config --libs`
@@ -16280,7 +16280,7 @@ fi
 
 
 # Need ImageMagick for image
-if test "x$IMAGE" == "xyes"; then
+if test "x$IMAGE" = "xyes"; then
   if test "x$MAGICK" != "xyes"; then
     as_fn_error $? "library 'Magick++' is required for image" "$LINENO" 5
   fi
@@ -16302,7 +16302,7 @@ else
 fi
 
 # Need libxml2 library for rss
-if test "x$RSS" == "xyes"; then
+if test "x$RSS" = "xyes"; then
   if test "x$ac_cv_lib_xml2_xmlNewDoc" != "xyes"; then
     as_fn_error $? "library 'libxml2' is required for the rss module" "$LINENO" 5
   fi
@@ -16330,7 +16330,7 @@ fi
 fi
 
 # Need mysqlclient library for mysql
-if test "x$MYSQL" == "xyes"; then
+if test "x$MYSQL" = "xyes"; then
   { $as_echo "$as_me:${as_lineno-$LINENO}: checking for mysql_init in -lmysqlclient" >&5
 $as_echo_n "checking for mysql_init in -lmysqlclient... " >&6; }
 if ${ac_cv_lib_mysqlclient_mysql_init+:} false; then :
@@ -16397,7 +16397,7 @@ fi
 fi
 
 # Need sqlite3 library for sqlite
-if test "x$SQLITE" == "xyes"; then
+if test "x$SQLITE" = "xyes"; then
   { $as_echo "$as_me:${as_lineno-$LINENO}: checking for sqlite3_open_v2 in -lsqlite3" >&5
 $as_echo_n "checking for sqlite3_open_v2 in -lsqlite3... " >&6; }
 if ${ac_cv_lib_sqlite3_sqlite3_open_v2+:} false; then :
@@ -16464,7 +16464,7 @@ fi
 fi
 
 # Need libgmp and libmpfr library for maths
-if test "x$MATHS" == "xyes"; then
+if test "x$MATHS" = "xyes"; then
   { $as_echo "$as_me:${as_lineno-$LINENO}: checking for mpfr_init in -lmpfr" >&5
 $as_echo_n "checking for mpfr_init in -lmpfr... " >&6; }
 if ${ac_cv_lib_mpfr_mpfr_init+:} false; then :
@@ -16531,7 +16531,7 @@ fi
 fi
 
 # Need libX11 library for ui
-if test "x$UI" == "xyes"; then
+if test "x$UI" = "xyes"; then
   { $as_echo "$as_me:${as_lineno-$LINENO}: checking for XOpenDisplay in -lX11" >&5
 $as_echo_n "checking for XOpenDisplay in -lX11... " >&6; }
 if ${ac_cv_lib_X11_XOpenDisplay+:} false; then :
