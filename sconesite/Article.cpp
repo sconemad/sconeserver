@@ -348,6 +348,9 @@ scx::ScriptRef* Article::script_method(const scx::ScriptAuth& auth,
       return scx::ScriptError::new_ref("No file specified");
     const scx::FilePath& srcpath = a_file->get_path();
 
+    if (!scx::FilePath::valid_filename(a_file->get_filename()))
+      return scx::ScriptError::new_ref("Invalid filename");
+
     scx::FilePath dstpath = get_root() + a_file->get_filename();
     LOG("Add file moving '" + srcpath.path() + 
 	"' to '" + dstpath.path() + "'");
@@ -366,11 +369,9 @@ scx::ScriptRef* Article::script_method(const scx::ScriptAuth& auth,
       return scx::ScriptError::new_ref("No file specified");
     std::string file = a_file->get_string();
 
-    if (file.empty()) return scx::ScriptError::new_ref("No file specified");
-    if (file.find("/") != std::string::npos ||
-	file.find("..") != std::string::npos) {
-      return scx::ScriptError::new_ref("Could not remove file");
-    }
+    if (!scx::FilePath::valid_filename(file))
+      return scx::ScriptError::new_ref("Invalid filename");
+
     scx::FilePath path = get_root() + file;
     if (!scx::FilePath::rmfile(path)) {
       DEBUG_LOG_ERRNO("Cannot remove file '"+path.path()+"'");

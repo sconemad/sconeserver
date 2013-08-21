@@ -1,3 +1,9 @@
+sconeserver (0.9.8ppa5) precise; urgency=low
+
+  * Fix concurrency issues with ScriptRef and shared http Sessions.
+
+ -- Andrew Wedgbury <wedge@sconemad.com>  Wed, 24 Apr 2013 20:12:34 +0000
+
 sconeserver (0.9.8ppa4) precise; urgency=low
 
   * Fix build-depends for location.

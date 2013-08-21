@@ -1,4 +1,10 @@
 
+2013-08-21 Andrew Wedgbury <wedge@sconemad.com>
+
+	* sconex/FilePath: Add valid_filename() to validate filenames (huh).
+	* sconesite/Article: Validate upload filename using above.
+	* sconesite/SconesiteStream: Validate upload filename using above.
+
 2013-05-11 Andrew Wedgbury <wedge@sconemad.com>
 
 	* http/Host: Factor out method for adding docroot.

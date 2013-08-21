@@ -147,6 +147,17 @@ bool FilePath::is_root(const std::string& pathstr)
 }
 
 //=============================================================================
+bool FilePath::valid_filename(const std::string& name)
+{
+  // I suspect this can be improved
+  if (name.empty() ||
+      name == "." ||
+      name == ".." ||
+      std::string::npos != name.find("/")) return false;
+  return true;
+}
+
+//=============================================================================
 bool FilePath::mkdir(const FilePath& path, bool recursive, mode_t mode)
 {
   const std::string& str = path.path();

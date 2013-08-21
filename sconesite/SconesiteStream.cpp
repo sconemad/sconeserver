@@ -232,6 +232,11 @@ scx::Condition SconesiteStream::start_section(const scx::MimeHeaderTable& header
 	m_module.object()->name() + "-" + session->get_id() + "-" + name;
       path += filename;
       //      STREAM_DEBUG_LOG("Streaming section to file '" << path.path() << "'");
+      if (!scx::FilePath::valid_filename(fname)) {
+	log("Invalid filename '" + fname + "'");
+	return scx::Close;
+      }
+
       req.set_param(name,
 		    new scx::ScriptRef(new scx::ScriptFile(path,fname)));
       

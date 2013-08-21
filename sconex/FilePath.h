@@ -52,7 +52,12 @@ public:
   void operator+=(const FilePath& a);
   
   static void normalize(std::string& path);
+
+  // Is this an absolute path
   static bool is_root(const std::string& path);
+
+  // Is this a valid file name
+  static bool valid_filename(const std::string& name);
 
   static bool mkdir(const FilePath& path, bool recursive, mode_t mode);
   static bool rmdir(const FilePath& path, bool recursive=false);
