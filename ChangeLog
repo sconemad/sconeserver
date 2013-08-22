@@ -4,6 +4,7 @@
 	* http/DocRoot: Check if request already has a session before lookup -
 	hopefully fixes annoying thread lockup issue on error pages.
 	* sconesite/SconesiteStream: Improve handling of invalid uploads.
+	* rss/Feed: Use our own http::Client to access feeds.
 
 2013-08-21 Andrew Wedgbury <wedge@sconemad.com>
 

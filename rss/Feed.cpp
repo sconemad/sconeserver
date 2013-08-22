@@ -29,8 +29,8 @@ Free Software Foundation, Inc.,
 #include "Feed.h"
 #include "RSSModule.h"
 #include <sconex/Log.h>
-
-#include "libxml/nanohttp.h"
+#include <sconex/Kernel.h>
+#include <http/Client.h>
 
 #define LOG(msg) scx::Log("rss").attach("id",m_id).submit(msg);
 
@@ -73,9 +73,16 @@ void Feed::refresh(bool force)
 {
   if (force || scx::Date::now() >= (m_refresh_time + m_period)) {
 
-    // Can set a HTTP proxy here:
-    //xmlNanoHTTPScanProxy("http://proxy_host:8080");
+    scx::Module::Ref httpmod = scx::Kernel::get()->get_module("http");
+    http::HTTPModule* http = dynamic_cast<http::HTTPModule*>(httpmod.object());
+    http::Client hc(http, "GET", m_url);
 
+    //XXX it would be nice if we could use an If-Modified-Since header to
+    // detect if the feed has changed
+    if (!hc.run()) {
+      LOG("Unable to refresh feed - network error");
+    }
+    
     xmlParserCtxt* cx;
     cx = xmlNewParserCtxt();
     cx->_private = this;
@@ -85,8 +92,10 @@ void Feed::refresh(bool force)
     int opts = 0;
     opts |= XML_PARSE_RECOVER;
     
-    xmlDoc* xmldoc = xmlCtxtReadFile(cx,m_url.get_string().c_str(),NULL,opts);
-    
+    const std::string& data = hc.get_response_data();
+    xmlDoc* xmldoc = xmlCtxtReadMemory(cx,data.data(),data.length(),
+				       m_url.get_string().c_str(),NULL,opts);
+
     bool success = false;
     if (xmldoc) {
       clear_items();
@@ -103,11 +112,11 @@ void Feed::refresh(bool force)
     } else if (xmldoc) {
       oss << "Unable to refresh feed - invalid feed data returned";
     } else {
-      oss << "Unable to refresh feed - recieved no data";
+      oss << "Unable to refresh feed - received no data";
     }
     LOG(oss.str());
     
-    xmlFreeDoc(xmldoc);
+    if (xmldoc) xmlFreeDoc(xmldoc);
     xmlFreeParserCtxt(cx);
   }
 }
@@ -378,7 +387,7 @@ void Feed::process_feed_entry(xmlNode* root)
       } else if (name == "author") {
 	for (xmlNode* subnode = node->children;
 	     subnode != 0;
-	     subnode = node->next) {
+	     subnode = subnode->next) {
 	  if (std::string((char*)subnode->name) == "name") {
 	    if (subnode->children && subnode->children->content) {
 	      value = new scx::ScriptString((char*)subnode->children->content);
