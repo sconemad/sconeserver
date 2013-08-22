@@ -1,4 +1,10 @@
 
+2013-08-22 Andrew Wedgbury <wedge@sconemad.com>
+
+	* http/DocRoot: Check if request already has a session before lookup -
+	hopefully fixes annoying thread lockup issue on error pages.
+	* sconesite/SconesiteStream: Improve handling of invalid uploads.
+
 2013-08-21 Andrew Wedgbury <wedge@sconemad.com>
 
 	* sconex/FilePath: Add valid_filename() to validate filenames (huh).

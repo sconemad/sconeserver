@@ -161,54 +161,57 @@ bool DocRoot::connect_request(scx::Descriptor* endpoint,
       }
     }
 
-    // Check for session cookie
-    std::string cookie = request.get_header("Cookie");
-    std::string scxid;
-    if (!cookie.empty()) {
-      const std::string pattern = "scxid=";
-      std::string::size_type start = cookie.find(pattern);
-      if (start != std::string::npos) {
-	start += pattern.length();
-	std::string::size_type end = cookie.find_first_of(" ;",start);
-	if (end != std::string::npos) {
-	  scxid = cookie.substr(start,end-start);
-	} else {
-	scxid = cookie.substr(start);
+    if (!request.get_session()) {
+
+      // Check for session cookie
+      std::string cookie = request.get_header("Cookie");
+      std::string scxid;
+      if (!cookie.empty()) {
+	const std::string pattern = "scxid=";
+	std::string::size_type start = cookie.find(pattern);
+	if (start != std::string::npos) {
+	  start += pattern.length();
+	  std::string::size_type end = cookie.find_first_of(" ;",start);
+	  if (end != std::string::npos) {
+	    scxid = cookie.substr(start,end-start);
+	  } else {
+	    scxid = cookie.substr(start);
+	  }
 	}
       }
-    }
-
-    const scx::ScriptRef* a_auto_session = get_param("auto_session");
-    bool b_auto_session = 
-      (a_auto_session && a_auto_session->object()->get_int());
-
-    // Lookup the session
-    Session::Ref* s = m_module.get_sessions().lookup_session(scxid);
-    if (s != 0) {
-      // Existing session
-      LOG("Existing session: " + scxid);
-      s->object()->set_last_used();
       
-    } else {
-      if (!scxid.empty()) {
-	// Timed-out session
+      const scx::ScriptRef* a_auto_session = get_param("auto_session");
+      bool b_auto_session = 
+	(a_auto_session && a_auto_session->object()->get_int());
+      
+      // Lookup the session
+      Session::Ref* s = m_module.get_sessions().lookup_session(scxid);
+      if (s != 0) {
+	// Existing session
+	LOG("Existing session: " + scxid);
+	s->object()->set_last_used();
+	
+      } else {
+	if (!scxid.empty()) {
+	  // Timed-out session
+	}
+	
+	// Create new session if auto_session enabled
+	if (b_auto_session) {
+	  s = m_module.get_sessions().new_session();
+	  scxid = s->object()->get_id();
+	  LOG("New session: " + scxid);
+	}
       }
       
-      // Create new session if auto_session enabled
-      if (b_auto_session) {
-	s = m_module.get_sessions().new_session();
-        scxid = s->object()->get_id();
-        LOG("New session: " + scxid);
+      if (s) {
+	// Update cookie
+	std::string cookie = "scxid=" + scxid +
+	  "; expires=" + s->object()->get_expiry().string() +
+	  "; path=/";
+	response.set_header("Set-Cookie",cookie);
+	request.give_session(s);
       }
-    }
-
-    if (s) {
-      // Update cookie
-      std::string cookie = "scxid=" + scxid +
-        "; expires=" + s->object()->get_expiry().string() +
-        "; path=/";
-      response.set_header("Set-Cookie",cookie);
-      request.give_session(s);
     }
   }
 
