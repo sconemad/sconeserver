@@ -232,31 +232,25 @@ scx::Condition SconesiteStream::start_section(const scx::MimeHeaderTable& header
 	m_module.object()->name() + "-" + session->get_id() + "-" + name;
       path += filename;
       //      STREAM_DEBUG_LOG("Streaming section to file '" << path.path() << "'");
-      if (scx::FilePath::valid_filename(fname)) {
-	
-	req.set_param(name,
-		      new scx::ScriptRef(new scx::ScriptFile(path,fname)));
-	
-	scx::File* file = new scx::File();
-	if (file->open(path.path(),
-		       scx::File::Write | scx::File::Create | 
-		       scx::File::Truncate,
-		       00660) == scx::Ok) {
-	  //	endpoint().add_stream(new scx::StreamDebugger("https-file"));
-	  scx::StreamTransfer* xfer = new scx::StreamTransfer(&endpoint());
-	  file->add_stream(xfer);
-	  // Add file to kernel
-	  scx::Kernel::get()->connect(file);
-	  file = 0;
-	  return scx::Ok;
-	}
-	
-	log("Error opening file '" + path.path() + "'");
-	delete file;
-
-      } else {
-	log("Invalid filename '" + fname + "'");
+      req.set_param(name,
+		    new scx::ScriptRef(new scx::ScriptFile(path,fname)));
+      
+      scx::File* file = new scx::File();
+      if (file->open(path.path(),
+		     scx::File::Write | scx::File::Create | 
+		     scx::File::Truncate,
+		     00660) == scx::Ok) {
+	//	endpoint().add_stream(new scx::StreamDebugger("https-file"));
+	scx::StreamTransfer* xfer = new scx::StreamTransfer(&endpoint());
+	file->add_stream(xfer);
+	// Add file to kernel
+	scx::Kernel::get()->connect(file);
+	file = 0;
+	return scx::Ok;
       }
+      
+      log("Error opening file '" + path.path() + "'");
+      delete file;
 
     } else {
       //      STREAM_DEBUG_LOG("Writing section to parameter '" << name << "'");
