@@ -530,24 +530,22 @@ TimeZone TimeZone::utc()
 //=============================================================================
 TimeZone TimeZone::local(const Date& date)
 {
-  struct tm* tms = 0;
+  struct tm tms;
   const time_t t = date.epoch_seconds();
 
   // Get local time on this date
-  tms = localtime(&t);
-  if (tms == 0) {
+  if (0 == localtime_r(&t, &tms)) {
     return TimeZone();
   }
-  tms->tm_isdst=-1;
-  time_t t_loc = mktime(tms);
+  tms.tm_isdst=-1;
+  time_t t_loc = mktime(&tms);
 
   // Get universal time on this date
-  tms = gmtime(&t);
-  if (tms == 0) {
+  if (0 == gmtime_r(&t, &tms)) {
     return TimeZone();
   }
-  tms->tm_isdst=-1;
-  time_t t_gmt = mktime(tms);
+  tms.tm_isdst=-1;
+  time_t t_gmt = mktime(&tms);
 
   // Local timezone is then the difference between these
   return TimeZone(t_loc - t_gmt);

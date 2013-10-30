@@ -404,7 +404,11 @@ std::string Date::ansi_string() const
   if (!get_tms(tms)) {
     return std::string("ERROR");
   }
-  return std::string(asctime(&tms));
+  char str[32];
+  if (0 == asctime_r(&tms, str)) {
+    return std::string("ERROR");
+  }
+  return std::string(str);
 }
 
 //=============================================================================
@@ -590,13 +594,11 @@ ScriptRef* Date::script_method(const ScriptAuth& auth,
 bool Date::get_tms(struct tm& tms) const
 {
   time_t tadj = m_time.tv_sec + m_timezone.seconds();
-  struct tm* tmr = gmtime(&tadj);
-
-  if (tmr == 0) {
+  
+  if (0 == gmtime_r(&tadj, &tms)) {
     return false;
   }
 
-  memcpy(&tms,tmr,sizeof(tm));
   return true;
 }
 
