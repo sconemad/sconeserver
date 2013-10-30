@@ -22,6 +22,10 @@ Free Software Foundation, Inc.,
 #include "IP6SocketAddress.h"
 #include <sconex/ScriptTypes.h>
 
+// Min/Max buffer size for gethostbyname_r/gethostbyaddr_r requests
+#define BSIZE_MIN 1024
+#define BSIZE_MAX 65536
+
 //=============================================================================
 IP6SocketAddress::IP6SocketAddress(scx::Module* module,
 				   const scx::ScriptRef* args)
@@ -141,7 +145,7 @@ std::string IP6SocketAddress::get_string() const
 
   std::string service = get_service();
   oss << service;
-  if (service.empty()) oss << (int)get_port();
+  if (service.empty()) oss << get_port();
   
   return oss.str();
 }
@@ -189,16 +193,28 @@ void IP6SocketAddress::set_address(
     } else {
       // Its not a valid ip address, so assume it is a host name and 
       // try and resolve it.
-      hostent* phe = gethostbyname2(addr.c_str(),AF_INET6);
-      if (phe) {
-        // Resolved so save it
-        memcpy(&m_addr.sin6_addr,phe->h_addr,phe->h_length);
-        m_host = addr;
-        m_valid = true;
-      } else {
-        // Could not resolve, so leave invalid
-        m_valid = false;
-        DEBUG_LOG("set_address() could not resolve address");
+      int ret = -1;
+      hostent he;
+      hostent* phe = 0;
+      int rerr = 0;
+      int bsize = BSIZE_MIN;
+      for (; bsize <= BSIZE_MAX; bsize *= 2) {
+	char* buf = new char[bsize];
+	ret = gethostbyname2_r(addr.c_str(),AF_INET6,
+			       &he,buf,bsize,&phe,&rerr);
+	if (0 == ret && phe) {
+	  // Resolved so save it
+	  memcpy(&m_addr.sin6_addr,phe->h_addr,phe->h_length);
+	  m_host = addr;
+	  m_valid = true;
+	}
+	delete [] buf;
+	if (ERANGE != ret) break;
+      }
+      if (0 != ret) {
+	// Could not resolve, so leave invalid
+	DEBUG_LOG("set_address() could not resolve address");
+	m_valid = false;
       }
     }
   }
@@ -222,18 +238,27 @@ std::string IP6SocketAddress::get_address() const
 const std::string& IP6SocketAddress::get_host() const
 {
   if (m_valid) {
-    
-    if (m_host.length()==0) {
+    if (0 == m_host.length()) {
       // We haven't got a host name set so try and resolve it
-      hostent* phe = gethostbyaddr((const char*)&m_addr.sin6_addr,
-                                   sizeof(m_addr.sin6_addr),AF_INET6);
-      if (phe) {
-        // Resolved the host name so cache it
-        IP6SocketAddress* unconst = (IP6SocketAddress*)this; // CAC!!!
-        unconst->m_host = phe->h_name;
+      int ret = -1;
+      hostent he;
+      hostent* phe = 0;
+      int rerr = 0;
+      int bsize = BSIZE_MIN;
+      for (; bsize <= BSIZE_MAX; bsize *= 2) {
+	char* buf = new char[bsize];
+	ret = gethostbyaddr_r((const char*)&m_addr.sin6_addr,
+			      sizeof(m_addr.sin6_addr),AF_INET6,
+			      &he,buf,bsize,&phe,&rerr);
+	if (0 == ret && phe) {
+	  // Resolved the host name so cache it
+	  IP6SocketAddress* unconst = const_cast<IP6SocketAddress*>(this);
+	  unconst->m_host = phe->h_name;
+	}
+	delete [] buf;
+	if (ERANGE != ret) break;
       }
     }
-    
   }
   return m_host;
 }
@@ -259,13 +284,24 @@ void IP6SocketAddress::set_port(
     if (m_addr.sin6_port == 0) {
       // Its not a valid port number, so assume it is a service name and 
       // try and resolve it.
-      servent* pse = getservbyname(port.c_str(),"tcp");
-      if (pse) {
-        // Resolved so save it
-        m_addr.sin6_port = pse->s_port;
-        m_service = port;
-      } else {
-        // Could not resolve, so leave as invalid
+      int ret = -1;
+      servent se;
+      servent* pse = 0;
+      int bsize = BSIZE_MIN;
+      for (; bsize <= BSIZE_MAX; bsize *= 2) {
+	char* buf = new char[bsize];
+	ret = getservbyname_r(port.c_str(),"tcp",
+			      &se,buf,bsize,&pse);
+	if (0 == ret && pse) {
+	  // Resolved so save it
+	  m_addr.sin6_port = pse->s_port;
+	  m_service = port;
+	}
+	delete [] buf;
+	if (ERANGE != ret) break;
+      }
+      if (0 != ret) {
+	// Could not resolve, so leave as invalid
         DEBUG_LOG("set_port() could not resolve port number");
         m_service = std::string();
       }
@@ -275,7 +311,7 @@ void IP6SocketAddress::set_port(
 
 //=============================================================================
 void IP6SocketAddress::set_port(
-  short port
+  unsigned short port
 )
 {
   m_service = std::string();
@@ -283,7 +319,7 @@ void IP6SocketAddress::set_port(
 }
 
 //=============================================================================
-short IP6SocketAddress::get_port() const
+unsigned short IP6SocketAddress::get_port() const
 {
   return ntohs(m_addr.sin6_port);
 }
@@ -291,16 +327,27 @@ short IP6SocketAddress::get_port() const
 //=============================================================================
 const std::string& IP6SocketAddress::get_service() const
 {
-  if (m_service.length()==0) {
+  if (0 == m_service.length()) {
+    IP6SocketAddress* unconst = const_cast<IP6SocketAddress*>(this);
     // We haven't got a service name set so try and resolve it
-    servent* pse = getservbyport((int)m_addr.sin6_port,"tcp");
-    IP6SocketAddress* unconst = (IP6SocketAddress*)this; // CAC!!!
-    if (pse) {
-      // Resolved the service name so cache it
-      unconst->m_service = pse->s_name;
-    } else {
+    int ret = -1;
+    servent se;
+    servent* pse = 0;
+    int bsize = BSIZE_MIN;
+    for (; bsize <= BSIZE_MAX; bsize *= 2) {
+      char* buf = new char[bsize];
+      ret = getservbyport_r((int)m_addr.sin6_port,"tcp",
+			    &se,buf,bsize,&pse);
+      if (0 == ret && pse) {
+	// Resolved the service name so cache it
+	unconst->m_service = pse->s_name;
+      }
+      delete [] buf;
+      if (ERANGE != ret) break;
+    }
+    if (ret != 0) {
       std::ostringstream oss;
-      oss << (int)ntohs(m_addr.sin6_port);
+      oss << ntohs(m_addr.sin6_port);
       unconst->m_service = oss.str();
     }
   }

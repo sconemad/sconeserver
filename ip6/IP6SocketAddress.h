@@ -70,9 +70,9 @@ public:
   // Port/service methods
 
   void set_port(const std::string& port);
-  void set_port(short port);
+  void set_port(unsigned short port);
 
-  short get_port() const;
+  unsigned short get_port() const;
   // Get the port in numerical form
 	
   const std::string& get_service() const;
