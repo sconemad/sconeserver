@@ -1,3 +1,13 @@
+sconeserver (0.9.8ppa7) precise; urgency=low
+
+  * Fixes:
+    - Eliminate use of known non-reenterant calls. This was known to be causing
+      at least one issue regarding HTTP session timeouts, and probably other
+      general instabilities.
+    - Fix errors when loading rss module.
+
+ -- Andrew Wedgbury <wedge@sconemad.com>  Wed, 30 Oct 2013 20:11:26 +0000
+
 sconeserver (0.9.8ppa6) precise; urgency=low
 
   * New features:
