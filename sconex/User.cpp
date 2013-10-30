@@ -89,25 +89,44 @@ bool User::is_valid() const
 {
   return (m_user_id > 0);
 }
+
+// Maximum buffer size for getpwnam_r/getpwuid_r requests
+#define BSIZE_MAX 65536
   
 //=============================================================================
 bool User::set_user_name(const std::string& user_name)
 {
-  struct passwd* pwent = getpwnam(user_name.c_str());
-  if (!pwent) {
-    return false;
+  int ret = -1;
+  struct passwd pwent;
+  struct passwd* pwret = 0;
+  int bsize = sysconf(_SC_GETPW_R_SIZE_MAX);
+  if (bsize <= 0) bsize = 1024;
+  for (; bsize <= BSIZE_MAX; bsize *= 2) {
+    char* buf = new char[bsize];
+    ret = getpwnam_r(user_name.c_str(),&pwent,buf,bsize,&pwret);
+    if (0 == ret) set_from_passwd(&pwent);
+    delete [] buf;
+    if (ERANGE != ret) break;
   }
-  return set_from_passwd(pwent);
+  return (0 == ret);
 }
 
 //=============================================================================
 bool User::set_user_id(uid_t user_id)
 {
-  struct passwd* pwent = getpwuid(user_id);
-  if (!pwent) {
-    return false;
+  int ret = -1;
+  struct passwd pwent;
+  struct passwd* pwret = 0;
+  int bsize = sysconf(_SC_GETPW_R_SIZE_MAX);
+  if (bsize <= 0) bsize = 1024;
+  for (; bsize <= BSIZE_MAX; bsize *=2 ) {
+    char* buf = new char[bsize];
+    ret = getpwuid_r(user_id,&pwent,buf,bsize,&pwret);
+    if (0 == ret) set_from_passwd(&pwent);
+    delete [] buf;
+    if (ERANGE != ret) break;
   }
-  return set_from_passwd(pwent); 
+  return (0 == ret);
 }
 
 //=============================================================================

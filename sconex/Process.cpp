@@ -726,6 +726,9 @@ void Proxy::reset()
 //============================================================================
 bool Proxy::verify_system_password(const char* user, const char* password)
 {
+  //NOTE: We're ok using non-reenterant calls here since this all runs in a
+  // single thread within the root proxy process.
+
   struct spwd* spwent = getspnam(user);
   if (spwent == 0) {
     PROCESS_DEBUG_LOG("VERIFY: getspnam failed");
