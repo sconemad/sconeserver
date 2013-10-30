@@ -1,3 +1,17 @@
+sconeserver (0.9.8ppa6) precise; urgency=low
+
+  * New features:
+    - Make it easier to configure http+sconesite sites.
+    - More secure HTTP session ID generation (uses /dev/urandom).
+    - Use internal http client to load RSS feeds (supports https).
+
+  * Fixes:
+    - Validate file names when uploading files in http.
+    - Fix some session locking issues with HTTP errors and uploads.
+    - Fix RSS feed parsing error which can cause lockups.
+
+ -- Andrew Wedgbury <wedge@sconemad.com>  Mon, 26 Aug 2013 22:19:05 +0000
+
 sconeserver (0.9.8ppa5) precise; urgency=low
 
   * Fix concurrency issues with ScriptRef and shared http Sessions.
