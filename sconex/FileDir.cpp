@@ -68,9 +68,10 @@ bool FileDir::next()
   }
 
   if (m_state == 1) {
-    struct dirent* dent = readdir(m_dir);
-    if (dent) {
-      m_current_name = dent->d_name;
+    struct dirent dent;
+    struct dirent* dret = 0;
+    if (0 == readdir_r(m_dir,&dent,&dret) && dret) {
+      m_current_name = dent.d_name;
       m_current_stat = FileStat(path());
       return true;
     }
