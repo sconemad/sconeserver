@@ -134,15 +134,19 @@ bool Session::valid() const
 }
 
 //=========================================================================
-void Session::set_locked(bool locked)
+bool Session::lock()
 {
-  m_locked = locked;
+  scx::MutexLocker locker(m_manager.m_mutex);
+  if (m_locked) return false;
+  m_locked = true;
+  return true;
 }
 
 //=========================================================================
-bool Session::is_locked() const
+void Session::unlock()
 {
-  return m_locked;
+  scx::MutexLocker locker(m_manager.m_mutex);
+  m_locked = false;
 }
 
 //=========================================================================
@@ -261,18 +265,7 @@ Session::Ref* SessionManager::lookup_session(const std::string& id)
   if (it == m_sessions.end()) {
     return 0;
   }
-  
-  Session* session = it->second->object();
-  if (session->is_locked()) {
-    DEBUG_LOG("*** Waiting for session release ***");
-    do {
-      m_release.wait(m_mutex);
-    } while (session->is_locked());
-    DEBUG_LOG("*** Session has been released ***"); 
-  }
-    
-  session->set_locked(true);
-  return new Session::Ref(session);
+  return new Session::Ref(it->second->object());
 }
 
 //=========================================================================
@@ -292,23 +285,13 @@ Session::Ref* SessionManager::new_session()
       continue;
     }
 
-    // Add the session, lock it and return
+    // Add the session and return
     m_sessions[session->get_id()] = new Session::Ref(session);
-    session->set_locked(true);
     return new Session::Ref(session);
   }
   return 0;
 }
 
-//=========================================================================
-void SessionManager::release_session(Session::Ref* session)
-{
-  scx::MutexLocker locker(m_mutex);
-  session->object()->set_locked(false);
-  delete session;
-  m_release.broadcast();
-}
-  
 //=========================================================================
 int SessionManager::check_sessions()
 {

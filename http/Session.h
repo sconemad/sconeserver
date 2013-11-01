@@ -57,9 +57,13 @@ public:
   scx::Date get_expiry() const;
   bool valid() const;
 
-  void set_locked(bool locked);
-  bool is_locked() const;
-  
+  // Attempt to lock the session, returns false if already locked
+  bool lock();
+
+  // Unlock the session
+  void unlock();
+
+  // Does the session permit uploads?
   bool allow_upload() const;
 
   SessionManager& get_manager() const;
@@ -110,9 +114,6 @@ public:
   // Create a new session
   Session::Ref* new_session();
 
-  // Release a locked session
-  void release_session(Session::Ref* session);
-  
   // Check through sessions, removing any that have timed-out
   int check_sessions();
 
@@ -130,10 +131,11 @@ public:
   typedef scx::ScriptRefTo<SessionManager> Ref;
 
  private:
+
+  friend class Session;
   
   HTTPModule& m_module;
   scx::Mutex m_mutex;
-  scx::ConditionEvent m_release;
   
   typedef HASH_TYPE<std::string,Session::Ref*> SessionMap;
   SessionMap m_sessions;

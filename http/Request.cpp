@@ -43,11 +43,7 @@ Request::Request(const std::string& profile, const std::string& id)
 //===========================================================================
 Request::~Request()
 {
-  if (m_session) {
-    SessionManager& manager = m_session->object()->get_manager();
-    manager.release_session(m_session);
-    m_session = 0;
-  }
+  delete m_session;
 }
 
 //===========================================================================

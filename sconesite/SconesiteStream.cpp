@@ -275,6 +275,7 @@ scx::Condition SconesiteStream::send_response()
   http::MessageStream* msg = GET_HTTP_MESSAGE();
   http::Request& req = const_cast<http::Request&>(msg->get_request());
   http::Response& resp = msg->get_response();
+  http::Session* session = req.get_session();
   std::string pathinfo = req.get_path_info();
 
   if (resp.get_status().code() == http::Status::Ok && !m_file.empty()) {
@@ -297,6 +298,12 @@ scx::Condition SconesiteStream::send_response()
     log("Sending article '" + m_article->object()->get_string() + "'");
   }
   
+  // If there is a session then we need to lock it before going any further
+  if (session && !session->lock()) {
+    log("Session [" + session->get_id() + "] is LOCKED, will try again later");
+    return scx::Wait;
+  }
+
   // Set the endpoint blocking, saving previous state
   bool prev_block = endpoint().set_blocking(true);
   
@@ -315,6 +322,9 @@ scx::Condition SconesiteStream::send_response()
   } catch (...) {
     DEBUG_LOG("EXCEPTION caught in SconesiteStream");
   }
+
+  // Unlock the session
+  if (session) session->unlock();
 
   scx::Time elapsed = scx::Date::now() - start_time;
   std::ostringstream oss;
