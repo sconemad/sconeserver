@@ -418,14 +418,17 @@ bool Module::load_config_file(FilePath path)
 bool Module::load_config_dir(FilePath path)
 {
   const char* filepattern =
-    "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ1234567890_-";
+    "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ1234567890_-.";
+  const char* fileext = ".conf";
 
   path = Kernel::get()->get_conf_path() + path;
 
   FileDir dir(path);
   std::list<std::string> files;
   while (dir.next()) {
+    size_t extpos = dir.name().length() - strlen(fileext);
     if (dir.stat().is_file() &&
+	dir.name().find(fileext,extpos) != std::string::npos &&
 	dir.name().find_first_not_of(filepattern) == std::string::npos) {
       files.push_back(dir.name());
     }
@@ -450,6 +453,7 @@ bool Module::load_module_dir(FilePath path)
 {
   const char* filepattern =
     "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ1234567890_-.";
+  const char* fileext = ".conf";
 
   path = Kernel::get()->get_conf_path() + path;
   
@@ -457,7 +461,9 @@ bool Module::load_module_dir(FilePath path)
   FileDir dir(path);
   std::list<std::string> files;
   while (dir.next()) {
+    size_t extpos = dir.name().length() - strlen(fileext);
     if (dir.stat().is_file() &&
+	dir.name().find(fileext,extpos) != std::string::npos &&
 	dir.name().find_first_not_of(filepattern) == std::string::npos) {
       files.push_back(dir.name());
     }
