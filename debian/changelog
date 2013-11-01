@@ -1,3 +1,12 @@
+sconeserver (0.9.8ppa8) precise; urgency=low
+
+  * Fixes:
+    - New asynchronous session locking in sconesite, prevents sever hangs.
+    - Only process files with .conf extensions in conf.d directories,
+      preventing problems with dpkg upgrades, etc.
+
+ -- Andrew Wedgbury <wedge@sconemad.com>  Fri, 01 Nov 2013 19:34:21 +0000
+
 sconeserver (0.9.8ppa7) precise; urgency=low
 
   * Fixes:
