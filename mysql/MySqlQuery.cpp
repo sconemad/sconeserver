@@ -84,7 +84,7 @@ void MySqlArg::init_param(MYSQL_BIND& bind, const scx::ScriptRef* arg)
     if (typeid(scx::ScriptString) == ti) {
       m_type = MYSQL_TYPE_STRING;
       const std::string value = obj->get_string();
-      delete m_str_data;
+      delete[] m_str_data;
       m_str_data = scx::new_c_str(value);
       m_length = value.size();
       bind.buffer = (void*)m_str_data;

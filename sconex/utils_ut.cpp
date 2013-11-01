@@ -68,7 +68,7 @@ void utils_ut()
 
   UTCOD(char* cs1 = new_c_str("look at this"));
   UTEST(0 == strcmp(cs1,"look at this"));
-  delete cs1;
+  delete[] cs1;
 
 
   UTSEC("escape_quotes");
