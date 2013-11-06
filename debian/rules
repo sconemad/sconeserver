@@ -15,11 +15,13 @@ configure-stamp:
 	# If you plan to install the target .deb on a wide variety of machines,
 	# you may want to add the "--enable-runtime-cpudetection" option to
 	# the line below, but beware: the resulting binary will run slower
-	./configure --prefix=/usr --sysconfdir=/etc/sconeserver --libdir=/usr/lib --localstatedir=/var/log/sconeserver $(DEB_BUILD_OPTIONS)
+	./autogen.sh --prefix=/usr --sysconfdir=/etc/sconeserver --libdir=/usr/lib --localstatedir=/var/log/sconeserver $(DEB_BUILD_OPTIONS)
 
 	touch configure-stamp
 
-build: configure-stamp build-stamp
+build: configure-stamp build-arch build-indep
+build-arch: build-stamp
+build-indep: build-stamp
 build-stamp:
 	dh_testdir
 
@@ -34,7 +36,7 @@ clean:
 	rm -f build-stamp configure-stamp
 
 	# commands to clean up after the build process.
-	-$(MAKE) distclean
+	[ ! -f Makefile ] || $(MAKE) distclean
 	rm -f help_mp.h config.h config.mak
 	dh_clean
 
