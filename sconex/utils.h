@@ -49,9 +49,18 @@ unsigned char SCONEX_API random_byte();
 // Get a random integer [0-RAND_MAX]
 unsigned int SCONEX_API random_int();
 
-// Get a random hex string
-std::string random_hex_string(int len);
+// Get a random string picked from a given set of chars
+std::string random_string(int len, const char* chars);
   
+// Get a random hex string (with characters [0-9a-f])
+std::string random_hex_string(int len);
+
+// Get a random base64 string (with characters [0-0a-zA-Z+/])
+std::string random_b64_string(int len);
+
+// Get a random base64url string (with characters [0-0a-zA-Z\-_])
+std::string random_b64url_string(int len);
+
 };
 
 #endif

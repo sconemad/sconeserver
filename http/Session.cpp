@@ -72,13 +72,13 @@ Session::Session(SessionManager& manager,
     // Create a new session ID, consisting of 48 chars as follows:
     //  [8 chars] Current epoch time in hex
     //  [6 chars] Server process ID in hex
-    //  [34 chars] Random bytes in hex
+    //  [34 chars] Random data in base64url format
     //  
     std::ostringstream oss;
     unsigned long t = scx::Date::now().epoch_seconds();
     oss << std::setw(8) << std::setfill('0') << std::hex << t;
     oss << std::setw(6) << std::setfill('0') << std::hex << getpid();
-    oss << scx::random_hex_string(34);
+    oss << scx::random_b64url_string(34);
     m_id = oss.str();
   }
 

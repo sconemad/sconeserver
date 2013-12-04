@@ -156,6 +156,18 @@ unsigned int random_int()
 }
   
 //============================================================================
+std::string random_string(int len, const char* chars)
+{
+  int max = strlen(chars);
+  std::ostringstream oss;
+  for (int i=0; i<len; ++i) {
+    int c = random_int() % max; // Assume RAND_MAX >> max
+    oss << chars[c];
+  }
+  return oss.str();
+}
+
+//============================================================================
 std::string random_hex_string(int len)
 {
   std::ostringstream oss;
@@ -165,5 +177,25 @@ std::string random_hex_string(int len)
   }
   return oss.str().substr(0,len);
 }
-  
+
+//============================================================================
+std::string random_b64_string(int len)
+{
+  return random_string(len,
+		       "ABCDEFGHIJKLMNOP"
+		       "QRSTUVWXYZabcdef"
+		       "ghijklmnopqrstuv"
+		       "wxyz0123456789+/");
+}
+
+//============================================================================
+std::string random_b64url_string(int len)
+{
+  return random_string(len,
+		       "ABCDEFGHIJKLMNOP"
+		       "QRSTUVWXYZabcdef"
+		       "ghijklmnopqrstuv"
+		       "wxyz0123456789-_");
+}
+
 };
