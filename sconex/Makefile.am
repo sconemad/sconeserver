@@ -38,6 +38,7 @@ ModuleLoader.cpp \
 Multiplexer.cpp \
 Mutex.cpp \
 NullFile.cpp \
+Password.cpp \
 Process.cpp \
 RegExp.cpp \
 Response.cpp \
@@ -98,6 +99,7 @@ ModuleLoader.h \
 Multiplexer.h \
 Mutex.h \
 NullFile.h \
+Password.h \
 Process.h \
 Provider.h \
 RegExp.h \
@@ -135,6 +137,7 @@ LineBuffer_ut.cpp \
 MemFile_ut.cpp \
 MimeHeader_ut.cpp \
 MimeType_ut.cpp \
+Password_ut.cpp \
 ScriptTypes_ut.cpp \
 TimeDate_ut.cpp \
 Uri_ut.cpp \

@@ -31,6 +31,7 @@ int main(int argc,char* argv[])
   UTRUN(MemFile);
   UTRUN(MimeHeader);
   UTRUN(MimeType);
+  UTRUN(Password);
   UTRUN(ScriptTypes);
   UTRUN(TimeDate);
   UTRUN(Uri);

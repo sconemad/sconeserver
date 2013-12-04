@@ -1,6 +1,6 @@
 /* SconeServer (http://www.sconemad.com)
 
-HTTP Authorisation using htpasswd files
+HTTP authentication using htpasswd files
 
 Copyright (c) 2000-2011 Andrew Wedgbury <wedge@sconemad.com>
 
@@ -29,64 +29,33 @@ Free Software Foundation, Inc.,
 
 namespace http {
 
-//=========================================================================
+//=============================================================================
 AuthRealmHtpasswd::AuthRealmHtpasswd(HTTPModule* module,
 				     const scx::FilePath& path)
-  : AuthRealm(""),
-    m_module(module),
+  : AuthRealm(module),
     m_path(path)
 {
   DEBUG_COUNT_CONSTRUCTOR(AuthRealmHtpasswd);
-  m_parent = module;
 }
 
-//=========================================================================
+//=============================================================================
 AuthRealmHtpasswd::~AuthRealmHtpasswd()
 {
   DEBUG_COUNT_DESTRUCTOR(AuthRealmHtpasswd);
 }
 
-//=========================================================================
-scx::ScriptRef* AuthRealmHtpasswd::authorised(const std::string& username,
-					      const std::string& password)
+//=============================================================================
+std::string AuthRealmHtpasswd::lookup_hash(const std::string& username)
 {
   refresh();
 
   scx::MutexLocker locker(m_mutex);
   UserMap::const_iterator it = m_users.find(username);
-  if (it == m_users.end())
-    return 0;
-  std::string pwentry = it->second;
-  locker.unlock();
-
-  bool auth = false;
-  if (pwentry == "!system") { 
-    // Use system method
-    auth = scx::User(username).verify_password(password);
-    
-  } else {
-    // Use crypt method
-#ifdef HAVE_CRYPT_R
-    struct crypt_data data;
-    memset(&data,0,sizeof(data));
-    data.initialized = 0;
-    std::string check = crypt_r(password.c_str(),
-				pwentry.c_str(),
-				&data);
-#else
-    //NOTE: crypt_r not available:
-    std::string check = crypt(password.c_str(), pwentry.c_str());
-#endif
-    auth = (check == pwentry);
-  }
-  
-  if (auth) {
-    return scx::ScriptInt::new_ref(1);
-  }
-  return 0;
+  if (it == m_users.end()) return "";
+  return it->second;
 }
 
-//=========================================================================
+//=============================================================================
 void AuthRealmHtpasswd::refresh()
 {
   scx::FilePath path(m_path);

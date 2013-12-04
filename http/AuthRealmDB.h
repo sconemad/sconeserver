@@ -1,6 +1,10 @@
 /* SconeServer (http://www.sconemad.com)
 
-HTTP Authorisation using database
+HTTP authentication using database storage
+
+This reads usernames and password hashes from the 'user' table in the specified
+database profile. Supports password updates and storing additional user data
+(according to the database schema).
 
 Copyright (c) 2000-2011 Andrew Wedgbury <wedge@sconemad.com>
 
@@ -51,7 +55,7 @@ private:
 
 
 //=============================================================================
-// AuthRealmDB - An authorisation realm which uses a database
+// AuthRealmDB - An authentication realm which uses database storage
 //
 class HTTP_API AuthRealmDB : public AuthRealm {
 public:
@@ -61,13 +65,16 @@ public:
 
   virtual ~AuthRealmDB();
 
-  // AuthRealm methods  
-  virtual scx::ScriptRef* authorised(const std::string& username,
-				     const std::string& password);
+protected:
 
+  // AuthRealm methods  
+  virtual std::string lookup_hash(const std::string& username);
+  virtual bool update_hash(const std::string& username,
+			   const std::string& hash);
+  virtual scx::ScriptRef* lookup_data(const std::string& username);
+  
 private:
 
-  scx::ScriptRefTo<HTTPModule> m_module;
   scx::Database::Ref* m_db;
 
 };

@@ -1,8 +1,8 @@
 /* SconeServer (http://www.sconemad.com)
 
-HTTP Authorisation
+HTTP Authentication
 
-Copyright (c) 2000-2011 Andrew Wedgbury <wedge@sconemad.com>
+Copyright (c) 2000-2013 Andrew Wedgbury <wedge@sconemad.com>
 
 This program is free software; you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -29,14 +29,15 @@ Free Software Foundation, Inc.,
 #include <sconex/Date.h>
 #include <sconex/Mutex.h>
 #include <sconex/Provider.h>
+#include <sconex/Password.h>
 namespace http {
 
 class HTTPModule;
 class MessageStream;
 
 //=============================================================================
-// AuthRealm - An authorisation realm, essentially an object which determines
-// whether a specified username/password combination is valid.
+// AuthRealm - An authentication realm, an object which can determine whether 
+// a specified username/password combination is valid.
 //
 // This is the base class, from which realm implementations are derived.
 // The default realm implementations can be suplemented using the realm
@@ -49,16 +50,17 @@ class MessageStream;
 class HTTP_API AuthRealm : public scx::ScriptObject {
 public:
 
-  // Create an authorisation realm for specified profile and root path
-  AuthRealm(const std::string name);
+  AuthRealm(HTTPModule* module);
 
   virtual ~AuthRealm();
+
+  void set_name(const std::string& name);
 
   // Returns a 'good' scriptref if the specified username/password combination
   // is valid, or a 'bad' scriptref (can be NULL) otherwise. In the succesful
   // case, the scriptref might be an object representing the user.
-  virtual scx::ScriptRef* authorised(const std::string& username,
-				     const std::string& password) = 0;
+  scx::ScriptRef* authenticate(const std::string& username,
+			       const std::string& password);
 
   // ScriptObject methods
   virtual std::string get_string() const;
@@ -77,9 +79,26 @@ public:
 
 protected:
 
+  // Lookup authentication hash for specified user
+  // Must return an empty string if the user doesn't exist
+  virtual std::string lookup_hash(const std::string& username) = 0;
+
+  // Update authentication hash for specified user
+  // (if supported by realm)
+  virtual bool update_hash(const std::string& username,
+			   const std::string& hash);
+
+  // Lookup data for specified user 
+  // (if supported by realm)
+  virtual scx::ScriptRef* lookup_data(const std::string& username);
+
+
+  scx::ScriptRefTo<HTTPModule> m_module;
   std::string m_name;
+  scx::PasswordHash::Ref m_hash;
 
 };
+
 
 //=============================================================================
 // AuthRealmManager - Manages the available authorisation realms, and allows
@@ -107,10 +126,10 @@ public:
 					const scx::ScriptRef* args);
 
   // AuthRealm provider interface for registering extension realm types
-  void register_realm(const std::string& type,
-		      scx::Provider<AuthRealm>* factory);
-  void unregister_realm(const std::string& type,
-			scx::Provider<AuthRealm>* factory);
+  void register_realm_type(const std::string& type,
+			   scx::Provider<AuthRealm>* factory);
+  void unregister_realm_type(const std::string& type,
+			     scx::Provider<AuthRealm>* factory);
 
   // We also provide some standard realm types
   virtual void provide(const std::string& type,
@@ -127,7 +146,7 @@ private:
   AuthRealmMap m_realms;
 
   // AuthRealm providers
-  scx::ProviderScheme<AuthRealm> m_providers;
+  scx::ProviderScheme<AuthRealm> m_realm_types;
 
 };
 

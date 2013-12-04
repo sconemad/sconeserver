@@ -1,6 +1,10 @@
 /* SconeServer (http://www.sconemad.com)
 
-HTTP Authorisation using htpasswd files
+HTTP authentication using htpasswd files
+
+This reads usernames and password hashes from htpasswd files created using
+Apache's htpasswd utility. It does not support updating passwords or storing
+additional information for users.
 
 Copyright (c) 2000-2011 Andrew Wedgbury <wedge@sconemad.com>
 
@@ -26,7 +30,7 @@ Free Software Foundation, Inc.,
 namespace http {
 
 //=============================================================================
-// AuthRealmHtpasswd - An authorisation realm using htpasswd files.
+// AuthRealmHtpasswd - An authentication realm which uses htpasswd files.
 //
 class HTTP_API AuthRealmHtpasswd : public AuthRealm {
 public:
@@ -36,17 +40,15 @@ public:
 
   virtual ~AuthRealmHtpasswd();
 
-  // AuthRealm methods  
-  virtual scx::ScriptRef* authorised(const std::string& username,
-				     const std::string& password);
-
 protected:
+
+  // AuthRealm methods  
+  virtual std::string lookup_hash(const std::string& username);
 
   void refresh();
 
 private:
 
-  scx::ScriptRefTo<HTTPModule> m_module;
   scx::FilePath m_path;
   scx::Date m_modtime;
   scx::Mutex m_mutex;
