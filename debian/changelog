@@ -1,3 +1,19 @@
+sconeserver (0.9.8ppa9) precise; urgency=low
+
+  * New features:
+    - Extensible password hashing scheme, allowing new hashing methods to be
+	added by modules, and passwords to be verified and rehashed.
+	sha512_crypt is used as the default hash.
+    - Use above scheme for http Authetication, allowing password changes if
+	supported by realm. Also supports automatic rehashing on
+	authentication to update user credentials to new hash types.
+
+  * Fixes:
+    - Use random base64url strings when generating HTTP session IDs, rather
+	than random hex strings, giving a much greater range of possible IDs.
+
+ -- Andrew Wedgbury <wedge@sconemad.com>  Wed, 04 Dec 2013 21:42:54 +0000
+
 sconeserver (0.9.8ppa8) precise; urgency=low
 
   * Fixes:
