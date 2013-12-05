@@ -89,6 +89,9 @@ public:
 
   virtual std::string rehash(const std::string& password);
 
+  static std::string crypt(const std::string& password,
+			   const std::string& hash);
+
 private:
 
   std::string m_type;

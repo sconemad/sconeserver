@@ -22,6 +22,7 @@ Free Software Foundation, Inc.,
 #include <sconex/Password.h>
 #include <sconex/ScriptTypes.h>
 #include <sconex/utils.h>
+#include <sconex/Mutex.h>
 namespace scx {
 
 const char* DEFAULT_HASH = "sha512_crypt";
@@ -125,23 +126,11 @@ bool PasswordHashCrypt::verify(const std::string& password,
 			       const std::string& hash,
 			       bool& rehash_req)
 {
-#ifdef HAVE_CRYPT_R
-  struct crypt_data data;
-  memset(&data,0,sizeof(data));
-  data.initialized = 0;
-  std::string check = crypt_r(password.c_str(),
-			      hash.c_str(),
-			      &data);
-#else
-  //NOTE: crypt_r not available:
-  std::string check = crypt(password.c_str(), hash.c_str());
-#endif
-
   // Flag that a rehash required if the hash does not start with our code
   rehash_req = (0 != hash.compare(0,m_code.length(),m_code,
 				  0,m_code.length()));
 
-  return (check == hash);
+  return (hash == crypt(password,hash));
 }
 
 //=============================================================================
@@ -155,20 +144,25 @@ std::string PasswordHashCrypt::rehash(const std::string& password)
 
   std::ostringstream oss;
   oss << m_code << scx::random_string(16,salt_chars) << "$";
+  return crypt(password, oss.str());
+}
 
+//=============================================================================
+std::string PasswordHashCrypt::crypt(const std::string& password,
+				     const std::string& hash)
+{
 #ifdef HAVE_CRYPT_R
   struct crypt_data data;
   memset(&data,0,sizeof(data));
   data.initialized = 0;
-  std::string hash = crypt_r(password.c_str(),
-			     oss.str().c_str(),
-			     &data);
-#else
-  //NOTE: crypt_r not available:
-  std::string hash = crypt(password.c_str(), oss.str().c_str());
-#endif
+  return ::crypt_r(password.c_str(), hash.c_str(), &data);
 
-  return hash;
+#else
+  //NOTE: crypt_r not available, protect non-reenterant crypt call with mutex
+  static Mutex* mutex = new Mutex();
+  MutexLocker locker(*mutex);
+  return ::crypt(password.c_str(), hash.c_str());
+#endif
 }
 
 
