@@ -1,16 +1,28 @@
+sconeserver (0.9.9ppa1) precise; urgency=low
+
+  * Bump version to 0.9.9.
+
+  * Fixes:
+    - Add autoconf/automake/libtool as build dependencies for debian package.
+    - Fix debian changelog formatting!
+    - Protect crypt calls on systems that don't have reenterant version.
+
+ -- Andrew Wedgbury <wedge@sconemad.com>  Wed, 04 Dec 2013 23:12:32 +0000
+
 sconeserver (0.9.8ppa9) precise; urgency=low
 
   * New features:
-    - Extensible password hashing scheme, allowing new hashing methods to be
-	added by modules, and passwords to be verified and rehashed.
-	sha512_crypt is used as the default hash.
+    - Extensible password hashing scheme, allowing new hashing methods to
+      be added by modules, and passwords to be verified and rehashed.
+      sha512_crypt is used as the default hash.
     - Use above scheme for http Authetication, allowing password changes if
-	supported by realm. Also supports automatic rehashing on
-	authentication to update user credentials to new hash types.
+      supported by realm. Also supports automatic rehashing on
+      authentication to update user credentials to new hash types.
 
   * Fixes:
-    - Use random base64url strings when generating HTTP session IDs, rather
-	than random hex strings, giving a much greater range of possible IDs.
+    - Use random base64url strings when generating HTTP session IDs,
+      rather than random hex strings, giving a much greater range of
+      possible IDs.
 
  -- Andrew Wedgbury <wedge@sconemad.com>  Wed, 04 Dec 2013 21:42:54 +0000
 
@@ -18,8 +30,8 @@ sconeserver (0.9.8ppa8) precise; urgency=low
 
   * Fixes:
     - New asynchronous session locking in sconesite, prevents sever hangs.
-    - Only process files with .conf extensions in conf.d directories,
-      preventing problems with dpkg upgrades, etc.
+    - Only process files with .conf extensions in conf.d directories preventing
+      problems with dpkg upgrades, etc.
 
  -- Andrew Wedgbury <wedge@sconemad.com>  Fri, 01 Nov 2013 19:34:21 +0000
 
