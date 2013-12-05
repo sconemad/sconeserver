@@ -3,7 +3,7 @@ Section: misc
 Priority: optional
 Maintainer: Andrew Wedgbury <wedge@sconemad.com>
 Standards-Version: 3.9.3
-Build-Depends: libpcre3-dev, libssl-dev, libxml2-dev, libmagick++-dev, libmysqlclient-dev, libsqlite3-dev, libbluetooth-dev, libgps-dev (>= 3), debhelper (>= 2)
+Build-Depends: autoconf, automake, libtool, libpcre3-dev, libssl-dev, libxml2-dev, libmagick++-dev, libmysqlclient-dev, libsqlite3-dev, libbluetooth-dev, libgps-dev (>= 3), debhelper (>= 2)
 Homepage: http://www.sconemad.com/sconeserver/
 
 Package: sconeserver-base
