@@ -37,7 +37,7 @@ namespace http {
 //=============================================================================
 AuthRealm::AuthRealm(HTTPModule* module)
   : m_module(module), 
-    m_hash(scx::PasswordHash::create("",0))
+    m_hash_method(scx::PasswordHash::create("",0))
 {
   DEBUG_COUNT_CONSTRUCTOR(AuthRealm);
   m_parent = module;
@@ -63,7 +63,7 @@ scx::ScriptRef* AuthRealm::authenticate(const std::string& username,
   if (hash.empty()) return 0;
   
   bool rehash = false;
-  if (!m_hash.object()->verify(password, hash, rehash)) return 0;
+  if (!m_hash_method.object()->verify(password, hash, rehash)) return 0;
   
   scx::ScriptRef* data = lookup_data(username);
   if (data == 0) {
@@ -73,10 +73,10 @@ scx::ScriptRef* AuthRealm::authenticate(const std::string& username,
   }
 
   if (rehash) {
-    hash = m_hash.object()->rehash(password);
+    hash = m_hash_method.object()->rehash(password);
     if (!hash.empty() && update_hash(username,hash)) {
       LOG("Re-hashed password for user " + username + 
-	  " using " + m_hash.object()->get_string());
+	  " using " + m_hash_method.object()->get_string());
     }
   }
 
@@ -99,12 +99,14 @@ scx::ScriptRef* AuthRealm::script_op(const scx::ScriptAuth& auth,
     const std::string name = right->object()->get_string();
 
     // Properties
-    if ("hash" == name) return m_hash.ref_copy();
+    if ("hash_method" == name) return m_hash_method.ref_copy();
 
     // Methods
     if ("auth" == name ||
-	"set_hash" == name ||
-	"chpass" == name) {
+	"set_hash_method" == name ||
+	"chpass" == name ||
+	"add_user" == name ||
+	"remove_user" == name) {
       return new scx::ScriptMethodRef(ref,name);
     }
   }
@@ -134,21 +136,21 @@ scx::ScriptRef* AuthRealm::script_method(const scx::ScriptAuth& auth,
     return authenticate(a_user->get_string(),a_pass->get_string());
   }
 
-  if ("set_hash" == name) {
+  if ("set_hash_method" == name) {
     if (!auth.admin()) return scx::ScriptError::new_ref("Not permitted");
 
-    const scx::ScriptString* a_hash =
-      scx::get_method_arg<scx::ScriptString>(args,0,"hash");
-    if (!a_hash)
-      return scx::ScriptError::new_ref("No hash specified");
+    const scx::ScriptString* a_method =
+      scx::get_method_arg<scx::ScriptString>(args,0,"method");
+    if (!a_method)
+      return scx::ScriptError::new_ref("No hash method specified");
 
-    scx::PasswordHash* hash =
-      scx::PasswordHash::create(a_hash->get_string(),0);
+    scx::PasswordHash* method =
+      scx::PasswordHash::create(a_method->get_string(),0);
 
-    if (!hash)
-      return scx::ScriptError::new_ref("Unknown hash");
+    if (!method)
+      return scx::ScriptError::new_ref("Unknown hash method");
     
-    m_hash = scx::PasswordHash::Ref(hash);
+    m_hash_method = scx::PasswordHash::Ref(method);
     return 0;
   }
 
@@ -173,10 +175,10 @@ scx::ScriptRef* AuthRealm::script_method(const scx::ScriptAuth& auth,
       if (oldhash.empty())
 	return scx::ScriptError::new_ref("Invalid credentials");
       bool rehash = false;
-      if (!m_hash.object()->verify(a_oldpass->get_string(), 
-				   oldhash, rehash))
+      if (!m_hash_method.object()->verify(a_oldpass->get_string(), 
+					  oldhash, rehash))
 	return scx::ScriptError::new_ref("Invalid credentials");
-
+      
     } else if (!auth.admin()) {
       // Only admin is allowed to change passwords without specifying the
       // old password
@@ -184,12 +186,49 @@ scx::ScriptRef* AuthRealm::script_method(const scx::ScriptAuth& auth,
     }
 
     // Rehash the new password and update
-    std::string hash = m_hash.object()->rehash(a_pass->get_string());
+    std::string hash = m_hash_method.object()->rehash(a_pass->get_string());
     if (hash.empty()) 
       return scx::ScriptError::new_ref("Failed to hash password");
 
     if (!update_hash(a_user->get_string(),hash)) 
       return scx::ScriptError::new_ref("Failed to update password");
+
+    return 0;
+  }
+
+  if ("add_user" == name) {
+    if (!auth.trusted()) return scx::ScriptError::new_ref("Not permitted");
+
+    const scx::ScriptString* a_user =
+      scx::get_method_arg<scx::ScriptString>(args,0,"username");
+    if (!a_user)
+      return scx::ScriptError::new_ref("No username specified");
+
+    std::string hash;
+    const scx::ScriptString* a_pass =
+      scx::get_method_arg<scx::ScriptString>(args,1,"password");
+    if (a_pass) {
+      hash = m_hash_method.object()->rehash(a_pass->get_string());
+      if (hash.empty()) 
+	return scx::ScriptError::new_ref("Failed to hash password");
+    }
+
+    if (!add_user(a_user->get_string(),hash))
+      return scx::ScriptError::new_ref("Failed to add user");
+
+    return 0;
+  }
+
+  if ("remove_user" == name) {
+    if (!auth.trusted()) return scx::ScriptError::new_ref("Not permitted");
+
+    const scx::ScriptString* a_user =
+      scx::get_method_arg<scx::ScriptString>(args,0,"username");
+    if (!a_user)
+      return scx::ScriptError::new_ref("No username specified");
+
+    if (!remove_user(a_user->get_string()))
+      return scx::ScriptError::new_ref("Failed to remove user");
 
     return 0;
   }
@@ -208,6 +247,18 @@ bool AuthRealm::update_hash(const std::string& username,
 scx::ScriptRef* AuthRealm::lookup_data(const std::string& username)
 {
   return 0;
+}
+
+//=============================================================================
+bool AuthRealm::add_user(const std::string& username, const std::string& hash)
+{
+  return false;
+}
+
+//=============================================================================
+bool AuthRealm::remove_user(const std::string& username)
+{
+  return false;
 }
 
 

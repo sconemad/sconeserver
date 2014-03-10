@@ -150,4 +150,47 @@ scx::ScriptRef* AuthRealmDB::lookup_data(const std::string& username)
   return new scx::ScriptRef(user);
 }
 
+//=============================================================================
+bool AuthRealmDB::add_user(const std::string& username,
+			   const std::string& hash)
+{
+  if (!m_db) return false;
+
+  std::auto_ptr<scx::DbQuery> query(m_db->object()->new_query(
+    "SELECT id FROM user WHERE username = ?"));
+  
+  scx::ScriptList::Ref args(new scx::ScriptList());
+  args.object()->give(scx::ScriptString::new_ref(username));
+  query->exec(&args);
+  if (query->next_result())
+    return false;
+
+  //XXX what about if someone else add the username in between these calls?
+
+  std::auto_ptr<scx::DbQuery> query2(m_db->object()->new_query(
+    "INSERT INTO user (username,password) VALUES (?,?)"));
+
+  args.object()->give(scx::ScriptString::new_ref(hash));
+  if (!query2->exec(&args))
+    return false;
+
+  return true;
+}
+
+//=============================================================================
+bool AuthRealmDB::remove_user(const std::string& username)
+{
+  if (!m_db) return false;
+
+  std::auto_ptr<scx::DbQuery> query(m_db->object()->new_query(
+    "DELETE FROM user WHERE username = ?"));
+  
+  scx::ScriptList::Ref args(new scx::ScriptList());
+  args.object()->give(scx::ScriptString::new_ref(username));
+  if (!query->exec(&args))
+    return false;
+
+  return true;
+}
+
 };

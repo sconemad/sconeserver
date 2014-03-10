@@ -72,6 +72,8 @@ protected:
   virtual bool update_hash(const std::string& username,
 			   const std::string& hash);
   virtual scx::ScriptRef* lookup_data(const std::string& username);
+  virtual bool add_user(const std::string& username,const std::string& hash);
+  virtual bool remove_user(const std::string& username);  
   
 private:
 

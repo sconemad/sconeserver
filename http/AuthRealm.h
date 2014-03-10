@@ -92,10 +92,17 @@ protected:
   // (if supported by realm)
   virtual scx::ScriptRef* lookup_data(const std::string& username);
 
+  // Add a user to the realm with the specified password hash
+  // (if supported by realm)
+  virtual bool add_user(const std::string& username, const std::string& hash);
+
+  // Remove a user from the realm
+  // (if supported by realm)
+  virtual bool remove_user(const std::string& username);
 
   scx::ScriptRefTo<HTTPModule> m_module;
   std::string m_name;
-  scx::PasswordHash::Ref m_hash;
+  scx::PasswordHash::Ref m_hash_method;
 
 };
 
