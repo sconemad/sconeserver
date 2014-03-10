@@ -207,8 +207,8 @@ scx::ScriptRef* Response::script_method(const scx::ScriptAuth& auth,
     if (!a_header) 
       return scx::ScriptError::new_ref("set_header() No name specified");
 
-    const scx::ScriptString* a_value = 
-      scx::get_method_arg<scx::ScriptString>(args,1,"value");
+    const scx::ScriptObject* a_value = 
+      scx::get_method_arg<scx::ScriptObject>(args,1,"value");
     if (!a_value) 
       return scx::ScriptError::new_ref("set_header() No value specified");
 
