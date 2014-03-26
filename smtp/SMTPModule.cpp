@@ -2,7 +2,7 @@
 
 SMTP (Simple Mail Transfer Protocol) Module
 
-Copyright (c) 2000-2010 Andrew Wedgbury <wedge@sconemad.com>
+Copyright (c) 2000-2014 Andrew Wedgbury <wedge@sconemad.com>
 
 This program is free software; you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -97,7 +97,7 @@ scx::StreamSocket* SMTPModule::new_server_connection()
     if (err != scx::Ok && err != scx::Wait) {
       DEBUG_LOG("Unable to initiate connection to mail server");
       delete sock;
-      return false;
+      return 0;
     }
     return sock;
     
@@ -111,7 +111,7 @@ scx::StreamSocket* SMTPModule::new_server_connection()
     if (!proc->launch()) {
       DEBUG_LOG("Unable to launch mail server process");
       delete proc;
-      return false;
+      return 0;
     }
 
     return proc;
