@@ -2,7 +2,7 @@
 
 Lettuce command stream
 
-Copyright (c) 2000-2009 Andrew Wedgbury <wedge@sconemad.com>
+Copyright (c) 2000-2014 Andrew Wedgbury <wedge@sconemad.com>
 
 This program is free software; you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -179,6 +179,35 @@ scx::ScriptObject* LettuceBuffer::new_obj()
       }
       break;
       
+    case LettuceBufferInt:
+      {
+        switch (m_size) {
+          case 1:
+            {
+              char b = m_buffer[0];
+              a = new scx::ScriptInt(b);
+            }
+            break;
+            
+          case 2:
+            {
+              short int w;
+              memcpy(&w,m_buffer,2);
+              a = new scx::ScriptInt(w);
+            }
+            break;
+            
+          case 4:
+            {
+              int l;
+              memcpy(&l,m_buffer,4);
+              a = new scx::ScriptInt(l);
+            }
+            break;
+        }
+      }
+      break;
+
     case LettuceBufferString:
       m_buffer[m_size] = '\0';
       a = new scx::ScriptString(m_buffer);
@@ -186,6 +215,7 @@ scx::ScriptObject* LettuceBuffer::new_obj()
       
     case LettuceBufferBinary:
     case LettuceBufferIPAddr:
+    case LettuceBufferIP6Addr:
       break;
   }
   
