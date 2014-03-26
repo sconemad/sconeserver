@@ -2,7 +2,7 @@
 
 UI Window
 
-Copyright (c) 2000-2011 Andrew Wedgbury <wedge@sconemad.com>
+Copyright (c) 2000-2014 Andrew Wedgbury <wedge@sconemad.com>
 
 This program is free software; you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -84,10 +84,10 @@ void UIWindow::xevent(XEvent& xe)
 //=========================================================================
 void UIWindow::plot(int x, int y, unsigned long value)
 {
-  Display* dpy = m_display->get_dpy();
+  //Display* dpy = m_display->get_dpy();
   //  XLockDisplay(m_dpy);
   //  XDrawPoint(dpy, m_win, m_gc, x, y);
-  unsigned long p = XGetPixel(m_image,x,y);
+  //unsigned long p = XGetPixel(m_image,x,y);
   XPutPixel(m_image,x,y,value);
   //  XUnlockDisplay(m_dpy);
   //  paint();
