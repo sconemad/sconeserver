@@ -2,7 +2,7 @@
 
 HTTP Partial Response Stream
 
-Copyright (c) 2000-2010 Andrew Wedgbury <wedge@sconemad.com>
+Copyright (c) 2000-2014 Andrew Wedgbury <wedge@sconemad.com>
 
 This program is free software; you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -160,7 +160,7 @@ scx::Condition PartialResponseStream::write(const void* buffer,int n,int& na)
     // A range error occurred, so don't send the message body
     if (m_position == 0) {
       http::MessageStream* msg = GET_HTTP_MESSAGE();
-      const http::Request& req = msg->get_request();
+      //const http::Request& req = msg->get_request();
       http::Response& resp = msg->get_response();
 
       resp.remove_header("Content-Length");
