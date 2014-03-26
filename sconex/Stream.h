@@ -2,7 +2,7 @@
 
 Stream base class
 
-Copyright (c) 2000-2006 Andrew Wedgbury <wedge@sconemad.com>
+Copyright (c) 2000-2014 Andrew Wedgbury <wedge@sconemad.com>
 
 This program is free software; you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -162,10 +162,12 @@ private:
   // Event status
   int m_events;
 
+  /*
   // List of modules used by this stream
   typedef std::list<ScriptRef*> ModuleRefList;
   ModuleRefList m_module_refs;
-  
+  */
+
   // Upstream pointer
   Stream* m_chain;
 

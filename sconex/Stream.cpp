@@ -2,7 +2,7 @@
 
 SconeX abstract base stream
 
-Copyright (c) 2000-2004 Andrew Wedgbury <wedge@sconemad.com>
+Copyright (c) 2000-2014 Andrew Wedgbury <wedge@sconemad.com>
 
 This program is free software; you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -46,6 +46,7 @@ Stream::Stream(const std::string& stream_name)
 //=============================================================================
 Stream::~Stream()
 {
+  /*
   // Release the module refs
   for (ModuleRefList::iterator it = m_module_refs.begin();
        it != m_module_refs.end();
@@ -53,6 +54,7 @@ Stream::~Stream()
     ScriptRef* r = (*it);
     delete r;
   }
+  */
 
   DEBUG_COUNT_DESTRUCTOR(Stream);
 }
