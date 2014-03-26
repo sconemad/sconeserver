@@ -2,7 +2,7 @@
 
 RSS Feed
 
-Copyright (c) 2000-2011 Andrew Wedgbury <wedge@sconemad.com>
+Copyright (c) 2000-2014 Andrew Wedgbury <wedge@sconemad.com>
 
 This program is free software; you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -38,7 +38,7 @@ Free Software Foundation, Inc.,
 void RSSFeed_ErrorHandler(void* vcx,const char* str,...)
 {
   va_list vl;
-  va_start(vl,1);
+  va_start(vl,str);
   char* msg = va_arg(vl,char*);
   va_end(vl);
 
