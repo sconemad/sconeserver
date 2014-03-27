@@ -144,10 +144,10 @@ int main(int argc,char* argv[])
           << " -v         Print version information and exit\n"
           << " -f         Launch in foreground with console\n"
           << " -n         Don't read main configuration file\n"
-          << " -c=PATH    Set configuration path\n"
-          << " -m=PATH    Set module path\n"
-          << " -l=PATH    Set var (log) path\n"
-          << " -p=FILE    Set file to which the process ID is written\n"
+          << " -c PATH    Set configuration path\n"
+          << " -m PATH    Set module path\n"
+          << " -l PATH    Set var (log) path\n"
+          << " -p FILE    Set file to which the process ID is written\n"
           << "\n";
       }
       // Exit if version/help was provided
