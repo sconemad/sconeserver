@@ -473,8 +473,10 @@ bool Module::load_module_dir(FilePath path)
   // Create a module loader for each conf file
   for (std::list<std::string>::const_iterator it = files.begin();
        it != files.end(); ++it) {
+    /*
     int i = (*it).find_last_of(".");
     std::string name((*it), 0, i);
+    */
     ModuleLoader* loader = new ModuleLoader(path + (*it), this);
     if (loader->get_name() == "") {
       delete loader;
