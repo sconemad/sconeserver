@@ -31,6 +31,29 @@ Free Software Foundation, Inc.,
 namespace scx {
 
 //=============================================================================
+static void get_sorted_conf_files(const FilePath& path,
+  std::list<std::string>& files)
+// Find all conf files under the specified directory path, and order by name
+{
+  files.clear();
+
+  const char* filepattern =
+    "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ1234567890_-.";
+  const char* fileext = ".conf";
+  
+  FileDir dir(path);
+  while (dir.next()) {
+    size_t extpos = dir.name().length() - strlen(fileext);
+    if (dir.stat().is_file() &&
+	dir.name().find(fileext,extpos) != std::string::npos &&
+	dir.name().find_first_not_of(filepattern) == std::string::npos) {
+      files.push_back(dir.name());
+    }
+  }
+  files.sort();
+}
+
+//=============================================================================
 Module::Module(
   const std::string& name,
   const VersionTag& version
@@ -417,23 +440,10 @@ bool Module::load_config_file(FilePath path)
 //=============================================================================
 bool Module::load_config_dir(FilePath path)
 {
-  const char* filepattern =
-    "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ1234567890_-.";
-  const char* fileext = ".conf";
-
   path = Kernel::get()->get_conf_path() + path;
 
-  FileDir dir(path);
   std::list<std::string> files;
-  while (dir.next()) {
-    size_t extpos = dir.name().length() - strlen(fileext);
-    if (dir.stat().is_file() &&
-	dir.name().find(fileext,extpos) != std::string::npos &&
-	dir.name().find_first_not_of(filepattern) == std::string::npos) {
-      files.push_back(dir.name());
-    }
-  }
-  files.sort();
+  get_sorted_conf_files(path, files);
 
   bool ok = true;
   ScriptRef ctx(this);
@@ -451,24 +461,10 @@ bool Module::load_config_dir(FilePath path)
 //=============================================================================
 bool Module::load_module_dir(FilePath path)
 {
-  const char* filepattern =
-    "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ1234567890_-.";
-  const char* fileext = ".conf";
-
   path = Kernel::get()->get_conf_path() + path;
   
-  // Find all the module conf files and order by name
-  FileDir dir(path);
   std::list<std::string> files;
-  while (dir.next()) {
-    size_t extpos = dir.name().length() - strlen(fileext);
-    if (dir.stat().is_file() &&
-	dir.name().find(fileext,extpos) != std::string::npos &&
-	dir.name().find_first_not_of(filepattern) == std::string::npos) {
-      files.push_back(dir.name());
-    }
-  }
-  files.sort();
+  get_sorted_conf_files(path, files);
 
   // Create a module loader for each conf file
   for (std::list<std::string>::const_iterator it = files.begin();
