@@ -7,6 +7,7 @@ Copyright (c) 2000-2011 Andrew Wedgbury <wedge@sconemad.com> */
 #include <sconex/Module.h>
 #include <sconex/ModuleInterface.h>
 #include <sconex/Date.h>
+#include <sconex/Log.h>
 #include <sconex/Stream.h>
 
 //=============================================================================
@@ -39,13 +40,17 @@ TuesdayOnlyModule::TuesdayOnlyModule()
   : scx::Module("tuesdayonly", scx::version())
 {
   // Specify module name and version in base constructor
+
+  // Register our stream type
+  scx::Stream::register_stream("tuesdayonly", this);
 }
 
 //=============================================================================
 // Destructor
 TuesdayOnlyModule::~TuesdayOnlyModule()
 {
-  // Nothing to do here
+  // Unregister our stream type
+  scx::Stream::unregister_stream("tuesdayonly", this);
 }
 
 //=============================================================================
@@ -63,5 +68,17 @@ void TuesdayOnlyModule::provide(const std::string& type,
 				const scx::ScriptRef* args,
 				scx::Stream*& object)
 {
+  // Check the type is "tuesdayonly" - this should always be the case since
+  // this is the only stream type we have registered
+  if ("tuesdayonly" == type) {
 
+    // Check that it is Tuesday
+    if (scx::Date::Tue != scx::Date::now().day()) {
+      scx::Log("tuesdayonly").submit("It is not Tuesday");
+      return;
+    }
+
+    // Create the requested stream and assign to the object reference
+    object = new scx::Stream("tuesdayonly");
+  }
 }
