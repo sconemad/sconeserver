@@ -11,6 +11,8 @@ bin_PROGRAMS = sconed
 sconed_SOURCES = main.cpp
 sconed_LDADD = $(top_builddir)/sconex/libsconex.la
 
+dist_bin_SCRIPTS = sconectl
+
 MODULES = \
 bluetooth \
 exec \
@@ -47,7 +49,7 @@ doc_DATA = AUTHORS COPYING ChangeLog INSTALL NEWS README THANKS TODO
 
 sysconf_DATA = sconeserver.conf
 
-dist_man_MANS = sconed.1
+dist_man_MANS = sconed.1 sconectl.1
 
 EXTRA_DIST = \
 $(sysconf_DATA) \

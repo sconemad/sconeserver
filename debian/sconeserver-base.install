@@ -1,5 +1,9 @@
 usr/bin/sconed
 usr/share/man/man1/sconed.1
+
+usr/bin/sconectl
+usr/share/man/man1/sconectl.1
+
 etc/sconeserver/sconeserver.conf
 
 usr/lib/lib*.so.*

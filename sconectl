@@ -1,0 +1,33 @@
+#!/usr/bin/perl -w
+my $HELP =
+"sconectl - sconeserver config/control client
+Copyright (c) 2014 Andrew Wedgbury <wedge\@sconemad.com>
+
+Usage: sconectl <command>
+
+";
+
+use IO::Socket;
+
+my $SOCKPATH = "/var/run/sconectl.socket";
+my ($cmd) = @ARGV;
+
+if (!$cmd) {
+  print $HELP;
+  exit(0);
+}
+
+my $sock = IO::Socket::UNIX->new(
+  Peer => $SOCKPATH
+);
+die "Can't create socket: $!" unless $sock;
+$sock->connected() || die "Could not connect, is sconed running?";
+
+print $sock "$cmd\n";
+$sock->shutdown(1);
+
+while (my $line = $sock->getline()) {
+  print $line;
+}
+
+$sock->close();
