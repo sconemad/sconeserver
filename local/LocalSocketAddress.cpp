@@ -36,7 +36,8 @@ Free Software Foundation, Inc.,
 LocalSocketAddress::LocalSocketAddress(scx::Module* module,
 				       const scx::ScriptRef* args)
   : scx::SocketAddress(PF_LOCAL,SOCK_STREAM),
-    m_module(module)
+    m_module(module),
+    m_mode(0700)
 {
   DEBUG_COUNT_CONSTRUCTOR(LocalSocketAddress);
   memset(&m_addr,0,sizeof(m_addr));
@@ -48,12 +49,18 @@ LocalSocketAddress::LocalSocketAddress(scx::Module* module,
     set_path(a_path->get_string());
   }
 
+  const scx::ScriptInt* a_mode =
+    scx::get_method_arg<scx::ScriptInt>(args,1,"mode");
+  if (a_mode) {
+    set_mode(a_mode->get_int());
+  }
 }
 
 //=============================================================================
 LocalSocketAddress::LocalSocketAddress(const LocalSocketAddress& c)
   : scx::SocketAddress(c),
-    m_module(c.m_module)
+    m_module(c.m_module),
+    m_mode(c.m_mode)
 {
   DEBUG_COUNT_CONSTRUCTOR(LocalSocketAddress);
   memcpy(&m_addr,&c.m_addr,sizeof(m_addr));
@@ -115,7 +122,15 @@ int LocalSocketAddress::socket_bind(SOCKET s) const
     unlink(get_path().c_str());
   }
   
-  return SCXBASE SocketAddress::socket_bind(s);
+  int ret = SCXBASE SocketAddress::socket_bind(s);
+  if (0 == ret) {
+    //XXX this really should be atomic, possibly using umask?
+    ret = chmod(get_path().c_str(), m_mode);
+    if (ret != 0) {
+      DEBUG_LOG_ERRNO("Failed to set mode of local socket");
+    }
+  }
+  return ret;
 }
 
 //=============================================================================
@@ -134,6 +149,7 @@ scx::ScriptRef* LocalSocketAddress::script_op(const scx::ScriptAuth& auth,
     std::string name = right->object()->get_string();
     if (name == "family") return scx::ScriptString::new_ref("local");
     if (name == "path") return scx::ScriptString::new_ref(get_path());
+    if (name == "mode") return scx::ScriptInt::new_ref(get_mode());
   }
 
   return scx::SocketAddress::script_op(auth,ref,op,right);
@@ -155,4 +171,16 @@ bool LocalSocketAddress::set_path(const std::string& path)
 std::string LocalSocketAddress::get_path() const
 {
   return std::string(m_addr.sun_path);
+}
+
+//=============================================================================
+void LocalSocketAddress::set_mode(mode_t mode)
+{
+  m_mode = mode;
+}
+
+//=============================================================================
+mode_t LocalSocketAddress::get_mode() const
+{
+  return m_mode;
 }

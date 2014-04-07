@@ -63,11 +63,15 @@ public:
   bool set_path(const std::string& path);
   std::string get_path() const;
   
+  void set_mode(mode_t mode);
+  mode_t get_mode() const;
+
 protected:
 
   scx::Module::Ref m_module;
 
   struct sockaddr_un m_addr;
+  mode_t m_mode;
   
 };
 
