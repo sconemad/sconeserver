@@ -61,6 +61,7 @@ Session::Session(SessionManager& manager,
                  const std::string& id)
   : m_manager(manager),
     m_id(id),
+    m_vars(new scx::ScriptMap()),
     m_timeout(DEFAULT_SESSION_TIMEOUT),
     m_locked(false)
 {
@@ -150,10 +151,21 @@ void Session::unlock()
 }
 
 //=========================================================================
-bool Session::allow_upload() const
+bool Session::has_permission(const std::string& permission) const
 {
-  const scx::ScriptRef* a = lookup("allow_upload");
-  return (a && a->object()->get_int());
+  return m_perms.count(permission);
+}
+
+//=========================================================================
+void Session::add_permission(const std::string& permission)
+{
+  m_perms.insert(permission);
+}
+
+//=========================================================================
+void Session::remove_permission(const std::string& permission)
+{
+  m_perms.erase(permission);
 }
 
 //=========================================================================
@@ -185,21 +197,27 @@ scx::ScriptRef* Session::script_op(const scx::ScriptAuth& auth,
 
     // Methods
     if ("reset" == name ||
-        "set_timeout" == name) {
+        "set_timeout" == name ||
+	"add_permission" == name ||
+	"remove_permission" == name) {
       return new scx::ScriptMethodRef(ref,name);
     }
     
     // Properties
     if ("id" == name) return scx::ScriptString::new_ref(m_id);
+    if ("vars" == name) return m_vars.ref_copy(ref.reftype());
     if ("timeout" == name) 
       return new scx::ScriptRef(m_timeout.new_copy());
     if ("last_used" == name) 
       return new scx::ScriptRef(m_last_used.new_copy());
     if ("expiry" == name) 
       return new scx::ScriptRef(get_expiry().new_copy());
+
+    // Permissions
+    if (has_permission(name)) return scx::ScriptInt::new_ref(1);
   }
     
-  return scx::ScriptMap::script_op(auth,ref,op,right);
+  return scx::ScriptObject::script_op(auth,ref,op,right);
 }
 
 //=============================================================================
@@ -209,12 +227,15 @@ scx::ScriptRef* Session::script_method(const scx::ScriptAuth& auth,
 				       const scx::ScriptRef* args)
 {
   if ("reset" == name) {
+    if (!auth.trusted()) return scx::ScriptError::new_ref("Not permitted");
     m_last_used = scx::Date(0);
-    clear();
+    m_perms.clear();
+    m_vars.object()->clear();
     return 0;
   }
 
   if ("set_timeout" == name) {
+    if (!auth.trusted()) return scx::ScriptError::new_ref("Not permitted");
     const scx::ScriptInt* a_timeout_int =
       scx::get_method_arg<scx::ScriptInt>(args,0,"timeout");
     if (a_timeout_int) {
@@ -230,7 +251,22 @@ scx::ScriptRef* Session::script_method(const scx::ScriptAuth& auth,
     return scx::ScriptError::new_ref("set_timeout() Must specify timeout");
   }
 
-  return scx::ScriptMap::script_method(auth,ref,name,args);
+  if ("add_permission" == name ||
+      "remove_permission" == name) {
+    if (!auth.trusted()) return scx::ScriptError::new_ref("Not permitted");
+    const scx::ScriptString* a_permission =
+      scx::get_method_arg<scx::ScriptString>(args,0,"permission");
+    if (!a_permission) 
+      return scx::ScriptError::new_ref("Permission not specified");
+    if ("add_permission" == name) {
+      add_permission(a_permission->get_string());
+    } else {
+      remove_permission(a_permission->get_string());
+    }
+    return 0;
+  }
+
+  return scx::ScriptObject::script_method(auth,ref,name,args);
 }
 
 

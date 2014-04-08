@@ -38,23 +38,32 @@ const scx::Time DEFAULT_SESSION_TIMEOUT = scx::Time(60 * 60);
 // from a particular client. Used to maintain state across (otherwise 
 // stateless) HTTP protocol interactions.
 //
-class HTTP_API Session : public scx::ScriptMap {
+class HTTP_API Session : public scx::ScriptObject {
 public:
 
+  // Create a session.
+  // A new, random session id is created if not specified.
   Session(SessionManager& manager,
           const std::string& id = "");
 
   virtual ~Session();
 
+  // Get the session id
   const std::string get_id() const;
 
+  // Set/get session timeout, this is the time from when the session was last 
+  // used until it expires.
   void set_timeout(const scx::Time& time);
   const scx::Time& get_timeout() const;
 
+  // Set/get when the session was last used
   void set_last_used(const scx::Date& used = scx::Date::now());
   const scx::Date& get_last_used() const;
   
+  // Get the expiry date
   scx::Date get_expiry() const;
+
+  // Test if the session is valid (i.e. within its expiry date)
   bool valid() const;
 
   // Attempt to lock the session, returns false if already locked
@@ -63,9 +72,13 @@ public:
   // Unlock the session
   void unlock();
 
-  // Does the session permit uploads?
-  bool allow_upload() const;
+  // Test if the session has the named permission
+  bool has_permission(const std::string& permission) const;
 
+  // Add/remove permission
+  void add_permission(const std::string& permission);
+  void remove_permission(const std::string& permission);
+  
   SessionManager& get_manager() const;
   
   // ScriptObject methods
@@ -91,6 +104,9 @@ private:
   SessionManager& m_manager;
 
   std::string m_id;
+
+  scx::ScriptMap::Ref m_vars;
+  std::set<std::string> m_perms;
 
   scx::Time m_timeout;
   scx::Date m_last_used;

@@ -208,7 +208,7 @@ scx::Condition SconesiteStream::start_section(const scx::MimeHeaderTable& header
   http::Response& resp = msg->get_response();
   const http::Session* session = req.get_session();
 
-  if (session && session->allow_upload()) {
+  if (session && session->has_permission("upload")) {
 
     std::string name;
     scx::MimeHeader disp = headers.get_parsed("Content-Disposition");
