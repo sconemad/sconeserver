@@ -28,6 +28,13 @@ AC_ARG_ENABLE([valgrind],
   [CXXFLAGS="-g -O0"]
 )
 
+# Enable address sanitizer
+AC_ARG_ENABLE([asan],
+  [AC_HELP_STRING([--enable-asan],[Enable address sanitizer])],
+  [CXXFLAGS="-g -O0 -fsanitize=address -fno-omit-frame-pointer"
+  LDFLAGS="-fsanitize=address -fno-omit-frame-pointer"]
+)
+
 # Enable all warnings
 CXXFLAGS="$CXXFLAGS -Wall"
 
