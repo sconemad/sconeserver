@@ -2,7 +2,7 @@
 
 Trivial File Transfer Protocol (TFTP) Stream
 
-Copyright (c) 2000-2007 Andrew Wedgbury <wedge@sconemad.com>
+Copyright (c) 2000-2014 Andrew Wedgbury <wedge@sconemad.com>
 
 This program is free software; you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -166,7 +166,7 @@ scx::Condition TFTPStream::event(scx::Stream::Event e)
 	  return scx::Error;
 	}
 
-	log("WRQ - recieving '"+path.path()+"'");
+	log("WRQ - receiving '"+path.path()+"'");
 
 	m_finished = false;
 	m_block = 0;

@@ -2,7 +2,7 @@
 
 Process
 
-Copyright (c) 2000-2006 Andrew Wedgbury <wedge@sconemad.com>
+Copyright (c) 2000-2014 Andrew Wedgbury <wedge@sconemad.com>
 
 This program is free software; you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -299,7 +299,7 @@ bool ProxyPacket::recv(SOCKET s)
       PROCESS_DEBUG_LOG("ProxyPacket::recv() Interrupted");
 
     } else {
-      PROCESS_DEBUG_LOG("ProxyPacket::recv() Error when recieving packet, errno=" << errno);
+      PROCESS_DEBUG_LOG("ProxyPacket::recv() Error when receiving packet, errno=" << errno);
       err = errno;
       break;
     }
@@ -342,7 +342,7 @@ bool ProxyPacket::recv(SOCKET s)
       PROCESS_DEBUG_LOG("ProxyPacket::recv() Interrupted");
 
     } else {
-      PROCESS_DEBUG_LOG("ProxyPacket::recv() Error when recieving packet, errno=" << errno);
+      PROCESS_DEBUG_LOG("ProxyPacket::recv() Error when receiving packet, errno=" << errno);
       err = errno;
       break;
     }
@@ -939,7 +939,7 @@ bool Process::launch()
   packet.set_str_value("");
   packet.send(s_proxy_sock);
   
-  // Recieve resulting pid and socket from proxy
+  // Receive resulting pid and socket from proxy
   packet.recv(s_proxy_sock);
   if (packet.get_type() == ProxyPacket::LaunchedOk) {
     m_pid = packet.get_num_value();

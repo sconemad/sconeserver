@@ -7,8 +7,8 @@ files, network connections, terminals, etc.
 
 Descriptors can contain streams, which are arranged in a chain and act as
 filters on any data read to, or written from, the descriptor. Streams can also
-elect to recieve event notifications from the descriptor, indicating the
-presence of data to be read, or free buffer space to write data. To recieve
+elect to receive event notifications from the descriptor, indicating the
+presence of data to be read, or free buffer space to write data. To receive
 events, the descriptor must be added to the SconeServer Kernel using connect();
 
 For example, here is a descriptor containing two streams:
@@ -40,7 +40,7 @@ sensible shutdown sequence to occur.
 
 See the Stream class for a more details on events.
           
-Copyright (c) 2000-2006 Andrew Wedgbury <wedge@sconemad.com>
+Copyright (c) 2000-2014 Andrew Wedgbury <wedge@sconemad.com>
 
 This program is free software; you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -130,7 +130,7 @@ protected:
   // be set
   
   virtual int event_connecting();
-  // Called when events are recieved while in connecting state
+  // Called when events are received while in connecting state
   // Should return nonzero to indicate an error has occured.
   
   virtual Condition endpoint_read(void* buffer,int n,int& na) =0;

@@ -2,7 +2,7 @@
 
 HTTP Client
 
-Copyright (c) 2000-2011 Andrew Wedgbury <wedge@sconemad.com>
+Copyright (c) 2000-2014 Andrew Wedgbury <wedge@sconemad.com>
 
 This program is free software; you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -288,7 +288,7 @@ scx::Condition ClientStream::event(scx::Stream::Event e)
           delete m_buffer;
           m_buffer = 0;
           std::string method = m_request.get_method();
-	  m_seq = RecieveResponse;
+	  m_seq = ReceiveResponse;
 	  enable_event(scx::Stream::Writeable,false);
 	  enable_event(scx::Stream::Readable,true);
         } else {
@@ -301,11 +301,11 @@ scx::Condition ClientStream::event(scx::Stream::Event e)
     case scx::Stream::Readable: { // READABLE
       std::string line;
 
-      if (m_seq == RecieveResponse) {
+      if (m_seq == ReceiveResponse) {
         if (scx::Ok == tokenize(line)) {
           if (m_response.parse_response(line)) {
 	    DEBUG_LOG("HTTP RESPONSE: " << line);
-            m_seq = RecieveHeaders;
+      m_seq = ReceiveHeaders;
           } else {
             // went wrong!
 	    return scx::Error;
@@ -313,13 +313,13 @@ scx::Condition ClientStream::event(scx::Stream::Event e)
         }
       }
 
-      if (m_seq == RecieveHeaders) {
+      if (m_seq == ReceiveHeaders) {
         while (scx::Ok == tokenize(line)) {
           if (line.empty()) {
 	    std::string method = m_request.get_method();
 	    if (method != "HEAD") {
 	      // Response has a body
-	      m_seq = RecieveBody;
+	      m_seq = ReceiveBody;
 	    } else {
 	      enable_event(scx::Stream::Readable,false);
 	      m_seq = End;
@@ -337,7 +337,7 @@ scx::Condition ClientStream::event(scx::Stream::Event e)
         }
       }
 
-      if (m_seq == RecieveBody) {
+      if (m_seq == ReceiveBody) {
 	char buffer[1024];
 	int na=0;
 	scx::Condition c = scx::StreamTokenizer::read(buffer,1023,na);
@@ -383,9 +383,9 @@ std::string ClientStream::stream_status() const
       << " seq:";
   switch (m_seq) {
     case Send: oss << "SEND"; break;
-    case RecieveResponse: oss << "RECV-RESP"; break;
-    case RecieveHeaders: oss << "RECV-HEADERS"; break;
-    case RecieveBody: oss << "RECV-BODY"; break;
+    case ReceiveResponse: oss << "RECV-RESP"; break;
+    case ReceiveHeaders: oss << "RECV-HEADERS"; break;
+    case ReceiveBody: oss << "RECV-BODY"; break;
     case End: oss << "END"; break;
     default: oss << "UNKNOWN!"; break;
   }
@@ -472,7 +472,7 @@ scx::Condition ProxyConnectStream::event(scx::Stream::Event e)
 	std::ostringstream oss;
 	oss << "CONNECT " << url.get_host() << ":" << url.get_port() << " HTTP/1.1\r\n\r\n";
 	write(oss.str());
-	m_seq = RecieveResponse;
+	m_seq = ReceiveResponse;
 	enable_event(scx::Stream::Writeable,false);
 	enable_event(scx::Stream::Readable,true);
       }
@@ -482,7 +482,7 @@ scx::Condition ProxyConnectStream::event(scx::Stream::Event e)
     case scx::Stream::Readable: { // READABLE
       std::string line;
 
-      if (m_seq == RecieveResponse) {
+      if (m_seq == ReceiveResponse) {
         if (scx::Ok == tokenize(line)) {
           if (m_response.parse_response(line)) {
 	    // Check the status code to see if the proxy accepted
@@ -490,7 +490,7 @@ scx::Condition ProxyConnectStream::event(scx::Stream::Event e)
 	      DEBUG_LOG("PROXY CONNECT FAILED: " << line);
 	      return scx::Error;
 	    }
-            m_seq = RecieveHeaders;
+            m_seq = ReceiveHeaders;
           } else {
             // went wrong!
 	    return scx::Error;
@@ -498,7 +498,7 @@ scx::Condition ProxyConnectStream::event(scx::Stream::Event e)
         }
       }
 
-      if (m_seq == RecieveHeaders) {
+      if (m_seq == ReceiveHeaders) {
         while (scx::Ok == tokenize(line)) {
           if (line.empty()) {
 	    // Tunnel is established, our job is done!
@@ -532,8 +532,8 @@ std::string ProxyConnectStream::stream_status() const
       << " seq:";
   switch (m_seq) {
     case Send: oss << "SEND"; break;
-    case RecieveResponse: oss << "RECV-RESP"; break;
-    case RecieveHeaders: oss << "RECV-HEADERS"; break;
+    case ReceiveResponse: oss << "RECV-RESP"; break;
+    case ReceiveHeaders: oss << "RECV-HEADERS"; break;
     case Established: oss << "ESTABLISHED"; break;
     default: oss << "UNKNOWN!"; break;
   }

@@ -2,7 +2,7 @@
 
 Buffering stream
 
-Copyright (c) 2000-2004 Andrew Wedgbury <wedge@sconemad.com>
+Copyright (c) 2000-2014 Andrew Wedgbury <wedge@sconemad.com>
 
 This program is free software; you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -96,7 +96,7 @@ Condition StreamBuffer::read(void* buffer,int n,int& na)
 Condition StreamBuffer::write(
   const void* buffer, // data to be written
   int n,              // number of bytes in buffer to be written
-  int& na             // recieves number of bytes actually accepted
+  int& na             // receives number of bytes actually accepted
 )
 {
   DEBUG_ASSERT(n>0,"write() Zero bytes specified");
