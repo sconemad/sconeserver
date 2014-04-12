@@ -65,3 +65,9 @@ debian/sconeserver-sconesite/
 debian/sconeserver-sqlite/
 debian/sconeserver-ssl/
 debian/sconeserver-testbuilder/
+
+# test output
+*/test-suite.log
+*/*.trs
+sconex/utest.log
+test/runscripttests.sh.log
