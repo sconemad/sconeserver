@@ -216,6 +216,12 @@ bool Client::run(const std::string& request_data)
 }
 
 //=============================================================================
+void Client::set_header(const std::string& name, const std::string& value)
+{
+  m_request.object()->set_header(name, value);
+}
+
+//=============================================================================
 const Response& Client::get_response() const
 {
   return *m_response.object();

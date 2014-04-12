@@ -65,6 +65,8 @@ public:
   // Client methods
   bool run(const std::string& request_data = "");
 
+  void set_header(const std::string& name, const std::string& value);
+
   const Response& get_response() const;
   const std::string& get_response_data() const;
 
