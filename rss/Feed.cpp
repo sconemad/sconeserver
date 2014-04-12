@@ -77,12 +77,18 @@ void Feed::refresh(bool force)
     http::HTTPModule* http = dynamic_cast<http::HTTPModule*>(httpmod.object());
     http::Client hc(http, "GET", m_url);
 
-    //XXX it would be nice if we could use an If-Modified-Since header to
-    // detect if the feed has changed
+    // use an If-Modified-Since header to detect if the feed has changed
+    hc.set_header("If-Modified-Since", m_refresh_time.string());
+
     if (!hc.run()) {
       LOG("Unable to refresh feed - network error");
     }
     
+    if (http::Status::NotModified == hc.get_response().get_status().code()) {
+      LOG("Not refreshing feed - not modified");
+      return;
+    }
+
     xmlParserCtxt* cx;
     cx = xmlNewParserCtxt();
     cx->_private = this;
