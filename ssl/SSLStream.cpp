@@ -72,13 +72,11 @@ SSLStream::~SSLStream()
 }
 
 //=============================================================================
-scx::Condition SSLStream::read(
-  void* buffer,
-  int n,
-  int& na
-)
+scx::Condition SSLStream::read(void* buffer,
+			       int n,
+			       int& na)
 {
-  if (m_seq < 1) {
+  if (m_seq == Start) {
     na=0;
     return scx::Ok;
   }
@@ -102,13 +100,11 @@ scx::Condition SSLStream::read(
 }
 
 //=============================================================================
-scx::Condition SSLStream::write(
-  const void* buffer,
-  int n,
-  int& na
-)
+scx::Condition SSLStream::write(const void* buffer,
+				int n,
+				int& na)
 {
-  if (m_seq < 1) {
+  if (m_seq == Start) {
     na=0;
     return scx::Ok;
   }
@@ -139,7 +135,8 @@ scx::Condition SSLStream::event(scx::Stream::Event e)
     case scx::Stream::Opening: { // OPENING
       if (m_seq == Start) {
 	// Determine if this is a client connection by examining the socket
-	scx::StreamSocket* socket = dynamic_cast<scx::StreamSocket*>(&endpoint());
+	scx::StreamSocket* socket = 
+	  dynamic_cast<scx::StreamSocket*>(&endpoint());
 	if (socket) {
 	  m_client = socket->is_client();
 	}
@@ -148,10 +145,16 @@ scx::Condition SSLStream::event(scx::Stream::Event e)
 	} else {
 	  enable_event(scx::Stream::Readable,true);
 	}
+	// Set a 1 minute timeout for SSL connecting stage
+	endpoint().set_timeout(scx::Time(60));
 	return init_ssl();
-      }
-      if (m_seq != Connected) {
+
+      } else if (m_seq == Connecting) {
 	return scx::Wait;
+
+      } else { // Connected
+	// Remove endpoint timeout
+	endpoint().set_timeout(scx::Time(0));
       }
     } break;
 
@@ -249,7 +252,14 @@ scx::Condition SSLStream::connect_ssl(scx::Stream::Event e)
 std::string SSLStream::stream_status() const
 {
   std::ostringstream oss;
-  oss << m_channel << " seq:" << m_seq;
+  oss << m_channel 
+      << " seq:";
+  switch (m_seq) {
+  case Start: oss << "START"; break;
+  case Connecting: oss << "CONNECTING"; break;
+  case Connected: oss << "CONNECTED"; break;
+  default: oss << "UNKNOWN!"; break;
+  }
   return oss.str();
 }
 
