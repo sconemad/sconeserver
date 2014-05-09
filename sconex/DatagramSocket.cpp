@@ -76,6 +76,7 @@ Condition DatagramSocket::connect(
   const SocketAddress* addr_remote
 )
 {
+  //XXX this doesn't look right?
   m_addr_local = dynamic_cast<SocketAddress*>(addr_remote->new_copy());
   DEBUG_ASSERT(m_addr_local!=0,"ctor() Invalid SocketAddress");
 

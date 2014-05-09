@@ -47,9 +47,9 @@ StreamSocket::~StreamSocket()
 //=============================================================================
 std::string StreamSocket::describe() const
 {
-  return Socket::describe() + " --> (" +
-    (m_addr_remote!=0 ? m_addr_remote->get_string() : "") +
-    ")";
+  return Socket::describe() + 
+    (m_client ? " --> (" : " <-- (") +
+    (m_addr_remote!=0 ? m_addr_remote->get_string() : "") + ")";
 }
 
 //=============================================================================

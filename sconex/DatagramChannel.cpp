@@ -56,7 +56,7 @@ std::string DatagramChannel::describe() const
   std::ostringstream oss;
   oss << Descriptor::describe()
       << " Datagram channel (" << m_master.get_local_addr()->get_string() << ")"
-      << " --> (" << (m_addr_remote!=0 ? m_addr_remote->get_string() : "")
+      << " <-- (" << (m_addr_remote!=0 ? m_addr_remote->get_string() : "")
       << ")";
   return oss.str();
 }
