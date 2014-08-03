@@ -93,11 +93,12 @@ Condition TermBuffer::read(void* buffer,int n,int& na)
       if (ch[1] == 0x5b) {
 	switch (ch[2]) {
 	  case 0x41: { // UP
-	    --m_history_pos;
-	    if (m_history_pos < 0) m_history_pos = 0;
+      if (0 != m_history_pos) {
+        --m_history_pos;
+      }
 	    erase_line();
 	    m_line = "";
-	    if (m_history_pos >= 0 && m_history_pos < m_history.size()) {
+	    if (m_history_pos < m_history.size()) {
 	      m_line = m_history[m_history_pos];
 	    }
 	    Stream::write(ansi("00;32m") + m_line + ansi("00m"));
@@ -109,7 +110,7 @@ Condition TermBuffer::read(void* buffer,int n,int& na)
 	    if (m_history_pos > m_history.size()) m_history_pos = m_history.size();
 	    erase_line();
 	    m_line = "";
-	    if (m_history_pos >= 0 && m_history_pos < m_history.size()) {
+	    if (m_history_pos < m_history.size()) {
 	      m_line = m_history[m_history_pos];
 	    }
 	    Stream::write(ansi("00;32m") + m_line + ansi("00m"));
@@ -136,7 +137,7 @@ Condition TermBuffer::read(void* buffer,int n,int& na)
 	unsigned int num = atoi(snum.c_str());
 	erase_line();
 	m_line = "";
-	if (num >= 0 && num < m_history.size()) m_line = m_history[num];
+	if (num < m_history.size()) m_line = m_history[num];
 	Stream::write("\r"+m_prompt);
 	Stream::write(ansi("00;32m") + m_line + ansi("00m"));
 	m_history_add = false;
