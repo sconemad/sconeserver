@@ -23,6 +23,7 @@ depcomp
 missing
 INSTALL
 install-sh
+compile
 
 main.o
 sconed
