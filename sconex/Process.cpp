@@ -315,7 +315,7 @@ bool ProxyPacket::recv(SOCKET s)
 #else
     if (msg.msg_accrightslen == sizeof(int) &&
 	m_fd == -1) {
-      m_fd == recv_fd;
+      m_fd = recv_fd;
     }
 #endif
 
