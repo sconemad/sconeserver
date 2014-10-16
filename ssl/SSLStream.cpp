@@ -239,7 +239,7 @@ scx::Condition SSLStream::connect_ssl(scx::Stream::Event e)
     return scx::Wait;
   }
   
-  SSLStream_DEBUG_LOG("Opened SSL connection using " << SSL_get_cipher(m_ssl));
+  SSLStream_DEBUG_LOG("Opened secure connection using " << SSL_get_cipher(m_ssl));
 
   m_seq = Connected;
   enable_event(scx::Stream::Opening,true);
@@ -259,6 +259,12 @@ std::string SSLStream::stream_status() const
   case Connecting: oss << "CONNECTING"; break;
   case Connected: oss << "CONNECTED"; break;
   default: oss << "UNKNOWN!"; break;
+  }
+  if (m_ssl) {
+    const SSL_CIPHER* cipher = SSL_get_current_cipher(m_ssl);
+    if (cipher) {
+      oss << " cipher:" << SSL_CIPHER_get_name(cipher);
+    }
   }
   return oss.str();
 }

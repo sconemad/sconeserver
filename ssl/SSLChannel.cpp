@@ -38,12 +38,16 @@ SSLChannel::SSLChannel(SSLModule& mod,
 
   if (client) {
     m_ctx = SSL_CTX_new( SSLv23_client_method() );
+    DEBUG_ASSERT(0 != m_ctx,"SSLChannel() Bad SSL context");
   } else {
     m_ctx = SSL_CTX_new( SSLv23_server_method() );
+    DEBUG_ASSERT(0 != m_ctx,"SSLChannel() Bad SSL context");
     SSL_CTX_set_tlsext_servername_callback(m_ctx, SSLStream::sni_callback);
   }
 
-  DEBUG_ASSERT(0 != m_ctx,"SSLChannel() Bad SSL context");
+  // Disallow old SSL protocols
+  SSL_CTX_set_options(m_ctx, SSL_OP_NO_SSLv2);
+  SSL_CTX_set_options(m_ctx, SSL_OP_NO_SSLv3);
 }
 
 //=========================================================================
