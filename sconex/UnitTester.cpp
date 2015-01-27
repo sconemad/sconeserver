@@ -20,6 +20,7 @@ Free Software Foundation, Inc.,
 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA */
 
 #include <sconex/UnitTester.h>
+#include <sconex/Logger.h>
 namespace scx {
 
 //=============================================================================
@@ -181,7 +182,7 @@ std::string UnitTester::ansi(const std::string& fmt)
 //=============================================================================
 UnitTester::UnitTester()
 {
-
+  scx::Logger::init(".");
 }
  
 //=============================================================================
