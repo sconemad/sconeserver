@@ -86,6 +86,8 @@ template<class T> T* ProviderScheme<T>::provide(
   Provider_DEBUG_LOG("provide("+type+","+
 		     (args ? args->object()->get_string() : "NULL") +")");
 
+  if (m_providers.empty()) return 0;
+  
   typename ProviderMap::iterator it = m_providers.upper_bound(type);
   --it; // Use the last registered provider for this type
   if (it == m_providers.end() || it->first != type) {
