@@ -164,7 +164,7 @@ bool RenderMarkupContext::handle_start(const std::string& name,
                name == "h4" || name == "h5" || name == "h6") {
       // Automatically insert anchors before headings
       if (data && m_article) { 
-        const ArticleHeading* h = (const ArticleHeading*)(data);
+        const Heading* h = (const Heading*)(data);
         if (h) {
           int index = h->index();
           std::string anchor = 
@@ -247,9 +247,9 @@ void RenderMarkupContext::handle_process(const std::string& name,
   if (m_inhibit) return;
     
   scx::ScriptAuth auth(scx::ScriptAuth::Untrusted);
-  ArticleBody* doc = get_current_doc();
+  Document* doc = get_current_doc();
   const std::type_info& ti = typeid(*doc);
-  if (ti == typeid(Template)) {
+  if (ti == typeid(Template)) { //XXX this is now wrong!!
     // Trust templates
     auth = scx::ScriptAuth(scx::ScriptAuth::Trusted);
   }

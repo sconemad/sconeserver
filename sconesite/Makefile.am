@@ -10,13 +10,12 @@ sconesite_la_SOURCES = \
 SconesiteModule.cpp \
 SconesiteStream.cpp \
 Article.cpp \
-ArticleHeading.cpp \
 Context.cpp \
+Document.cpp \
+Heading.cpp \
 Profile.cpp \
 RenderMarkup.cpp \
 Template.cpp \
-WikiTextArticleBody.cpp \
-XMLArticleBody.cpp \
 XMLDoc.cpp
 
 sconesiteincludedir = $(includedir)/sconesite
@@ -25,14 +24,12 @@ sconesiteinclude_HEADERS = \
 SconesiteModule.h \
 SconesiteStream.h \
 Article.h \
-ArticleBody.h \
-ArticleHeading.h \
 Context.h \
+Document.h \
+Heading.h \
 Profile.h \
 RenderMarkup.h \
 Template.h \
-WikiTextArticleBody.h \
-XMLArticleBody.h \
 XMLDoc.h
 
 sconesite_la_LDFLAGS = -module -avoid-version

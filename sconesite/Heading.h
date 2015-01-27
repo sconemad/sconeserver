@@ -1,6 +1,6 @@
 /* SconeServer (http://www.sconemad.com)
 
-Sconesite Article Heading
+Sconesite Document Heading
 
 Copyright (c) 2000-2011 Andrew Wedgbury <wedge@sconemad.com>
 
@@ -19,19 +19,19 @@ along with this program (see the file COPYING); if not, write to the
 Free Software Foundation, Inc.,
 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA */
 
-#ifndef sconesiteArticleHeading_h
-#define sconesiteArticleHeading_h
+#ifndef sconesiteHeading_h
+#define sconesiteHeading_h
 
 #include <sconex/ScriptBase.h>
 
 //=========================================================================
-// ArticleHeading - Represents a heading in a document, can be arranged in
-// a tree structure
+// Heading - Represents a heading in a document, can be arranged in a tree
+// structure
 //
-class ArticleHeading {
+class Heading {
 public:
-  ArticleHeading(int level, const std::string& name, int index);
-  ~ArticleHeading();
+  Heading(int level, const std::string& name, int index);
+  ~Heading();
 
   int level() const;
   const std::string& name() const;
@@ -40,7 +40,7 @@ public:
   void clear();
   void add(int level, const std::string& name, int index);
 
-  const ArticleHeading* lookup_index(int index) const;
+  const Heading* lookup_index(int index) const;
   std::string lookup_anchor(int index) const;
   std::string lookup_section(int index) const;
 
@@ -53,8 +53,8 @@ private:
   std::string m_name;
   int m_index;
   
-  typedef std::vector<ArticleHeading*> ArticleHeadingList;
-  ArticleHeadingList m_subs;
+  typedef std::vector<Heading*> HeadingList;
+  HeadingList m_subs;
 };
 
 #endif

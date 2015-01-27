@@ -22,7 +22,7 @@ Free Software Foundation, Inc.,
 #ifndef sconesiteContext_h
 #define sconesiteContext_h
 
-#include "ArticleBody.h"
+#include "Document.h"
 #include <sconex/ScriptBase.h>
 
 //=========================================================================
@@ -34,9 +34,9 @@ public:
   Context();
   ~Context();
 
-  virtual bool handle_doc_start(ArticleBody* doc);
+  virtual bool handle_doc_start(Document* doc);
 
-  virtual bool handle_doc_end(ArticleBody* doc);
+  virtual bool handle_doc_end(Document* doc);
 
   virtual bool handle_start(const std::string& name, 
 			    NodeAttrs& attrs, 
@@ -60,9 +60,9 @@ public:
 
 protected:
 
-  ArticleBody* get_current_doc();
+  Document* get_current_doc();
   
-  typedef std::stack<ArticleBody*> DocStack;
+  typedef std::stack<Document*> DocStack;
   DocStack m_doc_stack;
   
 };

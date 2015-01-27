@@ -1,6 +1,6 @@
 /* SconeServer (http://www.sconemad.com)
 
-Sconesite Article Heading
+Sconesite Document Heading
 
 Copyright (c) 2000-2011 Andrew Wedgbury <wedge@sconemad.com>
 
@@ -19,11 +19,11 @@ along with this program (see the file COPYING); if not, write to the
 Free Software Foundation, Inc.,
 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA */
 
-#include "ArticleHeading.h"
+#include "Heading.h"
 #include <sconex/ScriptTypes.h>
 
 //=========================================================================
-ArticleHeading::ArticleHeading(int level, const std::string& name, int index)
+Heading::Heading(int level, const std::string& name, int index)
   : m_level(level),
     m_name(name),
     m_index(index)
@@ -32,60 +32,60 @@ ArticleHeading::ArticleHeading(int level, const std::string& name, int index)
 }
 
 //=========================================================================
-ArticleHeading::~ArticleHeading()
+Heading::~Heading()
 {
   clear();
 }
 
 //=========================================================================
-int ArticleHeading::level() const
+int Heading::level() const
 {
   return m_level;
 }
 
 //=========================================================================
-const std::string& ArticleHeading::name() const
+const std::string& Heading::name() const
 {
   return m_name;
 }
 
 //=========================================================================
-int ArticleHeading::index() const
+int Heading::index() const
 {
   return m_index;
 }
 
 //=========================================================================
-void ArticleHeading::clear()
+void Heading::clear()
 {
-  for (ArticleHeadingList::iterator it = m_subs.begin();
+  for (HeadingList::iterator it = m_subs.begin();
        it != m_subs.end();
        ++it) {
-    ArticleHeading* h = *it;
+    Heading* h = *it;
     delete h;
   }
   m_subs.clear();
 }
 
 //=========================================================================
-void ArticleHeading::add(int level, const std::string& name, int index)
+void Heading::add(int level, const std::string& name, int index)
 {
   if (m_subs.size() == 0 || m_subs.back()->level() >= level) {
-    m_subs.push_back(new ArticleHeading(level,name,index));
+    m_subs.push_back(new Heading(level,name,index));
   } else {
     m_subs.back()->add(level,name,index);
   }
 }
 
 //=========================================================================
-const ArticleHeading* ArticleHeading::lookup_index(int index) const
+const Heading* Heading::lookup_index(int index) const
 {
   if (index == m_index) return this;
   
-  for (ArticleHeadingList::const_iterator it = m_subs.begin();
+  for (HeadingList::const_iterator it = m_subs.begin();
        it != m_subs.end();
        ++it) {
-    const ArticleHeading* f = (*it)->lookup_index(index);
+    const Heading* f = (*it)->lookup_index(index);
     if (f) return f;
   }
   
@@ -110,13 +110,13 @@ std::string name_encode(const std::string& name)
 }
 
 //=========================================================================
-std::string ArticleHeading::lookup_anchor(int index) const
+std::string Heading::lookup_anchor(int index) const
 {
   if (index == m_index) {
     return name_encode(m_name);
   }
 
-  for (ArticleHeadingList::const_iterator it = m_subs.begin();
+  for (HeadingList::const_iterator it = m_subs.begin();
        it != m_subs.end();
        ++it) {
     std::string p = (*it)->lookup_anchor(index);
@@ -130,13 +130,13 @@ std::string ArticleHeading::lookup_anchor(int index) const
 }
 
 //=========================================================================
-std::string ArticleHeading::lookup_section(int index) const
+std::string Heading::lookup_section(int index) const
 {
   int sec = 0;
-  for (ArticleHeadingList::const_iterator it = m_subs.begin();
+  for (HeadingList::const_iterator it = m_subs.begin();
        it != m_subs.end();
        ++it) {
-    const ArticleHeading* h = *it;
+    const Heading* h = *it;
     ++sec;
     std::ostringstream oss;
     if (h->index() == index) {
@@ -156,16 +156,15 @@ std::string ArticleHeading::lookup_section(int index) const
 }
 
 //=========================================================================
-scx::ScriptRef* ArticleHeading::get_tree(
-  const std::string& anchor_prefix,
-  const std::string& section_prefix) const
+scx::ScriptRef* Heading::get_tree(const std::string& anchor_prefix,
+				  const std::string& section_prefix) const
 {
   scx::ScriptList* list = new scx::ScriptList();
   int s=0;
-  for (ArticleHeadingList::const_iterator it = m_subs.begin();
+  for (HeadingList::const_iterator it = m_subs.begin();
        it != m_subs.end();
        ++it) {
-    const ArticleHeading* h = *it;
+    const Heading* h = *it;
     std::string anchor = name_encode(h->name());
 
     std::ostringstream oss;

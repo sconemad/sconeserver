@@ -32,7 +32,7 @@ Free Software Foundation, Inc.,
 //
 class SconesiteModule : public scx::Module,
                         public scx::Provider<scx::Stream>,
-                        public scx::Provider<ArticleBody> {
+                        public scx::Provider<Document> {
 public:
 
   SconesiteModule();
@@ -61,10 +61,10 @@ public:
 		       const scx::ScriptRef* args,
 		       scx::Stream*& object);
 
-  // Provider<ArticleBody::Ref> method
+  // Provider<Document> method
   virtual void provide(const std::string& type,
 		       const scx::ScriptRef* args,
-		       ArticleBody*& object);
+		       Document*& object);
 
   typedef scx::ScriptRefTo<SconesiteModule> Ref;
 

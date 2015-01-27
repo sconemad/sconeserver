@@ -34,14 +34,14 @@ Context::~Context()
 }
 
 //=========================================================================
-bool Context::handle_doc_start(ArticleBody* doc)
+bool Context::handle_doc_start(Document* doc)
 {
   m_doc_stack.push(doc);
   return true;
 }
 
 //=========================================================================
-bool Context::handle_doc_end(ArticleBody* doc)
+bool Context::handle_doc_end(Document* doc)
 {
   DEBUG_ASSERT(m_doc_stack.top() == doc,"Doc stack mismatch");
   m_doc_stack.pop();
@@ -49,7 +49,7 @@ bool Context::handle_doc_end(ArticleBody* doc)
 }
 
 //=========================================================================
-ArticleBody* Context::get_current_doc()
+Document* Context::get_current_doc()
 {
   if (m_doc_stack.empty()) return 0;
   return m_doc_stack.top();

@@ -21,17 +21,14 @@ Free Software Foundation, Inc.,
 
 
 #include "XMLDoc.h"
-#include "Article.h"
 #include "Context.h"
 
-#include <sconex/Stream.h>
-#include <sconex/Date.h>
-#include <sconex/FileStat.h>
-#include <sconex/utils.h>
+#include <sconex/MemFile.h>
+#include <sconex/ScriptEngine.h>
 #include <sconex/ScriptTypes.h>
+#include <sconex/Stream.h>
+#include <sconex/utils.h>
 #include <sconex/Log.h>
-
-scx::Mutex* XMLDoc::m_clients_mutex = 0;
 
 //=========================================================================
 bool XMLAttr_bool(NodeAttrs& attrs, const std::string& value, bool def)
@@ -73,120 +70,21 @@ void ErrorHandler(void* vcx,const char* str,...)
 XMLDoc::XMLDoc(const std::string& name,
 	       const scx::FilePath& root,
 	       const std::string& file)
-  : ArticleBody(name),
-    m_root(root),
-    m_file(file),
-    m_xmldoc(0),
-    m_clients(0),
-    m_opening(false)
+  : Document(name, root, file),
+    m_xmldoc(0)
 {
-  if (!m_clients_mutex) {
-    m_clients_mutex = new scx::Mutex();
-  }
 }
 
 //=========================================================================
 XMLDoc::~XMLDoc()
 {
-  close();
-}
-
-//=========================================================================
-const scx::FilePath& XMLDoc::get_root() const
-{
-  return m_root;
-}
-
-//=========================================================================
-const std::string& XMLDoc::get_file() const
-{
-  return m_file;
-}
-
-//=========================================================================
-scx::FilePath XMLDoc::get_filepath() const
-{
-  return m_root + m_file;
-}
-
-//=========================================================================
-bool XMLDoc::process(Context& context)
-{
-  m_clients_mutex->lock();
-  ++m_clients;
-  m_clients_mutex->unlock();
-
-  open();
-  
-  if (!m_xmldoc) {
-    context.handle_error(m_errors);
-    return false;
-  }
-
-  if (context.handle_doc_start(this)) {
-    do {
-      process_node(context,xmlDocGetRootElement(m_xmldoc));
-    } while (context.handle_doc_end(this));
-  }
-
-  m_clients_mutex->lock();
-  --m_clients;
-  m_clients_mutex->unlock();
-  
-  return true;
+  handle_close();
 }
 
 //=========================================================================
 void XMLDoc::parse_error(const std::string& msg)
 {
   m_errors += msg;
-}
-
-//=========================================================================
-bool XMLDoc::purge(const scx::Date& purge_time)
-{
-  if (!m_xmldoc) return false;
-  if (m_last_access > purge_time) return false;
-
-  scx::MutexLocker locker(*m_clients_mutex);
-  if (m_clients > 0) return false;
-
-  DEBUG_LOG("Purging " + get_filepath().path());
-  close();
-  return true;
-}
-
-//=========================================================================
-std::string XMLDoc::get_string() const
-{
-  return m_name;
-}
-
-//=========================================================================
-scx::ScriptRef* XMLDoc::script_op(const scx::ScriptAuth& auth,
-				  const scx::ScriptRef& ref,
-				  const scx::ScriptOp& op,
-				  const scx::ScriptRef* right)
-{
-  if (op.type() == scx::ScriptOp::Lookup) {
-    const std::string name = right->object()->get_string();
-
-    // Methods
-    if ("test" == name) {
-      return new scx::ScriptMethodRef(ref,name);
-    }
-
-    // Sub-objects
-    if ("name" == name) {
-      return scx::ScriptString::new_ref(m_name);
-    }
-
-    if ("modtime" == name) {
-      return new scx::ScriptRef(scx::FileStat(get_filepath()).time().new_copy());
-    }
-  }
-
-  return scx::ScriptObject::script_op(auth,ref,op,right);
 }
 
 //=========================================================================
@@ -263,72 +161,52 @@ void XMLDoc::process_node(Context& context, xmlNode* start)
 }
 
 //=========================================================================
-void XMLDoc::handle_open()
+bool XMLDoc::is_open() const
 {
-  scan_scripts(xmlDocGetRootElement(m_xmldoc));
-}
-
-//=========================================================================
-void XMLDoc::handle_close()
-{
-
-}
-
-//=========================================================================
-bool XMLDoc::open()
-{
-  m_last_access = scx::Date::now();
-
-  m_clients_mutex->lock();
-  bool open_wait = m_opening;
-  if (!m_opening) m_opening = true;
-  m_clients_mutex->unlock();
-  
-  if (open_wait) {
-    // Doc is being opened in another thread, wait for it to complete
-    DEBUG_LOG("XMLDoc::Open() Waiting for another thread to complete");
-    while (m_opening) { };
-    DEBUG_LOG("XMLDoc::Open() Other thread finished open, continuing");
-    return (m_xmldoc != 0);
-  }
-  
-  scx::FilePath path = get_filepath();
-  scx::FileStat stat(path);
-  if (stat.is_file()) {
-    if (m_xmldoc == 0 || m_modtime != stat.time()) {
-      close();
-      m_errors = "";
-
-      xmlParserCtxt* cx;
-      cx = xmlNewParserCtxt();
-      cx->_private = this;
-      cx->sax->error = ErrorHandler;
-      cx->vctxt.error = ErrorHandler;
-
-      int opts = 0;
-      opts |= XML_PARSE_NONET;
-      //opts |= XML_PARSE_RECOVER;
-      
-      m_xmldoc = xmlCtxtReadFile(cx,path.path().c_str(),NULL,opts);
-      m_modtime = stat.time();
-
-      xmlFreeParserCtxt(cx);
-
-      handle_open();
-    }
-  } else {
-    close();
-  }
-
-  m_clients_mutex->lock();
-  m_opening = false;
-  m_clients_mutex->unlock();
-
   return (m_xmldoc != 0);
 }
 
 //=========================================================================
-void XMLDoc::close()
+bool XMLDoc::handle_open()
+{
+  m_errors = "";
+  
+  xmlParserCtxt* cx;
+  cx = xmlNewParserCtxt();
+  cx->_private = this;
+  cx->sax->error = ErrorHandler;
+  cx->vctxt.error = ErrorHandler;
+  
+  int opts = 0;
+  opts |= XML_PARSE_NONET;
+  //opts |= XML_PARSE_RECOVER;
+  
+  m_xmldoc = xmlCtxtReadFile(cx,get_filepath().path().c_str(),NULL,opts);
+  
+  xmlFreeParserCtxt(cx);
+
+  scan_scripts(xmlDocGetRootElement(m_xmldoc));
+  
+  m_headings.clear();
+  int index = 0;
+  scan_headings(xmlDocGetRootElement(m_xmldoc),index);
+
+  return true;
+}
+
+//=========================================================================
+bool XMLDoc::handle_process(Context& context)
+{
+  if (context.handle_doc_start(this)) {
+    do {
+      process_node(context,xmlDocGetRootElement(m_xmldoc));
+    } while (context.handle_doc_end(this));
+  }
+  return true;
+}
+
+//=========================================================================
+void XMLDoc::handle_close()
 {
   for (Scripts::iterator it = m_scripts.begin();
        it != m_scripts.end(); ++it) {
@@ -337,7 +215,6 @@ void XMLDoc::close()
   m_scripts.clear();
 
   if (m_xmldoc) {
-    handle_close();
     xmlFreeDoc(m_xmldoc);
   }
   m_xmldoc = 0;
@@ -396,4 +273,31 @@ scx::ScriptStatement::Ref* XMLDoc::parse_script(char* data, int line)
   }
   
   return root;
+}
+
+//=========================================================================
+void XMLDoc::scan_headings(xmlNode* start,int& index)
+{
+  for (xmlNode* node = start;
+       node != 0;
+       node = node->next) {
+    
+    if (node->type == XML_ELEMENT_NODE) {
+      std::string name((char*)node->name);
+      if (name == "h1" || name == "h2" || name == "h3" ||
+          name == "h4" || name == "h5" || name == "h6") {
+        if (node->children) {
+          std::string text;
+          get_node_text(text,node->children);
+          int level = atoi(name.substr(1).c_str());
+          ++index;
+          m_headings.add(level,text,index);
+          const Heading* h = m_headings.lookup_index(index);
+          node->_private = (void*)h;
+        }
+      } else {
+        scan_headings(node->children,index);
+      }
+    }
+  }
 }

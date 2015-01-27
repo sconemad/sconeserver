@@ -62,14 +62,16 @@ Profile::Profile(
 {
   m_parent = &m_module;
 
-  configure_docroot("default");
-  configure_docroot("secure");
-  
   // Open article database
   scx::ScriptMap::Ref args(new scx::ScriptMap());
   args.object()->give("profile",scx::ScriptString::new_ref(name));
   m_db = scx::Database::open(dbtype,&args);
 
+  if (!m_db) throw std::exception();
+
+  configure_docroot("default");
+  configure_docroot("secure");
+  
   refresh();
 }
 

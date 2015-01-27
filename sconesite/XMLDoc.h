@@ -22,13 +22,8 @@ Free Software Foundation, Inc.,
 #ifndef sconesiteXMLDoc_h
 #define sconesiteXMLDoc_h
 
-#include "ArticleBody.h"
+#include "Document.h"
 
-#include <sconex/FilePath.h>
-#include <sconex/Date.h>
-#include <sconex/Mutex.h>
-#include <sconex/MemFile.h>
-#include <sconex/ScriptEngine.h>
 #include <sconex/ScriptStatement.h>
 
 #include <libxml/parser.h>
@@ -37,13 +32,11 @@ Free Software Foundation, Inc.,
 
 bool XMLAttr_bool(NodeAttrs& attrs, const std::string& value, bool def=false);
 
-class Context;
-
 //=========================================================================
 // XMLDoc - An article body implementation for XML-based documents, using
 // the libxml2 parser.
 //
-class XMLDoc : public ArticleBody {
+class XMLDoc : public Document {
 public:
 
   XMLDoc(const std::string& name,
@@ -52,24 +45,7 @@ public:
   
   virtual ~XMLDoc();
   
-  virtual const scx::FilePath& get_root() const;
-  virtual const std::string& get_file() const;
-  virtual scx::FilePath get_filepath() const;
-
-  virtual bool process(Context& context);
-
   void parse_error(const std::string& msg);
-
-  // Unload the article if it hasn't been accessed since purge_time
-  virtual bool purge(const scx::Date& purge_time);
-  
-  // ScriptObject methods
-  virtual std::string get_string() const;
-
-  virtual scx::ScriptRef* script_op(const scx::ScriptAuth& auth,
-				    const scx::ScriptRef& ref,
-				    const scx::ScriptOp& op,
-				    const scx::ScriptRef* right=0);
 
   typedef scx::ScriptRefTo<XMLDoc> Ref;
 
@@ -77,32 +53,24 @@ public:
 
 protected:
 
-  virtual void process_node(Context& context, xmlNode* node);
-  
-  virtual void handle_open();
+  virtual bool is_open() const;
+  virtual bool handle_open();
+  virtual bool handle_process(Context& context);
   virtual void handle_close();
-  
-  bool open();
-  void close();  
+
+  void process_node(Context& context, xmlNode* node);
 
   void scan_scripts(xmlNode* start);
   scx::ScriptStatement::Ref* parse_script(char* data, int line);
 
-  scx::FilePath m_root;
-  std::string m_file;
-  scx::Date m_modtime;
+  void scan_headings(xmlNode* start, int& index);
 
   xmlDoc* m_xmldoc;
   std::string m_errors;
 
   typedef std::vector<scx::ScriptStatement::Ref*> Scripts;
   Scripts m_scripts;
-  
-  scx::Date m_last_access;
-  int m_clients;
-  volatile bool m_opening;
 
-  static scx::Mutex* m_clients_mutex;
 };
 
 #endif

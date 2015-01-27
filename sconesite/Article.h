@@ -25,7 +25,7 @@ Free Software Foundation, Inc.,
 #include <sconex/ScriptBase.h>
 #include <sconex/Stream.h>
 #include <sconex/FilePath.h>
-#include "ArticleBody.h"
+#include "Document.h"
 
 class SconesiteModule;
 class Profile;
@@ -51,7 +51,7 @@ private:
 };
 
 //=========================================================================
-// Article - A SconeSite article, consisting of metadata and a body
+// Article - A SconeSite article, consisting of metadata and a document
 //
 class Article : public scx::ScriptObject {
 public:
@@ -76,17 +76,12 @@ public:
   scx::ScriptRef* get_meta(const std::string& name,
 			   bool recurse=false) const;
 
-  const ArticleHeading& get_headings() const;
+  const Heading& get_headings() const;
   std::string get_href_path() const;
   
   void refresh(const scx::Date& purge_time);
   const scx::Date& get_access_time() const;
   void reset_access_time();
-
-  static void register_article_type(const std::string& type,
-				    scx::Provider<ArticleBody>* factory);
-  static void unregister_article_type(const std::string& type,
-				      scx::Provider<ArticleBody>* factory);
 
   // ScriptObject methods
   virtual std::string get_string() const;
@@ -116,12 +111,8 @@ protected:
 
   scx::Date m_access_time;
 
-  ArticleBody::Ref* m_body;
+  Document::Ref* m_doc;
 
-  static void init();
-
-  static scx::ProviderScheme<ArticleBody>* s_article_providers;
-  
 };
 
 #endif
