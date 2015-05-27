@@ -55,6 +55,10 @@ public:
 
 protected:
 
+  RSSModule(const RSSModule& c);
+  RSSModule& operator=(const RSSModule& v);
+  // Prohibit copy
+
 private:
 
   typedef HASH_TYPE<std::string,Feed::Ref*> FeedMap;
