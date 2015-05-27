@@ -42,8 +42,8 @@ void RSSFeed_ErrorHandler(void* vcx,const char* str,...)
   char* msg = va_arg(vl,char*);
   va_end(vl);
 
-  //  xmlParserCtxt* cx = (xmlParserCtxt*)vcx;
-  //  Feed* feed = (Feed*)cx->_private;
+  //  xmlParserCtxt* cx = static_cast<xmlParserCtxt*>(vcx);
+  //  Feed* feed = static_cast<Feed*>(cx->_private);
   RSSFeed_DEBUG_LOG("Feed error: " << msg);
 }
 

@@ -47,7 +47,7 @@ int inet_pton(
     return 0;
 #else
     // We'll just have to use the crap one
-    *((unsigned long*)addrptr) = inet_addr(strptr);
+    *(static_cast<unsigned long*>(addrptr)) = inet_addr(strptr);
     // (hope in worked!)
     return 1;
 #endif
@@ -68,7 +68,7 @@ const char* inet_ntop(
   size_t len
 )
 {
-  const unsigned char *p = (const unsigned char*)addrptr;
+  const unsigned char *p = static_cast<const unsigned char*>(addrptr);
   if (family == AF_INET) {
     char temp[INET_ADDRSTRLEN];
     std::ostringstream oss;
@@ -179,7 +179,7 @@ void IPSocketAddress::set_sockaddr(const struct sockaddr* sa)
 //=============================================================================
 const struct sockaddr* IPSocketAddress::get_sockaddr() const
 {
-  return (const struct sockaddr*)&m_addr;
+  return reinterpret_cast<const struct sockaddr*>(&m_addr);
 }
 
 //=============================================================================
@@ -296,12 +296,12 @@ void IPSocketAddress::set_address(
   
   m_host = std::string();
   
-  unsigned char* paddr = (unsigned char*)&m_s_addr;
+  unsigned char* paddr = reinterpret_cast<unsigned char*>(&m_s_addr);
   
-  paddr[0] = (unsigned char)ip1;
-  paddr[1] = (unsigned char)ip2;
-  paddr[2] = (unsigned char)ip3;
-  paddr[3] = (unsigned char)ip4;
+  paddr[0] = static_cast<unsigned char>(ip1);
+  paddr[1] = static_cast<unsigned char>(ip2);
+  paddr[2] = static_cast<unsigned char>(ip3);
+  paddr[3] = static_cast<unsigned char>(ip4);
   m_valid = true;
 }
 
@@ -332,7 +332,7 @@ const std::string& IPSocketAddress::get_host() const
       int bsize = BSIZE_MIN;
       for (; bsize <= BSIZE_MAX; bsize *= 2) {
 	char* buf = new char[bsize];
-	ret = gethostbyaddr_r((const char*)&m_addr.sin_addr,
+	ret = gethostbyaddr_r(reinterpret_cast<const char*>(&m_addr.sin_addr),
 			      sizeof(m_addr.sin_addr),AF_INET,
 			      &he,buf,bsize,&phe,&rerr);
 	if (0 == ret && phe) {
