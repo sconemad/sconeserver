@@ -82,6 +82,10 @@ public:
 
 protected:
 
+  HTTPModule(const HTTPModule& c);
+  HTTPModule& operator=(const HTTPModule& v);
+  // Prohibit copy
+
 private:
 
   HostMapper::Ref* m_hosts;
