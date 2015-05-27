@@ -75,13 +75,17 @@ scx::Condition DatagramMultiplexer::event(scx::Stream::Event e)
 }
 
 //=============================================================================
-bool DatagramMultiplexer::channel_open(DatagramChannel* channel)
+bool DatagramMultiplexer::channel_open(
+  __attribute__((unused)) DatagramChannel* channel
+)
 {
   return true;
 }
 
 //=============================================================================
-void DatagramMultiplexer::channel_close(DatagramChannel* channel)
+void DatagramMultiplexer::channel_close(
+  __attribute__((unused)) DatagramChannel* channel
+)
 {
 
 }

@@ -113,9 +113,11 @@ std::string ForwardModule::info() const
 }
 
 //=========================================================================
-void ForwardModule::provide(const std::string& type,
-			    const scx::ScriptRef* args,
-			    scx::Stream*& object)
+void ForwardModule::provide(
+  __attribute__((unused)) const std::string& type,
+  const scx::ScriptRef* args,
+  scx::Stream*& object
+)
 {
   const scx::SocketAddress* sa =
     scx::get_method_arg<scx::SocketAddress>(args,0,"address");

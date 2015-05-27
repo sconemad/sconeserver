@@ -144,10 +144,12 @@ ScriptRef* ScriptObject::script_op(const ScriptAuth& auth,
 }
 
 //===========================================================================
-ScriptRef* ScriptObject::script_method(const ScriptAuth& auth,
-				       const ScriptRef& ref,
-				       const std::string& name,
-				       const ScriptRef* args)
+ScriptRef* ScriptObject::script_method(
+  __attribute__((unused)) const ScriptAuth& auth,
+  __attribute__((unused)) const ScriptRef& ref,
+  const std::string& name,
+  __attribute__((unused)) const ScriptRef* args
+)
 {
   return ScriptError::new_ref("Unsupported method: " + name);
 }

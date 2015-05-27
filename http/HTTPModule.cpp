@@ -215,9 +215,10 @@ void HTTPModule::provide(const std::string& type,
 }
 
 //=========================================================================
-void HTTPModule::provide(const std::string& type,
-			 const scx::ScriptRef* args,
-			 scx::ScriptObject*& object)
+void HTTPModule::provide(
+  __attribute__((unused)) const std::string& type,
+  const scx::ScriptRef* args,
+  scx::ScriptObject*& object)
 {
   const scx::ScriptString* method = 
     scx::get_method_arg<scx::ScriptString>(args,0,"method");

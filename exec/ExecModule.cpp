@@ -144,9 +144,11 @@ const scx::User& ExecModule::get_exec_user() const
 }
 
 //=========================================================================
-void ExecModule::provide(const std::string& type,
-			 const scx::ScriptRef* args,
-			 scx::Stream*& object)
+void ExecModule::provide(
+  __attribute__((unused)) const std::string& type,
+  const scx::ScriptRef* args,
+  scx::Stream*& object
+)
 {
   const scx::ScriptList* argl = 
     dynamic_cast<const scx::ScriptList*>(args->object());

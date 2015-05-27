@@ -438,7 +438,7 @@ private:
 static Proxy* s_proxy = 0;
 
 //=========================================================================
-void handleSIGCHLD(int i)
+void handleSIGCHLD(__attribute__((unused)) int i)
 {  
   int stat;
   int pid;
@@ -1030,7 +1030,7 @@ bool Process::get_exitcode(int& code)
 }
 
 //============================================================================
-void Process::set_detatched(bool onoff)
+void Process::set_detatched(__attribute__((unused)) bool onoff)
 {
   if (m_runstate == Unstarted ||
       m_runstate == Running) {

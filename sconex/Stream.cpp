@@ -114,7 +114,7 @@ int Stream::write(const std::string& string)
 }
 
 //=============================================================================
-Condition Stream::event(Event e)
+Condition Stream::event(__attribute__((unused)) Event e)
 {
   return Ok;
 }

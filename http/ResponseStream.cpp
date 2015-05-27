@@ -367,7 +367,9 @@ scx::Condition ResponseStream::read(void* buffer,int n,int& na)
 }
 
 //=========================================================================
-scx::Condition ResponseStream::start_section(const scx::MimeHeaderTable& headers)
+scx::Condition ResponseStream::start_section(
+  __attribute__((unused)) const scx::MimeHeaderTable& headers
+)
 {
   return scx::Ok;
 }

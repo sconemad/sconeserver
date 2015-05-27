@@ -237,26 +237,35 @@ scx::ScriptRef* AuthRealm::script_method(const scx::ScriptAuth& auth,
 }
 
 //=============================================================================
-bool AuthRealm::update_hash(const std::string& username,
-			    const std::string& hash)
+bool AuthRealm::update_hash(
+  __attribute__((unused)) const std::string& username,
+	__attribute__((unused)) const std::string& hash
+)
 {
   return false;
 }
 
 //=============================================================================
-scx::ScriptRef* AuthRealm::lookup_data(const std::string& username)
+scx::ScriptRef* AuthRealm::lookup_data(
+  __attribute__((unused)) const std::string& username
+)
 {
   return 0;
 }
 
 //=============================================================================
-bool AuthRealm::add_user(const std::string& username, const std::string& hash)
+bool AuthRealm::add_user(
+  __attribute__((unused)) const std::string& username,
+  __attribute__((unused)) const std::string& hash
+)
 {
   return false;
 }
 
 //=============================================================================
-bool AuthRealm::remove_user(const std::string& username)
+bool AuthRealm::remove_user(
+  __attribute__((unused)) const std::string& username
+)
 {
   return false;
 }

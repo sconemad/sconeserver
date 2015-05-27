@@ -204,15 +204,18 @@ ScriptObject* ScriptStatementExpr::new_copy() const
 
 //=============================================================================
 ScriptStatement::ParseResult ScriptStatementExpr::parse(
-  ScriptEngine& script,
-  const std::string& token
+  __attribute__((unused)) ScriptEngine& script,
+  __attribute__((unused)) const std::string& token
 )
 {
   return ScriptStatement::Pop;
 }
 
 //=============================================================================
-ScriptRef* ScriptStatementExpr::run(ScriptTracer& tracer, FlowMode& flow)
+ScriptRef* ScriptStatementExpr::run(
+  ScriptTracer& tracer,
+  __attribute__((unused)) FlowMode& flow
+)
 {
   ScriptStatement_DEBUG_LOG("expr: " << m_expr);
   return tracer.evaluate(m_expr,this);
@@ -759,7 +762,7 @@ ScriptStatementFlow::~ScriptStatementFlow()
 
 //=============================================================================
 ScriptStatement::ParseResult ScriptStatementFlow::parse(
-  ScriptEngine& script,
+  __attribute__((unused)) ScriptEngine& script,
   const std::string& token
 )
 {
@@ -843,7 +846,7 @@ ScriptObject* ScriptStatementDecl::new_copy() const
 
 //=============================================================================
 ScriptStatement::ParseResult ScriptStatementDecl::parse(
-  ScriptEngine& script,
+  __attribute__((unused)) ScriptEngine& script,
   const std::string& token
 )
 {
@@ -875,7 +878,10 @@ ScriptStatement::ParseMode ScriptStatementDecl::parse_mode() const
 }
 
 //=============================================================================
-ScriptRef* ScriptStatementDecl::run(ScriptTracer& tracer, FlowMode& flow)
+ScriptRef* ScriptStatementDecl::run(
+  ScriptTracer& tracer,
+  __attribute__((unused)) FlowMode& flow
+)
 {
   ScriptRef* initialiser=0;
   if (!m_initialiser.empty()) {
@@ -1008,7 +1014,10 @@ ScriptStatement::ParseMode ScriptStatementSub::parse_mode() const
 }
 
 //=============================================================================
-ScriptRef* ScriptStatementSub::run(ScriptTracer& tracer, FlowMode& flow)
+ScriptRef* ScriptStatementSub::run(
+  ScriptTracer& tracer,
+  __attribute__((unused)) FlowMode& flow
+)
 {
   ScriptStatement_DEBUG_LOG("sub " << m_name);
 

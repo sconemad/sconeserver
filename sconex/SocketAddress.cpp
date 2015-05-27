@@ -170,7 +170,9 @@ bool AnonSocketAddress::valid_for_connect() const
 }
 
 //=============================================================================
-void AnonSocketAddress::set_sockaddr(const struct sockaddr* sa)
+void AnonSocketAddress::set_sockaddr(
+  __attribute__((unused)) const struct sockaddr* sa
+)
 {
   DEBUG_LOG("Method not implemented for this address type");
 }

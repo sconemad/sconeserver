@@ -97,7 +97,11 @@ Condition MemFile::endpoint_read(void* buffer,int n,int& na)
 }
 
 //=============================================================================
-Condition MemFile::endpoint_write(const void* buffer,int n,int& na)
+Condition MemFile::endpoint_write(
+  __attribute__((unused)) const void* buffer,
+  __attribute__((unused)) int n,
+  __attribute__((unused)) int& na
+)
 {
   DESCRIPTOR_DEBUG_LOG("endpoint_write() cannot write to MemFile!");
   return scx::Error;

@@ -48,7 +48,11 @@ TermBuffer::~TermBuffer()
 }
 
 //=============================================================================
-Condition TermBuffer::read(void* buffer,int n,int& na)
+Condition TermBuffer::read(
+  void* buffer,
+  __attribute__((unused)) int n,
+  int& na
+)
 {
   char ch[130];
   Condition c = Stream::read(ch,128,na);

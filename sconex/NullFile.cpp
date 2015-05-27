@@ -63,7 +63,11 @@ int NullFile::fd()
 }
 
 //=============================================================================
-Condition NullFile::endpoint_read(void* buffer,int n,int& na)
+Condition NullFile::endpoint_read(
+  __attribute__((unused)) void* buffer,
+  __attribute__((unused)) int n,
+  int& na
+)
 {
   // Read nothing
   na = 0;
@@ -71,7 +75,11 @@ Condition NullFile::endpoint_read(void* buffer,int n,int& na)
 }
 
 //=============================================================================
-Condition NullFile::endpoint_write(const void* buffer,int n,int& na)
+Condition NullFile::endpoint_write(
+  __attribute__((unused)) const void* buffer,
+  int n,
+  int& na
+)
 {
   // Write (and discard) everything
   na = n;

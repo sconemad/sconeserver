@@ -95,8 +95,10 @@ void PasswordHash::init()
 }
   
 //=============================================================================
-PasswordHashCrypt::PasswordHashCrypt(const std::string& type,
-				     const scx::ScriptRef* args)
+PasswordHashCrypt::PasswordHashCrypt(
+  const std::string& type,
+  __attribute__((unused)) const scx::ScriptRef* args
+)
   : m_type(type)
 {
   DEBUG_COUNT_CONSTRUCTOR(PasswordHashCrypt);

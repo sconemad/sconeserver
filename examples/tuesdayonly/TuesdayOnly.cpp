@@ -64,9 +64,11 @@ std::string TuesdayOnlyModule::info() const
 //=============================================================================
 // Request to provide a stream
 //
-void TuesdayOnlyModule::provide(const std::string& type,
-				const scx::ScriptRef* args,
-				scx::Stream*& object)
+void TuesdayOnlyModule::provide(
+  const std::string& type,
+  __attribute__((unused)) const scx::ScriptRef* args,
+  scx::Stream*& object
+)
 {
   // Check the type is "tuesdayonly" - this should always be the case since
   // this is the only stream type we have registered

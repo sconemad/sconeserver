@@ -244,7 +244,9 @@ const MimeHeaderValue* MimeHeader::get_value(const std::string& value) const
 }
 
 //===========================================================================
-bool MimeHeader::add_value(const MimeHeaderValue& value)
+bool MimeHeader::add_value(
+  __attribute__((unused)) const MimeHeaderValue& value
+)
 {
 
   return true;

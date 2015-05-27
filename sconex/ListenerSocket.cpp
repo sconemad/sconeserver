@@ -107,14 +107,22 @@ int ListenerSocket::accept(StreamSocket* s)
 }
 
 //=============================================================================
-Condition ListenerSocket::endpoint_read(void* buffer,int n,int& na)
+Condition ListenerSocket::endpoint_read(
+  __attribute__((unused)) void* buffer,
+  __attribute__((unused)) int n,
+  __attribute__((unused)) int& na
+)
 {
   DESCRIPTOR_DEBUG_LOG("endpoint_read() Not valid for this type of socket!");
   return scx::Error;
 }
 
 //=============================================================================
-Condition ListenerSocket::endpoint_write(const void* buffer,int n,int& na)
+Condition ListenerSocket::endpoint_write(
+  __attribute__((unused)) const void* buffer,
+  __attribute__((unused)) int n,
+  __attribute__((unused)) int& na
+)
 {
   DESCRIPTOR_DEBUG_LOG("endpoint_write() Not valid for this type of socket!");
   return scx::Error;
