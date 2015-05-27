@@ -42,6 +42,9 @@ public:
 
   ~User();
 
+  User(const User& c);
+  User& operator=(const User& v);
+
   bool set_real();
   // Set real user ID for this process
   

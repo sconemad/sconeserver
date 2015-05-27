@@ -66,6 +66,23 @@ User::~User()
 }
 
 //=============================================================================
+User::User(const User& c)
+  : m_user_name(c.m_user_name),
+    m_user_id(c.m_user_id),
+    m_group_id(c.m_group_id)
+{
+}
+
+//=============================================================================
+User& User::operator=(const User& v)
+{
+  m_user_name = v.m_user_name;
+  m_user_id = v.m_user_id;
+  m_group_id = v.m_group_id;
+  return *this;
+}
+
+//=============================================================================
 bool User::set_real()
 {
   if (0 != ::setgid(m_group_id)) {
