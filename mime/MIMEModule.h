@@ -46,6 +46,10 @@ public:
 					const scx::ScriptRef* args);
 protected:
   
+  MIMEModule(const MIMEModule& c);
+  MIMEModule& operator=(const MIMEModule& v);
+  // Prohibit copy
+
 private:
 
   typedef HASH_TYPE<std::string,std::string> MimeMap;
