@@ -39,6 +39,10 @@ public:
   
 protected:
 
+  CGIResponseStream(const CGIResponseStream& c);
+  CGIResponseStream& operator=(const CGIResponseStream& v);
+  // Prohibit copy
+
   virtual scx::Condition event(scx::Stream::Event e);
 
 private:
