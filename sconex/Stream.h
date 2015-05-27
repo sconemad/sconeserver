@@ -40,7 +40,7 @@ public:
   static Stream* create_new(const std::string& type,
 			    const ScriptRef* args);
 
-  Stream(const std::string& stream_name);
+  explicit Stream(const std::string& stream_name);
   virtual ~Stream();
     
   virtual Condition read(void* buffer,int n,int& na);

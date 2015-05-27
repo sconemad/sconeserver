@@ -39,7 +39,7 @@ public:
 
   static void init();
   
-  Process(const std::string& exe = "");
+  explicit Process(const std::string& exe = "");
 
   ~Process();
 

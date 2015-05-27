@@ -34,7 +34,7 @@ class SCONEX_API TermBuffer : public Stream {
 
 public:
 
-  TermBuffer(
+  explicit TermBuffer(
     const std::string& stream_name
   );
 

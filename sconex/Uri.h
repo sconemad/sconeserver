@@ -37,7 +37,7 @@ class SCONEX_API Uri : public ScriptObject {
 public:
 
   Uri();
-  Uri(const std::string& str);
+  explicit Uri(const std::string& str);
   Uri(
     const std::string& scheme,
     const std::string& host,
@@ -45,7 +45,7 @@ public:
     const std::string& path,
     const std::string& query = ""
   );
-  Uri(const ScriptRef* args);
+  explicit Uri(const ScriptRef* args);
   Uri(const Uri& c);
   virtual ~Uri();
 
