@@ -26,7 +26,10 @@ namespace scx {
 //=============================================================================
 RegExp::RegExp(
   const std::string& pattern
-) : m_pcre(0)
+)
+  : ScriptObject(),
+    m_pattern(pattern),
+    m_pcre(0)
 {
   DEBUG_COUNT_CONSTRUCTOR(RegExp);
   from_string(m_pattern);
@@ -34,7 +37,9 @@ RegExp::RegExp(
 
 //=============================================================================
 RegExp::RegExp(const ScriptRef* args)
-  : m_pcre(0)
+  : ScriptObject(),
+    m_pattern(),
+    m_pcre(0)
 {
   DEBUG_COUNT_CONSTRUCTOR(RegExp);
 

@@ -44,9 +44,16 @@ ScriptRefTo<StandardContext>* ScriptExpr::s_standard_context = 0;
 
 //===========================================================================
 ScriptExpr::ScriptExpr(const ScriptAuth& auth, ScriptRef* ctx)
-  : m_auth(auth),
+  : m_pos(0),
+    m_expr(),
+    m_type(Null),
+    m_name(),
+    m_value(0),
+    m_auth(auth),
     m_int_type("Int"),
-    m_real_type("Real")
+    m_real_type("Real"),
+    m_contexts(),
+    m_stack()
 {
   init();
   m_contexts.push_back(s_standard_context);
@@ -55,10 +62,16 @@ ScriptExpr::ScriptExpr(const ScriptAuth& auth, ScriptRef* ctx)
 
 //===========================================================================
 ScriptExpr::ScriptExpr(const ScriptExpr& c)
-  : m_auth(c.m_auth),
+  : m_pos(c.m_pos),
+    m_expr(c.m_expr),
+    m_type(c.m_type),
+    m_name(c.m_name),
+    m_value(c.m_value),
+    m_auth(c.m_auth),
     m_int_type(c.m_int_type),
     m_real_type(c.m_real_type),
-    m_contexts(c.m_contexts)
+    m_contexts(c.m_contexts),
+    m_stack(c.m_stack)
 {
   init();
 }
@@ -888,6 +901,9 @@ void ScriptExpr::init()
 
 //===========================================================================
 StandardContext::StandardContext()
+  : ScriptObject(),
+    ProviderScheme<ScriptObject>(),
+    m_type_provider(0)
 {
 
 }

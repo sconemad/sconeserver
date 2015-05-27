@@ -41,6 +41,7 @@ ConnectionStream::ConnectionStream(HTTPModule* module,
     m_request(0),
     m_profile(profile),
     m_seq(http_Request),
+    m_persist(),
     m_num_connection(0),
     m_num_request(0)
 {

@@ -32,7 +32,11 @@ static void* thread_run(void* data)
 
 //=============================================================================
 Thread::Thread()
-  : m_state(Stopped)
+  : m_mutex(),
+    m_wakeup(),
+    m_state(Stopped),
+    m_thread(),
+    m_attr()
 {
   DEBUG_COUNT_CONSTRUCTOR(Thread);
 }

@@ -181,6 +181,9 @@ std::string UnitTester::ansi(const std::string& fmt)
 
 //=============================================================================
 UnitTester::UnitTester()
+  : m_file(),
+    m_section(),
+    m_results()
 {
   scx::Logger::init(".");
 }

@@ -26,7 +26,10 @@ namespace scx {
 
 //=============================================================================
 LogEntry::LogEntry()
-  : m_data(0)
+  : m_time(),
+    m_category(),
+    m_message(),
+    m_data(0)
 {
 }
 
@@ -134,6 +137,7 @@ FileLogChannel::FileLogChannel(const std::string& name,
                                const FilePath& path,
                                bool fallback)
   : LogChannel(name),
+    m_file(),
     m_fallback(fallback)
 {
   if (Ok != m_file.open(path, File::Write | File::Append | File::Create,
@@ -198,6 +202,7 @@ void FileLogChannel::log_entry(LogEntry* entry)
 //=============================================================================
 CacheLogChannel::CacheLogChannel(const std::string& name, int max)
   : LogChannel(name),
+    m_cache(),
     m_max(max)
 {
 }
@@ -499,7 +504,9 @@ void Logger::provide(const std::string& type,
 Logger::Logger(const FilePath& path)
   : m_path(path),
     m_mutex(new Mutex()),
-    m_thread(0)
+    m_thread(0),
+    m_queue(),
+    m_channels()
 {
   LogChannel::register_provider("file", this);
   LogChannel::register_provider("cache", this);

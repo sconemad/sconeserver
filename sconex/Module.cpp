@@ -59,6 +59,8 @@ Module::Module(
   const VersionTag& version
 ) : m_name(name),
     m_version(version),
+    m_loadtime(),
+    m_modules(),
     m_mod_path(""),
     m_var_path(""),
     m_parent_module(0)

@@ -29,7 +29,8 @@ VersionTag::VersionTag(
   int minor,
   int sub,
   const std::string& extra
-) : m_major(major),
+) : ScriptObject(),
+    m_major(major),
     m_minor(minor),
     m_sub(sub),
     m_extra(extra)
@@ -39,9 +40,11 @@ VersionTag::VersionTag(
 
 //=============================================================================
 VersionTag::VersionTag(const std::string& str) 
-  : m_major(-1),
+  : ScriptObject(),
+    m_major(-1),
     m_minor(-1),
-    m_sub(-1)
+    m_sub(-1),
+    m_extra()
 {
   DEBUG_COUNT_CONSTRUCTOR(VersionTag);
   from_string(str);
@@ -49,9 +52,11 @@ VersionTag::VersionTag(const std::string& str)
 
 //=============================================================================
 VersionTag::VersionTag(const ScriptRef* args)
-  : m_major(-1),
+  : ScriptObject(),
+    m_major(-1),
     m_minor(-1),
-    m_sub(-1)
+    m_sub(-1),
+    m_extra()
 {
   DEBUG_COUNT_CONSTRUCTOR(VersionTag);
 

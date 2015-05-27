@@ -35,7 +35,11 @@ namespace http {
   
 //=========================================================================
 HostMapper::HostMapper(HTTPModule& module)
-  : m_module(module)
+  : ScriptObject(),
+    m_module(module),
+    m_hosts(),
+    m_aliases(),
+    m_redirects()
 {
   m_parent = &module;
 }

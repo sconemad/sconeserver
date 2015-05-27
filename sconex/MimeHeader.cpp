@@ -24,6 +24,8 @@ namespace scx {
 
 //===========================================================================
 MimeHeaderValue::MimeHeaderValue()
+  : m_value(),
+    m_pars()
 {
 
 }
@@ -91,13 +93,16 @@ std::string MimeHeaderValue::get_string() const
 
 //===========================================================================
 MimeHeader::MimeHeader()
+  : m_name(),
+    m_values()
 {
 
 }
 
 //===========================================================================
 MimeHeader::MimeHeader(const std::string& name)
-  : m_name(name)
+  : m_name(name),
+    m_values()
 {
   
 }
@@ -299,6 +304,7 @@ std::string MimeHeader::get_string() const
 //===========================================================================
 MimeHeaderTable::MimeHeaderTable(
 )
+  : m_headers()
 {
 
 }

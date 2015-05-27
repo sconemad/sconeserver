@@ -24,6 +24,8 @@ namespace scx {
 
 //=============================================================================
 Mutex::Mutex()
+  : m_mutex(),
+    m_attr()
 {
   // NOTE: Cannot use DEBUG_COUNT here as the counter itself uses a mutex!
   // DEBUG_COUNT_CONSTRUCTOR(Mutex);
@@ -97,6 +99,7 @@ bool MutexLocker::unlock()
 
 //=============================================================================
 ConditionEvent::ConditionEvent()
+  : m_cond()
 {
   DEBUG_COUNT_CONSTRUCTOR(ConditionEvent);
 
@@ -132,7 +135,9 @@ void ConditionEvent::broadcast()
 
 //=============================================================================
 RWLock::RWLock()
-  : m_readers(0),
+  : m_mutex(),
+    m_condition(),
+    m_readers(0),
     m_writing(false)
 {
   DEBUG_COUNT_CONSTRUCTOR(RWLock);

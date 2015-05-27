@@ -31,7 +31,8 @@ const int File::Lock = 32;
   
 //=============================================================================
 File::File()
-  : m_file(-1)
+  : m_file(-1),
+    m_filepath()
 {
   DEBUG_COUNT_CONSTRUCTOR(File);
 }

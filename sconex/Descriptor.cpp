@@ -36,6 +36,9 @@ int Descriptor::s_des_count = 0;
 Descriptor::Descriptor()
   : m_state(Closed),
     m_virtual_events(0),
+    m_streams(),
+    m_timeout_interval(),
+    m_timeout(),
     m_uid(++s_des_count)
 {
   DEBUG_COUNT_CONSTRUCTOR(Descriptor);

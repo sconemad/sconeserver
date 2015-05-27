@@ -36,9 +36,13 @@ namespace http {
 Client::Client(HTTPModule* module,
                const std::string& method,
                const scx::Uri& url)
-  : m_module(module),
+  : ScriptObject(),
+    m_module(module),
     m_request(new Request("client","")),
     m_response(new Response()),
+    m_response_data(),
+    m_mutex(),
+    m_complete(),
     m_error(false)
 {
   DEBUG_COUNT_CONSTRUCTOR(HTTPClient);
@@ -53,6 +57,8 @@ Client::Client(const Client& c)
     m_request(c.m_request),
     m_response(c.m_response),
     m_response_data(c.m_response_data),
+    m_mutex(),
+    m_complete(),
     m_error(c.m_error)
 {
   DEBUG_COUNT_CONSTRUCTOR(HTTPClient);
@@ -449,6 +455,7 @@ ProxyConnectStream::ProxyConnectStream(HTTPModule* module,
   : scx::LineBuffer("http:proxy-connect",1024),
     m_module(module),
     m_request(request),
+    m_response(),
     m_seq(Send)
 {
   enable_event(scx::Stream::Writeable,true);

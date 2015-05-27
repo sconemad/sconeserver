@@ -36,6 +36,7 @@ StreamTransfer::StreamTransfer(
   int buffer_size
 ) : Stream("transfer"),
     m_status(StreamTransfer::Transfer),
+    m_manager(0),
     m_buffer(buffer_size),
     m_close_when_finished(false)
 {
@@ -278,6 +279,7 @@ int StreamTransferManager::s_tra_count = 0;
 StreamTransferManager::StreamTransferManager(StreamTransfer* dest)
   : m_dest(dest),
     m_source(0),
+    m_mutex(),
     m_uid(++s_tra_count)
 {
   DEBUG_COUNT_CONSTRUCTOR(StreamTransferManager);

@@ -32,7 +32,8 @@ namespace scx {
 //=============================================================================
 DebugInstanceCounter::DebugInstanceCounter()
   : m_num(0),
-    m_max(0)
+    m_max(0),
+    m_addrs()
 {
 
 }
@@ -208,7 +209,8 @@ void Debug::get_counters(InstanceCounterMap& counters)
 
 //=============================================================================
 Debug::Debug()
-  : m_mutex(new Mutex()),
+  : m_inst_counts(),
+    m_mutex(new Mutex()),
     m_stop_on_assert(false)
 {
 

@@ -27,6 +27,7 @@ Free Software Foundation, Inc.,
 namespace scx {
 
 struct time_tok {
+  time_tok() : value(0), sep() {}
   int value;
   std::string sep;
 };

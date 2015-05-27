@@ -273,7 +273,8 @@ bool FilePath::move(const FilePath& source, const FilePath& dest)
 
 //=========================================================================
 ScriptFile::ScriptFile(const scx::FilePath& path, const std::string& filename)
-  : m_path(path),
+  : ScriptObject(),
+    m_path(path),
     m_filename(filename)
 {
 
@@ -281,7 +282,8 @@ ScriptFile::ScriptFile(const scx::FilePath& path, const std::string& filename)
 
 //=========================================================================
 ScriptFile::ScriptFile(const ScriptFile& c)
-  : m_path(c.m_path),
+  : ScriptObject(),
+    m_path(c.m_path),
     m_filename(c.m_filename)
 {
 

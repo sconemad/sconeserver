@@ -408,7 +408,13 @@ const std::string& Kernel::get_system_hardware() const
 //=============================================================================
 Kernel::Kernel(const std::string& appname, const VersionTag& version)
   : Module(appname,version),
-    m_state(Init)
+    m_state(Init),
+    m_spinner(),
+    m_conf_path(),
+    m_autoload_config(false),
+    m_system_nodename(),
+    m_system_version(),
+    m_system_hardware()
 {
   struct utsname sysinf;
   if (::uname(&sysinf) != -1) {

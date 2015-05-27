@@ -25,14 +25,18 @@ namespace scx {
 
 //=============================================================================
 FileStat::FileStat()
-  : m_mode(0)
+  : m_mode(0),
+    m_size(0),
+    m_time()
 {
   DEBUG_COUNT_CONSTRUCTOR(FileStat);
 }
   
 //=============================================================================
 FileStat::FileStat(const FilePath& filepath)
-  : m_mode(0)
+  : m_mode(0),
+    m_size(0),
+    m_time(0)
 {
   DEBUG_COUNT_CONSTRUCTOR(FileStat);
 
@@ -86,6 +90,9 @@ const Date& FileStat::time() const
 
 //=============================================================================
 FileStat::FileStat(int filedes)
+  : m_mode(0),
+    m_size(0),
+    m_time()
 {
   DEBUG_COUNT_CONSTRUCTOR(FileStat);
 

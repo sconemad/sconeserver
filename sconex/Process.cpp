@@ -108,11 +108,12 @@ private:
   
 //============================================================================
 ProxyPacket::ProxyPacket()
+  : m_data(),
+    m_fd(-1)
 {
   m_data.type = Invalid;
   m_data.num = 0;
   m_data.str[0] = 0;
-  m_fd = -1;
 }
 
 //============================================================================
@@ -450,13 +451,17 @@ void handleSIGCHLD(__attribute__((unused)) int i)
 
 //============================================================================
 Proxy::Proxy()
-  : m_prog(0),
+  : m_packet(),
+    m_prog(0),
+    m_exec_args(),
     m_narg(0),
+    m_exec_envp(),
     m_nenv(0),
     m_cur_env_name(0),
     m_dir(0),
     m_uid(0),
-    m_gid(0)
+    m_gid(0),
+    m_stats()
 {
 
 }
@@ -803,9 +808,15 @@ void Process::init()
 Process::Process(
   const std::string& exe
 )	
-  : m_pid(-1),
+  : StreamSocket(),
+    m_pid(-1),
     m_exe(exe),
-    m_runstate(Unstarted)
+    m_args(),
+    m_env(),
+    m_dir(),
+    m_user(),
+    m_runstate(Unstarted),
+    m_exitcode(0)
 {
   DEBUG_COUNT_CONSTRUCTOR(Process);
 }

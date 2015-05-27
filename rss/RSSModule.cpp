@@ -56,8 +56,10 @@ protected:
 };
 
 //=========================================================================
-RSSModule::RSSModule(
-) : scx::Module("rss",scx::version())
+RSSModule::RSSModule()
+  : scx::Module("rss",scx::version()),
+    m_feeds(),
+    m_job()
 {
   m_job = scx::Kernel::get()->add_job(
     new RSSJob(this,scx::Time(RSS_JOB_PERIOD)));

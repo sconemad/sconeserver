@@ -29,7 +29,8 @@ Date::MonthNameMap* Date::s_month_table = 0;
 
 //=============================================================================
 Date::Date()
-  : m_time()
+  : m_time(),
+    m_timezone()
 {
   DEBUG_COUNT_CONSTRUCTOR(Date);
   init_tables();
@@ -57,7 +58,8 @@ Date::Date(const timeval& tv, bool local)
 //=============================================================================
 Date::Date(int year, int month, int mday, int hour, int minute, int second,
 	   bool local) 
-  : m_time()
+  : m_time(),
+    m_timezone()
 {
   DEBUG_COUNT_CONSTRUCTOR(Date);
   struct tm tms;
@@ -88,7 +90,8 @@ Date::Date(int year, int month, int mday, int hour, int minute, int second,
 
 //=============================================================================
 Date::Date(const std::string& str, bool local)
-  : m_time()
+  : m_time(),
+    m_timezone()
 {
   DEBUG_COUNT_CONSTRUCTOR(Date);
   init_tables();
@@ -97,7 +100,8 @@ Date::Date(const std::string& str, bool local)
 
 //=============================================================================
 Date::Date(const ScriptRef* args)
-  : m_time()
+  : m_time(),
+    m_timezone()
 {
   DEBUG_COUNT_CONSTRUCTOR(Date);
   init_tables();

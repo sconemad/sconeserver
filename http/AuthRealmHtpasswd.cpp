@@ -33,7 +33,10 @@ namespace http {
 AuthRealmHtpasswd::AuthRealmHtpasswd(HTTPModule* module,
 				     const scx::FilePath& path)
   : AuthRealm(module),
-    m_path(path)
+    m_path(path),
+    m_modtime(),
+    m_mutex(),
+    m_users()
 {
   DEBUG_COUNT_CONSTRUCTOR(AuthRealmHtpasswd);
 }

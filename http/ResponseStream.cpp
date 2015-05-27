@@ -87,8 +87,12 @@ protected:
 ResponseStream::ResponseStream(const std::string& stream_name)
   : scx::Stream(stream_name),
     m_resp_seq(resp_Start),
+    m_param_string(),
     m_buffer(1024),
+    m_mime_boundary(),
     m_mime_boundary_pos(-1),
+    m_mime_boundary_len(0),
+    m_mime_boundary_type(bound_Initial),
     m_mime_boundary_num(0),
     m_section_headers(),
     m_source_cond(scx::Ok)

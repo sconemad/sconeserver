@@ -28,6 +28,7 @@ JobID Job::s_next_jobid = 1;
 //=============================================================================
 Job::Job(const std::string& type)
   : m_type(type),
+    m_job_state(Wait),
     m_jobid(s_next_jobid++)
 {
   DEBUG_COUNT_CONSTRUCTOR(Job);

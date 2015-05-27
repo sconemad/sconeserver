@@ -31,7 +31,8 @@ SCONEX_MODULE(MIMEModule);
 //=========================================================================
 MIMEModule::MIMEModule(
 )
-  : scx::Module("mime",scx::version())
+  : scx::Module("mime",scx::version()),
+    m_mimemap()
 {
 
 }

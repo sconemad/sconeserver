@@ -39,9 +39,12 @@ const char* SCONESERVER_PROC_NAME = "sconex_module";
 //=============================================================================
 ModuleLoader::ModuleLoader(const scx::FilePath& conf,
                            Module* parent)
-  : m_conf(conf),
+  : m_name(),
+    m_conf(conf),
     m_dll(0),
     m_module(0),
+    m_depends(),
+    m_mutex(),
     m_parent(parent)
 {
   DEBUG_COUNT_CONSTRUCTOR(ModuleLoader);
@@ -52,8 +55,11 @@ ModuleLoader::ModuleLoader(const scx::FilePath& conf,
 ModuleLoader::ModuleLoader(const std::string& name,
                            Module* parent)
   : m_name(name),
+    m_conf(),
     m_dll(0),
     m_module(0),
+    m_depends(),
+    m_mutex(),
     m_parent(parent)
 {
   DEBUG_COUNT_CONSTRUCTOR(ModuleLoader);

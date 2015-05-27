@@ -36,7 +36,9 @@ namespace http {
 
 //=============================================================================
 AuthRealm::AuthRealm(HTTPModule* module)
-  : m_module(module), 
+  : ScriptObject(),
+    m_module(module),
+    m_name(),
     m_hash_method(scx::PasswordHash::create("",0))
 {
   DEBUG_COUNT_CONSTRUCTOR(AuthRealm);
@@ -273,7 +275,11 @@ bool AuthRealm::remove_user(
 
 //=============================================================================
 AuthRealmManager::AuthRealmManager(HTTPModule* module) 
-  : m_module(module)
+  : ScriptObject(),
+    Provider<AuthRealm>(),
+    m_module(module),
+    m_realms(),
+    m_realm_types()
 {
   m_parent = m_module;
 

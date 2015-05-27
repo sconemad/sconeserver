@@ -30,7 +30,9 @@ namespace http {
 
 //===========================================================================
 Response::Response()
-  : m_status(Status::Ok)
+  : ScriptObject(),
+    m_status(Status::Ok),
+    m_headers()
 {
   
 }

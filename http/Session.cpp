@@ -59,10 +59,13 @@ protected:
 //=========================================================================
 Session::Session(SessionManager& manager,
                  const std::string& id)
-  : m_manager(manager),
+  : ScriptObject(),
+    m_manager(manager),
     m_id(id),
     m_vars(new scx::ScriptMap()),
+    m_perms(),
     m_timeout(DEFAULT_SESSION_TIMEOUT),
+    m_last_used(),
     m_locked(false)
 {
   DEBUG_COUNT_CONSTRUCTOR(Session);
@@ -272,7 +275,11 @@ scx::ScriptRef* Session::script_method(const scx::ScriptAuth& auth,
 
 //=========================================================================
 SessionManager::SessionManager(HTTPModule& module)
-  : m_module(module)
+  : ScriptObject(),
+    m_module(module),
+    m_mutex(),
+    m_sessions(),
+    m_job()
 {
   m_parent = &m_module;
 

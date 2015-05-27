@@ -110,12 +110,13 @@ Condition MemFile::endpoint_write(
 
 //=============================================================================
 MemFileBuffer::MemFileBuffer(int buffer_size)
+  : m_buffer(new Buffer(buffer_size))
 {
-  m_buffer = new Buffer(buffer_size);
 }
 
 //=============================================================================
 MemFileBuffer::MemFileBuffer(File& file)
+  : m_buffer(0)
 {
   int buffer_size = file.size();
   

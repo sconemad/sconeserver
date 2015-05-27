@@ -30,11 +30,17 @@ namespace http {
 
 //===========================================================================
 Request::Request(const std::string& profile, const std::string& id)
-  : m_host(0),
+  : scx::ScriptObject(),
+    m_method(),
+    m_headers(),
+    m_host(0),
     m_profile(profile),
     m_id(id),
     m_docroot(0),
     m_session(0),
+    m_path(),
+    m_auth_user(),
+    m_pathinfo(),
     m_params(new scx::ScriptMap())
 {
   

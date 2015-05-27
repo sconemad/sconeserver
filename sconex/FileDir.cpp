@@ -25,6 +25,8 @@ namespace scx {
 //=============================================================================
 FileDir::FileDir(const FilePath& root)
   : m_root(root),
+    m_current_name(),
+    m_current_stat(),
     m_state(0),
     m_dir(0)
 {
@@ -34,6 +36,8 @@ FileDir::FileDir(const FilePath& root)
 //=============================================================================
 FileDir::FileDir(const FileDir& c)
   : m_root(c.m_root),
+    m_current_name(),
+    m_current_stat(),
     m_state(0),
     m_dir(0)
     

@@ -53,11 +53,16 @@ Feed::Feed(
   const std::string& id,
   const scx::Uri& url,
   const scx::Time& period
-) : m_module(module),
+) : scx::ScriptObject(),
+    m_module(module),
     m_id(id),
     m_url(url),
+    m_title(),
+    m_description(),
     m_items(new scx::ScriptList()),
-    m_period(period)
+    m_refresh_time(),
+    m_period(period),
+    m_mutex()
 {
   m_parent = &m_module;
 }

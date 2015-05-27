@@ -38,7 +38,8 @@ ScriptTracer::ScriptTracer(const ScriptAuth& auth,
 			   int line_offset)
   : m_expr(new ScriptExpr(auth)),
     m_file(file),
-    m_line_offset(line_offset)
+    m_line_offset(line_offset),
+    m_errors()
 {
 
 }
@@ -47,7 +48,8 @@ ScriptTracer::ScriptTracer(const ScriptAuth& auth,
 ScriptTracer::ScriptTracer(const ScriptTracer& c)
   : m_expr(new ScriptExpr(*c.m_expr)),
     m_file(c.m_file),
-    m_line_offset(c.m_line_offset)
+    m_line_offset(c.m_line_offset),
+    m_errors(c.m_errors)
 {
   
 }
@@ -225,6 +227,7 @@ ScriptRef* ScriptStatementExpr::run(
 //=============================================================================
 ScriptStatementGroup::ScriptStatementGroup(int line, ScriptMap* env)
   : ScriptStatement(line),
+    m_statements(),
     m_env(env),
     m_own_env(false)
 {
@@ -238,6 +241,7 @@ ScriptStatementGroup::ScriptStatementGroup(int line, ScriptMap* env)
 //=============================================================================
 ScriptStatementGroup::ScriptStatementGroup(const ScriptStatementGroup& c)
   : ScriptStatement(c),
+    m_statements(),
     m_env(c.m_env),
     m_own_env(c.m_own_env)
 {
@@ -609,6 +613,9 @@ ScriptRef* ScriptStatementWhile::run(ScriptTracer& tracer, FlowMode& flow)
 ScriptStatementFor::ScriptStatementFor(int line)
   : ScriptStatement(line),
     m_seq(0),
+    m_initialiser(),
+    m_condition(),
+    m_increment(),
     m_body(0)
 {
 
@@ -733,7 +740,8 @@ ScriptRef* ScriptStatementFor::run(ScriptTracer& tracer, FlowMode& flow)
 ScriptStatementFlow::ScriptStatementFlow(int line, FlowMode flow)
   : ScriptStatement(line),
     m_seq(0),
-    m_flow(flow)
+    m_flow(flow),
+    m_ret_expr()
 {
 
 }
@@ -816,7 +824,8 @@ ScriptStatementDecl::ScriptStatementDecl(int line,
   : ScriptStatement(line),
     m_seq(0),
     m_deftype(deftype),
-    m_name(name)
+    m_name(name),
+    m_initialiser()
 {
 
 }
@@ -924,6 +933,7 @@ ScriptStatementSub::ScriptStatementSub(int line, const std::string& name)
   : ScriptStatement(line),
     m_seq(0),
     m_name(name),
+    m_arg_names(),
     m_body(0)
 { 
 

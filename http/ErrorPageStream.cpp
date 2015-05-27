@@ -40,8 +40,10 @@ class VarSubstStream : public scx::LineBuffer {
 public:
   VarSubstStream(http::MessageStream* msg)
     : scx::LineBuffer("http:errorpage:varsubst"),
+      m_line(),
       m_pos(0),
-      m_msg(msg)
+      m_msg(msg),
+      m_vars()
   {
     m_vars["status"] = m_msg->get_response().get_status().string();
     m_vars["method"] = m_msg->get_request().get_method();

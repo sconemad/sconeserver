@@ -26,14 +26,24 @@ namespace scx {
 
 //=============================================================================
 Uri::Uri()
-  : m_port(0)
+  : ScriptObject(),
+    m_scheme(),
+    m_host(),
+    m_port(0),
+    m_path(),
+    m_query()
 {
   DEBUG_COUNT_CONSTRUCTOR(Uri);
 }
 
 //=============================================================================
 Uri::Uri(const std::string& str)
-  : m_port(0)
+  : ScriptObject(),
+    m_scheme(),
+    m_host(),
+    m_port(0),
+    m_path(),
+    m_query()
 {
   DEBUG_COUNT_CONSTRUCTOR(Uri);
   from_string(str);
@@ -46,7 +56,8 @@ Uri::Uri(
   short port,
   const std::string& path,
   const std::string& query
-) : m_scheme(scheme),
+) : ScriptObject(),
+    m_scheme(scheme),
     m_host(host),
     m_port(port),
     m_path(path),
@@ -59,7 +70,12 @@ Uri::Uri(
 
 //=============================================================================
 Uri::Uri(const ScriptRef* args)
-  : m_port(0)
+  : ScriptObject(),
+    m_scheme(),
+    m_host(),
+    m_port(0),
+    m_path(),
+    m_query()
 {
   DEBUG_COUNT_CONSTRUCTOR(Uri);
 

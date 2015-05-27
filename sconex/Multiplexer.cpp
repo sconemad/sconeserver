@@ -29,8 +29,17 @@ namespace scx {
 
 //=============================================================================
 Multiplexer::Multiplexer()
-  : m_num_threads(0),
+  : m_jobs(),
+    m_jobs_new(),
+    m_threads_pool(),
+    m_threads_busy(),
+    m_num_threads(0),
+    m_job_mutex(),
+    m_job_condition(),
+    m_new_mutex(),
+    m_end_condition(),
     m_main_thread(pthread_self()),
+    m_latency(),
     m_enable_jobs(true),
     m_loops(0),
     m_jobs_run(0),

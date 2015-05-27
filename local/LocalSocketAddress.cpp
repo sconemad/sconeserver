@@ -37,6 +37,7 @@ LocalSocketAddress::LocalSocketAddress(scx::Module* module,
 				       const scx::ScriptRef* args)
   : scx::SocketAddress(PF_LOCAL,SOCK_STREAM),
     m_module(module),
+    m_addr(),
     m_mode(0700)
 {
   DEBUG_COUNT_CONSTRUCTOR(LocalSocketAddress);
@@ -60,6 +61,7 @@ LocalSocketAddress::LocalSocketAddress(scx::Module* module,
 LocalSocketAddress::LocalSocketAddress(const LocalSocketAddress& c)
   : scx::SocketAddress(c),
     m_module(c.m_module),
+    m_addr(),
     m_mode(c.m_mode)
 {
   DEBUG_COUNT_CONSTRUCTOR(LocalSocketAddress);

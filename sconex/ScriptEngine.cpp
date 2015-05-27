@@ -56,6 +56,7 @@ ScriptEngine::ScriptEngine(
   ScriptStatement::Ref* root
 ) : StreamTokenizer("ScriptEngine",4096),
     m_root(root),
+    m_stack(),
     m_error_type(None)
 {
   DEBUG_COUNT_CONSTRUCTOR(ScriptEngine);

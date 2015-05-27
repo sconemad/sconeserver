@@ -78,6 +78,7 @@ public:
   int get_line_offset() const;
 
   struct ErrorEntry {
+    ErrorEntry() : file(), line(0), error() {}
     std::string file;
     int line;
     std::string error;

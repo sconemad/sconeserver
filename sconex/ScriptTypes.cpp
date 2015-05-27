@@ -258,7 +258,8 @@ ScriptRef* ScriptInt::new_ref(int value)
 
 //===========================================================================
 ScriptInt::ScriptInt(long value)
-  : m_value(value)
+  : ScriptNum(),
+    m_value(value)
 {
   DEBUG_COUNT_CONSTRUCTOR(ScriptInt);
 }
@@ -496,7 +497,8 @@ ScriptRef* ScriptReal::new_ref(double value)
 
 //===========================================================================
 ScriptReal::ScriptReal(double value)
-  : m_value(value)
+  : ScriptNum(),
+    m_value(value)
 {
   DEBUG_COUNT_CONSTRUCTOR(ScriptReal);
 }
@@ -685,13 +687,16 @@ double ScriptReal::get_real() const
 
 //===========================================================================
 ScriptList::ScriptList()
+  : ScriptObject(),
+    m_list()
 {
   DEBUG_COUNT_CONSTRUCTOR(ScriptList);
 }
 
 //===========================================================================
 ScriptList::ScriptList(const ScriptList& c)
-  : ScriptObject(c)
+  : ScriptObject(c),
+    m_list()
 {
   DEBUG_COUNT_CONSTRUCTOR(ScriptList);
   for (ScriptListData::const_iterator it = c.m_list.begin();
@@ -951,13 +956,16 @@ void ScriptList::clear()
 
 //===========================================================================
 ScriptMap::ScriptMap()
+  : ScriptObject(),
+    m_map()
 {
   DEBUG_COUNT_CONSTRUCTOR(ScriptMap);
 }
 
 //===========================================================================
 ScriptMap::ScriptMap(const ScriptMap& c)
-  : ScriptObject(c)
+  : ScriptObject(c),
+    m_map()
 {
   DEBUG_COUNT_CONSTRUCTOR(ScriptMap);
   for (ScriptMapData::const_iterator it = c.m_map.begin();

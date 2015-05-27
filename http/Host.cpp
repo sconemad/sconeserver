@@ -44,7 +44,8 @@ Host::Host(
     m_mapper(mapper),
     m_id(id),
     m_hostname(hostname),
-    m_dir(dir)
+    m_dir(dir),
+    m_docroots()
 {
   m_parent = &mapper;
 }

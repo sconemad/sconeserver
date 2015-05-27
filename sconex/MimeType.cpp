@@ -26,12 +26,20 @@ namespace scx {
 
 //=============================================================================
 MimeType::MimeType()
+  : ScriptObject(),
+    m_type(),
+    m_subtype(),
+    m_params()
 {
   DEBUG_COUNT_CONSTRUCTOR(MimeType);
 }
 
 //=============================================================================
 MimeType::MimeType(const std::string& str)
+  : ScriptObject(),
+    m_type(),
+    m_subtype(),
+    m_params()
 {
   DEBUG_COUNT_CONSTRUCTOR(MimeType);
   from_string(str);
@@ -42,8 +50,10 @@ MimeType::MimeType(
   const std::string& type,
   const std::string& subtype,
   const std::string& params
-) : m_type(type),
-    m_subtype(subtype)
+) : ScriptObject(),
+    m_type(type),
+    m_subtype(subtype),
+    m_params()
 {
   DEBUG_COUNT_CONSTRUCTOR(MimeType);
   strlow(m_type);
@@ -53,6 +63,10 @@ MimeType::MimeType(
 
 //=============================================================================
 MimeType::MimeType(const ScriptRef* args)
+  : ScriptObject(),
+    m_type(),
+    m_subtype(),
+    m_params()
 {
   DEBUG_COUNT_CONSTRUCTOR(MimeType);
 

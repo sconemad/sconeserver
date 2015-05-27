@@ -86,6 +86,9 @@ DocRoot::DocRoot(
     m_host(host),
     m_profile(profile),
     m_path(path),
+    m_extn_mods(),
+    m_path_mods(),
+    m_realm_maps(),
     m_params(new scx::ScriptMap())
 {
   m_parent = &host;

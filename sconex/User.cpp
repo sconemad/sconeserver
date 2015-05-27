@@ -32,7 +32,8 @@ User User::current()
   
 //=============================================================================
 User::User()
-  : m_user_id(0),
+  : m_user_name(),
+    m_user_id(0),
     m_group_id(0)
 {
   DEBUG_COUNT_CONSTRUCTOR(User);
@@ -40,6 +41,9 @@ User::User()
 
 //=============================================================================
 User::User(const std::string& user_name)
+  : m_user_name(),
+    m_user_id(0),
+    m_group_id(0)
 {
   DEBUG_COUNT_CONSTRUCTOR(User);
   set_user_name(user_name);
@@ -47,6 +51,9 @@ User::User(const std::string& user_name)
 
 //=============================================================================
 User::User(uid_t user_id)
+  : m_user_name(),
+    m_user_id(0),
+    m_group_id(0)
 {
   DEBUG_COUNT_CONSTRUCTOR(User);
   set_user_id(user_id);

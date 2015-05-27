@@ -28,7 +28,8 @@ namespace scx {
  
 //=============================================================================
 DatagramMultiplexer::DatagramMultiplexer()
-  : Stream("datagram_mplex")
+  : Stream("datagram_mplex"),
+    m_channels()
 {
   enable_event(Stream::Readable,true);
 }
