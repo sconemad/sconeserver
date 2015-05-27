@@ -60,6 +60,10 @@ public:
 
 protected:
 
+  ModuleLoader(const ModuleLoader& original);
+  ModuleLoader& operator=(const ModuleLoader& rhs);
+  // Prohibit copy
+
   bool load_module();
   bool unload_module();
 
