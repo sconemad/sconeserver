@@ -84,6 +84,10 @@ public:
 
 protected:
 
+  Module(const Module& original);
+  Module& operator=(const Module& rhs);
+  // Prohibit copy
+
   void add_module(ModuleLoader* loader);
   void remove_module(ModuleLoader* loader);
   ModuleLoader* find_module(const std::string& name);
