@@ -40,6 +40,12 @@ public:
   virtual void provide(const std::string& type,
 		       const scx::ScriptRef* args,
 		       scx::ScriptObject*& object);
+
+protected:
+
+  IP6Module(const IP6Module& c);
+  IP6Module& operator=(const IP6Module& v);
+  // Prohibit copy
 };
 
 SCONEX_MODULE(IP6Module);
