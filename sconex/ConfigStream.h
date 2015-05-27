@@ -45,6 +45,10 @@ public:
 
 private:
 
+  ConfigStream(const ConfigStream& original);
+  ConfigStream& operator=(const ConfigStream& rhs);
+  // Prohibit copy
+
   ScriptExpr m_proc;
   ScriptRef* m_ctx;
   bool m_shutdown_on_exit;

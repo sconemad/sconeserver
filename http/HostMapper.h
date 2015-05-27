@@ -64,6 +64,10 @@ public:
   
 protected:
 
+  HostMapper(const HostMapper& c);
+  HostMapper& operator=(const HostMapper& v);
+  // Prohibit copy
+
   typedef HASH_TYPE<std::string,std::string> HostNameMap;
 
   bool lookup(const HostNameMap& map,

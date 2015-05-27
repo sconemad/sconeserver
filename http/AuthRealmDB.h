@@ -48,6 +48,10 @@ public:
 
 private:
 
+  HTTPUser(const HTTPUser& c);
+  HTTPUser& operator=(const HTTPUser& v);
+  // Prohibit copy
+
   scx::ScriptRefTo<HTTPModule> m_module;
   std::string m_name;
 
@@ -66,6 +70,10 @@ public:
   virtual ~AuthRealmDB();
 
 protected:
+
+  AuthRealmDB(const AuthRealmDB& c);
+  AuthRealmDB& operator=(const AuthRealmDB& v);
+  // Prohibit copy
 
   // AuthRealm methods  
   virtual std::string lookup_hash(const std::string& username);

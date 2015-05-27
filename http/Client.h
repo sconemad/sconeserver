@@ -113,6 +113,12 @@ public:
 
   virtual std::string stream_status() const;
   
+protected:
+
+  ClientStream(const ClientStream& c);
+  ClientStream& operator=(const ClientStream& v);
+  // Prohibit copy
+
 private:
 
   void build_request(const std::string& method, const scx::Uri& url);
@@ -149,7 +155,13 @@ public:
   virtual scx::Condition event(scx::Stream::Event e);
 
   virtual std::string stream_status() const;
-  
+
+protected:
+
+  ProxyConnectStream(const ProxyConnectStream& c);
+  ProxyConnectStream& operator=(const ProxyConnectStream& v);
+  // Prohibit copy
+
 private:
 
   HTTPModule::Ref m_module;

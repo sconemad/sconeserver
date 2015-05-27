@@ -68,6 +68,10 @@ public:
 
 protected:
 
+  StreamTransfer(const StreamTransfer& c);
+  StreamTransfer& operator=(const StreamTransfer& v);
+  // Prohibit copy
+
   friend class StreamTransferManager;
   void source_event(Event e);
 
@@ -94,6 +98,10 @@ public:
   virtual std::string stream_status() const;
   
 protected:
+
+  StreamTransferSource(const StreamTransferSource& c);
+  StreamTransferSource& operator=(const StreamTransferSource& v);
+  // Prohibit copy
 
   friend class StreamTransferManager;
   void dest_event(Event e);
@@ -123,6 +131,10 @@ public:
   int get_uid() const;
   
 private:
+
+  StreamTransferManager(const StreamTransferManager& c);
+  StreamTransferManager& operator=(const StreamTransferManager& v);
+  // Prohibit copy
 
   StreamTransfer* m_dest;
   StreamTransferSource* m_source;

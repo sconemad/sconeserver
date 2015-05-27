@@ -50,6 +50,10 @@ public:
   
 private:
 
+  Log(const Log& original);
+  Log& operator=(const Log& rhs);
+  // Prohibit copy
+
   std::string m_category;
   LogData* m_data;
 

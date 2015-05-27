@@ -68,6 +68,12 @@ public:
 
   typedef scx::ScriptRefTo<Response> Ref;
   
+protected:
+
+  Response(const Response& c);
+  Response& operator=(const Response& v);
+  // Prohibit copy
+
 private:
 
   scx::VersionTag m_version;

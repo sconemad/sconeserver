@@ -108,6 +108,10 @@ public:
   
 private:
 
+  Request(const Request& c);
+  Request& operator=(const Request& v);
+  // Prohibit copy
+
   // ----
   // The following data comes directly from the HTTP Message, which looks like:
   // <METHOD> <URI> HTTP/<VERSION><CR><LF>

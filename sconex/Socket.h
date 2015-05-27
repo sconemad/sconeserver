@@ -51,6 +51,10 @@ public:
 
 protected:
 
+  Socket(const Socket& c);
+  Socket& operator=(const Socket& v);
+  // Prohibit copy
+
   virtual int event_create();
   // This fires when a socket gets created
 

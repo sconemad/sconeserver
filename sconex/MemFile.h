@@ -49,6 +49,10 @@ public:
 
 protected:
 
+  MemFile(const MemFile& original);
+  MemFile& operator=(const MemFile& rhs);
+  // Prohibit copy
+
   virtual int event_create();
 
   virtual int fd();
@@ -77,6 +81,10 @@ public:
   Buffer* get_buffer();
 
 private:
+
+  MemFileBuffer(const MemFileBuffer& original);
+  MemFileBuffer& operator=(const MemFileBuffer& rhs);
+  // Prohibit copy
 
   Buffer* m_buffer;
   

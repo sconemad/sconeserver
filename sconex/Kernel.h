@@ -92,6 +92,10 @@ public:
   
 protected:
 
+  Kernel(const Kernel& original);
+  Kernel& operator=(const Kernel& rhs);
+  // Prohibit copy
+
   Kernel(const std::string& appname, const VersionTag& version);
 
 private:

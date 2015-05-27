@@ -76,6 +76,10 @@ public:
   
 private:
 
+  MessageStream(const MessageStream& c);
+  MessageStream& operator=(const MessageStream& v);
+  // Prohibit copy
+
   bool connect_request_module(bool error);
   
   bool build_header();

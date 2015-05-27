@@ -97,6 +97,11 @@ public:
   std::string get_type_str(Type t);
   
 private:
+
+  ProxyPacket(const ProxyPacket& original);
+  ProxyPacket& operator=(const ProxyPacket& rhs);
+  // Prohibit copy
+
   struct {
     unsigned int size;
     int type;
@@ -394,6 +399,10 @@ public:
   void process_terminated(pid_t pid, int code);
   
 private:
+
+  Proxy(const Proxy& original);
+  Proxy& operator=(const Proxy& rhs);
+  // Prohibit copy
 
   void add_env(const char* name, const char* value);
 

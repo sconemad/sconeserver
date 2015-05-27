@@ -79,6 +79,10 @@ public:
 
 protected:
 
+  AuthRealm(const AuthRealm& c);
+  AuthRealm& operator=(const AuthRealm& v);
+  // Prohibit copy
+
   // Lookup authentication hash for specified user
   // Must return an empty string if the user doesn't exist
   virtual std::string lookup_hash(const std::string& username) = 0;
@@ -146,6 +150,10 @@ public:
   typedef scx::ScriptRefTo<AuthRealmManager> Ref;
 
 private:
+
+  AuthRealmManager(const AuthRealmManager& c);
+  AuthRealmManager& operator=(const AuthRealmManager& v);
+  // Prohibit copy
 
   HTTPModule* m_module;
 

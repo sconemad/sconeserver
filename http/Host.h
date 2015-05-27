@@ -86,6 +86,10 @@ public:
   
 protected:
 
+  Host(const Host& c);
+  Host& operator=(const Host& v);
+  // Prohibit copy
+
 private:
 
   HTTPModule& m_module;

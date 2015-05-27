@@ -65,6 +65,10 @@ public:
 
 protected:
 
+  ResponseStream(const ResponseStream& c);
+  ResponseStream& operator=(const ResponseStream& v);
+  // Prohibit copy
+
   // from scx::Stream:
   virtual scx::Condition event(scx::Stream::Event e);
   virtual scx::Condition read(void* buffer,int n,int& na);

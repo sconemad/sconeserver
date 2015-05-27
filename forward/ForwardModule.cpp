@@ -85,6 +85,10 @@ public:
 
 private:
 
+  ForwardStream(const ForwardStream& c);
+  ForwardStream& operator=(const ForwardStream& v);
+  // Prohibit copy
+
   scx::ScriptRefTo<ForwardModule> m_module;
 
   bool m_connected;

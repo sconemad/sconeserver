@@ -61,6 +61,10 @@ public:
 
 protected:
 
+  ScriptEngine(const ScriptEngine& original);
+  ScriptEngine& operator=(const ScriptEngine& rhs);
+  // Prohibit copy
+
   // Called when there are statements to run
   // Return true to keep parsing, false to abort.
   // Default implementation returns true.
@@ -123,6 +127,10 @@ public:
   void set_error_des(Descriptor* error_des);
 
 protected:
+
+  ScriptEngineExec(const ScriptEngineExec& original);
+  ScriptEngineExec& operator=(const ScriptEngineExec& rhs);
+  // Prohibit copy
 
   virtual bool event_runnable();
   virtual bool event_error();

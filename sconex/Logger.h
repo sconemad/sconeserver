@@ -47,6 +47,10 @@ public:
   std::string m_category;
   std::string m_message;
   LogData* m_data;
+ private:
+  LogEntry(const LogEntry& original);
+  LogEntry& operator=(const LogEntry& rhs);
+  // Prohibit copy
 };
 
   
@@ -190,6 +194,10 @@ public:
   typedef ScriptRefTo<Logger> Ref;
 
 protected:
+
+  Logger(const Logger& original);
+  Logger& operator=(const Logger& rhs);
+  // Prohibit copy
 
   Logger(const FilePath& path);
 

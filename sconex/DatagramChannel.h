@@ -54,6 +54,10 @@ public:
   
 protected:
 
+  DatagramChannel(const DatagramChannel& original);
+  DatagramChannel& operator=(const DatagramChannel& rhs);
+  // Prohibit copy
+
   friend class DatagramMultiplexer;
 
   void recv_datagram(void* buffer,int n);

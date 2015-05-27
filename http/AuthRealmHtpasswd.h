@@ -42,6 +42,10 @@ public:
 
 protected:
 
+  AuthRealmHtpasswd(const AuthRealmHtpasswd& c);
+  AuthRealmHtpasswd& operator=(const AuthRealmHtpasswd& v);
+  // Prohibit copy
+
   // AuthRealm methods  
   virtual std::string lookup_hash(const std::string& username);
 

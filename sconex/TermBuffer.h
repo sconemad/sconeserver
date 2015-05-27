@@ -46,6 +46,10 @@ public:
   
 protected:
 
+  TermBuffer(const TermBuffer& c);
+  TermBuffer& operator=(const TermBuffer& v);
+  // Prohibit copy
+
   void erase_line();
 
 private:

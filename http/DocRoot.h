@@ -57,6 +57,10 @@ public:
   bool connect(scx::Descriptor* endpoint);
   
 private:
+  StreamMap(const StreamMap& c);
+  StreamMap& operator=(const StreamMap& v);
+  // Prohibit copy
+
   HTTPModule& m_module;
 
   std::string m_type;
@@ -133,6 +137,10 @@ public:
   typedef scx::ScriptRefTo<DocRoot> Ref;
   
 protected:
+
+  DocRoot(const DocRoot& c);
+  DocRoot& operator=(const DocRoot& v);
+  // Prohibit copy
 
   // Check HTTP authorization for this request.
   // Returns true if it passes.

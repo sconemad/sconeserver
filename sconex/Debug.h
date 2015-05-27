@@ -173,6 +173,10 @@ public:
   
 private:
 
+  Debug(const Debug& original);
+  Debug& operator=(const Debug &rhs);
+  // Prohibit copy
+
   InstanceCounterMap m_inst_counts;
   Mutex* m_mutex;
 

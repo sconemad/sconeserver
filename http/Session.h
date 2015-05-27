@@ -99,6 +99,10 @@ public:
   
 protected:
 
+  Session(const Session& c);
+  Session& operator=(const Session& v);
+  // Prohibit copy
+
 private:
 
   SessionManager& m_manager;
@@ -145,6 +149,12 @@ public:
 					const scx::ScriptRef* args);
 
   typedef scx::ScriptRefTo<SessionManager> Ref;
+
+ protected:
+
+  SessionManager(const SessionManager& c);
+  SessionManager& operator=(const SessionManager& v);
+  // Prohibit copy
 
  private:
 

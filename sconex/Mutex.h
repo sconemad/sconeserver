@@ -43,6 +43,10 @@ public:
 
 private:
 
+  Mutex(const Mutex& original);
+  Mutex& operator=(const Mutex& rhs);
+  // Prohibit copy
+
   friend class ConditionEvent;
   
   pthread_mutex_t m_mutex;
@@ -84,6 +88,10 @@ public:
   
 private:
 
+  ConditionEvent(const ConditionEvent& original);
+  ConditionEvent& operator=(const ConditionEvent& rhs);
+  // Prohibit copy
+
   pthread_cond_t m_cond;
 };
   
@@ -105,6 +113,10 @@ public:
   void convert(Mode mode);
 
 private:
+
+  RWLock(const RWLock& original);
+  RWLock& operator=(const RWLock& rhs);
+  // Prohibit copy
 
   Mutex m_mutex;
   ConditionEvent m_condition;

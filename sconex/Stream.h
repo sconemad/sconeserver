@@ -130,6 +130,10 @@ public:
   
 protected:
 
+  Stream(const Stream& c);
+  Stream& operator=(const Stream& v);
+  // Prohibit copy
+
   friend class Descriptor;
 
   bool event_enabled(Event e) const;

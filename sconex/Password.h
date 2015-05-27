@@ -61,6 +61,12 @@ public:
 
   typedef ScriptRefTo<PasswordHash> Ref;
 
+ protected:
+
+  PasswordHash(const PasswordHash& original);
+  PasswordHash& operator=(const PasswordHash& rhs);
+  // Prohibit copy
+
 private:
 
   static void init();
@@ -91,6 +97,12 @@ public:
 
   static std::string crypt(const std::string& password,
 			   const std::string& hash);
+
+ protected:
+
+  PasswordHashCrypt(const PasswordHashCrypt& original);
+  PasswordHashCrypt& operator=(const PasswordHashCrypt& rhs);
+  // Prohibit copy
 
 private:
 

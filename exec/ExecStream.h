@@ -40,6 +40,10 @@ public:
   
 protected:
 
+  ExecStream(const ExecStream& c);
+  ExecStream& operator=(const ExecStream& v);
+  // Prohibit copy
+
   virtual scx::Condition event(scx::Stream::Event e);
 
   virtual std::string stream_status() const;

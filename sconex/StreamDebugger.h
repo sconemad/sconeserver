@@ -44,6 +44,10 @@ public:
 
 protected:
 
+  StreamDebugger(const StreamDebugger& c);
+  StreamDebugger& operator=(const StreamDebugger& v);
+  // Prohibit copy
+
   void write_header(const std::string& message);
 
   File* m_file;

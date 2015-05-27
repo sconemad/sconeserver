@@ -57,6 +57,10 @@ public:
 
 protected:
 
+  StreamSocket(const StreamSocket& c);
+  StreamSocket& operator=(const StreamSocket& v);
+  // Prohibit copy
+
   virtual Condition endpoint_read(void* buffer,int n,int& na);
   virtual Condition endpoint_write(const void* buffer,int n,int& na);
   // Socket I/O

@@ -171,6 +171,10 @@ public:
 				   const ScriptRef* args);
 private:
 
+  StandardContext(const StandardContext& c);
+  StandardContext& operator=(const StandardContext& v);
+  // Prohibit copy
+
   StandardTypeProvider* m_type_provider;
 
 };

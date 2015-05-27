@@ -85,6 +85,12 @@ public:
     return c;
   };
   
+protected:
+
+  VarSubstStream(const VarSubstStream& c);
+  VarSubstStream& operator=(const VarSubstStream& v);
+  // Prohibit copy
+
 private:
   
   std::string m_line;

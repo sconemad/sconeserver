@@ -57,6 +57,12 @@ public:
   enum JobState { Wait, Run, Cycle, Purge };
   JobState get_state() const;
   
+protected:
+
+  Job(const Job& original);
+  Job& operator=(const Job& rhs);
+  // Prohibit copy
+
 private:
   std::string m_type;
 
@@ -103,6 +109,10 @@ public:
   void allocate_job(Job* job);
 
 private:
+
+  JobThread(const JobThread& original);
+  JobThread& operator=(const JobThread& rhs);
+  // Prohibit copy
 
   Multiplexer& m_manager;
 

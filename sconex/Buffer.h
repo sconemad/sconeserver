@@ -81,6 +81,10 @@ public:
   
 protected:
 
+  Buffer(const Buffer& original);
+  Buffer& operator=(const Buffer& rhs);
+  // Prohibit copy
+
 private:
 
   char* m_buffer;

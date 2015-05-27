@@ -75,6 +75,10 @@ public:
 
 protected:
 
+  Feed(const Feed& c);
+  Feed& operator=(const Feed& v);
+  // Prohibit copy
+
   bool process(xmlNode* root);
 
   // RSS processing

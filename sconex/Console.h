@@ -43,6 +43,10 @@ public:
 
 protected:
 
+  Console(const Console& c);
+  Console& operator=(const Console& v);
+  // Prohibit copy
+
   virtual Condition endpoint_read(void* buffer,int n,int& na);
   virtual Condition endpoint_write(const void* buffer,int n,int& na);
 

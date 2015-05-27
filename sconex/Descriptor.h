@@ -196,6 +196,10 @@ public:
   
 private:
 
+  DescriptorJob(const DescriptorJob& original);
+  DescriptorJob& operator=(const DescriptorJob& rhs);
+  // Prohibit copy
+
   Descriptor* m_descriptor;
   int m_events;
 

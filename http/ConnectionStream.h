@@ -59,7 +59,13 @@ public:
 
   int get_num_connection() const;
   int get_num_request() const;
-  
+
+protected:
+
+  ConnectionStream(const ConnectionStream& c);
+  ConnectionStream& operator=(const ConnectionStream& v);
+  // Prohibit copy
+
 private:
 
   HTTPModule::Ref m_module;
