@@ -181,7 +181,7 @@ scx::ScriptRef* RSSModule::script_method(const scx::ScriptAuth& auth,
     }
         
     LOG("Adding feed '" + s_id + "' URL '" + s_url + "'");
-    Feed* feed = new Feed(*this,s_id,s_url);
+    Feed* feed = new Feed(*this,s_id,scx::Uri(s_url));
     m_feeds[s_id] = new Feed::Ref(feed);
 
     return new Feed::Ref(feed);
