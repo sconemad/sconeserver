@@ -909,8 +909,9 @@ ScriptRef* ScriptStatementDecl::run(
       args.object()->give(initialiser->ref_copy(ScriptRef::ConstRef));
       break;
     }
-    if (initialiser)
+    if (initialiser) {
       ScriptStatement_DEBUG_LOG(" = " << initialiser->object()->get_string());
+    }
     delete initialiser;
   }
 

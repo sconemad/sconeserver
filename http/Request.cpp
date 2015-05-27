@@ -349,10 +349,12 @@ scx::ScriptRef* Request::script_op(const scx::ScriptAuth& auth,
     if (name == "version") return new scx::ScriptRef(m_version.new_copy());
     if (name == "profile") return scx::ScriptString::new_ref(m_profile);
     if (name == "id") return scx::ScriptString::new_ref(m_id);
-    if (name == "params") 
+    if (name == "params") {
       return m_params.ref_copy(ref.reftype());
-    if (name == "session" && m_session) 
+    }
+    if (name == "session" && m_session) {
       return m_session->ref_copy(ref.reftype());
+    }
   }
 
   return scx::ScriptObject::script_op(auth,ref,op,right);
@@ -367,8 +369,9 @@ scx::ScriptRef* Request::script_method(const scx::ScriptAuth& auth,
   if (name == "get_header") {
     const scx::ScriptString* a_header = 
       scx::get_method_arg<scx::ScriptString>(args,0,"name");
-    if (!a_header) 
+    if (!a_header) {
       return scx::ScriptError::new_ref("get_header() No name specified");
+    }
 
     std::string value = m_headers.get(a_header->get_string());
     if (value.empty()) return 0;

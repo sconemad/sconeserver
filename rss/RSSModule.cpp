@@ -163,19 +163,22 @@ scx::ScriptRef* RSSModule::script_method(const scx::ScriptAuth& auth,
 
     const scx::ScriptString* a_id = 
       scx::get_method_arg<scx::ScriptString>(args,0,"id");
-    if (!a_id) 
+    if (!a_id) {
       return scx::ScriptError::new_ref("No feed id specified");
+    }
     std::string s_id = a_id->get_string();
     
     const scx::ScriptString* a_url = 
       scx::get_method_arg<scx::ScriptString>(args,1,"url");
-    if (!a_url) 
+    if (!a_url) {
       return scx::ScriptError::new_ref("No feed URL specified");
+    }
     std::string s_url = a_url->get_string();
 
     FeedMap::const_iterator it = m_feeds.find(s_id);
-    if (it != m_feeds.end()) 
+    if (it != m_feeds.end()) {
       return scx::ScriptError::new_ref("Feed already exists");
+    }
         
     LOG("Adding feed '" + s_id + "' URL '" + s_url + "'");
     Feed* feed = new Feed(*this,s_id,s_url);
@@ -189,13 +192,15 @@ scx::ScriptRef* RSSModule::script_method(const scx::ScriptAuth& auth,
 
     const scx::ScriptString* a_id = 
       scx::get_method_arg<scx::ScriptString>(args,0,"id");
-    if (!a_id) 
+    if (!a_id) {
       return scx::ScriptError::new_ref("No feed id specified");
+    }
     std::string s_id = a_id->get_string();
 
     FeedMap::const_iterator it = m_feeds.find(s_id);
-    if (it == m_feeds.end()) 
+    if (it == m_feeds.end()) {
       return scx::ScriptError::new_ref("Feed not found");
+    }
         
     LOG("Removing feed '" + s_id + "'");
     Feed::Ref* fr = it->second;

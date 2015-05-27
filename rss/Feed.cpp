@@ -167,18 +167,24 @@ scx::ScriptRef* Feed::script_op(const scx::ScriptAuth& auth,
     }
 
     // Properties
-    if ("refresh_time" == name) 
+    if ("refresh_time" == name) {
       return new scx::ScriptRef(m_refresh_time.new_copy());
-    if ("refresh_period" == name)
+    }
+    if ("refresh_period" == name) {
       return new scx::ScriptRef(m_period.new_copy());
-    if ("url" == name) 
+    }
+    if ("url" == name) {
       return new scx::ScriptRef(m_url.new_copy());
-    if ("image_url" == name) 
+    }
+    if ("image_url" == name) {
       return new scx::ScriptRef(m_image_url.new_copy());
-    if ("title" == name) 
+    }
+    if ("title" == name) {
       return scx::ScriptString::new_ref(m_title);
-    if ("description" == name) 
+    }
+    if ("description" == name) {
       return scx::ScriptString::new_ref(m_description);
+    }
     
     if ("items" == name) {
       scx::MutexLocker locker(m_mutex);
@@ -200,11 +206,13 @@ scx::ScriptRef* Feed::script_method(const scx::ScriptAuth& auth,
 
     const scx::ScriptInt* a_period = 
       scx::get_method_arg<scx::ScriptInt>(args,0,"value");
-    if (!a_period) 
+    if (!a_period) {
       return scx::ScriptError::new_ref("Must specify value");
+    }
     int n_period = a_period->get_int();
-    if (n_period < 0) 
+    if (n_period < 0) {
       return scx::ScriptError::new_ref("Value must be >= 0");
+    }
     m_period = scx::Time(n_period);
     return 0;
   }

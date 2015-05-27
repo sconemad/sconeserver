@@ -186,8 +186,9 @@ scx::ScriptRef* Response::script_op(const scx::ScriptAuth& auth,
       return new scx::ScriptMethodRef(ref,name);
     }
     
-    if (name == "version") 
+    if (name == "version") {
       return new scx::ScriptRef(m_version.new_copy());
+    }
     if (name == "status") return scx::ScriptString::new_ref(m_status.string());
     if (name == "statuscode") return scx::ScriptInt::new_ref(m_status.code());
   }
@@ -204,13 +205,15 @@ scx::ScriptRef* Response::script_method(const scx::ScriptAuth& auth,
   if (name == "set_header") {
     const scx::ScriptString* a_header = 
       scx::get_method_arg<scx::ScriptString>(args,0,"name");
-    if (!a_header) 
+    if (!a_header) {
       return scx::ScriptError::new_ref("set_header() No name specified");
+    }
 
     const scx::ScriptObject* a_value = 
       scx::get_method_arg<scx::ScriptObject>(args,1,"value");
-    if (!a_value) 
+    if (!a_value) {
       return scx::ScriptError::new_ref("set_header() No value specified");
+    }
 
     set_header(a_header->get_string(),a_value->get_string());
     return 0;
@@ -223,8 +226,9 @@ scx::ScriptRef* Response::script_method(const scx::ScriptAuth& auth,
       return scx::ScriptError::new_ref("set_status() No status specified");
 
     Status status((Status::Code)i_status->get_int());
-    if (!status.valid()) 
+    if (!status.valid()) {
       return scx::ScriptError::new_ref("set_status() Invalid status code");
+    }
 
     set_status(status);
     return 0;

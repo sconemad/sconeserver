@@ -136,10 +136,12 @@ scx::ScriptRef* HTTPModule::script_op(const scx::ScriptAuth& auth,
     }
 
     // Properties
-    if ("idle_timeout" == name) 
+    if ("idle_timeout" == name) {
       return scx::ScriptInt::new_ref(m_idle_timeout);
-    if ("client_proxy" == name) 
+    }
+    if ("client_proxy" == name) {
       return new scx::ScriptRef(m_client_proxy.new_copy());
+    }
   
     // Sub-objects
     if ("hosts" == name) return m_hosts->ref_copy();
@@ -161,11 +163,13 @@ scx::ScriptRef* HTTPModule::script_method(const scx::ScriptAuth& auth,
 
     const scx::ScriptInt* a_timeout = 
       scx::get_method_arg<scx::ScriptInt>(args,0,"value");
-    if (!a_timeout) 
+    if (!a_timeout) {
       return scx::ScriptError::new_ref("Must specify value");
+    }
     int n_timeout = a_timeout->get_int();
-    if (n_timeout < 0) 
+    if (n_timeout < 0) {
       return scx::ScriptError::new_ref("Timeout must be >= 0");
+    }
     m_idle_timeout = n_timeout;
     return 0;
   }
@@ -175,8 +179,9 @@ scx::ScriptRef* HTTPModule::script_method(const scx::ScriptAuth& auth,
 
     const scx::Uri* a_proxy = 
       scx::get_method_arg<scx::Uri>(args,0,"value");
-    if (!a_proxy) 
+    if (!a_proxy) {
       return scx::ScriptError::new_ref("Must specify proxy Uri");
+    }
     m_client_proxy = *a_proxy;
     return 0;
   }

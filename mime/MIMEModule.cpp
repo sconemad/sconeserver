@@ -87,8 +87,9 @@ scx::ScriptRef* MIMEModule::script_method(const scx::ScriptAuth& auth,
   if ("lookup" == name) {
     const scx::ScriptString* a_filename =
       scx::get_method_arg<scx::ScriptString>(args,0,"filename");
-    if (!a_filename)
+    if (!a_filename) {
       return scx::ScriptError::new_ref("Filename must be specified");
+    }
     std::string key=a_filename->get_string();
     
     int bailout=100;
@@ -125,14 +126,16 @@ scx::ScriptRef* MIMEModule::script_method(const scx::ScriptAuth& auth,
 
     const scx::ScriptString* a_pattern =
       scx::get_method_arg<scx::ScriptString>(args,0,"pattern");
-    if (!a_pattern)
+    if (!a_pattern) {
       return scx::ScriptError::new_ref("Pattern must be specified");
+    }
     std::string s_pattern = a_pattern->get_string();
 
     const scx::ScriptString* a_type =
       scx::get_method_arg<scx::ScriptString>(args,1,"type");
-    if (!a_type)
+    if (!a_type) {
       return scx::ScriptError::new_ref("Type must be specified");
+    }
     std::string s_type = a_type->get_string();
 
     m_mimemap[s_pattern] = s_type;
@@ -144,8 +147,9 @@ scx::ScriptRef* MIMEModule::script_method(const scx::ScriptAuth& auth,
 
     const scx::ScriptString* a_pattern =
       scx::get_method_arg<scx::ScriptString>(args,0,"pattern");
-    if (!a_pattern)
+    if (!a_pattern) {
       return scx::ScriptError::new_ref("Pattern must be specified");
+    }
     std::string s_pattern = a_pattern->get_string();
 
     m_mimemap.erase(s_pattern);

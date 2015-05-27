@@ -155,14 +155,17 @@ scx::ScriptRef* Host::script_op(const scx::ScriptAuth& auth,
 
     // Properties
     
-    if ("id" == name) 
+    if ("id" == name) {
       return scx::ScriptString::new_ref(m_id);
+    }
   
-    if ("hostname" == name) 
+    if ("hostname" == name) {
       return scx::ScriptString::new_ref(m_hostname);
+    }
     
-    if ("path" == name) 
+    if ("path" == name) {
       return scx::ScriptString::new_ref(m_dir.path());
+    }
     
     if ("docroots" == name) {
       scx::ScriptList* list = new scx::ScriptList();
