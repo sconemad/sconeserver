@@ -36,7 +36,7 @@ AC_ARG_ENABLE([asan],
 )
 
 # Enable all warnings
-CXXFLAGS="$CXXFLAGS -Wall"
+CXXFLAGS="$CXXFLAGS -Wall -Wextra -Weffc++ -Werror"
 
 # Libraries
 AC_CHECK_LIB([dl],[dlopen])
