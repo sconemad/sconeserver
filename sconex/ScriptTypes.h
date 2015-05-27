@@ -56,7 +56,7 @@ public:
   virtual ~ScriptString();
 
   static ScriptObject* create(const ScriptRef* args);
-  virtual ScriptObject* new_copy() const;
+  virtual ScriptString* new_copy() const;
 
   virtual std::string get_string() const;
   virtual int get_int() const;
@@ -120,7 +120,7 @@ public:
 
   static ScriptObject* from_string(const std::string& str, int base=10);
   static ScriptObject* create(const ScriptRef* args);
-  virtual ScriptObject* new_copy() const;
+  virtual ScriptInt* new_copy() const;
 
   virtual std::string get_string() const;
   virtual int get_int() const;
@@ -166,7 +166,7 @@ public:
   virtual ~ScriptReal();
 
   static ScriptObject* create(const ScriptRef* args);
-  virtual ScriptObject* new_copy() const;
+  virtual ScriptReal* new_copy() const;
 
   virtual std::string get_string() const;
   virtual int get_int() const;
@@ -216,7 +216,7 @@ public:
   ScriptList(const ScriptList& c);
   virtual ~ScriptList();
 
-  virtual ScriptObject* new_copy() const;
+  virtual ScriptList* new_copy() const;
 
   virtual std::string get_string() const;
   virtual int get_int() const;
@@ -275,7 +275,7 @@ public:
   ScriptMap(const ScriptMap& c);
   virtual ~ScriptMap();
 
-  virtual ScriptObject* new_copy() const;
+  virtual ScriptMap* new_copy() const;
 
   virtual std::string get_string() const;
   virtual int get_int() const;
@@ -332,7 +332,7 @@ public:
   ScriptSub(const ScriptSub& c);
   virtual ~ScriptSub();
 
-  virtual ScriptObject* new_copy() const;
+  virtual ScriptSub* new_copy() const;
 
   virtual std::string get_string() const;
   virtual int get_int() const;
@@ -370,7 +370,7 @@ public:
   virtual ~ScriptError();
 
   static ScriptObject* create(const ScriptRef* args);
-  virtual ScriptObject* new_copy() const;
+  virtual ScriptError* new_copy() const;
 
   virtual std::string get_string() const;
   virtual int get_int() const;

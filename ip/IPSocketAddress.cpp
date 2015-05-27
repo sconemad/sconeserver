@@ -148,7 +148,7 @@ IPSocketAddress::~IPSocketAddress()
 }
 
 //=============================================================================
-scx::ScriptObject* IPSocketAddress::new_copy() const
+IPSocketAddress* IPSocketAddress::new_copy() const
 {
   return new IPSocketAddress(*this);
 }

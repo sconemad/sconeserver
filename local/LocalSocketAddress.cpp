@@ -73,7 +73,7 @@ LocalSocketAddress::~LocalSocketAddress()
 }
 
 //=============================================================================
-scx::ScriptObject* LocalSocketAddress::new_copy() const
+LocalSocketAddress* LocalSocketAddress::new_copy() const
 {
   return new LocalSocketAddress(*this);
 }

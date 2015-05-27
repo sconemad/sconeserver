@@ -49,7 +49,7 @@ public:
   Uri(const Uri& c);
   virtual ~Uri();
 
-  ScriptObject* new_copy() const;
+  Uri* new_copy() const;
 
   void set_scheme(const std::string& scheme);
   void set_host(const std::string& host);

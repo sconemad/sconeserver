@@ -95,7 +95,7 @@ VersionTag::~VersionTag()
 }
 
 //=============================================================================
-ScriptObject* VersionTag::new_copy() const
+VersionTag* VersionTag::new_copy() const
 {
   return new VersionTag(*this);
 }

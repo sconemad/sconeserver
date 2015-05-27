@@ -145,7 +145,7 @@ Date::~Date()
 }
 
 //=============================================================================
-ScriptObject* Date::new_copy() const
+Date* Date::new_copy() const
 {
   return new Date(*this);
 }

@@ -89,7 +89,7 @@ Uri::~Uri()
 }
  
 //=============================================================================
-ScriptObject* Uri::new_copy() const
+Uri* Uri::new_copy() const
 {
   return new Uri(*this);
 }

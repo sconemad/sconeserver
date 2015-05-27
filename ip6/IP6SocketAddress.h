@@ -38,7 +38,7 @@ public:
   
   // SocketAddress methods
 
-  virtual scx::ScriptObject* new_copy() const;
+  virtual IP6SocketAddress* new_copy() const;
 
   virtual bool valid_for_bind() const;
   virtual bool valid_for_connect() const;

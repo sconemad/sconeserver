@@ -143,7 +143,7 @@ public:
   ScriptStatementExpr(int line, const std::string& expr);
   ScriptStatementExpr(const ScriptStatementExpr& c);
   virtual ~ScriptStatementExpr();
-  virtual ScriptObject* new_copy() const;
+  virtual ScriptStatementExpr* new_copy() const;
 
   virtual ParseResult parse(ScriptEngine& script, const std::string& token);
   virtual ScriptRef* run(ScriptTracer& tracer, FlowMode& flow);
@@ -163,7 +163,7 @@ public:
   ScriptStatementGroup(int line, ScriptMap* env=0);
   ScriptStatementGroup(const ScriptStatementGroup& c);
   virtual ~ScriptStatementGroup();
-  virtual ScriptObject* new_copy() const;
+  virtual ScriptStatementGroup* new_copy() const;
 
   virtual ParseResult parse(ScriptEngine& script, const std::string& token);
   virtual ScriptRef* run(ScriptTracer& tracer, FlowMode& flow);
@@ -204,7 +204,7 @@ public:
   ScriptStatementConditional(int line, const std::string& condition = "");
   ScriptStatementConditional(const ScriptStatementConditional& c);
   virtual ~ScriptStatementConditional();
-  virtual ScriptObject* new_copy() const;
+  virtual ScriptStatementConditional* new_copy() const;
 
   virtual ParseResult parse(ScriptEngine& script, const std::string& token);
   virtual ParseMode parse_mode() const;
@@ -234,7 +234,7 @@ public:
   ScriptStatementWhile(int line, const std::string& condition = "");
   ScriptStatementWhile(const ScriptStatementWhile& c);
   virtual ~ScriptStatementWhile();
-  virtual ScriptObject* new_copy() const;
+  virtual ScriptStatementWhile* new_copy() const;
 
   virtual ParseResult parse(ScriptEngine& script, const std::string& token);
   virtual ParseMode parse_mode() const;
@@ -261,7 +261,7 @@ public:
   ScriptStatementFor(int line);
   ScriptStatementFor(const ScriptStatementFor& c);
   virtual ~ScriptStatementFor();
-  virtual ScriptObject* new_copy() const;
+  virtual ScriptStatementFor* new_copy() const;
 
   virtual ParseResult parse(ScriptEngine& script, const std::string& token);
   virtual ParseMode parse_mode() const;
@@ -294,7 +294,7 @@ public:
   ScriptStatementFlow(int line, FlowMode flow);
   ScriptStatementFlow(const ScriptStatementFlow& c);
   virtual ~ScriptStatementFlow();
-  virtual ScriptObject* new_copy() const;
+  virtual ScriptStatementFlow* new_copy() const;
 
   virtual ParseResult parse(ScriptEngine& script, const std::string& token);
   virtual ParseMode parse_mode() const;
@@ -323,7 +323,7 @@ public:
   ScriptStatementDecl(int line, DefType deftype, const std::string& name = "");
   ScriptStatementDecl(const ScriptStatementDecl& c);
   virtual ~ScriptStatementDecl();
-  virtual ScriptObject* new_copy() const;
+  virtual ScriptStatementDecl* new_copy() const;
 
   virtual ParseResult parse(ScriptEngine& script, const std::string& token);
   virtual ParseMode parse_mode() const;
@@ -353,7 +353,7 @@ public:
   ScriptStatementSub(int line, const std::string& name = "");
   ScriptStatementSub(const ScriptStatementSub& c);
   virtual ~ScriptStatementSub();
-  virtual ScriptObject* new_copy() const;
+  virtual ScriptStatementSub* new_copy() const;
 
   virtual ParseResult parse(ScriptEngine& script, const std::string& token);
   virtual ParseMode parse_mode() const;

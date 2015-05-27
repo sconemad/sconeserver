@@ -43,7 +43,7 @@ public:
   VersionTag(const VersionTag& c);
   virtual ~VersionTag();
   
-  virtual ScriptObject* new_copy() const;
+  virtual VersionTag* new_copy() const;
   
   int get_major() const;
   int get_minor() const;

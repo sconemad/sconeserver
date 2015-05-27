@@ -65,7 +65,7 @@ Client::~Client()
 }
 
 //=============================================================================
-scx::ScriptObject* Client::new_copy() const
+Client* Client::new_copy() const
 {
   return new Client(*this);
 }

@@ -197,7 +197,7 @@ ScriptStatementExpr::~ScriptStatementExpr()
 }
 
 //=============================================================================
-ScriptObject* ScriptStatementExpr::new_copy() const
+ScriptStatementExpr* ScriptStatementExpr::new_copy() const
 {
   return new ScriptStatementExpr(*this);
 }
@@ -266,7 +266,7 @@ ScriptStatementGroup::~ScriptStatementGroup()
 }
 
 //=============================================================================
-ScriptObject* ScriptStatementGroup::new_copy() const
+ScriptStatementGroup* ScriptStatementGroup::new_copy() const
 {
   return new ScriptStatementGroup(*this);
 }
@@ -422,7 +422,7 @@ ScriptStatementConditional::~ScriptStatementConditional()
 }
 
 //=============================================================================
-ScriptObject* ScriptStatementConditional::new_copy() const
+ScriptStatementConditional* ScriptStatementConditional::new_copy() const
 {
   return new ScriptStatementConditional(*this);
 }
@@ -530,7 +530,7 @@ ScriptStatementWhile::~ScriptStatementWhile()
 }
 
 //=============================================================================
-ScriptObject* ScriptStatementWhile::new_copy() const
+ScriptStatementWhile* ScriptStatementWhile::new_copy() const
 {
   return new ScriptStatementWhile(*this);
 }
@@ -636,7 +636,7 @@ ScriptStatementFor::~ScriptStatementFor()
 }
 
 //=============================================================================
-ScriptObject* ScriptStatementFor::new_copy() const
+ScriptStatementFor* ScriptStatementFor::new_copy() const
 {
   return new ScriptStatementFor(*this);
 }
@@ -755,7 +755,7 @@ ScriptStatementFlow::~ScriptStatementFlow()
 }
 
 //=============================================================================
-  ScriptObject* ScriptStatementFlow::new_copy() const
+ScriptStatementFlow* ScriptStatementFlow::new_copy() const
 {
   return new ScriptStatementFlow(*this);
 }
@@ -839,7 +839,7 @@ ScriptStatementDecl::~ScriptStatementDecl()
 }
 
 //=============================================================================
-ScriptObject* ScriptStatementDecl::new_copy() const
+ScriptStatementDecl* ScriptStatementDecl::new_copy() const
 {
   return new ScriptStatementDecl(*this);
 }
@@ -950,7 +950,7 @@ ScriptStatementSub::~ScriptStatementSub()
 }
 
 //=============================================================================
-ScriptObject* ScriptStatementSub::new_copy() const
+ScriptStatementSub* ScriptStatementSub::new_copy() const
 {
   return new ScriptStatementSub(*this);
 }

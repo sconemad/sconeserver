@@ -44,7 +44,7 @@ public:
   Date(const Date& c);
   ~Date();
 
-  virtual ScriptObject* new_copy() const;
+  virtual Date* new_copy() const;
 
   static Date now(bool local=false);
 

@@ -103,7 +103,7 @@ ScriptObject* ScriptString::create(const ScriptRef* args)
 }
 
 //===========================================================================
-ScriptObject* ScriptString::new_copy() const
+ScriptString* ScriptString::new_copy() const
 {
   return new ScriptString(*this);
 }
@@ -329,7 +329,7 @@ ScriptObject* ScriptInt::create(const ScriptRef* args)
 }
 
 //===========================================================================
-ScriptObject* ScriptInt::new_copy() const
+ScriptInt* ScriptInt::new_copy() const
 {
   return new ScriptInt(*this);
 }
@@ -541,7 +541,7 @@ ScriptObject* ScriptReal::create(const ScriptRef* args)
 }
 
 //===========================================================================
-ScriptObject* ScriptReal::new_copy() const
+ScriptReal* ScriptReal::new_copy() const
 {
   return new ScriptReal(*this);
 }
@@ -713,7 +713,7 @@ ScriptList::~ScriptList()
 }
 
 //===========================================================================
-ScriptObject* ScriptList::new_copy() const
+ScriptList* ScriptList::new_copy() const
 {
   return new ScriptList(*this);
 }
@@ -981,7 +981,7 @@ ScriptMap::~ScriptMap()
 }
 
 //===========================================================================
-ScriptObject* ScriptMap::new_copy() const
+ScriptMap* ScriptMap::new_copy() const
 {
   return new ScriptMap(*this);
 }
@@ -1227,7 +1227,7 @@ ScriptSub::~ScriptSub()
 }
 
 //===========================================================================
-ScriptObject* ScriptSub::new_copy() const
+ScriptSub* ScriptSub::new_copy() const
 {
   return new ScriptSub(*this);
 }
@@ -1334,7 +1334,7 @@ ScriptObject* ScriptError::create(const ScriptRef* args)
 }
 
 //===========================================================================
-ScriptObject* ScriptError::new_copy() const
+ScriptError* ScriptError::new_copy() const
 {
   return new ScriptError(*this);
 }

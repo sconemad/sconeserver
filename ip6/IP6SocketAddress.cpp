@@ -80,7 +80,7 @@ IP6SocketAddress::~IP6SocketAddress()
 }
 
 //=============================================================================
-scx::ScriptObject* IP6SocketAddress::new_copy() const
+IP6SocketAddress* IP6SocketAddress::new_copy() const
 {
   return new IP6SocketAddress(*this);
 }

@@ -45,7 +45,7 @@ public:
   virtual ~Client();
 
   // ScriptObject methods
-  virtual scx::ScriptObject* new_copy() const;
+  virtual Client* new_copy() const;
 
   virtual std::string get_string() const;
   virtual int get_int() const;
