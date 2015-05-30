@@ -18,7 +18,7 @@ SSLStream.h \
 SSLChannel.h
 
 ssl_la_LDFLAGS = -module -avoid-version
-ssl_la_LIBADD = $(SSL_LIBADD)
+ssl_la_LIBADD = $(SSL_LIBS)
 
 modconfdir = $(sysconfdir)/modules.d
 modconf_DATA = ssl.conf
