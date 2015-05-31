@@ -46,8 +46,8 @@ public:
   Host(
     HTTPModule& module,
     HostMapper& mapper,
-    const std::string id,
-    const std::string hostname,
+    const std::string& id,
+    const std::string& hostname,
     const scx::FilePath& dir
   );
 
