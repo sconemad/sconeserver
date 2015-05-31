@@ -52,7 +52,7 @@ static std::string pid_file;
 // removed on destruction.
 class PidFile {
 public:
-  PidFile() {}
+  PidFile() : m_path(), m_file() {}
   
   bool create(const scx::FilePath& path) {
     m_path = path;
