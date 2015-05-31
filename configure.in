@@ -107,8 +107,19 @@ AC_ARG_WITH([local],
 AC_ARG_WITH([location],
   [AC_HELP_STRING([--with-location],[Enable location module])],
   [LOCATION="$withval"],
-  [AC_CHECK_HEADER([libgpsmm.h],[LOCATION="yes"],[LOCATION="no"])]
+  [LOCATION="check"]
 )
+if test "x$LOCATION" = "xyes" -o "x$LOCATION" = "xcheck"; then
+  PKG_CHECK_MODULES(
+    [LOCATION], [libgps],
+    [LOCATION=yes],
+    [if test "x$LOCATION" = "xyes"; then
+      AC_MSG_FAILURE([$LOCATION_PKG_ERRORS])
+     else
+      AC_MSG_WARN([$LOCATION_PKG_ERRORS])
+     fi
+     LOCATION="no"])
+fi
 
 # bluetooth module
 # Include if bluetooth headers are present

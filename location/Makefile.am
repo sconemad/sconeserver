@@ -10,7 +10,7 @@ location_la_SOURCES = \
 LocationModule.cpp
 
 location_la_LDFLAGS = -module -avoid-version
-location_la_LIBADD = -lgps
+location_la_LIBADD = $(LOCATION_LIBS)
 
 modconfdir = $(sysconfdir)/modules.d
 modconf_DATA = location.conf
