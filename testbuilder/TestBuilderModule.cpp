@@ -186,11 +186,14 @@ scx::ScriptRef* TestBuilderModule::script_method(const scx::ScriptAuth& auth,
   if ("add" == name) {
     const scx::ScriptString* a_name =
       scx::get_method_arg<scx::ScriptString>(args,0,"name");
-    if (!a_name) return scx::ScriptError::new_ref("Profile name must be specified");
+    if (!a_name) {
+      return scx::ScriptError::new_ref("Profile name must be specified");
+    }
     std::string s_name = a_name->get_string();
 
-    if (!add_profile(s_name))
+    if (!add_profile(s_name)) {
       return scx::ScriptError::new_ref("Profile '" + s_name + "' already exists");
+    }
 
     return new scx::ScriptRef(lookup_profile(s_name));
   }
@@ -198,54 +201,63 @@ scx::ScriptRef* TestBuilderModule::script_method(const scx::ScriptAuth& auth,
   if ("remove" == name) {
     const scx::ScriptString* a_name =
       scx::get_method_arg<scx::ScriptString>(args,0,"name");
-    if (!a_name)
+    if (!a_name) {
       return scx::ScriptError::new_ref("Profile name must be specified");
+    }
     std::string s_name = a_name->get_string();
 
-    if (!remove_profile(s_name))
+    if (!remove_profile(s_name)) {
       return scx::ScriptError::new_ref("Profile '" + s_name + "' does not exist");
+    }
     return 0;
   }
   
   if ("submit_build" == name) {
     const scx::ScriptString* a_profile =
       scx::get_method_arg<scx::ScriptString>(args,0,"profile");
-    if (!a_profile)
+    if (!a_profile) {
       return scx::ScriptError::new_ref("Profile must be specified");
+    }
     std::string s_profile = a_profile->get_string();
     std::string id = submit_build(s_profile);
-    if (id.empty())
+    if (id.empty()) {
       return scx::ScriptError::new_ref("Could not submit build");
+    }
     return scx::ScriptString::new_ref(id);
   }
 
   if ("abort_build" == name) {
     const scx::ScriptString* a_build =
       scx::get_method_arg<scx::ScriptString>(args,0,"build");
-    if (!a_build)
+    if (!a_build) {
       return scx::ScriptError::new_ref("Build ID must be specified");
+    }
     std::string s_id = a_build->get_string();
-    if (!abort_build(s_id))
+    if (!abort_build(s_id)) {
       return scx::ScriptError::new_ref("Could not abort build");
+    }
     return 0;
   }
 
   if ("remove_build" == name) {
     const scx::ScriptString* a_build =
       scx::get_method_arg<scx::ScriptString>(args,0,"build");
-    if (!a_build)
+    if (!a_build) {
       return scx::ScriptError::new_ref("Build ID must be specified");
+    }
     std::string s_id = a_build->get_string();
-    if (!remove_build(s_id))
+    if (!remove_build(s_id)) {
       return scx::ScriptError::new_ref("Could not remove build");
+    }
     return 0;
   }
 
   if ("set_dir" == name) {
     const scx::ScriptString* a_dir =
       scx::get_method_arg<scx::ScriptString>(args,0,"value");
-    if (!a_dir)
+    if (!a_dir) {
       return scx::ScriptError::new_ref("Directory must be specified");
+    }
     m_dir = scx::FilePath(a_dir->get_string());
     return 0;
   }
@@ -253,11 +265,13 @@ scx::ScriptRef* TestBuilderModule::script_method(const scx::ScriptAuth& auth,
   if ("set_max_running" == name) {
     const scx::ScriptInt* a_max = 
       scx::get_method_arg<scx::ScriptInt>(args,0,"value");
-    if (!a_max)
+    if (!a_max) {
       return scx::ScriptError::new_ref("Value must be specified");
+    }
     int i_max = a_max->get_int();
-    if (i_max <=0)
+    if (i_max <=0) {
       return scx::ScriptError::new_ref("Value must be >= 0");
+    }
     m_max_running = i_max;
     return 0;
   }
@@ -265,8 +279,9 @@ scx::ScriptRef* TestBuilderModule::script_method(const scx::ScriptAuth& auth,
   if ("set_build_user" == name) {
     const scx::ScriptString* a_user = 
       scx::get_method_arg<scx::ScriptString>(args,0,"value");
-    if (!a_user)
+    if (!a_user) {
       return scx::ScriptError::new_ref("Username must be specified");
+    }
     m_build_user = scx::User(a_user->get_string());
 
     return 0;
@@ -275,28 +290,32 @@ scx::ScriptRef* TestBuilderModule::script_method(const scx::ScriptAuth& auth,
   if ("add_source_method" == name) {
     const scx::ScriptString* a_name =
       scx::get_method_arg<scx::ScriptString>(args,0,"method");
-    if (!a_name)
+    if (!a_name) {
       return scx::ScriptError::new_ref("Name must be specified");
+    }
     std::string s_name = a_name->get_string();
 
     const scx::ScriptString* a_desc =
       scx::get_method_arg<scx::ScriptString>(args,1,"description");
-    if (!a_desc)
+    if (!a_desc) {
       return scx::ScriptError::new_ref("Description must be specified");
+    }
     m_source_methods[s_name] = a_desc->get_string();
     return 0;
   }
 
   if ("load_profiles" == name) {
     scx::FilePath path = m_dir + scx::FilePath("profiles.conf");
-    if (!load_config_file(path))
+    if (!load_config_file(path)) {
       return scx::ScriptError::new_ref("Error loading profiles");
+    }
     return 0;
   }
   
   if ("save_profiles" == name) {
-    if (!save_profiles())
+    if (!save_profiles()) {
       return scx::ScriptError::new_ref("Error saving profiles");
+    }
     return 0;
   }
 
