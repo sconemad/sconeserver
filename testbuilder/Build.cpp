@@ -87,12 +87,12 @@ bool Build::load(const std::string& id)
   while (parser->tokenize(token) == scx::Ok) {
     switch (++i) {
       case 1: /* text header */ break;
-      case 2: version = (State)atoi(token.c_str()); break;
-      case 3: m_state = (State)atoi(token.c_str()); break;
+    case 2: version = static_cast<State>(atoi(token.c_str())); break;
+    case 3: m_state = static_cast<State>(atoi(token.c_str())); break;
       case 4: m_profile = token; break;
     case 5: m_dir = scx::FilePath(token); break;
       default: {
-        int version = (State)atoi(token.c_str());
+        int version = static_cast<State>(atoi(token.c_str()));
         add_step( new BuildStep(m_module,m_dir,version,parser) );
       }
     }
@@ -117,7 +117,7 @@ bool Build::save()
   std::ostringstream oss;
   oss << "// TestBuilder build state file\n"
       << "1\n"
-      << ((int)m_state) << "\n"
+      << (static_cast<int>(m_state)) << "\n"
       << m_profile << "\n"
       << m_dir.path() << "\n";
   file.write(oss.str());
