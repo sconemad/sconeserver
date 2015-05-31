@@ -122,7 +122,7 @@ Build* BuildProfile::create_build(const scx::FilePath& root_dir)
 
   // Add source aquisition step
   scx::FilePath source_script =
-    m_module.get_dir() + "scripts" + m_source_method;
+    m_module.get_dir() + scx::FilePath("scripts") + scx::FilePath(m_source_method);
   build->add_step(new BuildStep(m_module,"source",
                                 source_script.path() + " " + m_source_uri)
   );
@@ -137,7 +137,7 @@ Build* BuildProfile::create_build(const scx::FilePath& root_dir)
        it != m_make_targets.end();
        it++) {
     scx::FilePath make_script =
-      m_module.get_dir() + "scripts" + "make";
+      m_module.get_dir() + scx::FilePath("scripts") + scx::FilePath("make");
     build->add_step(new BuildStep(m_module,"make_" + (*it),
                                   make_script.path() + " " + (*it)));
   }

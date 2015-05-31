@@ -219,8 +219,8 @@ scx::ScriptRef* HostMapper::script_method(const scx::ScriptAuth& auth,
         
     LOG("Adding host '" + s_id + "' hostname '" + s_hostname +
         "' path '" + a_path->get_string() + "'");
-    scx::FilePath path = scx::Kernel::get()->get_conf_path() + a_path->get_string();
-    Host* host = new Host(m_module, *this, s_id, s_hostname, path.path());
+    scx::FilePath path = scx::Kernel::get()->get_conf_path() + scx::FilePath(a_path->get_string());
+    Host* host = new Host(m_module, *this, s_id, s_hostname, path);
     host->init();
     m_hosts[s_id] = new Host::Ref(host);
     m_aliases[s_hostname] = s_id;

@@ -121,7 +121,7 @@ scx::ScriptRef* TestModule::script_method(const scx::ScriptAuth& auth,
       return scx::ScriptError::new_ref("test::run() File name must be specified");
     std::ostringstream oss;
     oss << "Listing:\n";
-    scx::FileDir dir(path->get_string());
+    scx::FileDir dir(scx::FilePath(path->get_string()));
     while (dir.next()) {
       oss << dir.path().path();
       if (dir.stat().is_dir()) {

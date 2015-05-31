@@ -75,7 +75,7 @@ void* TestBuilderModule::run()
 {
   // Load builds from disk
   m_builds_mutex.lock();
-  scx::FileDir dir(m_dir + "builds");
+  scx::FileDir dir(m_dir + scx::FilePath("builds"));
   while (dir.next()) {
     std::string id = dir.name();
     Build* build = new Build(*this);
@@ -246,7 +246,7 @@ scx::ScriptRef* TestBuilderModule::script_method(const scx::ScriptAuth& auth,
       scx::get_method_arg<scx::ScriptString>(args,0,"value");
     if (!a_dir)
       return scx::ScriptError::new_ref("Directory must be specified");
-    m_dir = a_dir->get_string();
+    m_dir = scx::FilePath(a_dir->get_string());
     return 0;
   }
 
@@ -288,7 +288,7 @@ scx::ScriptRef* TestBuilderModule::script_method(const scx::ScriptAuth& auth,
   }
 
   if ("load_profiles" == name) {
-    scx::FilePath path = m_dir + "profiles.conf";
+    scx::FilePath path = m_dir + scx::FilePath("profiles.conf");
     if (!load_config_file(path))
       return scx::ScriptError::new_ref("Error loading profiles");
     return 0;
@@ -423,7 +423,7 @@ bool TestBuilderModule::remove_profile(const std::string& profile)
 //=============================================================================
 bool TestBuilderModule::save_profiles()
 {
-  scx::FilePath path = m_dir + "profiles.conf";
+  scx::FilePath path = m_dir + scx::FilePath("profiles.conf");
   scx::File file;
   if (scx::Ok != file.open(path,scx::File::Write | scx::File::Create)) {
     return false;

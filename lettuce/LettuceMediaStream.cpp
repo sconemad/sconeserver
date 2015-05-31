@@ -68,7 +68,7 @@ scx::Condition LettuceMediaStream::next_track()
       scx::File* file; 
       file = new scx::File();
       scx::FilePath path("/mnt/data/music");
-      path += line;
+      path += scx::FilePath(line);
       if (file->open(path,scx::File::Read) == scx::Ok) {
         LOG("--START '" + path.path() + "'"); 
         
@@ -98,7 +98,7 @@ scx::Condition LettuceMediaStream::event(scx::Stream::Event e)
     endpoint().set_timeout(scx::Time(60));
 
     m_pls_file = new scx::File();
-    if (m_pls_file->open(PLS_PATH,scx::File::Read) != scx::Ok) {
+    if (m_pls_file->open(scx::FilePath(PLS_PATH),scx::File::Read) != scx::Ok) {
       LOG("Cannot open playlist '" PLS_PATH "'"); 
       return scx::Close;
     }

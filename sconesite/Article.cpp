@@ -111,7 +111,7 @@ Article::Article(Profile& profile,
 
   if (a_name) {
     m_name = a_name->object()->get_string();
-    m_root = m_profile.get_path() + "art" + m_link;
+    m_root = m_profile.get_path() + scx::FilePath("art") + scx::FilePath(m_link);
 
     m_doc = Document::find(m_name,m_root);
 
@@ -321,7 +321,7 @@ scx::ScriptRef* Article::script_method(const scx::ScriptAuth& auth,
     if (!scx::FilePath::valid_filename(a_file->get_filename()))
       return scx::ScriptError::new_ref("Invalid filename");
 
-    scx::FilePath dstpath = get_root() + a_file->get_filename();
+    scx::FilePath dstpath = get_root() + scx::FilePath(a_file->get_filename());
     LOG("Add file moving '" + srcpath.path() + 
 	"' to '" + dstpath.path() + "'");
     if (!scx::FilePath::move(srcpath,dstpath)) 
@@ -342,7 +342,7 @@ scx::ScriptRef* Article::script_method(const scx::ScriptAuth& auth,
     if (!scx::FilePath::valid_filename(file))
       return scx::ScriptError::new_ref("Invalid filename");
 
-    scx::FilePath path = get_root() + file;
+    scx::FilePath path = get_root() + scx::FilePath(file);
     if (!scx::FilePath::rmfile(path)) {
       DEBUG_LOG_ERRNO("Cannot remove file '"+path.path()+"'");
       return scx::ScriptError::new_ref("Could not remove file");

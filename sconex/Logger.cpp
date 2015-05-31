@@ -481,7 +481,7 @@ void Logger::provide(const std::string& type,
       if (a_file) {
         path += FilePath(a_file->get_string());
       } else {
-        path += (s_name+".log");
+        path += FilePath(s_name+std::string(".log"));
       }
       object = new LogChannel::Ref(new FileLogChannel(s_name, path));
     }
@@ -512,7 +512,7 @@ Logger::Logger(const FilePath& path)
   LogChannel::register_provider("cache", this);
 
   FilePath::mkdir(path,false,0755);
-  FilePath defaultPath = path + "sconeserver.log";
+  FilePath defaultPath = path + FilePath("sconeserver.log");
   m_channels["default"] =
     new LogChannel::Ref(new FileLogChannel("default",defaultPath,true));
 }

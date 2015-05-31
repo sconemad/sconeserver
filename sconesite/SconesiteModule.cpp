@@ -146,7 +146,7 @@ void SconesiteModule::provide(const std::string& type,
   
   if ("xml" == type) {
     object = new XMLDoc(name->get_string(),
-			root->get_string(), 
+                        scx::FilePath(root->get_string()), 
 			file->get_string());
   }
 }

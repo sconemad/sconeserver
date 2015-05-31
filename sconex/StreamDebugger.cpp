@@ -47,7 +47,7 @@ StreamDebugger::StreamDebugger(const std::string& name)
       << std::setfill('0') << std::setw(5) << index;
   
   m_file = new File();
-  if (Ok != m_file->open(oss.str(),File::Write | File::Create | File::Truncate)) {
+  if (Ok != m_file->open(FilePath(oss.str()),File::Write | File::Create | File::Truncate)) {
     DEBUG_LOG("Could not open debug file" << oss.str());
     delete m_file;
     m_file = 0;

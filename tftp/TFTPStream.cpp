@@ -126,7 +126,7 @@ scx::Condition TFTPStream::event(scx::Stream::Event e)
 	return scx::Error;
       }
 
-      scx::FilePath path = profile->get_path() + file;
+      scx::FilePath path = profile->get_path() + scx::FilePath(file);
       TFTPStream_DEBUG_LOG("FILE: '" << path.path() << "'");
       
       start = end+1;

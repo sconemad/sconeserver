@@ -98,7 +98,7 @@ int Kernel::init()
   LOG("Built for " + scx::build_type() + " on " + scx::build_time().code());
 
   if (m_autoload_config) {
-    load_config_file(m_conf_path + std::string(name() + ".conf"));
+    load_config_file(m_conf_path + FilePath(std::string(name() + ".conf")));
   }
   
   Module::init();

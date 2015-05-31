@@ -339,7 +339,7 @@ ScriptRef* Module::script_method(const ScriptAuth& auth,
     const ScriptString* a_path = get_method_arg<ScriptString>(args,0,"path");
     FilePath path;
     if (a_path) {
-      path = a_path->get_string();
+      path = FilePath(a_path->get_string());
     }
     if (false == load_config_file(path)) {
       return ScriptError::new_ref("Error occured");
@@ -353,7 +353,7 @@ ScriptRef* Module::script_method(const ScriptAuth& auth,
     const ScriptString* a_path = get_method_arg<ScriptString>(args,0,"path");
     FilePath path;
     if (a_path) {
-      path = a_path->get_string();
+      path = FilePath(a_path->get_string());
     }
     if (false == load_config_dir(path)) {
       return ScriptError::new_ref("Error occured");
@@ -367,7 +367,7 @@ ScriptRef* Module::script_method(const ScriptAuth& auth,
     const ScriptString* a_path = get_method_arg<ScriptString>(args,0,"path");
     FilePath path;
     if (a_path) {
-      path = a_path->get_string();
+      path = FilePath(a_path->get_string());
     }
     if (false == load_module_dir(path)) {
       return ScriptError::new_ref("Error occured");
@@ -382,7 +382,7 @@ ScriptRef* Module::script_method(const ScriptAuth& auth,
     if (!a_path) {
       return ScriptString::new_ref(get_mod_path().path());
     }
-    m_mod_path = a_path->get_string();
+    m_mod_path = FilePath(a_path->get_string());
     return 0;
   }
 
@@ -393,7 +393,7 @@ ScriptRef* Module::script_method(const ScriptAuth& auth,
     if (!a_path) {
       return ScriptString::new_ref(get_var_path().path());
     }
-    m_var_path = a_path->get_string();
+    m_var_path = FilePath(a_path->get_string());
     return 0;
   }
 
@@ -452,7 +452,7 @@ bool Module::load_config_dir(FilePath path)
   for (std::list<std::string>::const_iterator it = files.begin();
        it != files.end();
        ++it) {
-    ConfigFile config(path + *it);
+    ConfigFile config(path + FilePath(*it));
     if (!config.load(&ctx)) {
       ok = false;
     }
@@ -475,7 +475,7 @@ bool Module::load_module_dir(FilePath path)
     int i = (*it).find_last_of(".");
     std::string name((*it), 0, i);
     */
-    ModuleLoader* loader = new ModuleLoader(path + (*it), this);
+    ModuleLoader* loader = new ModuleLoader(path + FilePath(*it), this);
     if (loader->get_name() == "") {
       delete loader;
       continue;

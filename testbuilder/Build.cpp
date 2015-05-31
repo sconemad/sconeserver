@@ -48,7 +48,7 @@ Build::Build(
     m_profile(profile)
 {
   m_id = scx::Date::now().dcode();
-  m_dir = m_module.get_dir() + "builds" + m_id;
+  m_dir = m_module.get_dir() + scx::FilePath("builds") + scx::FilePath(m_id);
 
   // Create working directory for this build and set ownership
   scx::FilePath::mkdir(m_dir,true,0770);
@@ -69,9 +69,9 @@ Build::~Build()
 bool Build::load(const std::string& id)
 {
   m_id = id;
-  m_dir = m_module.get_dir() + "builds" + m_id;
+  m_dir = m_module.get_dir() + scx::FilePath("builds") + scx::FilePath(m_id);
 
-  scx::FilePath stat_filename = m_dir + TESTBUILDER_STAT_FILE;
+  scx::FilePath stat_filename = m_dir + scx::FilePath(TESTBUILDER_STAT_FILE);
   scx::File file;
   if (!scx::FileStat(stat_filename).is_file() ||
       file.open(stat_filename,scx::File::Read) != scx::Ok) {
@@ -90,7 +90,7 @@ bool Build::load(const std::string& id)
       case 2: version = (State)atoi(token.c_str()); break;
       case 3: m_state = (State)atoi(token.c_str()); break;
       case 4: m_profile = token; break;
-      case 5: m_dir = token; break;
+    case 5: m_dir = scx::FilePath(token); break;
       default: {
         int version = (State)atoi(token.c_str());
         add_step( new BuildStep(m_module,m_dir,version,parser) );
@@ -108,7 +108,7 @@ bool Build::load(const std::string& id)
 //=========================================================================
 bool Build::save()
 {
-  scx::FilePath stat_filename = m_dir + TESTBUILDER_STAT_FILE;
+  scx::FilePath stat_filename = m_dir + scx::FilePath(TESTBUILDER_STAT_FILE);
   scx::File file;
   if (file.open(stat_filename,scx::File::Write | scx::File::Create) != scx::Ok) {
     return false;
@@ -215,7 +215,8 @@ bool Build::remove()
 {
   abort();
 
-  scx::FilePath script = m_module.get_dir() + "scripts" + "remove";
+  scx::FilePath script =
+    m_module.get_dir() + scx::FilePath("scripts") + scx::FilePath("remove");
   scx::Process process(script.path());
   process.add_arg(script.path());
   process.add_arg(m_dir.path());

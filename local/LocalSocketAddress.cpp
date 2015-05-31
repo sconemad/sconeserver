@@ -116,7 +116,7 @@ socklen_t LocalSocketAddress::get_sockaddr_size() const
 //=============================================================================
 int LocalSocketAddress::socket_bind(SOCKET s) const
 {
-  scx::FileStat fs(get_path());
+  scx::FileStat fs = scx::FileStat(scx::FilePath(get_path()));
   if (fs.exists()) {
     if (fs.is_file() || fs.is_dir()) {
       return 1;

@@ -102,7 +102,7 @@ const std::string& FileDir::name() const
 //=============================================================================
 FilePath FileDir::path() const
 {
-  return FilePath(m_root + m_current_name);
+  return FilePath(m_root + FilePath(m_current_name));
 }
 
 //=============================================================================

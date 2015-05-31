@@ -32,8 +32,8 @@ class User;
 class SCONEX_API FilePath {
 public:
 
-  FilePath(const std::string& path = "");
-  FilePath(const char* path);
+  explicit FilePath(const std::string& path = "");
+  explicit FilePath(const char* path);
   FilePath(const FilePath& c);
     
   ~FilePath();

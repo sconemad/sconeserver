@@ -63,7 +63,7 @@ Host::~Host()
 //=========================================================================
 int Host::init()
 {
-  scx::ConfigFile config(m_dir + "host.conf");
+  scx::ConfigFile config(m_dir + scx::FilePath("host.conf"));
   scx::ScriptRef* ctx = new scx::ScriptRef(this);
   int err = config.load(ctx);
   return err;
@@ -219,7 +219,7 @@ scx::ScriptRef* Host::script_method(const scx::ScriptAuth& auth,
       return scx::ScriptError::new_ref("add() No path specified");
     }
 
-    return add_docroot(s_profile, a_path->get_string()).ref_copy(ref.reftype());
+    return add_docroot(s_profile, scx::FilePath(a_path->get_string())).ref_copy(ref.reftype());
   }
 
   if ("remove" == name) {

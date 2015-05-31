@@ -95,7 +95,7 @@ Profile::~Profile()
 void Profile::refresh()
 {
   // Add new templates
-  scx::FileDir dir(get_path() + TPLDIR);
+  scx::FileDir dir(get_path() + scx::FilePath(TPLDIR));
   while (dir.next()) {
     std::string file = dir.name();
     if (file != "." && file != "..") {
@@ -309,7 +309,7 @@ Article::Ref* Profile::create_article(int pid,
   }
 
   std::string link = parent->object()->get_href_path() + name + "/";
-  scx::FilePath path = parent->object()->get_root() + name;
+  scx::FilePath path = parent->object()->get_root() + scx::FilePath(name);
   delete parent;
 
   std::string extra;
@@ -357,7 +357,7 @@ Article::Ref* Profile::create_article(int pid,
     return 0;
   }
 
-  path = path + "article.xml";
+  path += scx::FilePath("article.xml");
   scx::File file;
   if (scx::Ok != file.open(path,scx::File::Write|scx::File::Create,00660)) {
     DEBUG_LOG_ERRNO("Unable to create new article '" << path.path() << "'");
@@ -439,9 +439,9 @@ bool Profile::rename_article(int id,
   }
 
   if (!new_name.empty()) {
-    new_path += new_name;
+    new_path += scx::FilePath(new_name);
   } else {
-    new_path += old_name;
+    new_path += scx::FilePath(old_name);
   }
 
   if (old_path == new_path) {
@@ -725,7 +725,7 @@ void Profile::configure_docroot(const std::string& docroot)
 {
   if (0 == m_host->object()->get_docroot(docroot)) {
     LOG("Autoconfiguring docroot '" + docroot + "' for http host");
-    http::DocRoot::Ref dr = m_host->object()->add_docroot(docroot,ARTDIR);
+    http::DocRoot::Ref dr = m_host->object()->add_docroot(docroot,scx::FilePath(ARTDIR));
 
     // Map everything in this docroot to the sconesite module
     scx::ScriptList* ml = new scx::ScriptList();

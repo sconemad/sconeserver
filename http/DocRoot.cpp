@@ -142,7 +142,7 @@ bool DocRoot::connect_request(scx::Descriptor* endpoint,
       return false;
     }
 
-    scx::FilePath path = m_path + uripath;
+    scx::FilePath path = m_path + scx::FilePath(uripath);
     request.set_path(path);
 
     std::string pathinfo;

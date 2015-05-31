@@ -181,7 +181,7 @@ scx::Condition SconesiteStream::event(scx::Stream::Event e)
       
     } else {
       // File request, update the path in the request
-      scx::FilePath path = m_article->object()->get_root() + m_file;
+      scx::FilePath path = m_article->object()->get_root() + scx::FilePath(m_file);
       req.set_path(path);
       log("File request for '" + path.path() + "'");
       
@@ -227,16 +227,16 @@ scx::Condition SconesiteStream::start_section(const scx::MimeHeaderTable& header
     std::string::size_type ip = name.find(file_pattern);
     if (ip == 0) {
       // Name starts with "file_" so stream it into a file
-      scx::FilePath path = "/tmp";
+      scx::FilePath path("/tmp");
       std::string filename = 
 	m_module.object()->name() + "-" + session->get_id() + "-" + name;
-      path += filename;
+      path += scx::FilePath(filename);
       //      STREAM_DEBUG_LOG("Streaming section to file '" << path.path() << "'");
       req.set_param(name,
 		    new scx::ScriptRef(new scx::ScriptFile(path,fname)));
       
       scx::File* file = new scx::File();
-      if (file->open(path.path(),
+      if (file->open(path,
 		     scx::File::Write | scx::File::Create | 
 		     scx::File::Truncate,
 		     00660) == scx::Ok) {

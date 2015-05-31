@@ -57,7 +57,7 @@ scx::Condition DirIndexStream::send_response()
     std::string url = uri.get_string();
     std::string uripath = uri.get_path();
     
-    if (scx::FileStat(path + s_default_page).exists()) {
+    if (scx::FileStat(path + scx::FilePath(s_default_page)).exists()) {
       // Redirect to default page
       if (url[url.size()-1] != '/') url += "/";
       msg->log("Redirect '" + url + "' to '" + url + s_default_page + "'"); 

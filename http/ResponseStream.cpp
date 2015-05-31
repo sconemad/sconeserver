@@ -389,7 +389,7 @@ bool ResponseStream::send_file(const scx::FilePath& path)
 {
   scx::File* file = new scx::File();
 
-  if (file->open(path.path(),scx::File::Read) != scx::Ok) {
+  if (file->open(path,scx::File::Read) != scx::Ok) {
     delete file;
     return false;
   }

@@ -117,7 +117,7 @@ static File* get_random()
   static File* s_random = 0;
   if (!s_random) {
     s_random = new File();
-    if (Ok != s_random->open("/dev/urandom", File::Read)) {
+    if (Ok != s_random->open(FilePath("/dev/urandom"), File::Read)) {
       DEBUG_LOG("/dev/random not available, falling back to rand()");
     }
   }

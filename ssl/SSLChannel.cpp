@@ -107,15 +107,15 @@ scx::ScriptRef* SSLChannel::script_method(const scx::ScriptAuth& auth,
     if (!a_key)
       return scx::ScriptError::new_ref("Key name must be supplied");
     scx::FilePath conf = scx::Kernel::get()->get_conf_path();
-    scx::FilePath key = conf + a_key->get_string();
+    scx::FilePath key = conf + scx::FilePath(a_key->get_string());
 
     const scx::ScriptString* a_cert =
       scx::get_method_arg<scx::ScriptString>(args,1,"cert");
     scx::FilePath cert = conf;
     if (a_cert) {
-      cert = cert + a_cert->get_string();
+      cert = cert + scx::FilePath(a_cert->get_string());
     } else {
-      cert = cert + std::string(a_key->get_string() + ".pub");
+      cert = cert + scx::FilePath(std::string(a_key->get_string() + ".pub"));
     }
 
     if (SSL_CTX_use_certificate_file(

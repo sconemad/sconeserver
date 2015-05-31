@@ -87,9 +87,9 @@ int run()
   scx::Kernel* kernel = scx::Kernel::get();
 
   // Set paths
-  kernel->set_conf_path(conf_path);
-  kernel->set_mod_path(mod_path);
-  kernel->set_var_path(var_path);
+  kernel->set_conf_path(scx::FilePath(conf_path));
+  kernel->set_mod_path(scx::FilePath(mod_path));
+  kernel->set_var_path(scx::FilePath(var_path));
   
   // Set config autoloading
   kernel->set_autoload_config(opt_load_config);
@@ -185,7 +185,7 @@ int main(int argc,char* argv[])
 
   // Create PID file
   PidFile pf;
-  if (!pf.create(pid_file)) {
+  if (!pf.create(scx::FilePath(pid_file))) {
     std::cout << "ERROR: Server is already running!\n";
     exit(1);
   }

@@ -41,7 +41,7 @@ public:
   FileStat();
   // Construct an invalid filestat
   
-  FileStat(const FilePath& filepath);
+  explicit FileStat(const FilePath& filepath);
   // Construct an object to access stats for the specified file
   // NOTE: Can also be constructed from a File object)
   
@@ -70,7 +70,7 @@ private:
 
   friend class File;
   friend class FileDir;
-  FileStat(int filedes);
+  explicit FileStat(int filedes);
 
   void become(struct stat* a);
   

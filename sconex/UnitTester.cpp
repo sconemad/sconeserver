@@ -185,7 +185,7 @@ UnitTester::UnitTester()
     m_section(),
     m_results()
 {
-  scx::Logger::init(".");
+  scx::Logger::init(FilePath("."));
 }
  
 //=============================================================================

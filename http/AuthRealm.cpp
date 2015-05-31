@@ -436,7 +436,7 @@ void AuthRealmManager::provide(const std::string& type,
       return;
     }
  
-    object = new AuthRealmHtpasswd(m_module,a_path->get_string());
+    object = new AuthRealmHtpasswd(m_module,scx::FilePath(a_path->get_string()));
 
   } else if (type == "db") {
     object = new AuthRealmDB(m_module,args);

@@ -92,7 +92,7 @@ bool ExecStream::spawn_process()
     std::string::size_type is = prog.find_last_of("/");
     if (is != std::string::npos) {
       std::string wd = prog.substr(0,is);
-      m_process->set_dir(wd);
+      m_process->set_dir(scx::FilePath(wd));
     }
       
     m_args->give(scx::ScriptString::new_ref(uri.get_string()));
