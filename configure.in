@@ -248,6 +248,25 @@ if test "x$RSS" = "xyes"; then
   fi
 fi
 
+# markdown module
+AC_ARG_WITH([markdown],
+  [AC_HELP_STRING([--with-markdown],[Enable markdown module])],
+  [MARKDOWN="$withval"],
+  [MARKDOWN="check"]
+)
+# Need libcmark for markdown
+if test "x$MARKDOWN" = "xyes" -o "x$MARKDOWN" = "xcheck"; then
+  PKG_CHECK_MODULES(
+    [MARKDOWN], [libcmark],
+    [MARKDOWN=yes],
+    [if test "x$MARKDOWN" = "xyes"; then
+      AC_MSG_FAILURE([$MARKDOWN_PKG_ERRORS])
+     else
+      AC_MSG_WARN([$MARKDOWN_PKG_ERRORS])
+     fi
+     MARKDOWN="no"])
+fi
+
 # MySql module
 # Include by default if mysqlclient headers are found
 AC_ARG_WITH([mysql_config],
@@ -401,6 +420,7 @@ AM_CONDITIONAL(BUILD_LETTUCE, test x$LETTUCE = xyes)
 AM_CONDITIONAL(BUILD_SCONESITE, test x$SCONESITE = xyes)
 AM_CONDITIONAL(BUILD_IMAGE, test x$IMAGE = xyes)
 AM_CONDITIONAL(BUILD_RSS, test x$RSS = xyes)
+AM_CONDITIONAL(BUILD_MARKDOWN, test x$MARKDOWN = xyes)
 AM_CONDITIONAL(BUILD_MYSQL, test x$MYSQL = xyes)
 AM_CONDITIONAL(BUILD_SQLITE, test x$SQLITE = xyes)
 AM_CONDITIONAL(BUILD_MATHS, test x$MATHS = xyes)
@@ -424,6 +444,7 @@ AC_CONFIG_FILES([ssl/Makefile])
 AC_CONFIG_FILES([http/Makefile])
 AC_CONFIG_FILES([sconesite/Makefile])
 AC_CONFIG_FILES([image/Makefile])
+AC_CONFIG_FILES([markdown/Makefile])
 AC_CONFIG_FILES([exec/Makefile])
 AC_CONFIG_FILES([forward/Makefile])
 AC_CONFIG_FILES([tftp/Makefile])
@@ -459,6 +480,7 @@ The following modules will be built:
   + http           yes
   + sconesite      $SCONESITE
   + image          $IMAGE
+  + markdown       $MARKDOWN
   + ssl            $SSL
   + exec           yes   
   + forward        yes   

@@ -23,6 +23,7 @@ ip \
 ip6 \
 local \
 location \
+markdown \
 maths \
 mime \
 mysql \
