@@ -148,7 +148,6 @@ scx::Condition SconesiteStream::event(scx::Stream::Event e)
     }
 
     // Lookup the article and get remaining file path
-    log("Lookup article '" + pathinfo + "'");
     m_article = m_profile.lookup_article(pathinfo,m_file);
 
     // Check article exists
@@ -298,6 +297,14 @@ scx::Condition SconesiteStream::send_response()
     log("Sending article '" + m_article->object()->get_string() + "'");
   }
   
+  // Find the template to use
+  Template* tpl = m_profile.lookup_template("default");
+  if (!tpl) {
+    log("No default template");
+    resp.set_status(http::Status::InternalServerError);
+    return scx::Close;
+  }
+
   // If there is a session then we need to lock it before going any further
   if (session && !session->lock()) {
     log("Session [" + session->get_id() + "] is LOCKED, will try again later");
@@ -306,20 +313,16 @@ scx::Condition SconesiteStream::send_response()
 
   // Set the endpoint blocking, saving previous state
   bool prev_block = endpoint().set_blocking(true);
-  
-  // Find the template to use
-  Template* tpl = m_profile.lookup_template("default");
-
   scx::Date start_time = scx::Date::now();
-
+  bool success = false;
+  
   // Render the page
   try {
-    if (!tpl) {
-      m_context->object()->handle_error("No template");
-    } else {
-      tpl->process(*m_context->object());
+    if (!tpl->process(*m_context->object())) {
+      tpl->log_errors();
+      resp.set_status(http::Status::InternalServerError);
     }
-  } catch (...) {
+   } catch (...) {
     DEBUG_LOG("EXCEPTION caught in SconesiteStream");
   }
 
@@ -328,7 +331,7 @@ scx::Condition SconesiteStream::send_response()
 
   scx::Time elapsed = scx::Date::now() - start_time;
   std::ostringstream oss;
-  oss << "--- Article rendered in " << elapsed.to_microseconds() << " us ---";
+  oss << "Sent article in " << elapsed.to_microseconds() << " us";
   log(oss.str());
 
   // Restore endpoint blocking state and reset timeout

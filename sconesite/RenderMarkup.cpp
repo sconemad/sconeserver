@@ -330,17 +330,6 @@ void RenderMarkupContext::handle_comment(const char* text)
 }
 
 //=========================================================================
-void RenderMarkupContext::handle_error(const std::string& msg)
-{
-  m_output.write("<html><body>");
-  m_output.write("<p class='scxerror'>ERROR: Cannot process article</p>");
-  m_output.write("<pre>");
-  m_output.write(msg);
-  m_output.write("</pre>");
-  m_output.write("</body></html>");
-}
-
-//=========================================================================
 scx::ScriptRef* RenderMarkupContext::script_op(const scx::ScriptAuth& auth,
 					       const scx::ScriptRef& ref,
 					       const scx::ScriptOp& op,
@@ -513,7 +502,9 @@ scx::ScriptRef* RenderMarkupContext::script_method(const scx::ScriptAuth& auth,
     m_inhibit = (!m_section.empty());
 
     // Process the article
-    art->object()->process(*this);
+    if (!art->object()->process(*this)) {
+      log("Article processing failed");
+    }
 
     // Restore previous state
     m_article = orig_art;
@@ -558,7 +549,9 @@ scx::ScriptRef* RenderMarkupContext::script_method(const scx::ScriptAuth& auth,
     if (!tpl) {
       return scx::ScriptError::new_ref("Unknown template");
     }
-    tpl->process(*this);
+    if (!tpl->process(*this)) {
+      tpl->log_errors();
+    }
     return 0;
   }
 

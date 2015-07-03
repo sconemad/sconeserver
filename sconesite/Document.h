@@ -27,6 +27,7 @@ Free Software Foundation, Inc.,
 #include <sconex/FilePath.h>
 #include <sconex/Date.h>
 #include <sconex/ScriptBase.h>
+#include <sconex/ScriptTypes.h>
 #include <sconex/Mutex.h>
 #include <sconex/Provider.h>
 
@@ -39,6 +40,8 @@ typedef std::map<std::string,std::string> NodeAttrs;
 //
 class Document : public scx::ScriptObject {
 public:
+
+  typedef std::vector<std::string> ErrorList;
 
   static scx::ScriptRefTo<Document>* find(const std::string& name,
 					  const scx::FilePath& root);
@@ -63,6 +66,12 @@ public:
 
   // Get document headings
   const Heading& get_headings() const;
+
+  // Get document parse errors
+  const ErrorList& get_errors() const;
+  
+  // Log any reported errors in processing the document
+  void log_errors() const;
 
   // Close the document if it isn't being processed and it was last
   // accessed over purge_time ago. Designed to free up memory.
@@ -90,6 +99,9 @@ protected:
 
   bool open();
 
+  // Report an error in processing the document
+  void report_error(const std::string& error);
+
   virtual bool is_open() const =0;
   virtual bool handle_open() =0;
   virtual bool handle_process(Context& context) =0;
@@ -107,7 +119,8 @@ protected:
   static scx::Mutex* m_clients_mutex;
   
   Heading m_headings;
-
+  ErrorList m_errors;
+  
   static void init();
 
   static scx::ProviderScheme<Document>* s_document_providers;

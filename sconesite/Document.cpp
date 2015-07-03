@@ -21,9 +21,11 @@ Free Software Foundation, Inc.,
 
 
 #include "Document.h"
+#include "Context.h"
 #include <sconex/Mutex.h>
 #include <sconex/ScriptTypes.h>
 #include <sconex/FileStat.h>
+#include <sconex/Log.h>
 
 scx::Mutex* Document::m_clients_mutex = 0;
 scx::ProviderScheme<Document>* Document::s_document_providers = 0;
@@ -97,7 +99,25 @@ scx::FilePath Document::get_filepath() const
 //=========================================================================
 const Heading& Document::get_headings() const
 {
+  const_cast<Document*>(this)->open();
   return m_headings; 
+}
+
+//=========================================================================
+const Document::ErrorList& Document::get_errors() const
+{
+  return m_errors; 
+}
+
+//=========================================================================
+void Document::log_errors() const
+{
+  for (ErrorList::const_iterator it = m_errors.begin();
+       it != m_errors.end(); ++it) {
+    scx::Log log("sconesite.doc");
+    log.attach("file", get_filepath().path());
+    log.submit(*it);
+  }
 }
 
 //=========================================================================
@@ -122,21 +142,20 @@ bool Document::process(Context& context)
   ++m_clients;
   m_clients_mutex->unlock();
 
-  bool opened = open();
-  
-  if (!opened) {
-    //XXX how to report back errors?
-    // context.handle_error(m_errors);
-    return false;
-  }
-
-  bool success = handle_process(context);
+  bool success = false;
+  if (open()) success = handle_process(context);
 
   m_clients_mutex->lock();
   --m_clients;
   m_clients_mutex->unlock();
   
   return success;
+}
+
+//=========================================================================
+void Document::report_error(const std::string& error)
+{
+  m_errors.push_back(error);
 }
 
 //=========================================================================
@@ -212,6 +231,8 @@ bool Document::open()
   if (stat.is_file()) {
     if (!opened || m_modtime != stat.time()) {
       if (opened) handle_close();
+      m_errors.clear();
+      m_headings.clear();
       opened = handle_open();
       m_modtime = stat.time();
     }

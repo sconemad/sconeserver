@@ -271,6 +271,18 @@ scx::ScriptRef* Article::script_op(const scx::ScriptAuth& auth,
       return get_headings().get_tree();
     }
 
+    if ("errors" == name) {
+      if (!m_doc) return scx::ScriptError::new_ref("Not processed");
+      scx::ScriptList* list = new scx::ScriptList();
+      scx::ScriptRef* list_ref = new scx::ScriptRef(list);
+      const Document::ErrorList& errors = m_doc->object()->get_errors();
+      for (Document::ErrorList::const_iterator it = errors.begin();
+           it != errors.end(); ++it) {
+        list->give(scx::ScriptString::new_ref(*it));
+      }
+      return list_ref;
+    }
+    
     if ("access_time" == name) {
       return new scx::ScriptRef(m_access_time.new_copy());
     }

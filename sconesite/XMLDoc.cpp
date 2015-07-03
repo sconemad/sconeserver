@@ -54,19 +54,6 @@ bool XMLAttr_bool(NodeAttrs& attrs, const std::string& value, bool def)
 }
 
 //=========================================================================
-void ErrorHandler(void* vcx,const char* str,...)
-{
-  va_list vl;
-  va_start(vl,str);
-  char* msg = va_arg(vl,char*);
-  va_end(vl);
-
-  xmlParserCtxt* cx = (xmlParserCtxt*)vcx;
-  XMLDoc* doc = (XMLDoc*)cx->_private;
-  doc->parse_error(msg);
-}
-
-//=========================================================================
 XMLDoc::XMLDoc(const std::string& name,
 	       const scx::FilePath& root,
 	       const std::string& file)
@@ -79,12 +66,6 @@ XMLDoc::XMLDoc(const std::string& name,
 XMLDoc::~XMLDoc()
 {
   handle_close();
-}
-
-//=========================================================================
-void XMLDoc::parse_error(const std::string& msg)
-{
-  m_errors += msg;
 }
 
 //=========================================================================
@@ -102,9 +83,35 @@ void XMLDoc::get_node_text(std::string& txt, xmlNode* node)
 }
 
 //=========================================================================
+void XMLDoc::report_xml_error(const std::string& error)
+{
+  report_error(error);
+}
+
+//=========================================================================
+static void xml_error_handler(void* vcx,const char* str,...)
+{
+  va_list vl;
+  va_start(vl,str);
+  const int MAX_MSG = 256;
+  char msg[MAX_MSG];
+  vsnprintf(msg,MAX_MSG,str,vl);
+  va_end(vl);
+
+  xmlParserCtxt* cx = (xmlParserCtxt*)vcx;
+  XMLDoc* doc = (XMLDoc*)cx->_private;
+
+  // Strip trailing newline, which libxml seems to include
+  int len = strlen(msg);
+  if (len > 0 && msg[len-1] == '\n') msg[len-1] = '\0';
+  
+  doc->report_xml_error(msg);
+}
+
+//=========================================================================
 void XMLDoc::process_node(Context& context, xmlNode* start)
 {
-  int line = start->line;
+  int line = start ? start->line : 0;
   for (xmlNode* node = start;
        node != 0;
        node = node->next) {
@@ -169,25 +176,24 @@ bool XMLDoc::is_open() const
 //=========================================================================
 bool XMLDoc::handle_open()
 {
-  m_errors = "";
-  
   xmlParserCtxt* cx;
   cx = xmlNewParserCtxt();
   cx->_private = this;
-  cx->sax->error = ErrorHandler;
-  cx->vctxt.error = ErrorHandler;
+  cx->sax->error = xml_error_handler;
+  cx->vctxt.error = xml_error_handler;
   
   int opts = 0;
   opts |= XML_PARSE_NONET;
   //opts |= XML_PARSE_RECOVER;
-  
   m_xmldoc = xmlCtxtReadFile(cx,get_filepath().path().c_str(),NULL,opts);
-  
   xmlFreeParserCtxt(cx);
 
+  if (!m_xmldoc) {
+    return false;
+  }
+  
   scan_scripts(xmlDocGetRootElement(m_xmldoc));
   
-  m_headings.clear();
   int index = 0;
   scan_headings(xmlDocGetRootElement(m_xmldoc),index);
 

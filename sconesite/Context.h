@@ -56,8 +56,6 @@ public:
 
   virtual void handle_comment(const char* text) =0;
 
-  virtual void handle_error(const std::string& msg) =0;
-
 protected:
 
   Document* get_current_doc();

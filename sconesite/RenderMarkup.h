@@ -78,8 +78,6 @@ public:
 
   virtual void handle_comment(const char* text);
 
-  virtual void handle_error(const std::string& msg);
-
 
   // ScriptObject methods
 

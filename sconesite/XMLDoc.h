@@ -45,12 +45,12 @@ public:
   
   virtual ~XMLDoc();
   
-  void parse_error(const std::string& msg);
-
   typedef scx::ScriptRefTo<XMLDoc> Ref;
 
   static void get_node_text(std::string& txt, xmlNode* node);
 
+  void report_xml_error(const std::string& error);
+  
 protected:
 
   virtual bool is_open() const;
@@ -66,7 +66,6 @@ protected:
   void scan_headings(xmlNode* start, int& index);
 
   xmlDoc* m_xmldoc;
-  std::string m_errors;
 
   typedef std::vector<scx::ScriptStatement::Ref*> Scripts;
   Scripts m_scripts;
