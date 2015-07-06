@@ -61,29 +61,30 @@ bool MarkdownDoc::is_open() const
 //=========================================================================
 bool MarkdownDoc::handle_open()
 {
-  m_errors = "";
-  m_doc = 0;
-
   scx::File file;
   if (scx::Ok != file.open(get_filepath(),scx::File::Read)) {
-    m_errors = "Cannot open file";
+    report_error("Cannot open file");
     return false;
   }
   
   cmark_parser* parser = cmark_parser_new(CMARK_OPT_DEFAULT);
-  char buffer[1024];
+  char buffer[4096];
   int na = 0;
-  while (scx::Ok == file.read(buffer, 1024, na)) {
+  while (scx::Ok == file.read(buffer, 4096, na)) {
     cmark_parser_feed(parser, buffer, na);
   }
   m_doc = cmark_parser_finish(parser);
   cmark_parser_free(parser);
 
-  m_headings.clear();
+  if (!m_doc) {
+    report_error("Markdown parsing failed");
+    return false;
+  }
+  
   int index = 0;
   scan_headings(m_doc, index);
-  
-  return (m_doc != 0);
+
+  return true;
 }
 
 //=========================================================================
@@ -143,7 +144,9 @@ void MarkdownDoc::process_node(Context& context, cmark_node* node)
           break;
         }
         default: {
-          DEBUG_LOG("Unknown list type: " << ltype);
+          std::ostringstream oss;
+          oss << "Unknown list type: " << ltype;
+          report_error(oss.str());
           break;
         }
       }
@@ -239,7 +242,9 @@ void MarkdownDoc::process_node(Context& context, cmark_node* node)
     }
 
     default: {
-      DEBUG_LOG("Unknown node type: " << type);
+      std::ostringstream oss;
+      oss << "Unknown node type: " << type;
+      report_error(oss.str());
       break;
     }
   }

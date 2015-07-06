@@ -60,7 +60,6 @@ protected:
   void scan_headings(cmark_node* node, int& index);
   
   cmark_node* m_doc;
-  std::string m_errors;
   int indent;
   
 };

@@ -29,9 +29,11 @@ Free Software Foundation, Inc.,
 #include <sconex/ScriptTypes.h>
 #include <sconex/Log.h>
 
+#include <cmark.h>
+
 SCONEX_MODULE(MarkdownModule);
 
-#define LOG(msg) scx::Log("sconesite").submit(msg);
+#define LOG(msg) scx::Log("markdown").submit(msg);
 
 //=========================================================================
 MarkdownModule::MarkdownModule()
@@ -49,7 +51,11 @@ MarkdownModule::~MarkdownModule()
 //=========================================================================
 std::string MarkdownModule::info() const
 {
-  return "Markdown document handler";
+  std::ostringstream oss;
+  oss << "Markdown document handler\n"
+      << "Using cmark version " << cmark_version_string()
+      << " (commonmark.org)";
+  return oss.str();
 }
 
 //=========================================================================
