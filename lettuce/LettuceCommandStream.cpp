@@ -247,21 +247,20 @@ scx::Condition LettuceCommandStream::event(scx::Stream::Event e)
 
   if (e == scx::Stream::Readable) {
     int na=0;
-    scx::Condition c;
 
     char prefix;
-    c = read(&prefix,1,na);
+    read(&prefix,1,na);
     
     char cmd;
-    c = read(&cmd,1,na);
+    read(&cmd,1,na);
 
     LettuceBuffer name_buffer;
-    c = name_buffer.read(*this);
+    name_buffer.read(*this);
     scx::ScriptObject* a_name = name_buffer.new_obj();
     scx::ScriptInt* a_int_name = dynamic_cast<scx::ScriptInt*>(a_name);
     
     LettuceBuffer data_buffer;
-    c = data_buffer.read(*this);
+    data_buffer.read(*this);
     scx::ScriptObject* a_data = data_buffer.new_obj();
 
     const scx::DatagramChannel* sock =

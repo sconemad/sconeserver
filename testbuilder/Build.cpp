@@ -83,16 +83,15 @@ bool Build::load(const std::string& id)
 
   std::string token;
   int i = 0;
-  int version;
+  int version = 0;
   while (parser->tokenize(token) == scx::Ok) {
     switch (++i) {
       case 1: /* text header */ break;
-      case 2: version = (State)atoi(token.c_str()); break;
+      case 2: version = atoi(token.c_str()); break;
       case 3: m_state = (State)atoi(token.c_str()); break;
       case 4: m_profile = token; break;
       case 5: m_dir = token; break;
       default: {
-        int version = (State)atoi(token.c_str());
         add_step( new BuildStep(m_module,m_dir,version,parser) );
       }
     }
