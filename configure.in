@@ -252,20 +252,8 @@ fi
 AC_ARG_WITH([markdown],
   [AC_HELP_STRING([--with-markdown],[Enable markdown module])],
   [MARKDOWN="$withval"],
-  [MARKDOWN="check"]
+  [MARKDOWN="yes"]
 )
-# Need libcmark for markdown
-if test "x$MARKDOWN" = "xyes" -o "x$MARKDOWN" = "xcheck"; then
-  PKG_CHECK_MODULES(
-    [MARKDOWN], [libcmark],
-    [MARKDOWN=yes],
-    [if test "x$MARKDOWN" = "xyes"; then
-      AC_MSG_FAILURE([$MARKDOWN_PKG_ERRORS])
-     else
-      AC_MSG_WARN([$MARKDOWN_PKG_ERRORS])
-     fi
-     MARKDOWN="no"])
-fi
 
 # MySql module
 # Include by default if mysqlclient headers are found

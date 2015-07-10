@@ -1,0 +1,3 @@
+[submodule "markdown/cmark"]
+	path = markdown/cmark
+	url = https://github.com/sconemad/cmark.git
