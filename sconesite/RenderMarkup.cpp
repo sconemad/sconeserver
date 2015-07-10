@@ -19,13 +19,12 @@ along with this program (see the file COPYING); if not, write to the
 Free Software Foundation, Inc.,
 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA */
 
-#include "RenderMarkup.h"
-#include "Profile.h"
-#include "Article.h"
-#include "Template.h"
-#include "SconesiteModule.h"
-#include "SconesiteStream.h"
-
+#include <sconesite/RenderMarkup.h>
+#include <sconesite/Profile.h>
+#include <sconesite/Article.h>
+#include <sconesite/Template.h>
+#include <sconesite/SconesiteModule.h>
+#include <sconesite/SconesiteStream.h>
 #include <sconex/Stream.h>
 #include <sconex/StreamTransfer.h>
 #include <sconex/Date.h>
@@ -37,6 +36,7 @@ Free Software Foundation, Inc.,
 #include <sconex/StreamSocket.h>
 #include <sconex/utils.h>
 #include <sconex/Log.h>
+namespace scs {
 
 const char* HTML_DOCTYPE = "<!doctype html>";
 
@@ -571,3 +571,5 @@ void RenderMarkupContext::log(const std::string message)
 {
   m_stream.log(message);
 }
+
+};

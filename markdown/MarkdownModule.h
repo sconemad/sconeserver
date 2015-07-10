@@ -22,15 +22,15 @@ Free Software Foundation, Inc.,
 #ifndef markdownModule_h
 #define markdownModule_h
 
+#include <sconesite/Document.h>
 #include <sconex/Module.h>
 #include <sconex/Job.h>
-#include <sconesite/Document.h>
 
 //=============================================================================
 // MarkdownModule - A markdown document handler for Sconesite
 //
 class MarkdownModule : public scx::Module,
-                       public scx::Provider<Document> {
+                       public scx::Provider<scs::Document> {
 
 public:
 
@@ -55,11 +55,7 @@ public:
   // Provider<Document> method
   virtual void provide(const std::string& type,
 		       const scx::ScriptRef* args,
-		       Document*& object);
-
-protected:
-
-private:
+		       scs::Document*& object);
 
 };
 

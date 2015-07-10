@@ -22,13 +22,12 @@ Free Software Foundation, Inc.,
 #ifndef sconesiteXMLDoc_h
 #define sconesiteXMLDoc_h
 
-#include "Document.h"
-
+#include <sconesite/Document.h>
 #include <sconex/ScriptStatement.h>
-
 #include <libxml/parser.h>
 #include <libxml/tree.h>
 #include <libxml/HTMLtree.h>
+namespace scs {
 
 bool XMLAttr_bool(NodeAttrs& attrs, const std::string& value, bool def=false);
 
@@ -72,4 +71,5 @@ protected:
 
 };
 
+};
 #endif

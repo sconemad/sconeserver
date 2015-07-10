@@ -19,18 +19,16 @@ along with this program (see the file COPYING); if not, write to the
 Free Software Foundation, Inc.,
 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA */
 
-
-#include "Template.h"
-#include "Article.h"
-#include "Profile.h"
-#include "Context.h"
-
+#include <sconesite/Template.h>
+#include <sconesite/Article.h>
+#include <sconesite/Profile.h>
+#include <sconesite/Context.h>
 #include <sconex/Stream.h>
 #include <sconex/StreamTransfer.h>
 #include <sconex/Date.h>
 #include <sconex/Kernel.h>
 #include <sconex/FileDir.h>
-
+namespace scs {
 
 //=========================================================================
 Template::Template(
@@ -49,3 +47,4 @@ Template::~Template()
 
 }
 
+};

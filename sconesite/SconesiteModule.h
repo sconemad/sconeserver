@@ -22,10 +22,11 @@ Free Software Foundation, Inc.,
 #ifndef sconesiteModule_h
 #define sconesiteModule_h
 
+#include <sconesite/Profile.h>
+#include <sconesite/Article.h>
 #include <sconex/Module.h>
 #include <sconex/Job.h>
-#include "Profile.h"
-#include "Article.h"
+namespace scs {
 
 //=============================================================================
 // SconesiteModule - A content management module for SconeServer
@@ -105,6 +106,6 @@ protected:
 
 };
 
-
+};
 #endif
 

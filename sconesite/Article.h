@@ -22,11 +22,12 @@ Free Software Foundation, Inc.,
 #ifndef sconesiteArticle_h
 #define sconesiteArticle_h
 
+#include <sconesite/Document.h>
 #include <sconex/ScriptBase.h>
 #include <sconex/Stream.h>
 #include <sconex/FilePath.h>
-#include "Document.h"
-
+namespace scs {
+  
 class SconesiteModule;
 class Profile;
 class Article;
@@ -115,4 +116,5 @@ protected:
 
 };
 
+};
 #endif

@@ -22,8 +22,8 @@ Free Software Foundation, Inc.,
 #ifndef sconesiteRenderMarkup_h
 #define sconesiteRenderMarkup_h
 
-#include "Context.h"
-#include "Article.h"
+#include <sconesite/Context.h>
+#include <sconesite/Article.h>
 #include <http/Request.h>
 #include <http/Response.h>
 #include <sconex/ScriptBase.h>
@@ -32,6 +32,7 @@ Free Software Foundation, Inc.,
 #include <sconex/FilePath.h>
 #include <sconex/FileDir.h>
 #include <sconex/ScriptStatement.h>
+namespace scs {
 
 class Profile;
 class SconesiteStream;
@@ -117,4 +118,5 @@ protected:
   std::string m_base_url;
 };
 
+};
 #endif

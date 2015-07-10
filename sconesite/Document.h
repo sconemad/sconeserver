@@ -22,14 +22,14 @@ Free Software Foundation, Inc.,
 #ifndef sconesiteDocument_h
 #define sconesiteDocument_h
 
-#include "Heading.h"
-
+#include <sconesite/Heading.h>
 #include <sconex/FilePath.h>
 #include <sconex/Date.h>
 #include <sconex/ScriptBase.h>
 #include <sconex/ScriptTypes.h>
 #include <sconex/Mutex.h>
 #include <sconex/Provider.h>
+namespace scs {
 
 class Context;
 
@@ -127,4 +127,5 @@ protected:
   
 };
 
+};
 #endif

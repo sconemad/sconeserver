@@ -19,19 +19,18 @@ along with this program (see the file COPYING); if not, write to the
 Free Software Foundation, Inc.,
 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA */
 
-
-#include "SconesiteModule.h"
-#include "SconesiteStream.h"
-#include "Profile.h"
-#include "XMLDoc.h"
-
+#include <sconesite/SconesiteModule.h>
+#include <sconesite/SconesiteStream.h>
+#include <sconesite/Profile.h>
+#include <sconesite/XMLDoc.h>
 #include <sconex/ModuleInterface.h>
 #include <sconex/Module.h>
 #include <sconex/ScriptTypes.h>
 #include <sconex/Stream.h>
 #include <sconex/Kernel.h>
 #include <sconex/Log.h>
-
+namespace scs {
+  
 SCONEX_MODULE(SconesiteModule);
 
 #define SCONESITE_JOB_PERIOD 7
@@ -240,3 +239,5 @@ scx::ScriptRef* SconesiteModule::script_method(const scx::ScriptAuth& auth,
   
   return scx::Module::script_method(auth,ref,name,args);
 }
+
+};

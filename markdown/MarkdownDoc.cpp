@@ -21,7 +21,6 @@ Free Software Foundation, Inc.,
 
 
 #include "MarkdownDoc.h"
-
 #include <sconesite/Context.h>
 #include <sconex/utils.h>
 #include <sconex/File.h>
@@ -30,7 +29,7 @@ Free Software Foundation, Inc.,
 MarkdownDoc::MarkdownDoc(const std::string& name,
 			 const scx::FilePath& path,
 			 const std::string& file)
-  : Document(name, path, file),
+  : scs::Document(name, path, file),
     m_doc(0)
 {
 }
@@ -88,7 +87,7 @@ bool MarkdownDoc::handle_open()
 }
 
 //=========================================================================
-bool MarkdownDoc::handle_process(Context& context)
+bool MarkdownDoc::handle_process(scs::Context& context)
 {
   if (context.handle_doc_start(this)) {
     do {
@@ -109,10 +108,10 @@ void MarkdownDoc::handle_close()
 }
 
 //=========================================================================
-void MarkdownDoc::process_node(Context& context, cmark_node* node)
+void MarkdownDoc::process_node(scs::Context& context, cmark_node* node)
 {
   std::string html;
-  NodeAttrs attrs;
+  scs::NodeAttrs attrs;
   const char* text = cmark_node_get_literal(node);
   cmark_node* child = cmark_node_first_child(node);
   void* data = cmark_node_get_user_data(node);
@@ -291,7 +290,7 @@ void MarkdownDoc::scan_headings(cmark_node* start, int& index)
       std::string text; get_node_text(text, node);
       ++index;
       m_headings.add(level, text, index);
-      const Heading* h = m_headings.lookup_index(index);
+      const scs::Heading* h = m_headings.lookup_index(index);
       cmark_node_set_user_data(node, (void*)h);
       
     } else {

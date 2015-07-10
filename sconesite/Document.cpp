@@ -19,13 +19,13 @@ along with this program (see the file COPYING); if not, write to the
 Free Software Foundation, Inc.,
 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA */
 
-
-#include "Document.h"
-#include "Context.h"
+#include <sconesite/Document.h>
+#include <sconesite/Context.h>
 #include <sconex/Mutex.h>
 #include <sconex/ScriptTypes.h>
 #include <sconex/FileStat.h>
 #include <sconex/Log.h>
+namespace scs {
 
 scx::Mutex* Document::m_clients_mutex = 0;
 scx::ProviderScheme<Document>* Document::s_document_providers = 0;
@@ -253,3 +253,5 @@ void Document::init()
     s_document_providers = new scx::ProviderScheme<Document>();
   }
 }
+
+};

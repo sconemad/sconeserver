@@ -19,8 +19,9 @@ along with this program (see the file COPYING); if not, write to the
 Free Software Foundation, Inc.,
 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA */
 
-#include "Heading.h"
+#include <sconesite/Heading.h>
 #include <sconex/ScriptTypes.h>
+namespace scs {
 
 //=========================================================================
 Heading::Heading(int level, const std::string& name, int index)
@@ -188,3 +189,5 @@ scx::ScriptRef* Heading::get_tree(const std::string& anchor_prefix,
 
   return new scx::ScriptRef(list);
 }
+
+};

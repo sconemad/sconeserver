@@ -19,16 +19,15 @@ along with this program (see the file COPYING); if not, write to the
 Free Software Foundation, Inc.,
 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA */
 
-
-#include "XMLDoc.h"
-#include "Context.h"
-
+#include <sconesite/XMLDoc.h>
+#include <sconesite/Context.h>
 #include <sconex/MemFile.h>
 #include <sconex/ScriptEngine.h>
 #include <sconex/ScriptTypes.h>
 #include <sconex/Stream.h>
 #include <sconex/utils.h>
 #include <sconex/Log.h>
+namespace scs {
 
 //=========================================================================
 bool XMLAttr_bool(NodeAttrs& attrs, const std::string& value, bool def)
@@ -307,3 +306,5 @@ void XMLDoc::scan_headings(xmlNode* start,int& index)
     }
   }
 }
+
+};

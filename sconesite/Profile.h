@@ -22,16 +22,16 @@ Free Software Foundation, Inc.,
 #ifndef sconesiteProfile_h
 #define sconesiteProfile_h
 
+#include <sconesite/Article.h>
+#include <sconesite/Template.h>
+#include <http/Host.h>
 #include <sconex/Stream.h>
 #include <sconex/FilePath.h>
 #include <sconex/ScriptBase.h>
 #include <sconex/Database.h>
 #include <sconex/Mutex.h>
-#include <http/Host.h>
-
-#include "Article.h"
-#include "Template.h"
-
+namespace scs {
+  
 class SconesiteModule;
 
 //=========================================================================
@@ -136,4 +136,5 @@ private:
   
 };
 
+};
 #endif

@@ -21,13 +21,13 @@ Free Software Foundation, Inc.,
 
 #include "MarkdownModule.h"
 #include "MarkdownDoc.h"
-
 #include <sconex/ModuleInterface.h>
 #include <sconex/Module.h>
 #include <sconex/FilePath.h>
 #include <sconex/FileStat.h>
 #include <sconex/ScriptTypes.h>
 #include <sconex/Log.h>
+#include <cmark.h>
 
 #include <cmark.h>
 
@@ -39,13 +39,13 @@ SCONEX_MODULE(MarkdownModule);
 MarkdownModule::MarkdownModule()
   : scx::Module("markdown",scx::version())
 {
-  Document::register_document_type("md",this);
+  scs::Document::register_document_type("md",this);
 }
 
 //=========================================================================
 MarkdownModule::~MarkdownModule()
 {
-  Document::unregister_document_type("md",this);
+  scs::Document::unregister_document_type("md",this);
 }
 
 //=========================================================================
@@ -98,7 +98,7 @@ scx::ScriptRef* MarkdownModule::script_method(const scx::ScriptAuth& auth,
 //=========================================================================
 void MarkdownModule::provide(const std::string& type,
                              const scx::ScriptRef* args,
-                             Document*& object)
+                             scs::Document*& object)
 {
   const scx::ScriptString* name =
     scx::get_method_arg<scx::ScriptString>(args,0,"name");

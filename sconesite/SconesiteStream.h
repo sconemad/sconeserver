@@ -24,9 +24,10 @@ Free Software Foundation, Inc.,
 
 #include <sconesite/RenderMarkup.h>
 #include <sconesite/Article.h>
-#include <sconex/Stream.h>
 #include <http/ResponseStream.h>
-
+#include <sconex/Stream.h>
+namespace scs {
+  
 class Profile;
 
 //=========================================================================
@@ -62,4 +63,5 @@ private:
   long int m_start_time;
 };
 
+};
 #endif

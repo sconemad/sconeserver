@@ -22,10 +22,11 @@ Free Software Foundation, Inc.,
 #ifndef sconesiteTemplate_h
 #define sconesiteTemplate_h
 
+#include <sconesite/XMLDoc.h>
 #include <sconex/Stream.h>
 #include <sconex/FilePath.h>
-#include "XMLDoc.h"
-
+namespace scs {
+  
 class Profile;
 
 //=========================================================================
@@ -49,4 +50,5 @@ private:
 
 };
 
+};
 #endif

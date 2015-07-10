@@ -22,9 +22,10 @@ Free Software Foundation, Inc.,
 #ifndef sconesiteContext_h
 #define sconesiteContext_h
 
-#include "Document.h"
+#include <sconesite/Document.h>
 #include <sconex/ScriptBase.h>
-
+namespace scs {
+  
 //=========================================================================
 // Context - A document processing context
 //
@@ -65,4 +66,5 @@ protected:
   
 };
 
+};
 #endif

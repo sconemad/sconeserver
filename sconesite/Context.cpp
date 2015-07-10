@@ -19,7 +19,8 @@ along with this program (see the file COPYING); if not, write to the
 Free Software Foundation, Inc.,
 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA */
 
-#include "Context.h"
+#include <sconesite/Context.h>
+namespace scs {
 
 //=========================================================================
 Context::Context()
@@ -54,3 +55,5 @@ Document* Context::get_current_doc()
   if (m_doc_stack.empty()) return 0;
   return m_doc_stack.top();
 }
+
+};

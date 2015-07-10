@@ -23,11 +23,9 @@ Free Software Foundation, Inc.,
 #define markdownDoc_h
 
 #include <sconesite/Document.h>
-
 #include <sconex/FilePath.h>
 #include <sconex/Date.h>
 #include <sconex/Mutex.h>
-
 #include <cmark.h>
 
 class Context;
@@ -35,7 +33,7 @@ class Context;
 //=========================================================================
 // MarkdownDoc - A Markdown document implementation
 //
-class MarkdownDoc : public Document {
+class MarkdownDoc : public scs::Document {
 public:
 
   MarkdownDoc(const std::string& name,
@@ -52,10 +50,10 @@ protected:
 
   virtual bool is_open() const;
   virtual bool handle_open();
-  virtual bool handle_process(Context& context);
+  virtual bool handle_process(scs::Context& context);
   virtual void handle_close();
 
-  void process_node(Context& context, cmark_node* node);
+  void process_node(scs::Context& context, cmark_node* node);
 
   void scan_headings(cmark_node* node, int& index);
   

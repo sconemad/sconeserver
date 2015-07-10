@@ -19,20 +19,17 @@ along with this program (see the file COPYING); if not, write to the
 Free Software Foundation, Inc.,
 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA */
 
-
-#include "SconesiteModule.h"
-#include "SconesiteStream.h"
-#include "Article.h"
-#include "Profile.h"
-#include "Template.h"
-#include "RenderMarkup.h"
-
+#include <sconesite/SconesiteModule.h>
+#include <sconesite/SconesiteStream.h>
+#include <sconesite/Article.h>
+#include <sconesite/Profile.h>
+#include <sconesite/Template.h>
+#include <sconesite/RenderMarkup.h>
 #include <http/HTTPModule.h>
 #include <http/Request.h>
 #include <http/Session.h>
 #include <http/MessageStream.h>
 #include <http/Status.h>
-
 #include <sconex/Stream.h>
 #include <sconex/Date.h>
 #include <sconex/NullFile.h>
@@ -42,6 +39,7 @@ Free Software Foundation, Inc.,
 #include <sconex/StreamDebugger.h>
 #include <sconex/FilePath.h>
 #include <sconex/Log.h>
+namespace scs {
 
 //=========================================================================
 // ParamReaderStream - Stream for reading parameters in mime headers
@@ -314,7 +312,6 @@ scx::Condition SconesiteStream::send_response()
   // Set the endpoint blocking, saving previous state
   bool prev_block = endpoint().set_blocking(true);
   scx::Date start_time = scx::Date::now();
-  bool success = false;
   
   // Render the page
   try {
@@ -341,3 +338,5 @@ scx::Condition SconesiteStream::send_response()
   // Finished
   return scx::Close;
 }
+
+};

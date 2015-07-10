@@ -23,6 +23,7 @@ Free Software Foundation, Inc.,
 #define sconesiteHeading_h
 
 #include <sconex/ScriptBase.h>
+namespace scs {
 
 //=========================================================================
 // Heading - Represents a heading in a document, can be arranged in a tree
@@ -57,4 +58,5 @@ private:
   HeadingList m_subs;
 };
 
+};
 #endif

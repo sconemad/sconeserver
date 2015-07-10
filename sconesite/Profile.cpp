@@ -19,12 +19,10 @@ along with this program (see the file COPYING); if not, write to the
 Free Software Foundation, Inc.,
 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA */
 
-
-#include "Profile.h"
-#include "Article.h"
-#include "Template.h"
-#include "SconesiteModule.h"
-
+#include <sconesite/Profile.h>
+#include <sconesite/Article.h>
+#include <sconesite/Template.h>
+#include <sconesite/SconesiteModule.h>
 #include <sconex/Stream.h>
 #include <sconex/StreamTransfer.h>
 #include <sconex/Date.h>
@@ -34,8 +32,8 @@ Free Software Foundation, Inc.,
 #include <sconex/ScriptTypes.h>
 #include <sconex/Database.h>
 #include <sconex/Log.h>
-
 #include <memory> // Using auto_ptr
+namespace scs {
 
 // Uncomment to enable debug logging
 //#define SCONESITEPROFILE_DEBUG_LOG(m) DEBUG_LOG(m)
@@ -736,3 +734,5 @@ void Profile::configure_docroot(const std::string& docroot)
     dr.object()->set_param("auto_session", scx::ScriptInt::new_ref(1));
   }
 }
+
+};
