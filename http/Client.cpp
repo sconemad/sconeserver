@@ -310,8 +310,7 @@ scx::Condition ClientStream::event(scx::Stream::Event e)
       if (m_seq == ReceiveResponse) {
         if (scx::Ok == tokenize(line)) {
           if (m_response.parse_response(line)) {
-	    DEBUG_LOG("HTTP RESPONSE: " << line);
-      m_seq = ReceiveHeaders;
+            m_seq = ReceiveHeaders;
           } else {
             // went wrong!
 	    return scx::Error;

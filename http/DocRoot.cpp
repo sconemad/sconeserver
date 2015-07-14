@@ -33,8 +33,9 @@ Free Software Foundation, Inc.,
 #include <sconex/Log.h>
 namespace http {
 
-#define LOG(msg) scx::Log("http.hosts"). \
-  attach("id", m_host.get_id() + "." + m_profile).submit(msg);
+#define LOGGER() scx::Log("http.hosts") \
+  .attach("id", m_host.get_id() + "." + m_profile)
+#define LOG(msg) LOGGER().submit(msg);
 
 //=========================================================================
 StreamMap::StreamMap(
@@ -146,7 +147,6 @@ bool DocRoot::connect_request(scx::Descriptor* endpoint,
     strmap = lookup_path_map(uripath,pathinfo);
     if (strmap) {
       // Path mapped module
-      // log("Using path mapping, pathinfo='" + pathinfo + "'",scx::Logger::Info);
       request.set_path_info(pathinfo);
     } else {
       // Normal file mapping
@@ -188,7 +188,7 @@ bool DocRoot::connect_request(scx::Descriptor* endpoint,
       Session::Ref* s = m_module.get_sessions().lookup_session(scxid);
       if (s != 0) {
 	// Existing session
-	LOG("Existing session: " + scxid);
+        LOGGER().attach("session",scxid).submit("Existing session");
 	s->object()->set_last_used();
 	
       } else {
@@ -200,7 +200,7 @@ bool DocRoot::connect_request(scx::Descriptor* endpoint,
 	if (b_auto_session) {
 	  s = m_module.get_sessions().new_session();
 	  scxid = s->object()->get_id();
-	  LOG("New session: " + scxid);
+          LOGGER().attach("session",scxid).submit("New session");
 	}
       }
       
