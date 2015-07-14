@@ -60,7 +60,8 @@ public:
   Article(Profile& profile, 
 	  int id, 
 	  int parent_id,
-	  const std::string& link);
+	  const std::string& link,
+          const std::string& type);
   
   virtual ~Article();
 

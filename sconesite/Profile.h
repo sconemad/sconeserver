@@ -59,15 +59,25 @@ public:
   Article::Ref* lookup_article(const std::string& href,
 			       std::string& extra);
 
-  // Create an article with the specified parent
-  // name is used for the path component from parent
+  // Create a new article under the specified parent.
+  // pid identifies the parent article.
+  // name is used for the path component from parent.
+  // type is the document type.
+  // Returns a ref to the new article on success, 0 on failure.
   Article::Ref* create_article(int pid, 
-			       const std::string& name);
+			       const std::string& name,
+                               const std::string& type);
 
-  // Remove the specified article and any associated data
+  // Remove the specified article and any associated data.
+  // id identifies the article to remove.
+  // Returns true on success, false on failure.
   bool remove_article(int id);
 
-  // Rename and/or move article and any associated data
+  // Rename and/or move article and any associated data.
+  // id identifies the article to rename/move.
+  // new_name specifies the new path component.
+  // new_pid identifies the new parent (or -1 to keep the same).
+  // Returns true on success, false on failure.
   bool rename_article(int id, 
 		      const std::string& new_name,
 		      int new_pid = -1);
@@ -104,7 +114,8 @@ protected:
 
   Article* load_article(int id,
 			int pid,
-			const std::string& link);
+			const std::string& link,
+                        const std::string& type="");
 
   void configure_docroot(const std::string& docroot);
   

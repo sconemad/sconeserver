@@ -95,7 +95,8 @@ bool ArticleMetaSorter::operator()(const Article* a, const Article* b)
 Article::Article(Profile& profile,
 		 int id,
 		 int parent_id,
-		 const std::string& link)
+		 const std::string& link,
+                 const std::string& type)
   : m_profile(profile),
     m_id(id),
     m_parent_id(parent_id),
@@ -113,7 +114,7 @@ Article::Article(Profile& profile,
     m_name = a_name->object()->get_string();
     m_root = m_profile.get_path() + "art" + m_link;
 
-    m_doc = Document::find(m_name,m_root);
+    m_doc = Document::find(m_name,m_root,type);
 
     if (!m_doc) {
       DEBUG_LOG("No document for '" << m_name << "' in '" << m_root.path() << "'");

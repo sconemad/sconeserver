@@ -44,7 +44,8 @@ public:
   typedef std::vector<std::string> ErrorList;
 
   static scx::ScriptRefTo<Document>* find(const std::string& name,
-					  const scx::FilePath& root);
+					  const scx::FilePath& root,
+                                          const std::string& type);
 
   Document(const std::string& name,
 	   const scx::FilePath& root,
@@ -80,11 +81,13 @@ public:
   // Process the document within the specified context
   bool process(Context& context);
 
+  // Document provider scheme
   static void register_document_type(const std::string& type,
 				     scx::Provider<Document>* factory);
   static void unregister_document_type(const std::string& type,
 				       scx::Provider<Document>* factory);
-
+  static const scx::ProviderScheme<Document>* get_document_providers();
+  
   // ScriptObject methods
   virtual std::string get_string() const;
 

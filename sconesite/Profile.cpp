@@ -163,7 +163,7 @@ Article::Ref* Profile::lookup_article(int id)
   scx::RWLocker locker(m_cache_lock);
   ArticleMap::const_iterator id_it = m_articles.find(id);
   if (id_it != m_articles.end()) {
-    SCONESITEPROFILE_DEBUG_LOG("Article id cache hit for '" << id << "'");
+    SCONESITEPROFILE_DEBUG_LOG("Article id cache hit for '" + id + "'");
     Article::Ref* article = id_it->second;
     article->object()->reset_access_time();
     return article->ref_copy();
@@ -210,8 +210,8 @@ Article::Ref* Profile::lookup_article(int id)
   locker.lock();
   ArticleLinkMap::iterator itL = m_article_links.find(link);
   if (itL == m_article_links.end()) {
-    SCONESITEPROFILE_DEBUG_LOG("Article link cache add: " << id << 
-			       " -> '" << link << "'");
+    SCONESITEPROFILE_DEBUG_LOG("Article link cache add: " + id + 
+			       " -> '" + link + "'");
     locker.lock(scx::RWLock::Write); // Relock for writing
     m_article_links[link] = id;
   }
@@ -228,7 +228,7 @@ Article::Ref* Profile::lookup_article(const std::string& href,
   scx::RWLocker locker(m_cache_lock);
   ArticleLinkMap::const_iterator it = m_article_links.find(href);
   if (it != m_article_links.end()) {
-    SCONESITEPROFILE_DEBUG_LOG("Article link cache hit for '" << href << "'");
+    SCONESITEPROFILE_DEBUG_LOG("Article link cache hit for '" + href + "'");
     locker.unlock();
     return lookup_article(it->second);
   }
@@ -255,8 +255,8 @@ Article::Ref* Profile::lookup_article(const std::string& href,
       locker.lock();
       ArticleLinkMap::iterator itL = m_article_links.find(link);
       if (itL == m_article_links.end()) {
-	SCONESITEPROFILE_DEBUG_LOG("Article link cache add: " << id << 
-				   " -> '" << link << "'");
+	SCONESITEPROFILE_DEBUG_LOG("Article link cache add: " + id + 
+				   " -> '" + link + "'");
 	locker.lock(scx::RWLock::Write);
 	m_article_links[link] = id;
       }
@@ -293,16 +293,21 @@ Article::Ref* Profile::lookup_article(const std::string& href,
 
 //=========================================================================
 Article::Ref* Profile::create_article(int pid,
-				      const std::string& name)
+				      const std::string& name,
+                                      const std::string& type)
 {
+  scx::Log("sconesite").attach("id",m_name)
+    .attach("name",name).attach("pid",pid).attach("type",type)
+    .submit("Create article");
+  
   if (name.empty()) { //TODO: check name validity
-    SCONESITEPROFILE_DEBUG_LOG("Invalid article name: " << name);
+    LOG("Invalid article name '" + name + "'");
     return 0;
   }
   
   Article::Ref* parent = lookup_article(pid);
   if (!parent) {
-    SCONESITEPROFILE_DEBUG_LOG("Invalid parent article: " << pid);
+    LOG("Invalid parent article: " + pid);
     return 0;
   }
 
@@ -315,12 +320,15 @@ Article::Ref* Profile::create_article(int pid,
   delete existing;
   if (existing && extra.empty()) {
     // Article already exists
-    SCONESITEPROFILE_DEBUG_LOG("Article '" << link << "' already exists");
+    LOG("Article '" + link + "' already exists");
     return 0;
   }
 
   // Create article directory
-  scx::FilePath::mkdir(path,false,00770);
+  if (!scx::FilePath::mkdir(path,false,00770)) {
+    LOG("Failed to create article directory '" + path.path() + "'");
+    return 0;
+  }
 
   std::auto_ptr<scx::DbQuery> query(m_db->object()->new_query(
     "INSERT INTO article (parent,path) VALUES (?,?)"));
@@ -329,7 +337,7 @@ Article::Ref* Profile::create_article(int pid,
   args.object()->give(scx::ScriptInt::new_ref(pid));
   args.object()->give(scx::ScriptString::new_ref(name));
   if (!query->exec(&args)) {
-    SCONESITEPROFILE_DEBUG_LOG("Failed to insert article metadata into db");
+    LOG("Failed to insert article metadata into db");
     return 0;
   }
 
@@ -338,7 +346,7 @@ Article::Ref* Profile::create_article(int pid,
     "SELECT id FROM article where parent = ? AND path = ?"));
 
   if (!query2->exec(&args)) {
-    SCONESITEPROFILE_DEBUG_LOG("Failed to query new article in db");
+    LOG("Failed to query new article in db");
     return 0;
   }
   
@@ -351,54 +359,56 @@ Article::Ref* Profile::create_article(int pid,
   }
 
   if (id <= 0) {
-    SCONESITEPROFILE_DEBUG_LOG("Could not determine id for new article");
+    LOG("Could not determine id for new article");
     return 0;
   }
-
-  path = path + "article.xml";
-  scx::File file;
-  if (scx::Ok != file.open(path,scx::File::Write|scx::File::Create,00660)) {
-    DEBUG_LOG_ERRNO("Unable to create new article '" << path.path() << "'");
-    return 0;
-  }
-
-  file.write("<article>\n");
-  file.write("\n<p>\nwrite something here...\n</p>\n\n");
-  file.write("</article>\n");
-  file.close();
 
   scx::RWLocker locker(m_cache_lock,true,scx::RWLock::Write);
 
-  Article* article = load_article(id,pid,link);
+  Article* article = load_article(id,pid,link,type);
 
-  SCONESITEPROFILE_DEBUG_LOG("Article link cache add: " << id << 
+  SCONESITEPROFILE_DEBUG_LOG("Article link cache add: " << id <<
 			     " -> '" << link << "'");
   m_article_links[link] = id;
 
   locker.unlock();
 
+  scx::Log("sconesite").attach("id",m_name)
+    .attach("aid",id).attach("link",link)
+    .submit("Article created");
+  
   return new Article::Ref(article);
 }
 
 //=========================================================================
 bool Profile::remove_article(int id)
 {
+  scx::Log("sconesite").attach("id",m_name)
+    .attach("aid",id)
+    .submit("Remove article");
+
   Article::Ref* article = lookup_article(id);
   if (!article) {
-    SCONESITEPROFILE_DEBUG_LOG("Cannot find article");
+    LOG("Cannot find article");
     return false;
   }
   std::string link = article->object()->get_href_path();
   scx::FilePath path = article->object()->get_root();
   delete article;
-  scx::FilePath::rmdir(path,true);
+  
+  if (!scx::FilePath::rmdir(path,true)) {
+    LOG("Failed to remove article directory '" + path.path() + "'");
+    return false;
+  }
   
   std::auto_ptr<scx::DbQuery> query(m_db->object()->new_query(
     "DELETE FROM article WHERE id = ?"));
 
   scx::ScriptList::Ref args(new scx::ScriptList());
   args.object()->give(scx::ScriptInt::new_ref(id));
-  bool result = query->exec(&args);
+  if (!query->exec(&args)) {
+    LOG("Failed to remove article from db");
+  }
 
   // Remove from caches
   scx::RWLocker locker(m_cache_lock,true,scx::RWLock::Write);
@@ -410,7 +420,12 @@ bool Profile::remove_article(int id)
   locker.unlock();
 
   delete article;
-  return result;
+
+  scx::Log("sconesite").attach("id",m_name)
+    .attach("aid",id).attach("link",link)
+    .submit("Article removed");
+
+  return true;
 }
 
 //=========================================================================
@@ -418,9 +433,13 @@ bool Profile::rename_article(int id,
 			     const std::string& new_name,
 			     int new_pid)
 {
+  scx::Log("sconesite").attach("id",m_name)
+    .attach("aid",id).attach("new_name",new_name).attach("new_pid",new_pid)
+    .submit("Rename article");
+  
   Article::Ref* article = lookup_article(id);
   if (!article) {
-    SCONESITEPROFILE_DEBUG_LOG("Cannot find article");
+    LOG("Cannot find article");
     return false;
   }
   std::string link = article->object()->get_href_path();
@@ -443,12 +462,13 @@ bool Profile::rename_article(int id,
   }
 
   if (old_path == new_path) {
-    SCONESITEPROFILE_DEBUG_LOG("Nothing to do");
+    LOG("Nothing to do");
     return false;
   }
 
-  bool ok = scx::FilePath::move(old_path, new_path);
-  if (!ok) {
+  if (!scx::FilePath::move(old_path, new_path)) {
+    LOG("Failed to move article directory '" + old_path.path() +
+        "' to '" + new_path.path() + "'");
     return false;
   }
 
@@ -459,7 +479,10 @@ bool Profile::rename_article(int id,
     scx::ScriptList::Ref args(new scx::ScriptList());
     args.object()->give(scx::ScriptInt::new_ref(new_pid));
     args.object()->give(scx::ScriptInt::new_ref(id));
-    ok = query->exec(&args);
+    if (!query->exec(&args)) {
+      LOG("Failed to update parent id in db");
+      return false;
+    }
   }
 
   if (!new_name.empty()) {
@@ -469,7 +492,10 @@ bool Profile::rename_article(int id,
     scx::ScriptList::Ref args(new scx::ScriptList());
     args.object()->give(scx::ScriptString::new_ref(new_name));
     args.object()->give(scx::ScriptInt::new_ref(id));
-    ok = query->exec(&args);
+    if (!query->exec(&args)) {
+      LOG("Failed to update path in db");
+      return false;
+    }
   }  
 
   // Remove from caches
@@ -496,7 +522,11 @@ bool Profile::rename_article(int id,
 
   locker.unlock();
 
-  return ok;
+  scx::Log("sconesite").attach("id",m_name)
+    .attach("aid",id)
+    .submit("Article renamed");
+
+  return true;
 }
 
 //=========================================================================
@@ -614,8 +644,12 @@ scx::ScriptRef* Profile::script_method(const scx::ScriptAuth& auth,
       scx::get_method_arg<scx::ScriptString>(args,1,"name");
     if (!a_name) return scx::ScriptError::new_ref("No name specified");
 
+    const scx::ScriptString* a_type = 
+      scx::get_method_arg<scx::ScriptString>(args,2,"type");
+
     Article::Ref* art = create_article(a_pid->get_int(),
-				       a_name->get_string());
+				       a_name->get_string(),
+                                       a_type ? a_type->get_string() : "");
     if (!art) 
       return scx::ScriptError::new_ref("Create article failed");
     
@@ -708,11 +742,12 @@ scx::ScriptRef* Profile::get_meta(int id,
 }
 
 //=========================================================================
-Article* Profile::load_article(int id, int pid, const std::string& link)
+Article* Profile::load_article(int id, int pid, const std::string& link,
+                               const std::string& type)
 {
   SCONESITEPROFILE_DEBUG_LOG("Loading article [" << id << "] p=" << pid << 
-			     " " << link);
-  Article* art = new Article(*this,id,pid,link);
+			     " " << link << " t=" << type);
+  Article* art = new Article(*this,id,pid,link,type);
   // Article cache must be locked for writing before calling this method!
   m_articles[id] = new Article::Ref(art);
   return art;

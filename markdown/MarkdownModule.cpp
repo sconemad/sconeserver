@@ -25,6 +25,7 @@ Free Software Foundation, Inc.,
 #include <sconex/Module.h>
 #include <sconex/FilePath.h>
 #include <sconex/FileStat.h>
+#include <sconex/File.h>
 #include <sconex/ScriptTypes.h>
 #include <sconex/Log.h>
 #include <cmark.h>
@@ -125,5 +126,19 @@ void MarkdownModule::provide(const std::string& type,
     object = new MarkdownDoc(name->get_string(),
                              root->get_string(), 
                              file->get_string());
+
+    // If the article file doesn't exist, create a default one.
+    if (!scx::FileStat(object->get_filepath()).exists()) {
+      scx::File file;
+      if (scx::Ok != file.open(object->get_filepath(),
+                               scx::File::Write|scx::File::Create,00660)) {
+        DEBUG_LOG_ERRNO("Unable to create new article '" <<
+                        object->get_filepath().path() << "'");
+        delete object; object = 0;
+      }
+      file.write("# Heading\n");
+      file.write("\nwrite something here...\n");
+      file.close();
+    }
   }
 }

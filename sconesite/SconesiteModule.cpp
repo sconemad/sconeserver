@@ -28,6 +28,7 @@ Free Software Foundation, Inc.,
 #include <sconex/ScriptTypes.h>
 #include <sconex/Stream.h>
 #include <sconex/Kernel.h>
+#include <sconex/File.h>
 #include <sconex/Log.h>
 namespace scs {
   
@@ -147,6 +148,21 @@ void SconesiteModule::provide(const std::string& type,
     object = new XMLDoc(name->get_string(),
 			root->get_string(), 
 			file->get_string());
+
+    // If the article file doesn't exist, create a default one.
+    if (!scx::FileStat(object->get_filepath()).exists()) {
+      scx::File file;
+      if (scx::Ok != file.open(object->get_filepath(),
+                               scx::File::Write|scx::File::Create,00660)) {
+        DEBUG_LOG_ERRNO("Unable to create new article '" <<
+                        object->get_filepath().path() << "'");
+        delete object; object = 0;
+      }
+      file.write("<article>\n");
+      file.write("\n<p>\nwrite something here...\n</p>\n\n");
+      file.write("</article>\n");
+      file.close();
+    }
   }
 }
 
@@ -186,8 +202,21 @@ scx::ScriptRef* SconesiteModule::script_op(const scx::ScriptAuth& auth,
       return new scx::ScriptMethodRef(ref,name);
     }      
 
-    // Sub-objects
+    // Properties
+    if ("document_types" == name) {
+      scx::ScriptList::Ref* list = 
+	new scx::ScriptList::Ref(new scx::ScriptList());
+      const scx::ProviderScheme<Document>* providers =
+        Document::get_document_providers();
+      scx::ProviderScheme<Document>::ProviderMap::const_iterator it;
+      for (it = providers->providers().begin();
+           it != providers->providers().end(); ++it) {
+        list->object()->give(scx::ScriptString::new_ref(it->first));
+      }
+      return list;
+    }
     
+    // Sub-objects
     ProfileMap::const_iterator it = m_profiles.find(name);
     if (it != m_profiles.end()) {
       return it->second->ref_copy(ref.reftype());

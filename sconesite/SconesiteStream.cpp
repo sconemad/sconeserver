@@ -140,7 +140,7 @@ scx::Condition SconesiteStream::event(scx::Stream::Event e)
 
     if (pathinfo.find("//") != std::string::npos ||
         pathinfo.find("..") != std::string::npos) {
-      log("Dodgy pathinfo '" + pathinfo + "' - rejecting");
+      log("Request for '" + pathinfo + "' - Forbidden (path contains forbidden chars)");
       resp.set_status(http::Status::Forbidden);
       return scx::Close;
     }
@@ -150,7 +150,7 @@ scx::Condition SconesiteStream::event(scx::Stream::Event e)
 
     // Check article exists
     if (!m_article) {
-      log("No article - sending NotFound, pathinfo is '" + pathinfo + "'");
+      log("Request for '" + pathinfo + "' - NotFound (no article)");
       resp.set_status(http::Status::NotFound);
       return scx::Close;
     }
@@ -180,10 +180,17 @@ scx::Condition SconesiteStream::event(scx::Stream::Event e)
       // File request, update the path in the request
       scx::FilePath path = m_article->object()->get_root() + m_file;
       req.set_path(path);
-      log("File request for '" + path.path() + "'");
-      
       if (!scx::FileStat(path).is_file()) {
+        log("File request for '" + path.path() + "' - NotFound");
         resp.set_status(http::Status::NotFound);
+        
+      } else if (m_file.find("article.") == 0) {
+        // Don't allow any article source to be sent
+        log("File request for '" + path.path() + "' - Forbidden (article source)");
+        resp.set_status(http::Status::Forbidden);
+
+      } else {
+        log("File request for '" + path.path() + "'");
       }
     }
     

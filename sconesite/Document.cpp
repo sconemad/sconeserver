@@ -32,23 +32,37 @@ scx::ProviderScheme<Document>* Document::s_document_providers = 0;
 
 //=========================================================================
 scx::ScriptRefTo<Document>* Document::find(const std::string& name,
-					   const scx::FilePath& root)
+					   const scx::FilePath& root,
+                                           const std::string& type)
 {
+  scx::ProviderScheme<Document>::ProviderMap::const_iterator provider;
+
+  if (!type.empty()) {
+    // A specific type has been given so use it
+    provider = s_document_providers->providers().find(type);
+  } else {
+    // Find an article file matching one of the providers
+    for (provider = s_document_providers->providers().begin(); 
+         provider != s_document_providers->providers().end();
+         ++provider) {
+      std::string file = "article." + provider->first;
+      if (scx::FileStat(root + file).is_file()) break;
+    }
+  }
+
+  if (provider == s_document_providers->providers().end()) {
+    // No suitable provider found
+    return 0;
+  }
+  
   scx::ScriptMap::Ref args(new scx::ScriptMap());
   args.object()->give("name",scx::ScriptString::new_ref(name));
   args.object()->give("root",scx::ScriptString::new_ref(root.path()));
+  std::string file = "article." + provider->first;
+  args.object()->give("file",scx::ScriptString::new_ref(file));
   
-  for (scx::ProviderScheme<Document>::ProviderMap::const_iterator it = 
-	 s_document_providers->providers().begin(); 
-       it != s_document_providers->providers().end(); ++it) {
-    std::string file = "article." + it->first;
-    if (scx::FileStat(root + file).is_file()) {
-      args.object()->give("file",scx::ScriptString::new_ref(file));
-      Document* doc = s_document_providers->provide(it->first, &args);
-      return new Document::Ref(doc);
-    }
-  }
-  return 0;
+  Document* doc = s_document_providers->provide(provider->first, &args);
+  return new Document::Ref(doc);
 }
 
 //=========================================================================
@@ -166,6 +180,13 @@ void Document::register_document_type(const std::string& type,
   s_document_providers->register_provider(type,factory);
 }
 
+//=========================================================================
+const scx::ProviderScheme<Document>* Document::get_document_providers()
+{
+  init();
+  return s_document_providers;
+}
+  
 //=========================================================================
 void Document::unregister_document_type(const std::string& type,
 					scx::Provider<Document>* factory)
