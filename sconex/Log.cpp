@@ -57,6 +57,13 @@ Log& Log::attach(const std::string& name, const std::string& value)
   return *this;
 }
 
+//=============================================================================
+Log& Log::attach(const std::string& name, int value)
+{
+  if (!m_data) m_data = new LogData();
+  (*m_data)[name] = ScriptInt::new_ref(value);
+  return *this;
+}
   
 //=============================================================================
 void Log::submit(const std::string& msg)

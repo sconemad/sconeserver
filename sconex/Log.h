@@ -41,6 +41,7 @@ public:
   // Attach some data to the log entry
   Log& attach(const std::string& name, ScriptRef* value);
   Log& attach(const std::string& name, const std::string& value);
+  Log& attach(const std::string& name, int value);
 
   // Submit the log entry, specifying a message
   // This may be called multiple times on the same instance, to submit logs
