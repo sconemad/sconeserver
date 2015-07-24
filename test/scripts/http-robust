@@ -2,56 +2,162 @@
 
 use IO::Socket;
 use IO::Select;
+use Digest::MD5 qw(md5 md5_hex md5_base64);
 
-my $HOSTNAME = "localhost";
-my $PORT = 80;
-
-my $scd = IO::Socket::INET->new(
-  PeerAddr => $HOSTNAME,
-  PeerPort => $PORT
-);
-
-die "Can't create socket: $!" unless $scd;
-
-if (!$scd->connected()) {
-  print "Could not connect\n";
+$| = 1;
+my $URL = shift;
+if ($URL !~ /^((http|https):\/\/)?([^\/\:]+)(:(\d+))?(\/.*)?$/) {
+  die "Invalid URL";
 }
-#binmode($scd);
 
-my $read_set = IO::Select->new;
-$read_set->add($scd);
+my $PROTO = $2 || "http";
+my $HOST = $3;
+my $PORT = $5 || 80;
+my $PATH = $6 || "/";
+my $EOL = "\r\n";
 
+my $max_con = 200;
+my $max_req = 5;
 
-test_req(
-  "GET / HTTP/1.1",
-  "User-Agent: scx-test",
-  "Host: localhost",
-  "If-Modified-Since: Wed, 16 Nov 2005 18:36:41 +0000"
-);
-
-$scd->close();
-
-
-sub test_req
+sub new_connection
 {
-  my $i = 0;
-  my $max = 1000;
-  for ($i=0; $i<$max; ++$i) {
-    printf("SEND(%d): %s\n", $i, $_[0]);
-    foreach my $line (@_) {
-      print $scd "$line\r\n";
+  my $s = IO::Socket::INET->new(
+    PeerAddr => $HOST,
+    PeerPort => $PORT);
+  die "Can't create socket: $!" unless $s;
+  die "Could not connect" unless $s->connected();
+  binmode($s);
+  my $c = {socket=>$s,
+           id=>$s->fileno};
+  return $c;
+}
+
+sub send_get
+{
+  my ($c, $headers) = @_;
+  my $s = $c->{socket};
+  $c->{req} = "GET $PATH HTTP/1.1";
+  $c->{req_headers} = $headers;
+  print $s $c->{req}.$EOL;
+  foreach my $key (keys(%$headers)) { print $s "$key: ".$headers->{$key}.$EOL; }
+  print $s $EOL;
+  $s->flush();
+}
+
+sub read_buffer
+{
+  my ($c) = @_;
+  my $s = $c->{socket};
+  $c->{buffer} = "" unless $c->{buffer};
+  my $b = $c->{buffer};
+  if (length($b) == 0) {
+    my $nr = $s->read($b,65536,length($b));
+  }
+  return $b;
+}
+
+sub read_line
+{
+  my ($c) = @_;
+  my $b = read_buffer($c);
+  my $l = undef;
+  if ($b =~ /^(.*)$EOL/) {
+    my $l = $1;
+    $c->{buffer} = substr($b,length($l)+length($EOL));
+    return $l;
+  }
+  return undef;
+}
+
+sub read_response
+{
+  my ($c) = @_;
+  $c->{resp} = read_line($c);
+  $c->{resp_headers} = {};
+  while (1) {
+    my $l = read_line($c);
+    last if ($l eq "");
+    if ($l =~ /^([^\:]+)\:\s+(.*)$/) {
+      $c->{resp_headers}->{lc($1)} = $2;
     }
-    if ($i == $max-1) {
-      print $scd "Connection: close\r\n";
-    }
-    print $scd "\r\n";
   }
 
-  $i = 0;
-  while (my $line = <$scd>) {
-    chomp $line;
-    if ($line =~ /^HTTP/) {
-      printf("RECV(%d) %s\n", $i++, $line);
+  $c->{data} = "";
+  if ($c->{resp_headers}->{"transfer-encoding"} &&
+      lc($c->{resp_headers}->{"transfer-encoding"}) eq "chunked") {
+    # Read chunked data
+    while (1) {
+      if ($c->{buffer} =~ /^([[:xdigit:]]+)\r\n/) {
+        $chunk_header = $1;
+        $chunk_length = hex($chunk_header);
+        $c->{buffer} = substr($c->{buffer},length($chunk_header) + length($EOL));
+        $c->{data} .= substr($c->{buffer},0,$chunk_length);
+        $c->{buffer} = substr($c->{buffer},$chunk_length + length($EOL));
+        last if ($chunk_length == 0);
+      } else {
+        print "Invalid: ".$c->{buffer}."\n";
+        last;
+      }
     }
+  } else { # (content-length)
+    read_buffer($c,65536);
+    $c->{data} = $c->{buffer};
+    $c->{buffer} = "";
+  }
+
+  if ($c->{resp_headers}->{connection} &&
+      lc($c->{resp_headers}->{connection}) eq "close") {
+    $c->{socket}->close();
   }
 }
+
+
+
+my $c = new_connection();
+send_get($c, {"Host"=>$HOST,
+              "User-Agent"=>"http-robust",
+              "Connection"=>"close"
+         });
+
+read_response($c);
+if ($c->{resp_headers}->{"set-cookie"} &&
+    $c->{resp_headers}->{"set-cookie"} =~ /(scxid=[^;]+;)/) {
+  $cookie = $1;
+  print "Got session cookie: $cookie\n";
+}
+
+my @conns;
+my $ncon = 0;
+my $nreq = 0;
+
+for ($ncon=0; $ncon<$max_con; ++$ncon) {
+  my $c = new_connection();
+  push(@conns, $c);
+  printf("[%d] Connected\n", $ncon);
+}
+
+for ($ncon=0; $ncon<$max_con; ++$ncon) {
+  my $c = $conns[$ncon];
+  for ($nreq=0; $nreq<$max_req; ++$nreq) {
+    send_get($c, {"Host"=>$HOST,
+                  "User-Agent"=>"http-robust",
+                  "Cookie"=>$cookie,
+                  "Connection"=>($nreq==$max_req-1 ? "close" : "keep-alive")
+             });
+    printf("[%d] send request %d: %s\n",
+           $ncon,$nreq,$c->{req});
+  }
+}
+
+for ($ncon=0; $ncon<$max_con; ++$ncon) {
+  my $c = $conns[$ncon];
+  for ($nreq=0; $nreq<$max_req; ++$nreq) {
+    read_response($c);
+    my $digest = md5_hex($c->{data});
+    printf("[%d] read response %d: %s (%d bytes) [%s]\n",
+           $ncon,$nreq,$c->{resp},length($c->{data}), $digest);
+  }
+}
+
+print "DONE\n";
+
