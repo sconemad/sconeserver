@@ -192,7 +192,12 @@ scx::ScriptRef* ConnectionChain::script_method(const scx::ScriptAuth& auth,
 
       ServerListener* rl = new ServerListener(m_module.object(), m_name);
     
-      const int bl = 5;
+      // Backlog
+      int bl = 5;
+      const scx::ScriptInt* a_bl =
+        scx::get_method_arg<scx::ScriptInt>(args,1,"backlog");
+      if (a_bl) bl = a_bl->get_int();
+
       scx::ListenerSocket* ls = new scx::ListenerSocket(sa, bl);
       ls->add_stream(rl);
       
