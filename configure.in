@@ -249,10 +249,11 @@ if test "x$RSS" = "xyes"; then
 fi
 
 # markdown module
+# Include by default if cmark submodule is present
 AC_ARG_WITH([markdown],
   [AC_HELP_STRING([--with-markdown],[Enable markdown module])],
   [MARKDOWN="$withval"],
-  [MARKDOWN="yes"]
+  [AC_CHECK_FILE([markdown/cmark/Makefile],[MARKDOWN="yes"],[MARKDOWN="no"])]
 )
 
 # MySql module
