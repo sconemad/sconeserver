@@ -222,7 +222,7 @@ scx::Condition ResponseStream::event(scx::Stream::Event e)
         case scx::Wait:
           m_resp_seq = resp_WriteWait;
           enable_event(scx::Stream::Writeable,false);
-          break;
+          return scx::Close;
         case scx::Ok:
           break;
         default:
