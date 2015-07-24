@@ -26,6 +26,7 @@ Free Software Foundation, Inc.,
 namespace scx {
 
 class SCONEX_API ConditionEvent;
+class SCONEX_API Time;
   
 //=============================================================================
 // Mutex - A mutual exclusion
@@ -78,6 +79,7 @@ public:
   ~ConditionEvent();
 
   void wait(Mutex& mutex);
+  bool wait_timeout(Mutex& mutex, const Time& time);
 
   void signal();
   void broadcast();

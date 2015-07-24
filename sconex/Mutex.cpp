@@ -20,6 +20,7 @@ Free Software Foundation, Inc.,
 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA */
 
 #include <sconex/Mutex.h>
+#include <sconex/Time.h>
 namespace scx {
 
 //=============================================================================
@@ -117,6 +118,17 @@ void ConditionEvent::wait(Mutex& mutex)
   pthread_cond_wait(&m_cond,&mutex.m_mutex);
 }
 
+//=============================================================================
+bool ConditionEvent::wait_timeout(Mutex& mutex, const Time& time)
+{
+  timespec ts;
+  clock_gettime(CLOCK_REALTIME, &ts);
+  ts.tv_sec += time.seconds();
+  ts.tv_nsec += time.microseconds() * 1000;
+  while (ts.tv_nsec > 1e9) { ts.tv_nsec -= 1e9; ++ts.tv_sec; }
+  return (0 == pthread_cond_timedwait(&m_cond,&mutex.m_mutex,&ts));
+}
+  
 //=============================================================================
 void ConditionEvent::signal()
 {
