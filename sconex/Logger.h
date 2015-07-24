@@ -225,8 +225,6 @@ public:
 
   virtual void* run();
 
-  void awaken();
-
 protected:
 
   Logger& m_logger;

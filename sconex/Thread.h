@@ -48,22 +48,35 @@ public:
 
   // Set the thread's priority
   void set_priority(int prio);
+
+  // Wake up the thread
+  void wakeup();
   
   // Thread entry point
   virtual void* run() =0;
 
 protected:
 
+  // Wait to be woken up
+  // The thread's run method should call this to signal that it it running -
+  // the start method waits for this before returning.
+  // Returns false if the the thread should stop, true otherwise.
+  bool await_wakeup();
+
+  // Shoule the thread exit
   bool should_exit() const;
 
+  // Mutex used by wakeup. This will be unlocked while the thread is
+  // in await_wakeup.
   Mutex m_mutex;
-  ConditionEvent m_wakeup;
-  
-private:
+
+ private:
 
   enum ThreadState { Stopped, Running, WaitingExit };
   ThreadState m_state;
   
+  ConditionEvent m_wakeup;
+
   pthread_t m_thread;
   pthread_attr_t m_attr;
 };

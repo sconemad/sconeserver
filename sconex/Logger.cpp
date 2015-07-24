@@ -315,7 +315,7 @@ void Logger::log(const std::string& category,
   m_mutex->unlock();
 
   if (m_thread) {
-    m_thread->awaken();
+    m_thread->wakeup();
   } else {
     process_queue();
   }
@@ -513,13 +513,16 @@ Logger::Logger(const FilePath& path)
 //=============================================================================
 void Logger::process_queue()
 {
-  MutexLocker locker(*m_mutex, false);
+  // If logging in a separate thread, then we only need to protect access to
+  // the queue, otherwise we need to protect the log_entry calls too.
+  bool separate_thread = (0 != m_thread);
+  MutexLocker locker(*m_mutex, !separate_thread);
   while (true) {
-    locker.lock();
+    if (separate_thread) locker.lock();
     if (m_queue.empty()) break;
     LogEntry* entry = m_queue.front();
     m_queue.pop_front();
-    locker.unlock();
+    if (separate_thread) locker.unlock();
 
     log_entry(entry);
     delete entry;
@@ -550,29 +553,16 @@ LogThread::~LogThread()
 //=============================================================================
 void* LogThread::run()
 {
-  m_mutex.lock();
-  while (true) {
-
-    // Wait to be woken up
-    m_wakeup.wait(m_mutex);
-
-    if (should_exit()) {
-      // Time for the thread to stop
-      break;
-    }
+  while (await_wakeup()) {
 
     try {
       m_logger.process_queue();
-    } catch (...) { }
+    } catch (...) {
+      std::cerr << "EXCEPTION caught in logger thread\n";
+    }
 
   }
-  
   return 0;
 }
 
-void LogThread::awaken()
-{
-  m_wakeup.signal();
-}
-  
 };

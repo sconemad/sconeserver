@@ -64,7 +64,10 @@ bool Thread::start()
     return false;
   }
 
-  m_state = Running;
+  locker.unlock();
+
+  // Wait until the thread is up and running
+  while (m_state != Running) pthread_yield();
   
   return true;
 }
@@ -115,6 +118,25 @@ bool Thread::current() const
 void Thread::set_priority(int prio)
 {
   pthread_setschedprio(m_thread, prio);
+}
+
+//=============================================================================
+void Thread::wakeup()
+{
+  m_wakeup.signal();
+}
+
+//=============================================================================
+bool Thread::await_wakeup()
+{
+  if (m_state == Stopped) {
+    m_mutex.lock();
+    m_state = Running;
+  }
+  if (m_state == Running) {
+    m_wakeup.wait(m_mutex);
+  }
+  return (m_state == Running);
 }
   
 //=============================================================================
