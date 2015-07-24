@@ -228,6 +228,12 @@ void Kernel::restart()
 }
 
 //=============================================================================
+bool Kernel::is_threaded()
+{
+  return (m_spinner.get_num_threads() > 0);
+}
+
+//=============================================================================
 void Kernel::shutdown()
 {
   if (m_state == Run) {

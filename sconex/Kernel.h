@@ -69,6 +69,9 @@ public:
   // End a job
   bool end_job(JobID jobid);
 
+  // Is the server running multi-threaded
+  bool is_threaded();
+  
   // Request a restart
   void restart();
 

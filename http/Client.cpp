@@ -124,6 +124,11 @@ scx::ScriptRef* Client::script_method(const scx::ScriptAuth& auth,
 //=============================================================================
 bool Client::run(const std::string& request_data)
 {
+  if (!scx::Kernel::get()->is_threaded()) {
+    DEBUG_LOG("http::Client requires threading to be enabled");
+    return false;
+  }
+
   bool proxy = false;
   scx::Uri addr_url = m_module.object()->get_client_proxy();
   if (addr_url.get_int()) {
