@@ -241,7 +241,7 @@ void SQLiteQuery::log_error(const std::string& context, bool invalid)
   oss << context;
   int code = ::sqlite3_errcode(m_db);
   if (code != SQLITE_OK) {
-    oss << " err=" << code << " (" << ::sqlite3_errmsg(m_db) << ")";
+    oss << " err=" << code << " (" << ::sqlite3_errstr(code) << ")";
   }
   m_error_string = oss.str();
   SQLiteQuery_DEBUG_LOG(m_error_string);
