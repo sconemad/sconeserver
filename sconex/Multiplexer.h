@@ -74,9 +74,11 @@ public:
 
 protected:
 
-  void interrupt_select();
-  // Interrupt any ongoing select call in the main thread
+  // Wakeup the main thread
+  void wakeup();
 
+  void update_stats(const Time& dispatch_time);
+  
 private:
 
   friend class JobThread;
@@ -101,6 +103,8 @@ private:
   Mutex m_new_mutex;
   ConditionEvent m_end_condition;
 
+  int m_wakeup[2];
+  
   pthread_t m_main_thread;
 
   timeval m_latency;
@@ -111,6 +115,9 @@ private:
   long m_jobs_run;
   long m_job_waits;
   long m_job_waits_acc;
+  long m_avail_threads;
+  long m_busy_threads;
+  long m_thread_usage;
 };
 
 };

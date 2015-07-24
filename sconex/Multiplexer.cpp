@@ -23,8 +23,6 @@ Free Software Foundation, Inc.,
 #include <sconex/Descriptor.h>
 #include <sconex/Stream.h>
 
-void empty_handler(int /*sig*/) { }
-
 namespace scx {
 
 //=============================================================================
@@ -37,20 +35,19 @@ Multiplexer::Multiplexer()
     m_job_waits(0),
     m_job_waits_acc(0)
 {
-  // Install an empty handler for SIGUSR1 signals, which we use for
-  // interrupting system calls.
-  struct sigaction sa;
-  memset(&sa, 0, sizeof(sa));
-  sa.sa_handler = empty_handler;
-  sigaction(SIGUSR1,&sa,0);
-
+  // Create a socketpair for waking up the main thread.
+  socketpair(PF_UNIX,SOCK_STREAM,0,m_wakeup);
+  fcntl(m_wakeup[0],F_SETFL,fcntl(m_wakeup[0],F_GETFL) | O_NONBLOCK);
+  fcntl(m_wakeup[1],F_SETFL,fcntl(m_wakeup[1],F_GETFL) | O_NONBLOCK);
+    
   set_latency(1000000);
 }
 
 //=============================================================================
 Multiplexer::~Multiplexer()
 {
-
+  ::close(m_wakeup[0]);
+  ::close(m_wakeup[1]);
 }
 
 //=============================================================================
@@ -64,7 +61,7 @@ JobID Multiplexer::add_job(Job* job)
   m_jobs_new.push_back(job);
   m_new_mutex.unlock();
 
-  interrupt_select();
+  wakeup();
   return id;
 }
 
@@ -93,7 +90,7 @@ bool Multiplexer::end_job(JobID jobid)
     job->m_job_state = Job::Purge;
   }
 
-  interrupt_select();
+  wakeup();
 
   // Wait for the job to be purged
   while (found) {
@@ -142,7 +139,8 @@ int Multiplexer::spin()
 
   // Find jobs to run
   int num_added=0;
-  int maxfd=0;
+  int maxfd=m_wakeup[0];
+  FD_SET(m_wakeup[0],&fds_read); // Add wakeup socket
   JobList::iterator it;
   for (it = m_jobs.begin(); it != m_jobs.end(); ++it) {
     Job* job = *it;
@@ -203,7 +201,7 @@ int Multiplexer::spin()
     // sent from another thread.
     time.tv_usec = m_latency.tv_usec; time.tv_sec = m_latency.tv_sec;
   }
-
+  
   // Make the select call
   if (select(maxfd+1, &fds_read, &fds_write, &fds_except, &time) < 0) {
     // Select returned an error or it was interrupted
@@ -243,17 +241,13 @@ int Multiplexer::spin()
       }
     }
 
-    Time elapsed = Date::now() - start;
-
-    m_job_waits_acc += elapsed.to_microseconds();
+    update_stats(Date::now() - start);
     
-    if (++m_loops == 1000) {
-      m_job_waits = m_job_waits_acc / m_jobs_run;
-      m_job_waits_acc = 0;
-      m_jobs_run = 0;
-      m_loops = 0;
+    // Read from the wakeup socket to clear
+    if (FD_ISSET(m_wakeup[0],&fds_read)) {
+      char buffer[16];
+      recv(m_wakeup[0],buffer,16,0);
     }
-    
   }
 
   // Purge jobs
@@ -320,9 +314,12 @@ std::string Multiplexer::describe() const
   }
   oss << "\n";
   
-  oss << " mean wait time: " << m_job_waits << "us";
+  oss << " mean wait time: " << m_job_waits << "us\n";
+  if (m_num_threads) {
+    oss << " mean thread usage: " << m_thread_usage << "%\n";
+  }
 
-  oss << "\n\n";
+  oss << "\n";
   
   for (JobList::const_iterator it = m_jobs.begin(); it != m_jobs.end(); ++it) {
     Job* job = *it;
@@ -406,7 +403,12 @@ bool Multiplexer::allocate_job(Job* job)
     // Multithreaded mode - wait for a thread to become available and 
     // allocate the job to it
     while (m_threads_pool.empty()) {
-      m_job_condition.wait(m_job_mutex);
+      if (!m_job_condition.wait_timeout(m_job_mutex,Time(m_latency))) {
+        DEBUG_LOG("Timeout allocating new job, adding another thread to the pool");
+	m_threads_pool.push_back( new JobThread(*this) );
+        ++m_num_threads;
+        break;
+      }
     }
     
     JobThread* thread = m_threads_pool.front();
@@ -440,7 +442,9 @@ bool Multiplexer::finished_job(JobThread* thread, Job* job, bool purge)
   }
 
   m_job_mutex.unlock();
-  interrupt_select();
+
+  wakeup();
+
   return true;
 }
 
@@ -449,7 +453,12 @@ void Multiplexer::check_thread_pool()
 {
   m_job_mutex.lock();
 
-  unsigned int cur_threads = m_threads_pool.size() + m_threads_busy.size();
+  unsigned int avail_threads = m_threads_pool.size();
+  unsigned int busy_threads = m_threads_busy.size();
+  m_avail_threads += avail_threads;
+  m_busy_threads += busy_threads;
+  
+  unsigned int cur_threads = avail_threads + busy_threads;
   if (cur_threads != m_num_threads) {
     // Thread pool needs resizing
     if (m_num_threads > cur_threads) {
@@ -457,8 +466,6 @@ void Multiplexer::check_thread_pool()
       for (unsigned int i=cur_threads; i<m_num_threads; ++i) {
 	m_threads_pool.push_back( new JobThread(*this) );
       }
-
-      sleep(1); //HACK: Wait for threads to reach ready state before proceeding
 
     } else {
       // Decrease size of thread pool if possible, by eliminating idle threads
@@ -476,14 +483,36 @@ void Multiplexer::check_thread_pool()
 }
 
 //=============================================================================
-void Multiplexer::interrupt_select()
+void Multiplexer::wakeup()
 {
-  if (m_num_threads > 0) {
-    // Interrupt the main thread's select() call by sending it a signal, this 
-    // is because we don't want to wait for select to timeout when we know 
-    // that there is a new job waiting to be actioned.
-    pthread_kill(m_main_thread,SIGUSR1);
-  }
+  // Wake up the main thread by sending a single byte through the wakeup
+  // socketpair - this will wakeup any ongoing select call or cause it to
+  // return immediately if it is just about to start.
+  char buffer[] = "!";
+  send(m_wakeup[1],buffer,1,0);
 }
 
+//=============================================================================
+void Multiplexer::update_stats(const Time& dispatch_time)
+{
+  m_job_waits_acc += dispatch_time.to_microseconds();
+    
+  if (++m_loops >= 100) {
+    m_job_waits = m_job_waits_acc / m_jobs_run;
+    m_job_waits_acc = 0;
+    m_jobs_run = 0;
+    
+    long total_threads = m_busy_threads + m_avail_threads;
+    if (total_threads > 0) {
+      m_thread_usage = 100.0 * (double)m_busy_threads / (double)total_threads;
+    } else {
+      m_thread_usage = 0;
+    }
+    m_busy_threads = 0;
+    m_avail_threads = 0;
+
+    m_loops = 0;
+  }
+}
+  
 };
