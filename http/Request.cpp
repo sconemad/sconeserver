@@ -62,6 +62,8 @@ const std::string& Request::get_method() const
 void Request::set_uri(const scx::Uri& uri)
 {
   m_uri = uri;
+  if (m_uri.get_scheme().empty())
+    m_uri.set_scheme("http"); // Default scheme to http
 }
 
 //===========================================================================

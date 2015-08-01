@@ -116,6 +116,12 @@ public:
 private:
 
   void build_request(const std::string& method, const scx::Uri& url);
+  scx::Condition send_request();
+  scx::Condition receive_response();
+  scx::Condition receive_headers();
+  scx::Condition receive_body();
+  scx::Condition receive_body_chunked();
+  scx::Condition receive_data();
   
   HTTPModule::Ref m_module;
   Client* m_client;
@@ -125,6 +131,9 @@ private:
 
   Response& m_response;
   std::string& m_response_data;
+
+  bool m_chunked;
+  int m_remaining;
 
   Sequence m_seq;
   scx::Buffer* m_buffer;

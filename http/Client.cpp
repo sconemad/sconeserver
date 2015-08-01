@@ -264,6 +264,8 @@ ClientStream::ClientStream(HTTPModule* module,
     m_request_data(request_data),
     m_response(response),
     m_response_data(response_data),
+    m_chunked(false),
+    m_remaining(-1),
     m_seq(Send),
     m_buffer(0)
 {
@@ -283,94 +285,42 @@ ClientStream::~ClientStream()
 //=============================================================================
 scx::Condition ClientStream::event(scx::Stream::Event e)
 {
+  scx::Condition c = scx::Ok;
   switch (e) {
     
     case scx::Stream::Writeable: { // WRITEABLE
       if (m_seq == Send) {
-        int na = 0;
-        scx::Condition c = Stream::write(m_buffer->head(),m_buffer->used(),na);
-	if (c != scx::Ok && c != scx::Wait) {
-	  return c;
-	}
-        m_buffer->pop(na);
-        
-        if (m_buffer->used() == 0) {
-          // Finished sending request
-          delete m_buffer;
-          m_buffer = 0;
-          std::string method = m_request.get_method();
-	  m_seq = ReceiveResponse;
-	  enable_event(scx::Stream::Writeable,false);
-	  enable_event(scx::Stream::Readable,true);
-        } else {
-	  return scx::Wait;
-	}
+        c = send_request();
       }
-
     } break;
 
     case scx::Stream::Readable: { // READABLE
-      std::string line;
-
       if (m_seq == ReceiveResponse) {
-        if (scx::Ok == tokenize(line)) {
-          if (m_response.parse_response(line)) {
-            m_seq = ReceiveHeaders;
-          } else {
-            // went wrong!
-	    return scx::Error;
-          }
-        }
+        c = receive_response();
+        if (c != scx::Ok) return c;
       }
 
       if (m_seq == ReceiveHeaders) {
-        while (scx::Ok == tokenize(line)) {
-          if (line.empty()) {
-	    std::string method = m_request.get_method();
-	    if (method != "HEAD") {
-	      // Response has a body
-	      m_seq = ReceiveBody;
-	    } else {
-	      enable_event(scx::Stream::Readable,false);
-	      m_seq = End;
-	      m_client->event_complete(false);
-	      return scx::End;
-	    }
-	    break;
-          } else {
-            if (!m_response.parse_header(line)) {
-              // went wrong!
-	      return scx::Error;
-            }
-            endpoint().reset_timeout();
-          }
-        }
+        c = receive_headers();
+        if (c != scx::Ok) return c;
       }
 
       if (m_seq == ReceiveBody) {
-	char buffer[1024];
-	int na=0;
-	scx::Condition c = scx::StreamTokenizer::read(buffer,1023,na);
-	if (na > 0) {
-	  buffer[na] = '\0';
-	  m_response_data += buffer;
-          endpoint().reset_timeout();
-	}
-	if (c != scx::Ok && c != scx::Wait) {
-	  enable_event(scx::Stream::Readable,false);
-	  m_seq = End;
-	  m_client->event_complete(false);
-	  return c;
-	}
+        c = m_chunked ? receive_body_chunked() : receive_body();
       }
-      
+
+      if (c != scx::Ok && c != scx::Wait) {
+        enable_event(scx::Stream::Readable,false);
+        m_seq = End;
+        m_client->event_complete(c == scx::Error);
+      }
     } break;
 
     default: 
       break;
   }
-  
-  return scx::Ok;
+
+  return c;
 }
 
 //=============================================================================
@@ -435,7 +385,7 @@ void ClientStream::build_request(const std::string& method, const scx::Uri& url)
   }
 
   // Other headers
-  m_request.set_header("Connection","Close");
+  m_request.set_header("Connection","close");
 
   // Push the request into a buffer ready for sending
   std::string hdrs = m_request.build_header_string();
@@ -446,6 +396,143 @@ void ClientStream::build_request(const std::string& method, const scx::Uri& url)
   }
 }
 
+//=============================================================================
+scx::Condition ClientStream::send_request()
+{
+  int na = 0;
+  scx::Condition c = Stream::write(m_buffer->head(),m_buffer->used(),na);
+  if (c != scx::Ok && c != scx::Wait) {
+    return c;
+  }
+  m_buffer->pop(na);
+  
+  if (m_buffer->used() == 0) {
+    // Finished sending request
+    delete m_buffer;
+    m_buffer = 0;
+    m_seq = ReceiveResponse;
+    enable_event(scx::Stream::Writeable,false);
+    enable_event(scx::Stream::Readable,true);
+  } else {
+    return scx::Wait;
+  }
+  return c;
+}
+  
+//=============================================================================
+scx::Condition ClientStream::receive_response()
+{
+  std::string line;
+  scx::Condition c = tokenize(line);
+  if (c != scx::Ok) return c;
+  
+  if (m_response.parse_response(line)) {
+    m_seq = ReceiveHeaders;
+  } else {
+    // went wrong!
+    return scx::Error;
+  }
+
+  return scx::Ok;
+}
+
+//=============================================================================
+scx::Condition ClientStream::receive_headers()
+{
+  std::string line;
+  scx::Condition c = scx::Ok;
+  while (scx::Ok == (c = tokenize(line))) {
+    if (line.empty()) {
+      std::string method = m_request.get_method();
+      if (method != "HEAD") {
+        // Response has a body
+        m_seq = ReceiveBody;
+        m_remaining = -1;
+        m_chunked = 
+          (m_response.get_header("Transfer-Encoding") == "chunked");
+        if (!m_chunked) {
+          std::string cl = m_response.get_header("Content-Length");
+          if (!cl.empty()) {
+            m_remaining = strtoul(cl.c_str(),0,10);
+          }
+        }
+      } else {
+        enable_event(scx::Stream::Readable,false);
+        m_seq = End;
+        m_client->event_complete(false);
+        return scx::End;
+      }
+      break;
+    } else {
+      if (!m_response.parse_header(line)) {
+        // went wrong!
+        return scx::Error;
+      }
+      endpoint().reset_timeout();
+    }
+  }
+  return c;
+}
+
+//=============================================================================
+scx::Condition ClientStream::receive_body()
+{
+  scx::Condition c = receive_data();
+  if (c == scx::Ok && m_remaining == 0) c = scx::End;
+  if (c != scx::Ok && c != scx::Wait) {
+    enable_event(scx::Stream::Readable,false);
+    m_seq = End;
+    m_client->event_complete(c == scx::Error);
+  }
+  return c;
+}
+
+//=============================================================================
+scx::Condition ClientStream::receive_body_chunked()
+{
+  scx::Condition c = scx::Ok;
+  
+  if (m_remaining == -1) { // Read chunk header
+    std::string line;
+    c = tokenize(line);
+    if (c == scx::Ok) {
+      m_remaining = (int)strtoul(line.c_str(),0,16);
+      if (m_remaining == 0) c = scx::End; // Final chunk
+      //XXX Should we handle trailers?
+    }
+  }
+  
+  if (c == scx::Ok && m_remaining > 0) { // Read chunk data
+    c = receive_data();
+  }
+  
+  if (c == scx::Ok && m_remaining == 0) { // Read chunk footer
+    std::string line;
+    c = tokenize(line);
+    if (c == scx::Ok) m_remaining = -1; // back to header
+  }
+  
+  return c;
+}
+
+//=============================================================================
+scx::Condition ClientStream::receive_data()
+{
+  const int max_req = 4096;
+  int nreq = max_req;
+  if (m_remaining > 0 && m_remaining < nreq) nreq = m_remaining;
+  char* buffer = new char[nreq+1];
+  int na=0;
+  scx::Condition c = scx::StreamTokenizer::read(buffer,nreq,na);
+  if (na > 0) {
+    DEBUG_ASSERT(na <= nreq, "Read more than requested");
+    if (m_remaining > 0) m_remaining -= na;
+    buffer[na] = '\0';
+    m_response_data += buffer;
+  }
+  delete [] buffer;
+  return c;
+}
 
 //=============================================================================
 ProxyConnectStream::ProxyConnectStream(HTTPModule* module,
@@ -480,7 +567,8 @@ scx::Condition ProxyConnectStream::event(scx::Stream::Event e)
       if (m_seq == Send) {
 	scx::Uri url = m_request.get_uri();
 	std::ostringstream oss;
-	oss << "CONNECT " << url.get_host() << ":" << url.get_port() << " HTTP/1.1\r\n\r\n";
+	oss << "CONNECT " << url.get_host() << ":" << url.get_port()
+            << " HTTP/1.1\r\n\r\n";
 	write(oss.str());
 	m_seq = ReceiveResponse;
 	enable_event(scx::Stream::Writeable,false);
