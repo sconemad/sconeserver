@@ -241,8 +241,11 @@ void SQLiteQuery::log_error(const std::string& context, bool invalid)
   oss << context;
   int code = ::sqlite3_errcode(m_db);
   if (code != SQLITE_OK) {
-    oss << " err=" << code << " (" << ::sqlite3_errstr(code) << ")";
-  }
+    oss << " err=" << code;
+    // Ideally we'd print the error string, but this function doesn't seem
+    // to be available everywhere, and sqlite3_errmsg is not thread-safe.
+    //oss << " (" << ::sqlite3_errstr(code) << ")";
+   }
   m_error_string = oss.str();
   SQLiteQuery_DEBUG_LOG(m_error_string);
 
