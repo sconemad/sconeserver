@@ -114,7 +114,8 @@ scx::ScriptRef* ImageModule::script_method(const scx::ScriptAuth& auth,
 {
   if (name == "thumbnail") {
 
-    const Article* article = scx::get_method_arg<Article>(args,0,"article");
+    const scs::Article* article = 
+      scx::get_method_arg<scs::Article>(args,0,"article");
     if (!article) 
       return scx::ScriptError::new_ref("No article specified");
 

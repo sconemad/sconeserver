@@ -70,6 +70,8 @@ if test "$system_crypt_r $have_crypt_r_lib" != "no no"; then
    AC_DEFINE(HAVE_CRYPT_R, 1, [Have crypt_r function])
 fi
 
+AC_SEARCH_LIBS([clock_gettime],[rt posix4])
+
 # server module
 # Always include this unless explicitly told not to
 AC_ARG_WITH([ip],
