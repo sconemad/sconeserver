@@ -183,9 +183,10 @@ scx::ScriptRef* Article::get_meta(const std::string& name,
 }
 
 //=========================================================================
-const Heading& Article::get_headings() const
+const Heading* Article::get_headings() const
 {
-  return m_doc->object()->get_headings();
+  if (!m_doc) return 0;
+  return &m_doc->object()->get_headings();
 }
 
 //=========================================================================
@@ -269,11 +270,13 @@ scx::ScriptRef* Article::script_op(const scx::ScriptAuth& auth,
     }
 
     if ("headings" == name) {
-      return get_headings().get_tree();
+      const Heading* h = get_headings();
+      if (!h) return scx::ScriptError::new_ref("Not available");
+      return h->get_tree();
     }
 
     if ("errors" == name) {
-      if (!m_doc) return scx::ScriptError::new_ref("Not processed");
+      if (!m_doc) return scx::ScriptError::new_ref("No document");
       scx::ScriptList* list = new scx::ScriptList();
       scx::ScriptRef* list_ref = new scx::ScriptRef(list);
       const Document::ErrorList& errors = m_doc->object()->get_errors();
@@ -289,8 +292,8 @@ scx::ScriptRef* Article::script_op(const scx::ScriptAuth& auth,
     }
 
     if ("body" == name || "document" == name) {
-      if (m_doc) return m_doc->ref_copy(ref.reftype());
-      return scx::ScriptError::new_ref("No article body");
+      if (!m_doc) return scx::ScriptError::new_ref("No document");
+      return m_doc->ref_copy(ref.reftype());
     }
   }
 

@@ -164,17 +164,17 @@ bool RenderMarkupContext::handle_start(const std::string& name,
                name == "h4" || name == "h5" || name == "h6") {
       // Automatically insert anchors before headings
       if (data && m_article) { 
+        const Heading* headings = m_article->object()->get_headings();
         const Heading* h = (const Heading*)(data);
-        if (h) {
+        if (headings && h) {
           int index = h->index();
-          std::string anchor = 
-	    m_article->object()->get_headings().lookup_anchor(index);
+          std::string anchor = headings->lookup_anchor(index);
           if (m_auto_number) {
             std::string href = "/" + m_article->object()->get_href_path() + 
 	                       "#" + anchor;
             pre += "<span class='section'><a href='" +
               href + "' title='Link to this section'>" +
-              m_article->object()->get_headings().lookup_section(index) +
+              headings->lookup_section(index) +
               ".</a></span> ";
           }
           

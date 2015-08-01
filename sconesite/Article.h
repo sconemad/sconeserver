@@ -78,7 +78,7 @@ public:
   scx::ScriptRef* get_meta(const std::string& name,
 			   bool recurse=false) const;
 
-  const Heading& get_headings() const;
+  const Heading* get_headings() const;
   std::string get_href_path() const;
   
   void refresh(const scx::Date& purge_time);
