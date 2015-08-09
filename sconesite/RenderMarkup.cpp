@@ -100,6 +100,15 @@ const Article* RenderMarkupContext::get_article() const
 }
 
 //=========================================================================
+bool RenderMarkupContext::in_template() const
+{
+  RenderMarkupContext* unconst = const_cast<RenderMarkupContext*>(this);
+  Document* doc = unconst->get_current_doc();
+  const std::type_info& ti = typeid(*doc);
+  return (ti == typeid(Template));
+}
+  
+//=========================================================================
 bool RenderMarkupContext::handle_start(const std::string& name,
 				       NodeAttrs& attrs,
 				       bool empty,
@@ -163,7 +172,7 @@ bool RenderMarkupContext::handle_start(const std::string& name,
     } else if (name == "h1" || name == "h2" || name == "h3" ||
                name == "h4" || name == "h5" || name == "h6") {
       // Automatically insert anchors before headings
-      if (data && m_article) { 
+      if (data && m_article && !in_template()) { 
         const Heading* headings = m_article->object()->get_headings();
         const Heading* h = (const Heading*)(data);
         if (headings && h) {
@@ -247,9 +256,7 @@ void RenderMarkupContext::handle_process(const std::string& name,
   if (m_inhibit) return;
     
   scx::ScriptAuth auth(scx::ScriptAuth::Untrusted);
-  Document* doc = get_current_doc();
-  const std::type_info& ti = typeid(*doc);
-  if (ti == typeid(Template)) { //XXX this is now wrong!!
+  if (in_template()) {
     // Trust templates
     auth = scx::ScriptAuth(scx::ScriptAuth::Trusted);
   }
@@ -290,7 +297,8 @@ void RenderMarkupContext::handle_process(const std::string& name,
       script->set_parent(this);
       
       // Run statements
-      scx::ScriptTracer tracer(auth, doc->get_filepath().path(),line);
+      scx::ScriptTracer tracer(auth,get_current_doc()->get_filepath().path(),
+                               line);
       ret = script->execute(tracer);
       delete ret;
       //      script->clear();

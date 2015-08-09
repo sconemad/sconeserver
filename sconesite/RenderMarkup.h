@@ -60,6 +60,8 @@ public:
   void set_article(Article* article);
   const Article* get_article() const;
 
+  bool in_template() const;
+  
   // Context methods
   virtual bool handle_start(const std::string& name, 
 			    NodeAttrs& attrs, 
