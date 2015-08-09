@@ -60,14 +60,22 @@ AuthRealmDB::AuthRealmDB(HTTPModule* module,
 {
   DEBUG_COUNT_CONSTRUCTOR(AuthRealmDB);
 
-  const scx::ScriptString* type =
-    scx::get_method_arg<scx::ScriptString>(args,0,"type");
+  // Can either specify the database object directly, or the arguments
+  // required to open/create it.
+  const scx::Database* a_db =
+    dynamic_cast<const scx::Database*>(args->object());
+  if (a_db) {
+    m_db = new scx::Database::Ref(const_cast<scx::Database*>(a_db));
 
-  if (type) {
-    m_db = scx::Database::open(type->get_string(),args);
   } else {
-    DEBUG_LOG("No DB type specified");
+    const scx::ScriptString* type =
+      scx::get_method_arg<scx::ScriptString>(args,0,"type");
+    if (type) {
+      m_db = scx::Database::open(type->get_string(),args);
+    }
   }
+
+  check_database();
 }
 
 //=============================================================================
@@ -193,4 +201,19 @@ bool AuthRealmDB::remove_user(const std::string& username)
   return true;
 }
 
+//=============================================================================
+void AuthRealmDB::check_database()
+{
+  if (!m_db) throw std::exception();
+
+  // Create user table if not present
+  if (!m_db->object()->simple_query(
+        "CREATE TABLE IF NOT EXISTS user ( "
+        "id        INTEGER PRIMARY KEY AUTOINCREMENT, "
+        "username  VARCHAR(128), "
+        "password  VARCHAR(128) )")) {
+    throw std::exception(/*"Failed to create user table"*/);
+  }
+}
+  
 };

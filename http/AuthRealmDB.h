@@ -77,6 +77,8 @@ protected:
   
 private:
 
+  void check_database();
+  
   scx::Database::Ref* m_db;
 
 };
