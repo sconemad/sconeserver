@@ -45,8 +45,18 @@ public:
   Database(const Database& c);
   virtual ~Database();
 
+  // Create a new query for the database
   virtual DbQuery* new_query(const std::string& query) =0;
-  
+
+  // Convenience method for performing a simple static query that returns
+  // success or failure.
+  bool simple_query(const std::string& query);
+
+  // Convenience method for performing a simple static query that returns
+  // a single numeric value.
+  int simple_query_num(const std::string& query);
+
+  // Register/unregister a database provider
   static void register_provider(const std::string& type,
                                 Provider<Database::Ref>* factory);
   static void unregister_provider(const std::string& type,

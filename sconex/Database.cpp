@@ -61,6 +61,27 @@ Database::~Database()
 }
 
 //=========================================================================
+bool Database::simple_query(const std::string& query)
+{
+  std::auto_ptr<DbQuery> q(new_query(query));
+  return q->exec(0);
+}
+
+//=========================================================================
+int Database::simple_query_num(const std::string& query)
+{
+  std::auto_ptr<DbQuery> q(new_query(query));
+  if (!q->exec(0)) return -1;
+  if (!q->next_result()) return -1;
+  ScriptRef* row_ref = q->result_list();
+  ScriptList* row = dynamic_cast<ScriptList*>(row_ref->object());
+  ScriptRef* a_num = row->get(0);
+  int result = a_num ? a_num->object()->get_int() : -1;
+  delete row_ref;
+  return result;
+}
+  
+//=========================================================================
 void Database::register_provider(const std::string& type,
                                  Provider<Database::Ref>* factory)
 {
