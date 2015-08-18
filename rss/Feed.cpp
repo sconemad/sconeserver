@@ -78,7 +78,7 @@ void Feed::refresh(bool force)
     http::Client hc(http, "GET", m_url);
 
     // use an If-Modified-Since header to detect if the feed has changed
-    hc.set_header("If-Modified-Since", m_refresh_time.string());
+    hc.set_header("If-Modified-Since", m_modified_time.string());
 
     if (!hc.run()) {
       LOG("Unable to refresh feed - network error");
@@ -86,6 +86,7 @@ void Feed::refresh(bool force)
     
     if (http::Status::NotModified == hc.get_response().get_status().code()) {
       LOG("Not refreshing feed - not modified");
+      m_refresh_time = scx::Date::now();
       return;
     }
 
@@ -106,7 +107,7 @@ void Feed::refresh(bool force)
     if (xmldoc) {
       clear_items();
       m_mutex.lock();
-      m_refresh_time = scx::Date::now();
+      m_refresh_time = m_modified_time = scx::Date::now();
       success = process(xmlDocGetRootElement(xmldoc));
       m_mutex.unlock();
     }
@@ -169,6 +170,8 @@ scx::ScriptRef* Feed::script_op(const scx::ScriptAuth& auth,
     // Properties
     if ("refresh_time" == name) 
       return new scx::ScriptRef(m_refresh_time.new_copy());
+    if ("modified_time" == name) 
+      return new scx::ScriptRef(m_modified_time.new_copy());
     if ("refresh_period" == name)
       return new scx::ScriptRef(m_period.new_copy());
     if ("url" == name) 

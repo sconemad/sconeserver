@@ -103,6 +103,7 @@ private:
   scx::ScriptList::Ref m_items;
 
   scx::Date m_refresh_time;
+  scx::Date m_modified_time;
   scx::Time m_period;
 
   scx::Mutex m_mutex;
