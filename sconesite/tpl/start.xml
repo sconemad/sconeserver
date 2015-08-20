@@ -1,0 +1,17 @@
+<template>
+<?scx
+
+template("common");
+template("account");
+template("shorturl");
+template("botdetect");
+
+if (defined(request.params["rss"])) {
+  template("rss");
+
+} else {
+  template("normal");
+}
+
+?>
+</template>

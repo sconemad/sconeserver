@@ -6,3 +6,8 @@ etc/sconeserver/modules.d/image.conf
 
 usr/lib/sconeserver/rss.so
 etc/sconeserver/modules.d/rss.conf
+
+usr/lib/sconeserver/markdown.so
+etc/sconeserver/modules.d/markdown.conf
+
+usr/share/sconeserver/sconesite/*

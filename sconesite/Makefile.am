@@ -40,4 +40,37 @@ sconesite_la_LIBADD = -lxml2
 modconfdir = $(sysconfdir)/modules.d
 modconf_DATA = sconesite.conf
 
-EXTRA_DIST = $(modconf_DATA)
+scsdatadir = $(datadir)/sconeserver/sconesite
+
+tpldir = $(scsdatadir)/tpl
+tpl_DATA = \
+tpl/account.xml \
+tpl/botdetect.xml \
+tpl/common.xml \
+tpl/normal.xml \
+tpl/rss.xml \
+tpl/shorturl.xml \
+tpl/start.xml
+
+testsitedir = $(scsdatadir)/test-site
+
+testsitetpldir = $(testsitedir)/tpl
+testsitetpl_DATA = \
+test-site/tpl/common.xml
+
+testsiteartdir = $(testsitedir)/art
+testsiteart_DATA = \
+test-site/art/article.xml
+
+testsitestyledir = $(testsiteartdir)/style
+testsitestyle_DATA = \
+test-site/art/style/common.css \
+test-site/art/style/mobile.css \
+test-site/art/style/print.css
+
+EXTRA_DIST = \
+$(modconf_DATA) \
+$(tpl_DATA) \
+$(testsitetpl_DATA) \
+$(testsiteart_DATA) \
+$(testsitestyle_DATA)

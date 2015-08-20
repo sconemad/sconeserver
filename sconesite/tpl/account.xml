@@ -1,0 +1,72 @@
+<template>
+<?scx
+sub account_op(op)
+{
+  # Only allow account ops over secure connections
+  if (request.profile != 'secure') {
+    log("Account op request over non-secure connection");
+    response.set_status(401);
+    abort();
+  }
+
+  if (!REALM) {
+    log("No authentication realm defined");
+    response.set_status(401);
+    abort();
+  }
+
+  if (op == 'login') {
+    constref username = request.params["username"];
+    constref password = request.params["password"];
+
+    # Perform authentication, returns a valid user if successful.
+    ref user = REALM.auth(username, password);
+
+    if (!user) {
+      log("Auth failed for user '"+username+"'");
+      response.set_status(401);
+      abort();
+    }
+
+    session.vars.add("user",user);
+    session.add_permission("auth");
+    session.add_permission("upload");
+    response.set_status(200);
+    log("User '"+username+"' logged in");
+
+  } else if (op == 'logout') {
+    session.remove_permission("auth");
+    session.remove_permission("upload");
+    log("User '"+session.vars.user+"' logged out");
+    response.set_header("Location","http://"+request.uri.host);
+    response.set_status(302);
+    abort();
+
+  } else if (op == 'chpass') {
+    if (!defined(session.auth)) {
+      response.set_status(401);
+      abort();
+    }
+
+    constref username = String(session.vars.user);
+    constref newpassword = request.params["newpassword"];
+    constref password = request.params["password"];
+    ref err = String(REALM.chpass(username, newpassword, password));
+    if (err) {
+      log("Failed to change password for user " + username + ": " + err);
+    } else {
+      log("Changed password for user " + username);
+    }
+  }
+}
+
+if (defined(request.params["op"])) {
+  constref op = request.params["op"];
+  if (op == "login" |
+      op == "logout" |
+      op == "chpass") {
+    account_op(op);    
+  }
+}
+?>
+</template>

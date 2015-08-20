@@ -1,0 +1,30 @@
+<template>
+<?scx
+# Copy this into your site's tpl directory and fill in the values:
+
+# Short name for your site
+var SITE_NAME = "sconesite example";
+
+# Longer name or description
+var SITE_DESC = "An example website using sconeserver and the sconesite plugin.";
+
+# Number of latest articles to show in rss
+var NUM_LATEST = 10;
+
+# Email domain for users
+var EMAIL_DOMAIN = "localhost";
+
+# Copyright information
+var SITE_COPYRIGHT = "Copyright (c) 2015 Andrew Wedgbury";
+
+# Url for site logo
+var LOGO_URL = "";
+
+# Google Analytics ID (if using)
+#var GA_TRACKER = "UA-XXXX-Y";
+
+# Authentication realm
+#ref REALM = http.realms.test;
+
+?>
+</template>

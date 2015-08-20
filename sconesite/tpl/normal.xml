@@ -1,0 +1,110 @@
+<template>
+<?scx response.set_header("Content-Type","text/html; charset=utf-8"); ?>
+<html lang='en'>
+<head>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<link rel="stylesheet" href="/style/common.css" media="all" type="text/css"/>
+<link rel="stylesheet" href="/style/mobile.css" media="screen and (max-width:75em)" type="text/css"/>
+<link rel="stylesheet" href="/style/print.css" media="print" type="text/css"/>
+<link rel="alternate" title="RSS" href="/?rss=1" type="application/rss+xml"/>
+<title><?scxp (article.title | "Home") + " - " + SITE_NAME ?></title>
+</head>
+<body>
+
+<header>
+
+<h1><?scxp SITE_NAME ?></h1>
+<p><?scxp SITE_DESC ?></p>
+
+<nav>
+<ul>
+<?scx
+ref q = profile.db.Query("select * from article");
+q.exec();
+while (q.next_result()) {
+  ref r = q.result;
+  if (r.path == '') continue;
+  if (article.id == r.id) {
+    print("<li><strong>/"+ r.path + "</strong></li>\n");
+  } else {
+    print("<li><a href='/" + r.path + "'>/"+ r.path + "</a></li>\n");
+  }
+}
+?>
+</ul>
+</nav>
+
+<nav class='article'>
+<h2>Current article contents</h2>
+<?scx 
+sub print_subs(hl)
+{
+  var i;
+  print("<ul>");
+  for (i=0; i<hl.size; ++i) {
+    ref h = hl[i];
+    print("<li><a href='/"+article.link+"#" + h.anchor + "'>" + h.name + "</a></li>");
+    if (h.subs.size) print_subs(h.subs);
+  }
+  print("</ul>");
+}
+
+print_subs(article.headings);
+?>
+</nav>
+
+</header>
+
+<main>
+<?scx 
+if (response.statuscode == 200) {
+  process_article();
+} else {
+  print("<h1>"+response.status+"</h1>");
+  print("<p>");
+  print("Oh dear, something has gone wrong!");
+  print("</p>");
+}
+?>
+</main>
+
+<?scx
+var errors = article.errors;
+if (errors) {
+  print("<h2>Errors</h2>");
+  print("<pre>" + errors + "</pre>");
+}
+?>
+
+<footer>
+<p>This page was last updated
+<?scx
+ref mt = article.body.modtime;
+var diff = Date() - mt;
+if (diff.weeks > 4)
+  print("on " + mt.format("%a %d %b %Y"));
+else if (diff.weeks > 2)
+  print("" + Int(diff.weeks) + " weeks ago");
+else if (diff.days > 2)
+  print("" + Int(diff.days) + " days ago");
+else if (diff.hours > 2)
+  print("" + Int(diff.hours) + " hours ago");
+else if (diff.minutes > 2)
+  print("" + Int(diff.minutes) + " minutes ago");
+else 
+  print("a moment ago");
+?>
+</p>
+<p>Requested from <?scxp remote_addr ?> on <?scxp Date().string ?></p>
+<p>
+See <a href='http://www.sconemad.com/sconeserver/'>www.sconemad.com/sconeserver/</a> 
+for more information about sconeserver and sconesite
+</p>
+<p><?scxp SITE_COPYRIGHT ?></p>
+</footer>
+
+<?scx if (defined(GA_TRACKER)) template("google_analytics"); ?>
+
+</body>
+</html>
+</template>

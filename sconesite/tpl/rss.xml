@@ -1,0 +1,42 @@
+<template>
+<?scx 
+response.set_header("Content-Type","application/rss+xml"); 
+?>
+<rss version="2.0">
+<channel>
+<?scx 
+{
+print("<title>"+SITE_NAME+": Latest articles</title>");
+print("<description>"+SITE_DESC+"</description>");
+print("<language>en-uk</language>");
+print("<copyright>"+SITE_COPYRIGHT+"</copyright>");
+print("<managingEditor>editor@"+EMAIL_DOMAIN+"</managingEditor>");
+print("<webMaster>webmaster@"+EMAIL_DOMAIN+"</webMaster>");
+
+print("<image>");
+print("<url>"+LOGO_URL+"</url>");
+print("<title>"+SITE_NAME+"</title>");
+print("<link>"+request.uri.base+"</link>");
+print("</image>");
+
+ref q = profile.db.Query("SELECT id FROM article");
+q.exec();
+while (q.next_result()) {
+  ref r = q.result;
+  ref art = profile.lookup(r.id);
+  
+  var link = request.uri.base+"/"+art.link;
+  print("<item>");
+  print("<title>"+art.title+"</title>");
+  print("<link>"+link+"</link>");
+  print("<description><![CDATA[");
+  process_article(art);
+  print("]]></description>");
+  print("<guid isPermaLink=\"true\">"+link+"</guid>");
+  print("</item>");
+}
+}
+?>
+</channel>
+</rss>
+</template>

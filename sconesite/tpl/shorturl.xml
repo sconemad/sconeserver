@@ -1,0 +1,17 @@
+<template>
+<?scx
+#
+# Handle short URLs in the form http://host/nnn by looking up article with
+# id nnn, redirecting to it if it matches.
+#
+var shortid = RegExp("^([0-9]+)$").match(request.uri.path);
+if (shortid) {
+  ref art = profile.lookup(Int(shortid[0]));
+  if (art) {
+    response.set_header("Location",request.uri.base+"/"+art.link);
+    response.set_status(302);
+    abort();
+  }
+}
+?>
+</template>
