@@ -303,9 +303,9 @@ scx::Condition SconesiteStream::send_response()
   }
   
   // Find the template to use
-  Template* tpl = m_profile.lookup_template("default");
+  Template* tpl = m_profile.lookup_template("start");
   if (!tpl) {
-    log("No default template");
+    log("start template not found");
     resp.set_status(http::Status::InternalServerError);
     return scx::Close;
   }

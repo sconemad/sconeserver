@@ -16,6 +16,7 @@ Heading.cpp \
 Profile.cpp \
 RenderMarkup.cpp \
 Template.cpp \
+TemplateManager.cpp \
 XMLDoc.cpp
 
 sconesiteincludedir = $(includedir)/sconesite
@@ -30,6 +31,7 @@ Heading.h \
 Profile.h \
 RenderMarkup.h \
 Template.h \
+TemplateManager.h \
 XMLDoc.h
 
 sconesite_la_LDFLAGS = -module -avoid-version

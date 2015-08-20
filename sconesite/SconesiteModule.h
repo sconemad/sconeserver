@@ -46,6 +46,9 @@ public:
   void refresh();
   Profile* lookup_profile(const std::string& name);
 
+  // Lookup a template in the standard template stores
+  Template* lookup_template(const std::string& name);
+  
   // Module methods
   virtual scx::ScriptRef* script_op(const scx::ScriptAuth& auth,
 				    const scx::ScriptRef& ref,
@@ -76,6 +79,8 @@ private:
   typedef HASH_TYPE<std::string,Profile::Ref*> ProfileMap;
   ProfileMap m_profiles;
 
+  TemplateManager m_templates;
+  
   scx::JobID m_job;
   
 };

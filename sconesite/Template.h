@@ -34,20 +34,13 @@ class Template : public XMLDoc {
 
 public:
 
-  Template(Profile& profile,
-           const std::string& name,
+  Template(const std::string& name,
            const scx::FilePath& path);
 
   ~Template();
 
   typedef scx::ScriptRefTo<Template> Ref;
   
-protected:
-
-private:
-  
-  Profile& m_profile;
-
 };
 
 };

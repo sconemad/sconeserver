@@ -23,7 +23,7 @@ Free Software Foundation, Inc.,
 #define sconesiteProfile_h
 
 #include <sconesite/Article.h>
-#include <sconesite/Template.h>
+#include <sconesite/TemplateManager.h>
 #include <http/Host.h>
 #include <sconex/Stream.h>
 #include <sconex/FilePath.h>
@@ -44,7 +44,7 @@ public:
   Profile(SconesiteModule& module,
           const std::string& name,
           http::Host* host,
-          const std::string& dbtype);
+          scx::Database* db);
   
   ~Profile();
 
@@ -117,6 +117,7 @@ protected:
 			const std::string& link,
                         const std::string& type="");
 
+  void check_database();
   void configure_docroot(const std::string& docroot);
   
 private:
@@ -139,10 +140,9 @@ private:
   typedef HASH_TYPE<std::string,int> ArticleLinkMap;
   ArticleLinkMap m_article_links;
 
-  // Templates
-  typedef HASH_TYPE<std::string,Template::Ref*> TemplateMap;
-  TemplateMap m_templates;
-
+  TemplateManager m_templates;
+  bool m_use_default_templates;
+  
   scx::Time m_purge_threshold;
   
 };

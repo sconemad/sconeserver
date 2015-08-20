@@ -169,6 +169,7 @@ void SconesiteModule::provide(const std::string& type,
 //=========================================================================
 void SconesiteModule::refresh()
 {
+  m_templates.refresh();
   for (ProfileMap::iterator it = m_profiles.begin();
        it != m_profiles.end();
        ++it) {
@@ -184,10 +185,15 @@ Profile* SconesiteModule::lookup_profile(const std::string& profile)
   if (it != m_profiles.end()) {
     return it->second->object();
   }
-
   return 0;
 }
 
+//=============================================================================
+Template* SconesiteModule::lookup_template(const std::string& name)
+{
+  return m_templates.lookup(name);
+}
+  
 //=============================================================================
 scx::ScriptRef* SconesiteModule::script_op(const scx::ScriptAuth& auth,
 					   const scx::ScriptRef& ref,
@@ -198,7 +204,8 @@ scx::ScriptRef* SconesiteModule::script_op(const scx::ScriptAuth& auth,
     const std::string name = right->object()->get_string();
 
     // Methods
-    if ("add" == name) {
+    if ("add" == name ||
+        "add_templates" == name) {
       return new scx::ScriptMethodRef(ref,name);
     }      
 
@@ -254,16 +261,30 @@ scx::ScriptRef* SconesiteModule::script_method(const scx::ScriptAuth& auth,
     if (it != m_profiles.end())
       return scx::ScriptError::new_ref("Profile already exists");
 
-    std::string s_dbtype = "MySQL";
-    const scx::ScriptString* a_dbtype =
-      scx::get_method_arg<scx::ScriptString>(args,1,"dbtype");
-    if (a_dbtype) s_dbtype = a_dbtype->get_string();
+    scx::Database* a_db =
+      const_cast<scx::Database*>(
+        scx::get_method_arg<scx::Database>(args,1,"db"));
+    if (!a_db)
+      return scx::ScriptError::new_ref("No database specified");
     
-    LOG("Adding profile '" + s_profile + "' dbtype '" + s_dbtype + "'");
-    Profile* profile = new Profile(*this,s_profile,host,s_dbtype);
+    LOG("Adding profile '" + s_profile);
+    Profile* profile = new Profile(*this,s_profile,host,a_db);
     m_profiles[s_profile] = new Profile::Ref(profile);
 
     return new Profile::Ref(profile);
+  }
+
+  if ("add_templates" == name) {
+    if (!auth.admin()) return scx::ScriptError::new_ref("Not permitted");
+
+    const scx::ScriptString* a_path =
+      scx::get_method_arg<scx::ScriptString>(args,0,"path");
+    if (!a_path) {
+      return scx::ScriptError::new_ref("No path specified");
+    }
+    m_templates.add(a_path->get_string());
+
+    return 0;
   }
   
   return scx::Module::script_method(auth,ref,name,args);

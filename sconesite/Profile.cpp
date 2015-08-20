@@ -52,24 +52,20 @@ Profile::Profile(
   SconesiteModule& module,
   const std::string& name,
   http::Host* host,
-  const std::string& dbtype
+  scx::Database* db
 ) : m_module(module),
     m_name(name),
     m_host(new http::Host::Ref(host)),
-    m_db(0)
+    m_db(new scx::Database::Ref(db)),
+    m_use_default_templates(true)
 {
   m_parent = &m_module;
 
-  // Open article database
-  scx::ScriptMap::Ref args(new scx::ScriptMap());
-  args.object()->give("profile",scx::ScriptString::new_ref(name));
-  m_db = scx::Database::open(dbtype,&args);
-
-  if (!m_db) throw std::exception();
-
+  check_database();
   configure_docroot("default");
   configure_docroot("secure");
-  
+  m_templates.add(get_path() + TPLDIR);
+
   refresh();
 }
 
@@ -80,10 +76,6 @@ Profile::~Profile()
        it_a != m_articles.end(); ++it_a) {
     delete it_a->second;
   }
-  for (TemplateMap::iterator it_t = m_templates.begin();
-       it_t != m_templates.end(); ++it_t) {
-    delete it_t->second;
-  }
 
   delete m_db;
   delete m_host;
@@ -92,36 +84,7 @@ Profile::~Profile()
 //=========================================================================
 void Profile::refresh()
 {
-  // Add new templates
-  scx::FileDir dir(get_path() + TPLDIR);
-  while (dir.next()) {
-    std::string file = dir.name();
-    if (file != "." && file != "..") {
-      std::string::size_type idot = file.find_first_of(".");
-      if (idot != std::string::npos) {
-        std::string name = file.substr(0,idot);
-        std::string extn = file.substr(idot+1,std::string::npos);
-        if (extn == "xml" && !lookup_template(name)) {
-          Template* tpl = new Template(*this,name,dir.root());
-          m_templates[name] = new Template::Ref(tpl);
-          LOG("Adding template '" + name + "'");
-        }
-      }
-    }
-  }
-  
-  // Remove deleted templates
-  for (TemplateMap::iterator it_t = m_templates.begin();
-       it_t != m_templates.end();
-       ++it_t) {
-    Template::Ref* tpl_ref = it_t->second;
-    Template* tpl = tpl_ref->object();
-    if (!scx::FileStat(tpl->get_filepath()).is_file()) {
-      LOG("Removing template '" + tpl->get_name() + "'");
-      it_t = m_templates.erase(it_t);
-      delete tpl_ref;
-    }
-  }
+  m_templates.refresh();
 
   // Calculate purge time for cached articles
   scx::Date purge_time;
@@ -532,11 +495,10 @@ bool Profile::rename_article(int id,
 //=========================================================================
 Template* Profile::lookup_template(const std::string& name)
 {
-  TemplateMap::iterator it = m_templates.find(name);
-  if (it != m_templates.end()) {
-    return it->second->object();
-  }
-  return 0;
+  Template* t = m_templates.lookup(name);
+  if (t) return t;
+  if (m_use_default_templates) t = m_module.lookup_template(name);
+  return t;
 }
 
 //=========================================================================
@@ -559,7 +521,9 @@ scx::ScriptRef* Profile::script_op(const scx::ScriptAuth& auth,
 	"lookup" == name ||
 	"create_article" == name ||
 	"remove_article" == name ||
-	"rename_article" == name) {
+	"rename_article" == name ||
+        "add_templates" == name ||
+        "set_use_default_templates" == name) {
       return new scx::ScriptMethodRef(ref,name);
     }
 
@@ -570,6 +534,9 @@ scx::ScriptRef* Profile::script_op(const scx::ScriptAuth& auth,
     if ("path" == name) 
       return scx::ScriptString::new_ref(get_path().path());
 
+    if ("db" == name) 
+      return m_db->ref_copy();
+    
     if ("article_cache" == name) {
       scx::ScriptList::Ref* list = 
 	new scx::ScriptList::Ref(new scx::ScriptList());
@@ -588,6 +555,9 @@ scx::ScriptRef* Profile::script_op(const scx::ScriptAuth& auth,
       }
       return list;
     }
+
+    if ("use_default_templates" == name) 
+      return scx::ScriptInt::new_ref(m_use_default_templates);
   }
 
   return scx::ScriptObject::script_op(auth,ref,op,right);
@@ -693,6 +663,33 @@ scx::ScriptRef* Profile::script_method(const scx::ScriptAuth& auth,
     return 0;
   }
 
+  if ("add_templates" == name) {
+    if (!auth.admin()) return scx::ScriptError::new_ref("Not permitted");
+
+    const scx::ScriptString* a_path =
+      scx::get_method_arg<scx::ScriptString>(args,0,"path");
+    if (!a_path) {
+      return scx::ScriptError::new_ref("No path specified");
+    }
+    m_templates.add(a_path->get_string());
+
+    return 0;
+  }
+
+  if ("set_use_default_templates" == name) {
+    if (!auth.admin()) return scx::ScriptError::new_ref("Not permitted");
+
+    const scx::ScriptInt* a_value =
+      scx::get_method_arg<scx::ScriptInt>(args,0,"value");
+    if (!a_value) {
+      return scx::ScriptError::new_ref("No value specified");
+    }
+
+    m_use_default_templates = (a_value->get_int() != 0);
+    
+    return 0;
+  }
+  
   return scx::ScriptObject::script_method(auth,ref,name,args);
 }
 
@@ -770,4 +767,26 @@ void Profile::configure_docroot(const std::string& docroot)
   }
 }
 
+//=============================================================================
+void Profile::check_database()
+{
+  if (!m_db) throw std::exception();
+
+  // Create article table if not present
+  if (!m_db->object()->simple_query(
+        "CREATE TABLE IF NOT EXISTS article ( "
+        "id        INTEGER PRIMARY KEY AUTOINCREMENT, "
+        "parent    INTEGER, "
+        "path      VARCHAR(128) )")) {
+    LOG("Failed to create article table");
+  }
+
+  // Create root article if not present
+  if (m_db->object()->simple_query_num(
+        "SELECT COUNT(*) FROM article WHERE id = 1") != 1) {
+    m_db->object()->simple_query(
+      "INSERT INTO article (id,parent,path) VALUES (1,0,\"\")");
+  }
+}
+  
 };
