@@ -25,6 +25,7 @@ File.cpp \
 FileDir.cpp \
 FilePath.cpp \
 FileStat.cpp \
+GzipStream.cpp \
 Job.cpp \
 Kernel.cpp \
 LineBuffer.cpp \
@@ -87,6 +88,7 @@ File.h \
 FileDir.h \
 FilePath.h \
 FileStat.h \
+GzipStream.h \
 IOBase.h \
 Job.h \
 Kernel.h \

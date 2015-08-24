@@ -42,6 +42,10 @@ CXXFLAGS="$CXXFLAGS -Wall"
 # Libraries
 AC_CHECK_LIB([dl],[dlopen])
 
+AC_CHECK_LIB([z],[deflate],,
+  [AC_MSG_ERROR([library 'libz' is required])]
+)
+
 AC_CHECK_LIB([pthread],[pthread_create])
 AC_CHECK_LIB([c_r],[pthread_create],
   [LIBS="$LIBS -pthread"
