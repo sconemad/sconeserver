@@ -1,0 +1,16 @@
+
+body > header {
+  position: relative;
+  float: none;
+  width: 100%;
+  border-right: none;
+  border-bottom: solid 0.2em #eee;
+}
+
+body > main {
+  margin: 1em;
+}
+
+body > footer {
+  margin: 0;
+}

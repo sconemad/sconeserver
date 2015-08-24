@@ -1,0 +1,14 @@
+<template>
+<?scx
+
+var SITE_NAME = "sconesite example";
+var SITE_DESC = "An example website using sconeserver and the sconesite plugin.";
+var NUM_LATEST = 10;
+var EMAIL_DOMAIN = "localhost";
+var SITE_COPYRIGHT = "Copyright (c) 2015 Andrew Wedgbury";
+var LOGO_URL = "";
+#var GA_TRACKER = "UA-XXXX-Y";
+#ref REALM = http.realms.test;
+
+?>
+</template>
