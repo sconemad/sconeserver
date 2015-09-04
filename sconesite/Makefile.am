@@ -47,6 +47,7 @@ tpl_DATA = \
 tpl/account.xml \
 tpl/botdetect.xml \
 tpl/common.xml \
+tpl/google_analytics.xml \
 tpl/normal.xml \
 tpl/rss.xml \
 tpl/shorturl.xml \
