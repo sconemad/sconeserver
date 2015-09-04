@@ -772,14 +772,12 @@ void Profile::check_database()
 {
   if (!m_db) throw std::exception();
 
-  // Create article table if not present
-  if (!m_db->object()->simple_query(
-        "CREATE TABLE IF NOT EXISTS article ( "
-        "id        INTEGER PRIMARY KEY AUTOINCREMENT, "
-        "parent    INTEGER, "
-        "path      VARCHAR(128) )")) {
-    LOG("Failed to create article table");
-  }
+  // Attempt to create article table if not present
+  m_db->object()->simple_query(
+    "CREATE TABLE IF NOT EXISTS article ( "
+    "id        INTEGER PRIMARY KEY AUTOINCREMENT, "
+    "parent    INTEGER, "
+    "path      VARCHAR(128) )");
 
   // Create root article if not present
   if (m_db->object()->simple_query_num(

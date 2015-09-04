@@ -206,14 +206,12 @@ void AuthRealmDB::check_database()
 {
   if (!m_db) throw std::exception();
 
-  // Create user table if not present
-  if (!m_db->object()->simple_query(
-        "CREATE TABLE IF NOT EXISTS user ( "
-        "id        INTEGER PRIMARY KEY AUTOINCREMENT, "
-        "username  VARCHAR(128), "
-        "password  VARCHAR(128) )")) {
-    throw std::exception(/*"Failed to create user table"*/);
-  }
+  // Attempt to create user table if not present
+  m_db->object()->simple_query(
+    "CREATE TABLE IF NOT EXISTS user ( "
+    "id        INTEGER PRIMARY KEY AUTOINCREMENT, "
+    "username  VARCHAR(128), "
+    "password  VARCHAR(128) )");
 }
   
 };
