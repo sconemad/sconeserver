@@ -24,6 +24,9 @@ Free Software Foundation, Inc.,
 
 #include <sconex/sconex.h>
 #include <sconex/ScriptBase.h>
+
+#ifdef HAVE_PCRE
+
 namespace scx {
 
 //===========================================================================
@@ -63,5 +66,7 @@ protected:
 };
 
 };
+
+#endif
 
 #endif

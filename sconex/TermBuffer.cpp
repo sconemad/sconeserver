@@ -21,6 +21,9 @@ Free Software Foundation, Inc.,
 
 #include <sconex/TermBuffer.h>
 #include <sconex/Kernel.h>
+
+#include <ttydefaults.h>
+
 namespace scx {
 
 //=============================================================================

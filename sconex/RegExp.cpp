@@ -21,6 +21,9 @@ Free Software Foundation, Inc.,
 
 #include <sconex/RegExp.h>
 #include <sconex/ScriptTypes.h>
+
+#ifdef HAVE_PCRE
+
 namespace scx {
 
 //=============================================================================
@@ -185,3 +188,5 @@ void RegExp::from_string(const std::string& str)
 }
 
 };
+
+#endif

@@ -56,9 +56,7 @@ AC_CHECK_FUNCS([gethostbyname],,
 AC_CHECK_FUNCS([setsockopt],,
   [AC_CHECK_LIB([socket],[setsockopt])]
 )
-AC_CHECK_LIB([pcre],[pcre_compile],,
-  [AC_MSG_ERROR([library 'libpcre' is required])]
-)
+AC_CHECK_LIB([pcre],[pcre_compile])
 AC_CHECK_LIB([crypt],[crypt],,
   [AC_MSG_ERROR([library 'libcrypt' is required])]
 )

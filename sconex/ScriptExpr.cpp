@@ -973,7 +973,9 @@ StandardTypeProvider::StandardTypeProvider()
   ScriptExpr::register_type("TimeZone",this);
   ScriptExpr::register_type("Uri",this);
   ScriptExpr::register_type("MimeType",this);
+#ifdef HAVE_PCRE
   ScriptExpr::register_type("RegExp",this);
+#endif
 };
 
 //===========================================================================
@@ -1011,8 +1013,10 @@ void StandardTypeProvider::provide(const std::string& type,
   } else if ("MimeType" == type) {
     object = new MimeType(args);
 
+#ifdef HAVE_PCRE
   } else if ("RegExp" == type) {
     object = new RegExp(args);
+#endif
   }
 };
 
