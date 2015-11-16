@@ -926,7 +926,7 @@ ScriptRef* ScriptList::script_method(const ScriptAuth& auth,
     
     for (int i=0; i<argl->size(); ++i) {
       const ScriptRef* value = argl->get(i);
-      give(value->ref_copy());
+      give(value->new_copy());
     }
 
     return 0;
@@ -935,13 +935,40 @@ ScriptRef* ScriptList::script_method(const ScriptAuth& auth,
   if ("splice" == name) {
     if (ref.is_const()) return ScriptError::new_ref("Not permitted");
 
-    const ScriptInt* a_offs = get_method_arg<ScriptInt>(args,0,"offset");
-    if (!a_offs) 
-      return ScriptError::new_ref("ScriptList::splice() No offset specified");
-      
-    ScriptRef* entry = take(a_offs->get_int());
-    delete entry;
-    return 0;
+    const ScriptNum* a_offs = get_method_arg<ScriptNum>(args,0,"offset");
+    int offset = a_offs ? a_offs->get_int() : 0;
+    if (offset < 0 || offset > m_list.size()) 
+      return ScriptError::new_ref("ScriptList::splice() Offset out of range");
+
+    const ScriptNum* a_len = get_method_arg<ScriptNum>(args,1,"length");
+    int length= a_len ? a_len->get_int() : (m_list.size() - offset);
+    if (length < 0 || offset + length > m_list.size()) 
+      return ScriptError::new_ref("ScriptList::splice() Length out of range");
+
+    ScriptList* removed = new ScriptList();
+    ScriptListData::iterator it = m_list.begin();
+    std::advance(it, offset);
+
+    // Remove the specified items, adding them to the removed list to return
+    for (int i=0; i<length; ++i) {
+      removed->give((*it)->new_copy());
+      ScriptListData::iterator next = it; ++next;
+      m_list.erase(it);
+      it = next;
+    }
+
+    // Insert any new items in place, if specified
+    const ScriptList* a_list = get_method_arg<ScriptList>(args,2,"list");
+    if (a_list) {
+      ScriptListData::iterator it = m_list.begin();
+      std::advance(it, offset);
+      const int n = a_list->size();
+      for (int i=0; i<n; ++i) {
+	m_list.insert(it, a_list->get(i)->new_copy());
+      }
+    }
+    
+    return new ScriptRef(removed);
   }
 
   if ("reverse" == name) {
@@ -1009,26 +1036,22 @@ int ScriptList::size() const
 //===========================================================================
 const ScriptRef* ScriptList::get(int i) const
 {
-  int ic=0;
-  for (ScriptListData::const_iterator it = m_list.begin();
-       it != m_list.end();
-       ++it) {
-    if (ic++==i) return *it;
+  ScriptListData::const_iterator it = m_list.begin();
+  std::advance(it, i);
+  if (it != m_list.end()) {
+    return *it;
   }
-
   return 0;
 }
 
 //===========================================================================
 ScriptRef* ScriptList::get(int i)
 {
-  int ic=0;
-  for (ScriptListData::iterator it = m_list.begin();
-       it != m_list.end();
-       ++it) {
-    if (ic++==i) return *it;
+  ScriptListData::iterator it = m_list.begin();
+  std::advance(it, i);
+  if (it != m_list.end()) {
+    return *it;
   }
-  
   return 0;
 }
 
@@ -1038,13 +1061,8 @@ void ScriptList::give(ScriptRef* item, int i)
   if (-1==i) {
     m_list.push_back(item);
   } else {
-    int ic=0;
-    ScriptListData::iterator it;
-    for (it = m_list.begin();
-	 it != m_list.end();
-	 ++it) {
-      if (ic++==i) break;
-    }
+    ScriptListData::iterator it = m_list.begin();
+    std::advance(it, i);
     m_list.insert(it,item);
   }
 }
@@ -1052,15 +1070,12 @@ void ScriptList::give(ScriptRef* item, int i)
 //===========================================================================
 ScriptRef* ScriptList::take(int i)
 {
-  int ic=0;
-  for (ScriptListData::iterator it = m_list.begin();
-       it != m_list.end();
-       ++it) {
-    if (ic++==i) {
-      ScriptRef* cur = *it;
-      m_list.erase(it);
-      return cur;
-    }
+  ScriptListData::iterator it = m_list.begin();
+  std::advance(it, i);
+  if (it != m_list.end()) {
+    ScriptRef* cur = *it;
+    m_list.erase(it);
+    return cur;
   }
   return 0;
 }
