@@ -96,6 +96,44 @@ public:
 
 
 //=============================================================================
+// ScriptBool - A SconeScript boolean
+//
+// SconeScript ops:
+//   !bool // negative
+//
+class SCONEX_API ScriptBool : public ScriptNum {
+public:
+
+  // Convenience method to create a new ScriptRef to a new ScriptInt
+  static ScriptRef* new_ref(bool value);
+
+  ScriptBool(bool value);
+  ScriptBool(const ScriptBool& c);
+  virtual ~ScriptBool();
+
+  static ScriptObject* from_string(const std::string& str);
+  static ScriptObject* create(const ScriptRef* args);
+  virtual ScriptObject* new_copy() const;
+
+  virtual std::string get_string() const;
+  virtual int get_int() const;
+
+  virtual ScriptRef* script_op(const ScriptAuth& auth,
+			       const ScriptRef& ref,
+			       const ScriptOp& op,
+			       const ScriptRef* right);
+  
+  virtual void serialize(IOBase& output) const;
+
+  typedef ScriptRefTo<ScriptBool> Ref;
+
+protected:
+
+  bool m_value;
+
+};
+
+//=============================================================================
 // ScriptInt - A SconeScript integer
 //
 // SconeScript ops:
@@ -132,7 +170,7 @@ public:
   
   virtual void serialize(IOBase& output) const;
 
-  typedef ScriptRefTo<ScriptNum> Ref;
+  typedef ScriptRefTo<ScriptInt> Ref;
 
 protected:
 

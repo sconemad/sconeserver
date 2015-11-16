@@ -964,6 +964,7 @@ ScriptRef* StandardContext::script_method(const ScriptAuth& auth,
 StandardTypeProvider::StandardTypeProvider() 
 {
   ScriptExpr::register_type("String",this);
+  ScriptExpr::register_type("Bool",this);
   ScriptExpr::register_type("Int",this);
   ScriptExpr::register_type("Real",this);
   ScriptExpr::register_type("Error",this);
@@ -985,6 +986,9 @@ void StandardTypeProvider::provide(const std::string& type,
 {
   if ("String" == type) {
     object = ScriptString::create(args);
+
+  } else if ("Bool" == type) {
+    object = ScriptBool::create(args);
 
   } else if ("Int" == type) {
     object = ScriptInt::create(args);

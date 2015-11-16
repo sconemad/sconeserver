@@ -248,6 +248,136 @@ double ScriptNum::get_real() const
 }
 
 
+// ### ScriptBool ###
+
+//===========================================================================
+ScriptRef* ScriptBool::new_ref(bool value)
+{
+  return new ScriptRef(new ScriptBool(value));
+}
+
+//===========================================================================
+ScriptBool::ScriptBool(bool value)
+  : m_value(value)
+{
+  DEBUG_COUNT_CONSTRUCTOR(ScriptBool);
+}
+
+//===========================================================================
+ScriptBool::ScriptBool(const ScriptBool& c)
+  : ScriptNum(c),
+    m_value(c.m_value)
+{
+  DEBUG_COUNT_CONSTRUCTOR(ScriptBool);
+}
+
+//===========================================================================
+ScriptBool::~ScriptBool()
+{
+  DEBUG_COUNT_DESTRUCTOR(ScriptBool);
+}
+
+//===========================================================================
+ScriptObject* ScriptBool::from_string(const std::string& str)
+{
+  if (str.length() == 0 || str == "0" || str == "false") 
+    return new ScriptBool(false);
+  return new ScriptBool(true);
+}
+
+//===========================================================================
+ScriptObject* ScriptBool::create(const ScriptRef* args)
+{
+  const ScriptRef* value = get_method_arg_ref(args,0,"value");
+  if (!value) {
+    return new ScriptBool(false);
+  }
+
+  const ScriptString* str = dynamic_cast<const ScriptString*>(value->object());
+  if (str) {
+    return ScriptBool::from_string(str->get_string());
+  }
+  
+  return new ScriptBool(0 != value->object()->get_int());
+}
+
+//===========================================================================
+ScriptObject* ScriptBool::new_copy() const
+{
+  return new ScriptBool(*this);
+}
+
+//===========================================================================
+std::string ScriptBool::get_string() const
+{
+  return m_value ? "true" : "false";
+}
+
+//===========================================================================
+int ScriptBool::get_int() const
+{
+  return m_value ? 1 : 0;
+}
+
+//===========================================================================
+ScriptRef* ScriptBool::script_op(const ScriptAuth& auth,
+				 const ScriptRef& ref,
+				 const ScriptOp& op,
+				 const ScriptRef* right)
+{
+  if (right) { // binary ops
+
+    const ScriptBool* rbool = dynamic_cast<const ScriptBool*> (right->object());
+    if (rbool) { // Bool x Bool ops
+      bool rvalue = (0 != rbool->get_int());
+      switch (op.type()) {
+        
+      case ScriptOp::Or:
+	return ScriptBool::new_ref(m_value || rvalue);
+	
+      case ScriptOp::Xor:
+	return ScriptBool::new_ref(!m_value != !rvalue);
+	
+      case ScriptOp::And:
+	return ScriptBool::new_ref(m_value && rvalue);
+
+      case ScriptOp::Equality:
+	return ScriptBool::new_ref(m_value == rvalue);
+	
+      case ScriptOp::Inequality:
+	return ScriptBool::new_ref(m_value != rvalue);
+	
+      case ScriptOp::Assign:
+	if (!ref.is_const()) {
+	  m_value = rvalue;
+	}
+	return ref.ref_copy();
+
+      default: break;
+      }
+    }
+
+  } else { // prefix or postfix ops
+
+    switch (op.type()) {
+      
+    case ScriptOp::Not:
+      return ScriptBool::new_ref(!m_value);
+      
+    default: break;
+    }
+  }
+    
+  return ScriptObject::script_op(auth,ref,op,right);
+}
+
+//===========================================================================
+void ScriptBool::serialize(IOBase& output) const
+{
+  output.write(get_string());
+}
+
+
 // ### ScriptInt ###
 
 //===========================================================================
