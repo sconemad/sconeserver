@@ -22,7 +22,7 @@ Free Software Foundation, Inc.,
 #include <sconex/RegExp.h>
 #include <sconex/ScriptTypes.h>
 
-#ifdef HAVE_PCRE
+#ifdef HAVE_LIBPCRE
 
 namespace scx {
 
