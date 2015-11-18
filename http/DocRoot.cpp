@@ -39,11 +39,9 @@ namespace http {
 
 //=========================================================================
 StreamMap::StreamMap(
-  HTTPModule& module,
   const std::string& type,
   scx::ScriptRef* args
-) : m_module(module),
-    m_type(type),
+) : m_type(type),
     m_args(args)
 {
 
@@ -244,7 +242,7 @@ void DocRoot::add_extn_map(const std::string& pattern,
 
   PatternMap::iterator it = m_extn_mods.find(pattern);
   if (it != m_extn_mods.end()) delete it->second;
-  m_extn_mods[pattern] = new StreamMap(m_module,stream,args);
+  m_extn_mods[pattern] = new StreamMap(stream,args);
 }
 
 //=========================================================================
@@ -292,7 +290,7 @@ void DocRoot::add_path_map(const std::string& pattern,
   
   PatternMap::iterator it = m_path_mods.find(pattern);
   if (it != m_path_mods.end()) delete it->second;
-  m_path_mods[pattern] = new StreamMap(m_module,stream,args);
+  m_path_mods[pattern] = new StreamMap(stream,args);
 }
 
 //=========================================================================

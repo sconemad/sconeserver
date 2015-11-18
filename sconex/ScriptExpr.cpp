@@ -40,7 +40,7 @@ ScriptExpr::OperatorMap* ScriptExpr::s_prefix_ops = 0;
 ScriptExpr::OperatorMap* ScriptExpr::s_postfix_ops = 0;
 ScriptExpr::PrecedenceMap* ScriptExpr::s_op_precs = 0;
 ScriptRefTo<StandardContext>* ScriptExpr::s_standard_context = 0;
-
+StandardTypeProvider* ScriptExpr::s_type_provider = 0;
 
 //===========================================================================
 ScriptExpr::ScriptExpr(const ScriptAuth& auth, ScriptRef* ctx)
@@ -882,7 +882,7 @@ void ScriptExpr::init()
     new ScriptRefTo<StandardContext>(new StandardContext());
 
   // This registers and handles creation of standard types
-  new StandardTypeProvider();
+  s_type_provider = new StandardTypeProvider();
 }
 
 

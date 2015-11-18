@@ -35,7 +35,7 @@ class Mutex;
 // Macro to help determine if a ScriptRef is 'bad' -
 // meaning it is NULL or refers to a ScriptError object.
 #define BAD_SCRIPTREF(a) \
-(!a || (typeid(*a->object()) == typeid(scx::ScriptError)))
+(!a || 0 != dynamic_cast<const scx::ScriptError*>(a->object()))
 
 //=============================================================================
 // ScriptAuth - Authorisation level for callers of operations and methods on

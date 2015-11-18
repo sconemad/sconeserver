@@ -130,6 +130,9 @@
 /* Define to 1 if you have the <pthread.h> header file. */
 #undef HAVE_PTHREAD_H
 
+/* Define to 1 if you have the `pthread_yield' function. */
+#undef HAVE_PTHREAD_YIELD
+
 /* Define to 1 if you have the <queue> header file. */
 #undef HAVE_QUEUE
 
@@ -223,11 +226,17 @@
 /* Define to 1 if you have the <tr1/unordered_map> header file. */
 #undef HAVE_TR1_UNORDERED_MAP
 
+/* Define to 1 if you have the <ttydefaults.h> header file. */
+#undef HAVE_TTYDEFAULTS_H
+
 /* Define to 1 if you have the <typeinfo> header file. */
 #undef HAVE_TYPEINFO
 
 /* Define to 1 if you have the <unistd.h> header file. */
 #undef HAVE_UNISTD_H
+
+/* Define to 1 if you have the <unordered_map> header file. */
+#undef HAVE_UNORDERED_MAP
 
 /* Define to 1 if you have the `vfork' function. */
 #undef HAVE_VFORK

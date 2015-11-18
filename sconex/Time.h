@@ -130,7 +130,7 @@ public:
   TimeZone operator+(const Time& t) const;
   TimeZone operator-(const Time& t) const;
   
-  virtual std::string string() const;
+  virtual std::string string(Time::Precision precision=Time::Seconds) const;
 
   typedef ScriptRefTo<TimeZone> Ref;
 

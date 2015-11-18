@@ -22,7 +22,12 @@ Free Software Foundation, Inc.,
 #include <sconex/TermBuffer.h>
 #include <sconex/Kernel.h>
 
+#ifdef HAVE_TTYDEFAULTS_H
 #include <ttydefaults.h>
+#else
+#define CEOT ('d' & 037)
+#define CERASE 0177
+#endif
 
 namespace scx {
 

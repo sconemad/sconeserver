@@ -82,7 +82,7 @@ ScriptRef* ScriptObject::script_op(const ScriptAuth& auth,
   switch (op.type()) {
     
   case ScriptOp::Not:
-    return ScriptInt::new_ref(!value);
+    return ScriptBool::new_ref(!value);
     
   case ScriptOp::Resolve:
     {
@@ -107,22 +107,22 @@ ScriptRef* ScriptObject::script_op(const ScriptAuth& auth,
     }
 
   case ScriptOp::GreaterThan:
-    return ScriptInt::new_ref(value > rvalue);
+    return ScriptBool::new_ref(value > rvalue);
       
   case ScriptOp::LessThan: 
-    return ScriptInt::new_ref(value < rvalue);
+    return ScriptBool::new_ref(value < rvalue);
       
   case ScriptOp::GreaterThanOrEqualTo:
-    return ScriptInt::new_ref(value >= rvalue);
+    return ScriptBool::new_ref(value >= rvalue);
       
   case ScriptOp::LessThanOrEqualTo:
-    return ScriptInt::new_ref(value <= rvalue);
+    return ScriptBool::new_ref(value <= rvalue);
       
   case ScriptOp::Equality:
-    return ScriptInt::new_ref(value == rvalue);
+    return ScriptBool::new_ref(value == rvalue);
       
   case ScriptOp::Inequality:
-    return ScriptInt::new_ref(value != rvalue);
+    return ScriptBool::new_ref(value != rvalue);
       
   case ScriptOp::And:
     if (value && right) return right->ref_copy(ScriptRef::Ref);
@@ -134,7 +134,7 @@ ScriptRef* ScriptObject::script_op(const ScriptAuth& auth,
     return 0;
       
   case ScriptOp::Xor:
-    return ScriptInt::new_ref((value!=0) ^ (rvalue!=0));
+    return ScriptBool::new_ref((value!=0) ^ (rvalue!=0));
     
   default:
     break;

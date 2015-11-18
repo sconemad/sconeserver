@@ -45,7 +45,6 @@ class StreamMap {
 public:
 
   StreamMap(
-    HTTPModule& module,
     const std::string& type,
     scx::ScriptRef* args
   );
@@ -57,8 +56,6 @@ public:
   bool connect(scx::Descriptor* endpoint);
   
 private:
-  HTTPModule& m_module;
-
   std::string m_type;
   scx::ScriptRef* m_args;
 };

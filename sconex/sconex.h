@@ -98,8 +98,8 @@ Free Software Foundation, Inc.,
 #  include <sys/ioctl.h>
 #endif
 
-#ifdef HAVE_SYS_SIGNAL_H
-#  include <sys/signal.h>
+#ifdef HAVE_SIGNAL_H
+#  include <signal.h>
 #endif
 
 #ifdef HAVE_SYS_SOCKET_H
@@ -166,30 +166,29 @@ Free Software Foundation, Inc.,
 #  include <set>
 #endif
 
-#ifdef HAVE_TR1_UNORDERED_MAP
+#if defined(HAVE_UNORDERED_MAP)
+#  include <unordered_map>
+#  define HASH_TYPE std::unordered_map
+#elif defined(HAVE_TR1_UNORDERED_MAP)
 #  include <tr1/unordered_map>
 #  define HASH_TYPE std::tr1::unordered_map
-#else
-#  if HAVE_EXT_HASH_MAP
-#    include <ext/hash_map>
-#    define HASH_TYPE __gnu_cxx::hash_map
-     namespace __gnu_cxx
+#elif defined(HAVE_EXT_HASH_MAP)
+#  include <ext/hash_map>
+#  define HASH_TYPE __gnu_cxx::hash_map
+   namespace __gnu_cxx
+   {
+     template<> struct hash<std::string> 
      {
-       template<> struct hash<std::string> 
+       size_t operator()(const std::string& x) const
        {
-         size_t operator()(const std::string& x) const
-         {
-           return hash<const char*>()(x.c_str());
-         }
-       };
-     }
-#  else
-#    ifdef HAVE_MAP
-#      define HASH_TYPE std::map
-#    else
-#      error "No std::map type found!"
-#    endif
-#  endif
+         return hash<const char*>()(x.c_str());
+       }
+     };
+   }
+#elif defined(HAVE_MAP)
+#  define HASH_TYPE std::map
+#else
+#  error "No std::map type found!"
 #endif
 
 // PCRE

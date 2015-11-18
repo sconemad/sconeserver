@@ -132,16 +132,16 @@ ScriptRef* ScriptString::script_op(const ScriptAuth& auth,
     return ScriptString::new_ref(m_string + right->object()->get_string());
     
   case ScriptOp::Equality:
-    return ScriptInt::new_ref(m_string == right->object()->get_string());
+    return ScriptBool::new_ref(m_string == right->object()->get_string());
       
   case ScriptOp::Inequality:
-    return ScriptInt::new_ref(m_string != right->object()->get_string());
+    return ScriptBool::new_ref(m_string != right->object()->get_string());
 
   case ScriptOp::GreaterThan:
-      return ScriptInt::new_ref(m_string > right->object()->get_string());
+      return ScriptBool::new_ref(m_string > right->object()->get_string());
 
   case ScriptOp::LessThan:
-    return ScriptInt::new_ref(m_string < right->object()->get_string());
+    return ScriptBool::new_ref(m_string < right->object()->get_string());
 
   case ScriptOp::Assign:
     if (!ref.is_const()) {
@@ -159,7 +159,7 @@ ScriptRef* ScriptString::script_op(const ScriptAuth& auth,
     {
       std::string name = right->object()->get_string();
       if ("length" == name) return ScriptInt::new_ref(m_string.size());
-      if ("empty" == name) return ScriptInt::new_ref(m_string.empty());
+      if ("empty" == name) return ScriptBool::new_ref(m_string.empty());
       
       if ("clear" == name ||
 	  "split" == name ||
@@ -720,22 +720,22 @@ ScriptRef* ScriptReal::script_op(const ScriptAuth& auth,
 	return ScriptReal::new_ref(pow(m_value,rvalue));
 
       case ScriptOp::GreaterThan:
-	return ScriptInt::new_ref(m_value > rvalue);
+	return ScriptBool::new_ref(m_value > rvalue);
 	
       case ScriptOp::LessThan:
-	return ScriptInt::new_ref(m_value < rvalue);
+	return ScriptBool::new_ref(m_value < rvalue);
 	
       case ScriptOp::GreaterThanOrEqualTo:
-	return ScriptInt::new_ref(m_value >= rvalue);
+	return ScriptBool::new_ref(m_value >= rvalue);
 	
       case ScriptOp::LessThanOrEqualTo:
-	return ScriptInt::new_ref(m_value <= rvalue);
+	return ScriptBool::new_ref(m_value <= rvalue);
 	
       case ScriptOp::Equality:
-	return ScriptInt::new_ref(m_value == rvalue);
+	return ScriptBool::new_ref(m_value == rvalue);
 	
       case ScriptOp::Inequality:
-	return ScriptInt::new_ref(m_value != rvalue);
+	return ScriptBool::new_ref(m_value != rvalue);
 	
       case ScriptOp::Assign:
 	if (!ref.is_const()) {

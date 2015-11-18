@@ -66,8 +66,10 @@ bool Thread::start()
 
   locker.unlock();
 
+#ifdef HAVE_PTHREAD_YIELD
   // Wait until the thread is up and running
   while (m_state != Running) pthread_yield();
+#endif
   
   return true;
 }

@@ -564,7 +564,7 @@ TimeZone TimeZone::operator-(const Time& t) const
 }
 
 //=============================================================================
-std::string TimeZone::string() const
+std::string TimeZone::string(Time::Precision /*precision*/) const
 {
   int hours,minutes,seconds;
   get(hours,minutes,seconds);

@@ -71,15 +71,15 @@ void test_ScriptString()
   UTCOD(test_script_op(as2r,ScriptOp::Add,as3r,ScriptString("fish1234fowl5678")));
   UTCOD(test_script_op(as3r,ScriptOp::Add,as2r,ScriptString("fowl5678fish1234")));
 
-  UTCOD(test_script_op(as1r,ScriptOp::Equality,as1r,ScriptInt(1)));
-  UTCOD(test_script_op(as2r,ScriptOp::Equality,as2r,ScriptInt(1)));
-  UTCOD(test_script_op(as2r,ScriptOp::Equality,as3r,ScriptInt(0)));
-  UTCOD(test_script_op(as1r,ScriptOp::Equality,as3r,ScriptInt(0)));
+  UTCOD(test_script_op(as1r,ScriptOp::Equality,as1r,ScriptBool(1)));
+  UTCOD(test_script_op(as2r,ScriptOp::Equality,as2r,ScriptBool(1)));
+  UTCOD(test_script_op(as2r,ScriptOp::Equality,as3r,ScriptBool(0)));
+  UTCOD(test_script_op(as1r,ScriptOp::Equality,as3r,ScriptBool(0)));
 
-  UTCOD(test_script_op(as1r,ScriptOp::Inequality,as1r,ScriptInt(0)));
-  UTCOD(test_script_op(as2r,ScriptOp::Inequality,as2r,ScriptInt(0)));
-  UTCOD(test_script_op(as2r,ScriptOp::Inequality,as3r,ScriptInt(1)));
-  UTCOD(test_script_op(as1r,ScriptOp::Inequality,as3r,ScriptInt(1)));
+  UTCOD(test_script_op(as1r,ScriptOp::Inequality,as1r,ScriptBool(0)));
+  UTCOD(test_script_op(as2r,ScriptOp::Inequality,as2r,ScriptBool(0)));
+  UTCOD(test_script_op(as2r,ScriptOp::Inequality,as3r,ScriptBool(1)));
+  UTCOD(test_script_op(as1r,ScriptOp::Inequality,as3r,ScriptBool(1)));
 }
 
 void test_ScriptInt()
@@ -162,54 +162,113 @@ void test_ScriptInt()
   UTCOD(test_script_op(ai2r,ScriptOp::Divide,ai3r,ScriptInt(12345/-67890)));
   UTCOD(test_script_op(ai3r,ScriptOp::Divide,ai2r,ScriptInt(-67890/12345)));
 
-  UTCOD(test_script_op(ai1r,ScriptOp::GreaterThan,ai1r,ScriptInt(0)));
-  UTCOD(test_script_op(ai2r,ScriptOp::GreaterThan,ai1r,ScriptInt(1)));
-  UTCOD(test_script_op(ai3r,ScriptOp::GreaterThan,ai2r,ScriptInt(0)));
-  UTCOD(test_script_op(ai2r,ScriptOp::GreaterThan,ai3r,ScriptInt(1)));
-  UTCOD(test_script_op(ai3r,ScriptOp::GreaterThan,ai3r,ScriptInt(0)));
+  UTCOD(test_script_op(ai1r,ScriptOp::GreaterThan,ai1r,ScriptBool(0)));
+  UTCOD(test_script_op(ai2r,ScriptOp::GreaterThan,ai1r,ScriptBool(1)));
+  UTCOD(test_script_op(ai3r,ScriptOp::GreaterThan,ai2r,ScriptBool(0)));
+  UTCOD(test_script_op(ai2r,ScriptOp::GreaterThan,ai3r,ScriptBool(1)));
+  UTCOD(test_script_op(ai3r,ScriptOp::GreaterThan,ai3r,ScriptBool(0)));
 
-  UTCOD(test_script_op(ai1r,ScriptOp::LessThan,ai1r,ScriptInt(0)));
-  UTCOD(test_script_op(ai2r,ScriptOp::LessThan,ai1r,ScriptInt(0)));
-  UTCOD(test_script_op(ai3r,ScriptOp::LessThan,ai2r,ScriptInt(1)));
-  UTCOD(test_script_op(ai2r,ScriptOp::LessThan,ai3r,ScriptInt(0)));
-  UTCOD(test_script_op(ai3r,ScriptOp::LessThan,ai3r,ScriptInt(0)));
+  UTCOD(test_script_op(ai1r,ScriptOp::LessThan,ai1r,ScriptBool(0)));
+  UTCOD(test_script_op(ai2r,ScriptOp::LessThan,ai1r,ScriptBool(0)));
+  UTCOD(test_script_op(ai3r,ScriptOp::LessThan,ai2r,ScriptBool(1)));
+  UTCOD(test_script_op(ai2r,ScriptOp::LessThan,ai3r,ScriptBool(0)));
+  UTCOD(test_script_op(ai3r,ScriptOp::LessThan,ai3r,ScriptBool(0)));
 
-  UTCOD(test_script_op(ai1r,ScriptOp::GreaterThanOrEqualTo,ai1r,ScriptInt(1)));
-  UTCOD(test_script_op(ai2r,ScriptOp::GreaterThanOrEqualTo,ai1r,ScriptInt(1)));
-  UTCOD(test_script_op(ai3r,ScriptOp::GreaterThanOrEqualTo,ai2r,ScriptInt(0)));
-  UTCOD(test_script_op(ai2r,ScriptOp::GreaterThanOrEqualTo,ai3r,ScriptInt(1)));
-  UTCOD(test_script_op(ai3r,ScriptOp::GreaterThanOrEqualTo,ai3r,ScriptInt(1)));
+  UTCOD(test_script_op(ai1r,ScriptOp::GreaterThanOrEqualTo,ai1r,ScriptBool(1)));
+  UTCOD(test_script_op(ai2r,ScriptOp::GreaterThanOrEqualTo,ai1r,ScriptBool(1)));
+  UTCOD(test_script_op(ai3r,ScriptOp::GreaterThanOrEqualTo,ai2r,ScriptBool(0)));
+  UTCOD(test_script_op(ai2r,ScriptOp::GreaterThanOrEqualTo,ai3r,ScriptBool(1)));
+  UTCOD(test_script_op(ai3r,ScriptOp::GreaterThanOrEqualTo,ai3r,ScriptBool(1)));
 
-  UTCOD(test_script_op(ai1r,ScriptOp::LessThanOrEqualTo,ai1r,ScriptInt(1)));
-  UTCOD(test_script_op(ai2r,ScriptOp::LessThanOrEqualTo,ai1r,ScriptInt(0)));
-  UTCOD(test_script_op(ai3r,ScriptOp::LessThanOrEqualTo,ai2r,ScriptInt(1)));
-  UTCOD(test_script_op(ai2r,ScriptOp::LessThanOrEqualTo,ai3r,ScriptInt(0)));
-  UTCOD(test_script_op(ai3r,ScriptOp::LessThanOrEqualTo,ai3r,ScriptInt(1)));
+  UTCOD(test_script_op(ai1r,ScriptOp::LessThanOrEqualTo,ai1r,ScriptBool(1)));
+  UTCOD(test_script_op(ai2r,ScriptOp::LessThanOrEqualTo,ai1r,ScriptBool(0)));
+  UTCOD(test_script_op(ai3r,ScriptOp::LessThanOrEqualTo,ai2r,ScriptBool(1)));
+  UTCOD(test_script_op(ai2r,ScriptOp::LessThanOrEqualTo,ai3r,ScriptBool(0)));
+  UTCOD(test_script_op(ai3r,ScriptOp::LessThanOrEqualTo,ai3r,ScriptBool(1)));
   
-  UTCOD(test_script_op(ai1r,ScriptOp::Equality,ai1r,ScriptInt(1)));
-  UTCOD(test_script_op(ai2r,ScriptOp::Equality,ai2r,ScriptInt(1)));
-  UTCOD(test_script_op(ai2r,ScriptOp::Equality,ai3r,ScriptInt(0)));
-  UTCOD(test_script_op(ai1r,ScriptOp::Equality,ai3r,ScriptInt(0)));
+  UTCOD(test_script_op(ai1r,ScriptOp::Equality,ai1r,ScriptBool(1)));
+  UTCOD(test_script_op(ai2r,ScriptOp::Equality,ai2r,ScriptBool(1)));
+  UTCOD(test_script_op(ai2r,ScriptOp::Equality,ai3r,ScriptBool(0)));
+  UTCOD(test_script_op(ai1r,ScriptOp::Equality,ai3r,ScriptBool(0)));
 
-  UTCOD(test_script_op(ai1r,ScriptOp::Inequality,ai1r,ScriptInt(0)));
-  UTCOD(test_script_op(ai2r,ScriptOp::Inequality,ai2r,ScriptInt(0)));
-  UTCOD(test_script_op(ai2r,ScriptOp::Inequality,ai3r,ScriptInt(1)));
-  UTCOD(test_script_op(ai1r,ScriptOp::Inequality,ai3r,ScriptInt(1)));
+  UTCOD(test_script_op(ai1r,ScriptOp::Inequality,ai1r,ScriptBool(0)));
+  UTCOD(test_script_op(ai2r,ScriptOp::Inequality,ai2r,ScriptBool(0)));
+  UTCOD(test_script_op(ai2r,ScriptOp::Inequality,ai3r,ScriptBool(1)));
+  UTCOD(test_script_op(ai1r,ScriptOp::Inequality,ai3r,ScriptBool(1)));
+}
 
-  UTCOD(test_script_op(zero,ScriptOp::And,zero,ScriptInt(0)));
-  UTCOD(test_script_op(one,ScriptOp::And,zero,ScriptInt(0)));
-  UTCOD(test_script_op(zero,ScriptOp::And,one,ScriptInt(0)));
-  UTCOD(test_script_op(one,ScriptOp::And,one,ScriptInt(1)));
+void test_ScriptBool()
+{
+  UTSEC("ScriptBool");
 
-  UTCOD(test_script_op(zero,ScriptOp::Or,zero,ScriptInt(0)));
-  UTCOD(test_script_op(one,ScriptOp::Or,zero,ScriptInt(1)));
-  UTCOD(test_script_op(zero,ScriptOp::Or,one,ScriptInt(1)));
-  UTCOD(test_script_op(one,ScriptOp::Or,one,ScriptInt(1)));
+  UTMSG("construction");
 
-  UTCOD(test_script_op(zero,ScriptOp::Xor,zero,ScriptInt(0)));
-  UTCOD(test_script_op(one,ScriptOp::Xor,zero,ScriptInt(1)));
-  UTCOD(test_script_op(zero,ScriptOp::Xor,one,ScriptInt(1)));
-  UTCOD(test_script_op(one,ScriptOp::Xor,one,ScriptInt(0)));
+  UTCOD(ScriptBool* ai1 = new ScriptBool(0));
+  UTEST(ai1->get_int() == 0);
+  UTEST(ai1->get_string() == "false");
+
+  UTCOD(ScriptBool* ai2 = new ScriptBool(1));
+  UTEST(ai2->get_int() == 1);
+  UTEST(ai2->get_string() == "true");
+
+  UTCOD(ScriptBool* ai3 = new ScriptBool(2));
+  UTEST(ai3->get_int() == 1);
+  UTEST(ai3->get_string() == "true");
+
+  UTMSG("copy");
+
+  UTCOD(ScriptBool* ai4 = new ScriptBool(*ai2));
+  UTEST(ai4->get_int() == ai2->get_int());
+
+  UTCOD(ScriptObject* a1 = ai4->new_copy());
+  UTEST(a1 != 0);
+  UTEST(a1->get_int() == 1);
+  
+  UTCOD(ScriptBool* ai5 = dynamic_cast<ScriptBool*>(a1));
+  UTEST(ai5 != 0);
+  UTEST(ai5->get_string() == ai4->get_string());
+  UTEST(ai5->get_int() == 1);
+
+  delete ai4;
+  delete a1;
+
+  ScriptRef ai1r(ai1);
+  ScriptRef ai2r(ai2);
+  
+  UTMSG("prefix ops");
+
+  UTCOD(test_script_op(ScriptOp::Not,ai1r,ScriptBool(1)));
+  UTCOD(test_script_op(ScriptOp::Not,ai2r,ScriptBool(0)));
+
+  UTMSG("binary ops");
+
+  ScriptRef vfalse(new ScriptBool(0));
+  ScriptRef vtrue(new ScriptBool(1));
+  
+  UTCOD(test_script_op(ai1r,ScriptOp::Equality,ai1r,ScriptBool(1)));
+  UTCOD(test_script_op(ai2r,ScriptOp::Equality,ai2r,ScriptBool(1)));
+  UTCOD(test_script_op(ai1r,ScriptOp::Equality,ai2r,ScriptBool(0)));
+  UTCOD(test_script_op(ai2r,ScriptOp::Equality,ai1r,ScriptBool(0)));
+
+  UTCOD(test_script_op(ai1r,ScriptOp::Inequality,ai1r,ScriptBool(0)));
+  UTCOD(test_script_op(ai2r,ScriptOp::Inequality,ai2r,ScriptBool(0)));
+  UTCOD(test_script_op(ai1r,ScriptOp::Inequality,ai2r,ScriptBool(1)));
+  UTCOD(test_script_op(ai2r,ScriptOp::Inequality,ai1r,ScriptBool(1)));
+
+  UTCOD(test_script_op(vfalse,ScriptOp::And,vfalse,ScriptBool(0)));
+  UTCOD(test_script_op(vtrue,ScriptOp::And,vfalse,ScriptBool(0)));
+  UTCOD(test_script_op(vfalse,ScriptOp::And,vtrue,ScriptBool(0)));
+  UTCOD(test_script_op(vtrue,ScriptOp::And,vtrue,ScriptBool(1)));
+
+  UTCOD(test_script_op(vfalse,ScriptOp::Or,vfalse,ScriptBool(0)));
+  UTCOD(test_script_op(vtrue,ScriptOp::Or,vfalse,ScriptBool(1)));
+  UTCOD(test_script_op(vfalse,ScriptOp::Or,vtrue,ScriptBool(1)));
+  UTCOD(test_script_op(vtrue,ScriptOp::Or,vtrue,ScriptBool(1)));
+
+  UTCOD(test_script_op(vfalse,ScriptOp::Xor,vfalse,ScriptBool(0)));
+  UTCOD(test_script_op(vtrue,ScriptOp::Xor,vfalse,ScriptBool(1)));
+  UTCOD(test_script_op(vfalse,ScriptOp::Xor,vtrue,ScriptBool(1)));
+  UTCOD(test_script_op(vtrue,ScriptOp::Xor,vtrue,ScriptBool(0)));
 }
 
 void test_ScriptReal()
@@ -272,15 +331,15 @@ void test_ScriptReal()
   UTCOD(test_script_op(ar2r,ScriptOp::Divide,ar3r,ScriptReal(1.2345/-6.7890)));
   UTCOD(test_script_op(ar3r,ScriptOp::Divide,ar2r,ScriptReal(-6.789/1.2345)));
 
-  UTCOD(test_script_op(ar1r,ScriptOp::Equality,ar1r,ScriptInt(1)));
-  UTCOD(test_script_op(ar2r,ScriptOp::Equality,ar2r,ScriptInt(1)));
-  UTCOD(test_script_op(ar2r,ScriptOp::Equality,ar3r,ScriptInt(0)));
-  UTCOD(test_script_op(ar1r,ScriptOp::Equality,ar3r,ScriptInt(0)));
+  UTCOD(test_script_op(ar1r,ScriptOp::Equality,ar1r,ScriptBool(1)));
+  UTCOD(test_script_op(ar2r,ScriptOp::Equality,ar2r,ScriptBool(1)));
+  UTCOD(test_script_op(ar2r,ScriptOp::Equality,ar3r,ScriptBool(0)));
+  UTCOD(test_script_op(ar1r,ScriptOp::Equality,ar3r,ScriptBool(0)));
 
-  UTCOD(test_script_op(ar1r,ScriptOp::Inequality,ar1r,ScriptInt(0)));
-  UTCOD(test_script_op(ar2r,ScriptOp::Inequality,ar2r,ScriptInt(0)));
-  UTCOD(test_script_op(ar2r,ScriptOp::Inequality,ar3r,ScriptInt(1)));
-  UTCOD(test_script_op(ar1r,ScriptOp::Inequality,ar3r,ScriptInt(1)));
+  UTCOD(test_script_op(ar1r,ScriptOp::Inequality,ar1r,ScriptBool(0)));
+  UTCOD(test_script_op(ar2r,ScriptOp::Inequality,ar2r,ScriptBool(0)));
+  UTCOD(test_script_op(ar2r,ScriptOp::Inequality,ar3r,ScriptBool(1)));
+  UTCOD(test_script_op(ar1r,ScriptOp::Inequality,ar3r,ScriptBool(1)));
 }
 
 void test_ScriptList()
@@ -379,6 +438,7 @@ void ScriptTypes_ut()
 {
   test_ScriptString();
   test_ScriptInt();
+  test_ScriptBool();
   test_ScriptReal();
   test_ScriptList();
 }

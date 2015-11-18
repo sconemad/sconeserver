@@ -145,6 +145,8 @@ protected:
   // Standard execution context  
   static ScriptRefTo<StandardContext>* s_standard_context;
 
+  // Standard type provider
+  static StandardTypeProvider* s_type_provider;
 };
 
 //===========================================================================
@@ -169,10 +171,6 @@ public:
 				   const ScriptRef& ref,
 				   const std::string& name,
 				   const ScriptRef* args);
-private:
-
-  StandardTypeProvider* m_type_provider;
-
 };
 
 //===========================================================================
