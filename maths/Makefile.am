@@ -10,11 +10,13 @@ endif
 
 maths_la_SOURCES = \
 MathsModule.cpp \
-Num.cpp
+MathsInt.cpp \
+MathsFloat.cpp
 
 noinst_HEADERS = \
 MathsModule.h \
-Num.h 
+MathsInt.h \
+MathsFloat.h 
 
 maths_la_LDFLAGS = -module -avoid-version
 maths_la_LIBADD = $(MATHS_LIBADD)

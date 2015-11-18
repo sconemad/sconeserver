@@ -19,7 +19,7 @@ along with this program (see the file COPYING); if not, write to the
 Free Software Foundation, Inc.,
 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA */
 
-#include "Num.h"
+#include "MathsFloat.h"
 #include "MathsModule.h"
 #include <sconex/UnitTester.h>
 using namespace scx;
@@ -30,13 +30,13 @@ void Num_ut()
 
   UTSEC("construction");
   
-  UTCOD(Num i1(mod.object(),0));
+  UTCOD(MathsFloat i1(mod.object(),0));
   UTEST(i1.get_int() == 0);
 
-  UTCOD(Num i2(mod.object(),1234567890));
+  UTCOD(MathsFloat i2(mod.object(),1234567890));
   UTEST(i2.get_int() == 1234567890);
 
-  UTCOD(Num i3(mod.object(),Mpfr("987654")));
+  UTCOD(MathsFloat i3(mod.object(),Mpfr("987654")));
   UTEST(i3.get_int() == 987654);
 
   //TODO: need to add more tests...
@@ -47,8 +47,8 @@ void Num_ut()
 
   // Compute 2^1000 - which produces quite a big number
 
-  Num::Ref i4r(new Num(mod.object(),2));
-  Num::Ref i5r(new Num(mod.object(),1e3));
+  MathsFloat::Ref i4r(new MathsFloat(mod.object(),2));
+  MathsFloat::Ref i5r(new MathsFloat(mod.object(),1e3));
 
   const char* _2pow1000 = 
     "10715086071862673209484250490600018105614048117055336074437503883703"
@@ -58,6 +58,6 @@ void Num_ut()
     "429831652624386837205668069376";
 
   UTCOD(test_script_op(i4r,ScriptOp::Power,i5r,
-		       Num(mod.object(),Mpfr(_2pow1000))));
+		       MathsFloat(mod.object(),Mpfr(_2pow1000))));
 
 }

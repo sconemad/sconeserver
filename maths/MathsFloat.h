@@ -19,8 +19,8 @@ along with this program (see the file COPYING); if not, write to the
 Free Software Foundation, Inc.,
 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA */
 
-#ifndef mathsComplex_h
-#define mathsComplex_h
+#ifndef mathsFloat_h
+#define mathsFloat_h
 
 #include <sconex/ScriptTypes.h>
 
@@ -132,18 +132,17 @@ inline Mpfr tanh(const Mpfr& v) { Mpfr r; mpfr_tanh(r,v,rnd); return r; }
 
 
 //=========================================================================
-// Num - A mathematical number (as if there were any other sort)
+// MathsFloat - A mathematical number (as if there were any other sort)
 //
-class Num : public scx::ScriptNum {
+class MathsFloat : public scx::ScriptNum {
 public:
 
-  Num(MathsModule* module, 
-      const Mpfr& re = 0.0, 
-      const Mpfr& im = 0.0);
+  MathsFloat(MathsModule* module,
+      const Mpfr& value = 0.0);
 
-  Num(const Num& c);
+  MathsFloat(const MathsFloat& c);
 
-  virtual ~Num();
+  virtual ~MathsFloat();
 
   static scx::ScriptObject* create(MathsModule* module, 
 				   const scx::ScriptRef* args);
@@ -163,24 +162,16 @@ public:
 					const std::string& name,
 					const scx::ScriptRef* args);
 
-  bool is_real() const;      // Num has only a real part
-  bool is_imaginary() const; // Num has only an imaginary part
-  bool is_complex() const;   // Num has both real and imaginary parts
-
-  const Mpfr& get_re() const;
-  const Mpfr& get_im() const;
-  Mpfr get_mod() const;
-  Mpfr get_arg() const;
-
+  const Mpfr& get_value() const;
+  
   std::string to_string(unsigned int dp) const;
   
-  typedef scx::ScriptRefTo<Num> Ref;
+  typedef scx::ScriptRefTo<MathsFloat> Ref;
 
 protected:
 
   scx::ScriptRefTo<MathsModule> m_module;
-  Mpfr m_re;
-  Mpfr m_im;
+  Mpfr m_value;
 
 };
 
