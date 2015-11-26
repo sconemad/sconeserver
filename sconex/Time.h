@@ -100,6 +100,9 @@ public:
   typedef ScriptRefTo<Time> Ref;
 
 protected:
+
+  void parse_string(const std::string& str);
+
   friend class Date;
   friend class TimeZone;
   timeval m_time;

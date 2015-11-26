@@ -104,9 +104,19 @@ Time::Time(const ScriptRef* args)
 {
   DEBUG_COUNT_CONSTRUCTOR(Time);
 
-  const ScriptInt* a_int = get_method_arg<ScriptInt>(args,0,"value");
-  if (a_int) {
-    m_time.tv_sec = a_int->get_int();
+  const ScriptNum* a_num = get_method_arg<ScriptNum>(args,0,"value");
+  if (a_num) {
+    double dt = a_num->get_real();
+    double sec = 0.0;
+    double subsec = modf(dt, &sec);
+    m_time.tv_sec = sec;
+    m_time.tv_usec = subsec * 1e6;
+    return;
+  }
+  
+  const ScriptString* a_string = get_method_arg<ScriptString>(args,0,"string");
+  if (a_string) {
+    parse_string(a_string->get_string());
   }
 }
 
@@ -115,77 +125,7 @@ Time::Time(const std::string& str)
   : m_time()
 {
   DEBUG_COUNT_CONSTRUCTOR(Time);
-  std::queue<time_tok> ts;
-  std::string::const_iterator it = str.begin();
-  time_tok cur;
-  cur.value=0;
-  int unq=0;
-  int sign=1;
-  bool got=false;
-
-  while (it < str.end()) {
-
-    if (isdigit(*it)) {
-      if (got) {
-        ts.push(cur);
-        unq += (!isalpha(cur.sep[0]));
-      }
-      cur.value=0; cur.sep="";
-      std::string::const_iterator it1(it);
-      do ++it; while (it < str.end() && isdigit(*it));
-      std::string token(it1,it);
-      cur.value = atoi(token.c_str());
-      got=true;
-
-    } else if (isalpha(*it)) {
-      std::string::const_iterator it1(it);
-      do ++it; while (it < str.end() && isalpha(*it));
-      cur.sep = std::string(it1,it);
-      strup(cur.sep);
-      
-    } else if ((*it)=='-') {
-      sign = -1;
-      ++it;
-
-    } else {
-      ++it;
-    }
-  }
-  if (got) {
-    ts.push(cur);
-    unq += (!isalpha(cur.sep[0]));
-  }
-
-  int seq=2;
-  if (unq>0 && unq<6) seq = 5-unq;
-
-  while (!ts.empty()) {
-    const time_tok& cur = ts.front();
-    if (cur.sep=="S" || cur.sep=="SEC" ||
-        cur.sep=="SECS" || cur.sep=="SECOND" || cur.sep=="SECONDS") {
-      seq=4;
-    } else if (cur.sep=="M" || cur.sep=="MIN" ||
-               cur.sep=="MINS" || cur.sep=="MINUTE" || cur.sep=="MINUTES") {
-      seq=3;
-    } else if (cur.sep=="H" || cur.sep=="HR" ||
-               cur.sep=="HRS" || cur.sep=="HOUR" || cur.sep=="HOURS") {
-      seq=2;
-    } else if (cur.sep=="D" || cur.sep=="DY" ||
-               cur.sep=="DYS" || cur.sep=="DAY" || cur.sep=="DAYS") {
-      seq=1;
-    } else if (cur.sep=="W" || cur.sep=="WK" ||
-               cur.sep=="WKS" || cur.sep=="WEEK" || cur.sep=="WEEKS") {
-      seq=0;
-    }
-    switch (seq++) {
-      case 0: m_time.tv_sec += sign*cur.value*SECONDS_PER_WEEK; break;
-      case 1: m_time.tv_sec += sign*cur.value*SECONDS_PER_DAY; break;
-      case 2: m_time.tv_sec += sign*cur.value*SECONDS_PER_HOUR; break;
-      case 3: m_time.tv_sec += sign*cur.value*SECONDS_PER_MINUTE; break;
-      case 4: m_time.tv_sec += sign*cur.value; break;
-    }
-    ts.pop();
-  }
+  parse_string(str);
 }
 
 //=============================================================================
@@ -444,6 +384,82 @@ ScriptRef* Time::script_op(const ScriptAuth& auth,
   }
 
   return ScriptObject::script_op(auth,ref,op,right);
+}
+
+//=============================================================================
+void Time::parse_string(const std::string& str)
+{
+  std::queue<time_tok> ts;
+  std::string::const_iterator it = str.begin();
+  time_tok cur;
+  cur.value=0;
+  int unq=0;
+  int sign=1;
+  bool got=false;
+
+  while (it < str.end()) {
+
+    if (isdigit(*it)) {
+      if (got) {
+        ts.push(cur);
+        unq += (!isalpha(cur.sep[0]));
+      }
+      cur.value=0; cur.sep="";
+      std::string::const_iterator it1(it);
+      do ++it; while (it < str.end() && isdigit(*it));
+      std::string token(it1,it);
+      cur.value = atoi(token.c_str());
+      got=true;
+
+    } else if (isalpha(*it)) {
+      std::string::const_iterator it1(it);
+      do ++it; while (it < str.end() && isalpha(*it));
+      cur.sep = std::string(it1,it);
+      strup(cur.sep);
+      
+    } else if ((*it)=='-') {
+      sign = -1;
+      ++it;
+
+    } else {
+      ++it;
+    }
+  }
+  if (got) {
+    ts.push(cur);
+    unq += (!isalpha(cur.sep[0]));
+  }
+
+  int seq=2;
+  if (unq>0 && unq<6) seq = 5-unq;
+
+  while (!ts.empty()) {
+    const time_tok& cur = ts.front();
+    if (cur.sep=="S" || cur.sep=="SEC" ||
+        cur.sep=="SECS" || cur.sep=="SECOND" || cur.sep=="SECONDS") {
+      seq=4;
+    } else if (cur.sep=="M" || cur.sep=="MIN" ||
+               cur.sep=="MINS" || cur.sep=="MINUTE" || cur.sep=="MINUTES") {
+      seq=3;
+    } else if (cur.sep=="H" || cur.sep=="HR" ||
+               cur.sep=="HRS" || cur.sep=="HOUR" || cur.sep=="HOURS") {
+      seq=2;
+    } else if (cur.sep=="D" || cur.sep=="DY" ||
+               cur.sep=="DYS" || cur.sep=="DAY" || cur.sep=="DAYS") {
+      seq=1;
+    } else if (cur.sep=="W" || cur.sep=="WK" ||
+               cur.sep=="WKS" || cur.sep=="WEEK" || cur.sep=="WEEKS") {
+      seq=0;
+    }
+    switch (seq++) {
+      case 0: m_time.tv_sec += sign*cur.value*SECONDS_PER_WEEK; break;
+      case 1: m_time.tv_sec += sign*cur.value*SECONDS_PER_DAY; break;
+      case 2: m_time.tv_sec += sign*cur.value*SECONDS_PER_HOUR; break;
+      case 3: m_time.tv_sec += sign*cur.value*SECONDS_PER_MINUTE; break;
+      case 4: m_time.tv_sec += sign*cur.value; break;
+    }
+    ts.pop();
+  }
 }
 
 
