@@ -23,7 +23,7 @@ Free Software Foundation, Inc.,
 #include <sconex/ModuleInterface.h>
 #include <sconex/Module.h>
 #include <sconex/ScriptTypes.h>
-#include <sconex/ScriptExpr.h>
+#include <sconex/ScriptContext.h>
 #include "LocalSocketAddress.h"
 
 //=========================================================================
@@ -48,13 +48,13 @@ SCONEX_MODULE(LocalModule);
 LocalModule::LocalModule(
 ) : scx::Module("local",scx::version())
 {
-  scx::ScriptExpr::register_type("LocalAddr",this);
+  scx::StandardContext::register_type("LocalAddr",this);
 }
 
 //=========================================================================
 LocalModule::~LocalModule()
 {
-  scx::ScriptExpr::unregister_type("LocalAddr",this);
+  scx::StandardContext::unregister_type("LocalAddr",this);
 }
 
 //=========================================================================

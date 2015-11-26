@@ -20,11 +20,7 @@ Free Software Foundation, Inc.,
 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA */
 
 #include <sconex/ScriptExpr.h>
-#include <sconex/VersionTag.h>
-#include <sconex/Uri.h>
-#include <sconex/Date.h>
-#include <sconex/MimeType.h>
-#include <sconex/RegExp.h>
+#include <sconex/ScriptContext.h>
 #include <sconex/utils.h>
 namespace scx {
 
@@ -39,8 +35,6 @@ ScriptExpr::OperatorMap* ScriptExpr::s_binary_ops = 0;
 ScriptExpr::OperatorMap* ScriptExpr::s_prefix_ops = 0;
 ScriptExpr::OperatorMap* ScriptExpr::s_postfix_ops = 0;
 ScriptExpr::PrecedenceMap* ScriptExpr::s_op_precs = 0;
-ScriptRefTo<StandardContext>* ScriptExpr::s_standard_context = 0;
-StandardTypeProvider* ScriptExpr::s_type_provider = 0;
 
 //===========================================================================
 ScriptExpr::ScriptExpr(const ScriptAuth& auth, ScriptRef* ctx)
@@ -49,7 +43,7 @@ ScriptExpr::ScriptExpr(const ScriptAuth& auth, ScriptRef* ctx)
     m_real_type("Real")
 {
   init();
-  m_contexts.push_back(s_standard_context);
+  m_contexts.push_back(StandardContext::get());
   if (ctx) m_contexts.push_back(ctx);
 }
 
@@ -114,7 +108,7 @@ ScriptRef* ScriptExpr::evaluate(const std::string& expr)
 void ScriptExpr::set_ctx(ScriptRef* ctx, bool include_standard)
 {
   m_contexts.clear();
-  if (include_standard) m_contexts.push_back(s_standard_context);
+  if (include_standard) m_contexts.push_back(StandardContext::get());
   if (ctx) m_contexts.push_back(ctx);
 }
 
@@ -152,31 +146,6 @@ void ScriptExpr::set_real_type(const std::string type)
 const std::string& ScriptExpr::get_real_type() const
 {
   return m_real_type;
-}
-
-//===========================================================================
-void ScriptExpr::register_type(const std::string& type,
-			       Provider<ScriptObject>* factory)
-{
-  init();
-  ScriptExpr_DEBUG_LOG("Registering standard type: " << type);
-  s_standard_context->object()->register_provider(type,factory);
-}
-
-//===========================================================================
-void ScriptExpr::unregister_type(const std::string& type,
-				 Provider<ScriptObject>* factory)
-{
-  init();
-  ScriptExpr_DEBUG_LOG("Unregistering standard type: " << type);
-  s_standard_context->object()->unregister_provider(type,factory);
-}
-
-//===========================================================================
-ScriptObject* ScriptExpr::create_object(const std::string& type,
-					const ScriptRef* args)
-{
-  return s_standard_context->object()->provide(type,args);
 }
 
 //===========================================================================
@@ -244,22 +213,25 @@ ScriptRef* ScriptExpr::expression(int p, bool f, bool exec)
 
           if (s==1 && args->get(0)==0 && ")"==m_name) {
             // Empty argument list, that's ok
+            ScriptExpr_DEBUG_LOG("Function call - no arguments");
             delete args_ref;
             args = new ScriptList();
 	    args_ref = new ScriptRef(args);
 
           } else if (m_type == ScriptExpr::Null) {
             // Error in argument list
+            ScriptExpr_DEBUG_LOG("Function call - error in arguments list");
             // return args[args->size()-1];
             delete args_ref;
             delete left;
-            return 0;
+            return ScriptError::new_ref("Bad argument list");
 
           } else if (ScriptExpr::Operator!=m_type || ")"!=m_name) {
+            ScriptExpr_DEBUG_LOG("Function call - badly terminated argument list");
             m_type = ScriptExpr::Null;
             delete args_ref;
             delete left;
-            return 0;
+            return ScriptError::new_ref("Badly terminated argument list");
           }
           next();
 
@@ -660,13 +632,13 @@ void ScriptExpr::next()
     args.object()->give(ScriptString::new_ref(m_name));
 
     if (num_dd==1 || ex == 1) {
-      m_value = new ScriptRef(create_object(m_real_type,&args));
+      m_value = new ScriptRef(StandardContext::create_object(m_real_type,&args));
       ScriptExpr_DEBUG_LOG("next: (Real) " << value);
       return;
     }
 
     if (num_dd==0) {
-      m_value = new ScriptRef(create_object(m_int_type,&args));
+      m_value = new ScriptRef(StandardContext::create_object(m_int_type,&args));
       ScriptExpr_DEBUG_LOG("next: (Int) " << value);
       return;
     }
@@ -876,152 +848,6 @@ void ScriptExpr::init()
   (*s_op_precs)[ScriptOp::Map] = ++p; // Map initializer
 
   (*s_op_precs)[ScriptOp::Lookup] = ++p; // Member access
-
-  // Create standard context
-  s_standard_context = 
-    new ScriptRefTo<StandardContext>(new StandardContext());
-
-  // This registers and handles creation of standard types
-  s_type_provider = new StandardTypeProvider();
 }
-
-
-//===========================================================================
-StandardContext::StandardContext()
-{
-
-}
-
-//===========================================================================
-StandardContext::~StandardContext()
-{
-
-}
-
-//===========================================================================
-std::string StandardContext::get_string() const
-{
-  return "Standard";
-}
-
-//===========================================================================
-ScriptRef* StandardContext::script_op(const ScriptAuth& auth,
-				      const ScriptRef& ref,
-				      const ScriptOp& op,
-				      const ScriptRef* right)
-{
-  if (ScriptOp::Lookup == op.type() || 
-      ScriptOp::Resolve == op.type()) {
-    std::string name = right->object()->get_string();
-
-    // Standard functions
-    if ("defined" == name ||
-	"ref" == name ||
-	"constref" == name) {
-      return new ScriptMethodRef(ref,name);
-    }
-
-    // Registered type constructors
-    ProviderMap::iterator it = m_providers.find(name);
-    if (it != m_providers.end()) {
-      return new ScriptMethodRef(ref,name);
-    }
-  }
-  return ScriptObject::script_op(auth,ref,op,right);
-}
-
-//===========================================================================
-ScriptRef* StandardContext::script_method(const ScriptAuth& auth,
-					  const ScriptRef& ref,
-					  const std::string& name,
-					  const ScriptRef* args)
-{
-  const ScriptList* argl = dynamic_cast<const ScriptList*>(args->object());
-  const ScriptRef* ar = argl->get(0);
-
-  if ("defined" == name) {
-    // Is the argument defined (i.e. its not NULL or an error)
-    return ScriptInt::new_ref(!BAD_SCRIPTREF(ar));
-  }
-
-  if ("ref" == name) {
-    // Return a reference to the argument
-    if (ar) return ar->ref_copy(ScriptRef::Ref);
-    return 0;
-  }
-
-  if ("constref" == name) {
-    // Return a const reference to the argument
-    if (ar) return ar->ref_copy(ScriptRef::ConstRef);
-    return 0;
-  }
-
-  // Registered type constructor, call provide to create the object
-  return new ScriptRef(provide(name,args));
-}
-
-//===========================================================================
-StandardTypeProvider::StandardTypeProvider() 
-{
-  ScriptExpr::register_type("String",this);
-  ScriptExpr::register_type("Bool",this);
-  ScriptExpr::register_type("Int",this);
-  ScriptExpr::register_type("Real",this);
-  ScriptExpr::register_type("Error",this);
-  ScriptExpr::register_type("VersionTag",this);
-  ScriptExpr::register_type("Date",this);
-  ScriptExpr::register_type("Time",this);
-  ScriptExpr::register_type("TimeZone",this);
-  ScriptExpr::register_type("Uri",this);
-  ScriptExpr::register_type("MimeType",this);
-#ifdef HAVE_LIBPCRE
-  ScriptExpr::register_type("RegExp",this);
-#endif
-};
-
-//===========================================================================
-void StandardTypeProvider::provide(const std::string& type,
-				   const ScriptRef* args,
-				   ScriptObject*& object)
-{
-  if ("String" == type) {
-    object = ScriptString::create(args);
-
-  } else if ("Bool" == type) {
-    object = ScriptBool::create(args);
-
-  } else if ("Int" == type) {
-    object = ScriptInt::create(args);
-
-  } else if ("Real" == type) {
-    object = ScriptReal::create(args);
-
-  } else if ("Error" == type) {
-    object = ScriptError::create(args);
-
-  } else if ("VersionTag" == type) {
-    object = new VersionTag(args);
-
-  } else if ("Date" == type) {
-    object = new Date(args);
-
-  } else if ("Time" == type) {
-    object = new Time(args);
-
-  } else if ("TimeZone" == type) {
-    object = new TimeZone(args);
-
-  } else if ("Uri" == type) {
-    object = new Uri(args);
-
-  } else if ("MimeType" == type) {
-    object = new MimeType(args);
-
-#ifdef HAVE_LIBPCRE
-  } else if ("RegExp" == type) {
-    object = new RegExp(args);
-#endif
-  }
-};
 
 };

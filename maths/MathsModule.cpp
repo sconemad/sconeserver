@@ -23,7 +23,7 @@ Free Software Foundation, Inc.,
 #include <sconex/ModuleInterface.h>
 #include <sconex/Module.h>
 #include <sconex/ScriptTypes.h>
-#include <sconex/ScriptExpr.h>
+#include <sconex/ScriptContext.h>
 
 #include "MathsModule.h"
 #include "MathsInt.h"
@@ -87,10 +87,10 @@ std::string MathsModule::info() const
 //=============================================================================
 int MathsModule::init()
 {
-  //  mpfr_set_default_prec(1024);
+  mpfr_set_default_prec(1024);
 
-  scx::ScriptExpr::register_type("MathsFloat",this);
-  scx::ScriptExpr::register_type("MathsInt",this);
+  scx::StandardContext::register_type("MathsFloat",this);
+  scx::StandardContext::register_type("MathsInt",this);
 
   return scx::Module::init();
 }
@@ -98,8 +98,8 @@ int MathsModule::init()
 //=============================================================================
 bool MathsModule::close()
 {
-  scx::ScriptExpr::unregister_type("MathsFloat",this);
-  scx::ScriptExpr::unregister_type("MathsInt",this);
+  scx::StandardContext::unregister_type("MathsFloat",this);
+  scx::StandardContext::unregister_type("MathsInt",this);
 
   return scx::Module::close();
 }

@@ -29,7 +29,7 @@ Free Software Foundation, Inc.,
 #include <sconex/StreamSocket.h>
 #include <sconex/Kernel.h>
 #include <sconex/ScriptTypes.h>
-#include <sconex/ScriptExpr.h>
+#include <sconex/ScriptContext.h>
 namespace http {
 
 //=============================================================================
@@ -151,7 +151,7 @@ bool Client::run(const std::string& request_data)
   args.object()->give( scx::ScriptString::new_ref(addr_url.get_host()) );
   args.object()->give( scx::ScriptInt::new_ref(addr_url.get_port()) );
 
-  scx::ScriptObject* addr_obj = scx::ScriptExpr::create_object("IPAddr",&args);
+  scx::ScriptObject* addr_obj = scx::StandardContext::create_object("IPAddr",&args);
   addr = dynamic_cast<scx::SocketAddress*>(addr_obj);
 
   if (addr == 0) {

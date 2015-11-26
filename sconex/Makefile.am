@@ -43,6 +43,7 @@ Process.cpp \
 RegExp.cpp \
 Response.cpp \
 ScriptBase.cpp \
+ScriptContext.cpp \
 ScriptEngine.cpp \
 ScriptExpr.cpp \
 ScriptStatement.cpp \
@@ -105,6 +106,7 @@ Provider.h \
 RegExp.h \
 Response.h \
 ScriptBase.h \
+ScriptContext.h \
 ScriptEngine.h \
 ScriptExpr.h \
 ScriptStatement.h \

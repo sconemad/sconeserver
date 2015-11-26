@@ -156,22 +156,22 @@ scx::ScriptRef* MathsFloat::script_op(const scx::ScriptAuth& auth,
 	}
 
       case scx::ScriptOp::GreaterThan:
-	return scx::ScriptInt::new_ref(m_value > rvalue->get_value());
+	return scx::ScriptBool::new_ref(m_value > rvalue->get_value());
 	
       case scx::ScriptOp::LessThan:
-	return scx::ScriptInt::new_ref(m_value < rvalue->get_value());
+	return scx::ScriptBool::new_ref(m_value < rvalue->get_value());
 	
       case scx::ScriptOp::GreaterThanOrEqualTo:
-	return scx::ScriptInt::new_ref(m_value >= rvalue->get_value());
+	return scx::ScriptBool::new_ref(m_value >= rvalue->get_value());
 	
       case scx::ScriptOp::LessThanOrEqualTo:
-	return scx::ScriptInt::new_ref(m_value <= rvalue->get_value());
+	return scx::ScriptBool::new_ref(m_value <= rvalue->get_value());
 	
       case scx::ScriptOp::Equality:
-	return scx::ScriptInt::new_ref(m_value == rvalue->get_value());
+	return scx::ScriptBool::new_ref(m_value == rvalue->get_value());
 	
       case scx::ScriptOp::Inequality:
-	return scx::ScriptInt::new_ref(m_value != rvalue->get_value());
+	return scx::ScriptBool::new_ref(m_value != rvalue->get_value());
 
       case scx::ScriptOp::Assign:
 	if (!ref.is_const()) {

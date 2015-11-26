@@ -23,7 +23,7 @@ Free Software Foundation, Inc.,
 #include <sconex/ModuleInterface.h>
 #include <sconex/Module.h>
 #include <sconex/ScriptTypes.h>
-#include <sconex/ScriptExpr.h>
+#include <sconex/ScriptContext.h>
 #include "BluetoothSocketAddress.h"
 
 //=========================================================================
@@ -48,13 +48,13 @@ SCONEX_MODULE(BluetoothModule);
 BluetoothModule::BluetoothModule(
 ) : scx::Module("bluetooth",scx::version())
 {
-  scx::ScriptExpr::register_type("BTAddr",this);
+  scx::StandardContext::register_type("BTAddr",this);
 }
 
 //=========================================================================
 BluetoothModule::~BluetoothModule()
 {
-  scx::ScriptExpr::unregister_type("BTAddr",this);
+  scx::StandardContext::unregister_type("BTAddr",this);
 }
 
 //=========================================================================

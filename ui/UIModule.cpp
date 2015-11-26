@@ -24,6 +24,7 @@ Free Software Foundation, Inc.,
 #include "UIDisplay.h"
 #include "UIWindow.h"
 #include <sconex/Kernel.h>
+#include <sconex/ScriptContext.h>
 
 SCONEX_MODULE(UIModule);
 
@@ -34,13 +35,13 @@ UIModule::UIModule()
     m_window(0)
 {
   XInitThreads();
-  scx::ScriptExpr::register_type("Window",this);
+  scx::StandardContext::register_type("Window",this);
 }
 
 //=========================================================================
 UIModule::~UIModule()
 {
-  scx::ScriptExpr::unregister_type("Window",this);
+  scx::StandardContext::unregister_type("Window",this);
 }
 
 //=========================================================================

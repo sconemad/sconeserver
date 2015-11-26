@@ -28,9 +28,6 @@ Free Software Foundation, Inc.,
 #include <sconex/Provider.h>
 namespace scx {
 
-class StandardContext;
-class StandardTypeProvider;
-
 //=============================================================================
 // ScriptExpr - this is the SconeScript expression evaluator. 
 // It parses and evaluates single line SconeScript expressions given as a 
@@ -64,19 +61,6 @@ public:
   // Set type to use for real literals (default "Real")
   void set_real_type(const std::string type);
   const std::string& get_real_type() const;
-
-  // Register/unregister object types
-  // Modules can use these methods to register object types that they 
-  // provide, to make them available in the standard context.
-  static void register_type(const std::string& type,
-			    Provider<ScriptObject>* factory);
-  static void unregister_type(const std::string& type,
-			      Provider<ScriptObject>* factory);
-
-  // Method to programatically create an object of one of the registered
-  // standard types.
-  static ScriptObject* create_object(const std::string& type,
-				     const ScriptRef* args);
 
 protected:
 
@@ -141,49 +125,6 @@ protected:
   // Operator type -> precedence mapping
   typedef std::map<ScriptOp::OpType,int> PrecedenceMap;
   static PrecedenceMap* s_op_precs;
-
-  // Standard execution context  
-  static ScriptRefTo<StandardContext>* s_standard_context;
-
-  // Standard type provider
-  static StandardTypeProvider* s_type_provider;
-};
-
-//===========================================================================
-// StandardContext - This is the standard context used by default when 
-// evaluating expressions.
-//
-class StandardContext : public ScriptObject, 
-                        public ProviderScheme<ScriptObject> {
-public:
-
-  StandardContext();
-  ~StandardContext();
-
-  virtual std::string get_string() const;
-
-  virtual ScriptRef* script_op(const ScriptAuth& auth,
-			       const ScriptRef& ref,
-			       const ScriptOp& op,
-			       const ScriptRef* right=0);
-
-  virtual ScriptRef* script_method(const ScriptAuth& auth,
-				   const ScriptRef& ref,
-				   const std::string& name,
-				   const ScriptRef* args);
-};
-
-//===========================================================================
-// StandardTypeProvider - This registers the standard SconeScript types and
-// provides constructors for them.
-//
-class StandardTypeProvider : public Provider<ScriptObject> {
-public:
-
-  StandardTypeProvider();
-  virtual void provide(const std::string& type,
-		       const ScriptRef* args,
-		       ScriptObject*& object);
 };
 
 };

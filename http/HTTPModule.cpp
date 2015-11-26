@@ -30,7 +30,7 @@ Free Software Foundation, Inc.,
 #include <sconex/ScriptTypes.h>
 #include <sconex/ModuleInterface.h>
 #include <sconex/StreamDebugger.h>
-#include <sconex/ScriptExpr.h>
+#include <sconex/ScriptContext.h>
 
 namespace http {
 
@@ -48,7 +48,7 @@ HTTPModule::HTTPModule()
   scx::Stream::register_stream("getfile",this);
   scx::Stream::register_stream("dirindex",this);
   scx::Stream::register_stream("errorpage",this);
-  scx::ScriptExpr::register_type("HTTPClient",this);
+  scx::StandardContext::register_type("HTTPClient",this);
 
   m_hosts = new HostMapper::Ref(new HostMapper(*this));
   m_realms = new AuthRealmManager::Ref(new AuthRealmManager(this));
@@ -62,7 +62,7 @@ HTTPModule::~HTTPModule()
   scx::Stream::unregister_stream("getfile",this);
   scx::Stream::unregister_stream("dirindex",this);
   scx::Stream::unregister_stream("errorpage",this);
-  scx::ScriptExpr::unregister_type("HTTPClient",this);
+  scx::StandardContext::unregister_type("HTTPClient",this);
 }
 
 //=========================================================================

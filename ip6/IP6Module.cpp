@@ -23,7 +23,7 @@ Free Software Foundation, Inc.,
 #include <sconex/ModuleInterface.h>
 #include <sconex/Module.h>
 #include <sconex/ScriptTypes.h>
-#include <sconex/ScriptExpr.h>
+#include <sconex/ScriptContext.h>
 #include "IP6SocketAddress.h"
 
 //=========================================================================
@@ -48,13 +48,13 @@ SCONEX_MODULE(IP6Module);
 IP6Module::IP6Module(
 ) : scx::Module("ip6",scx::version())
 {
-  scx::ScriptExpr::register_type("IP6Addr",this);
+  scx::StandardContext::register_type("IP6Addr",this);
 }
 
 //=========================================================================
 IP6Module::~IP6Module()
 {
-  scx::ScriptExpr::unregister_type("IP6Addr",this);
+  scx::StandardContext::unregister_type("IP6Addr",this);
 }
 
 //=========================================================================

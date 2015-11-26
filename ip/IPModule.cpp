@@ -23,7 +23,7 @@ Free Software Foundation, Inc.,
 #include <sconex/ModuleInterface.h>
 #include <sconex/Module.h>
 #include <sconex/ScriptTypes.h>
-#include <sconex/ScriptExpr.h>
+#include <sconex/ScriptContext.h>
 #include "IPSocketAddress.h"
 
 //=========================================================================
@@ -48,13 +48,13 @@ SCONEX_MODULE(IPModule);
 IPModule::IPModule(
 ) : scx::Module("ip",scx::version())
 {
-  scx::ScriptExpr::register_type("IPAddr",this);
+  scx::StandardContext::register_type("IPAddr",this);
 }
 
 //=========================================================================
 IPModule::~IPModule()
 {
-  scx::ScriptExpr::unregister_type("IPAddr",this);
+  scx::StandardContext::unregister_type("IPAddr",this);
 }
 
 //=========================================================================

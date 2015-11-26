@@ -25,7 +25,7 @@ Free Software Foundation, Inc.,
 #include <sconex/ScriptTypes.h>
 #include <sconex/ModuleInterface.h>
 #include <sconex/Process.h>
-#include <sconex/ScriptExpr.h>
+#include <sconex/ScriptContext.h>
 
 namespace smtp {
 
@@ -36,13 +36,13 @@ SMTPModule::SMTPModule()
   : SCXBASE Module("smtp",scx::version()),
     m_server(0)
 {
-  scx::ScriptExpr::register_type("SMTPClient",this);
+  scx::StandardContext::register_type("SMTPClient",this);
 }
 
 //=========================================================================
 SMTPModule::~SMTPModule()
 {
-  scx::ScriptExpr::unregister_type("SMTPClient",this);
+  scx::StandardContext::unregister_type("SMTPClient",this);
   delete m_server;
 }
 
