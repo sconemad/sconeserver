@@ -271,6 +271,28 @@ scx::ScriptRef* MathsInt::script_method(const scx::ScriptAuth& auth,
     mpz_t r; mpz_init(r); mpz_abs(r, m_value);
     return MathsInt::new_ref(m, r);
   }
+
+  if ("gcd" == name) {
+    const MathsInt* a = scx::get_method_arg<MathsInt>(args,0,"a");
+    const MathsInt* b = scx::get_method_arg<MathsInt>(args,1,"b");
+    if (!a || !a) 
+      return scx::ScriptError::new_ref("No a or b value specified");
+    mpz_t r; mpz_init(r); mpz_gcd(r, a->get_value(), b->get_value());
+    return MathsInt::new_ref(m, r);
+  }
+
+  if ("lcm" == name) {
+    const MathsInt* a = scx::get_method_arg<MathsInt>(args,0,"a");
+    const MathsInt* b = scx::get_method_arg<MathsInt>(args,1,"b");
+    if (!a || !a) 
+      return scx::ScriptError::new_ref("No a or b value specified");
+    mpz_t r; mpz_init(r); mpz_lcm(r, a->get_value(), b->get_value());
+    return MathsInt::new_ref(m, r);
+  }
+
+  // Promote to float to handle other methods
+  scx::ScriptRef fl(new MathsFloat(m_module.object(), get_string()));
+  return fl.object()->script_method(auth, ref, name, args);
   
   return scx::ScriptObject::script_method(auth,ref,name,args);
 }

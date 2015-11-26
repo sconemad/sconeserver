@@ -63,6 +63,8 @@ public:
 private:
   unsigned int m_sf;
 
+  std::set<std::string> m_funcs;
+
 };
 
 #endif

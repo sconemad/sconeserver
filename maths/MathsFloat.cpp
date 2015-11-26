@@ -332,6 +332,9 @@ scx::ScriptRef* MathsFloat::script_method(const scx::ScriptAuth& auth,
     if (!y || !x) 
       return scx::ScriptError::new_ref("No x or y value specified");
     r = new MathsFloat(m,atan2(y->get_value(), x->get_value()));
+
+  } else if ("sqrt" == name) {
+    r = new MathsFloat(m, sqrt(m_value));
   }
 
   if (r) return new scx::ScriptRef(r);

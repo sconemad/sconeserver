@@ -66,6 +66,24 @@ MathsModule::MathsModule()
     m_sf(16)
 {
   ::mp_set_memory_functions(alloc_func, realloc_func, free_func);
+  m_funcs.insert("abs");
+  m_funcs.insert("ceil");
+  m_funcs.insert("floor");
+  m_funcs.insert("trunc");
+  m_funcs.insert("ln");
+  m_funcs.insert("exp");
+  m_funcs.insert("sin");
+  m_funcs.insert("cos");
+  m_funcs.insert("tan");
+  m_funcs.insert("sinh");
+  m_funcs.insert("cosh");
+  m_funcs.insert("asin");
+  m_funcs.insert("acos");
+  m_funcs.insert("atan");
+  m_funcs.insert("atan2");
+  m_funcs.insert("sqrt");
+  m_funcs.insert("gcd");
+  m_funcs.insert("lcm");
 }
 
 //=========================================================================
@@ -120,25 +138,8 @@ scx::ScriptRef* MathsModule::script_op(const scx::ScriptAuth& auth,
     std::string name = right->object()->get_string();
 
     // Methods
-
-    if ("abs" == name || 
-	"ceil" == name ||
-	"floor" == name ||
-	"trunc" == name ||
-	"ln" == name || 
-	"exp" == name ||
-	"sin" == name || 
-	"cos" == name || 
-	"tan" == name ||
-	"sinh" == name || 
-	"cosh" == name ||
-	"asin" == name || 
-	"acos" == name || 
-	"atan" == name || 
-	"atan2" == name) {
-      return new scx::ScriptMethodRef(ref,name);
-    }
-
+    if (m_funcs.count(name)) return new scx::ScriptMethodRef(ref,name);
+    
     // Properties
     MathsFloat* c = 0;
 
@@ -161,21 +162,7 @@ scx::ScriptRef* MathsModule::script_method(const scx::ScriptAuth& auth,
 					   const std::string& name,
 					   const scx::ScriptRef* args)
 {
-  if ("abs" == name || 
-      "ceil" == name ||
-      "floor" == name ||
-      "trunc" == name ||
-      "ln" == name || 
-      "exp" == name ||
-      "sin" == name || 
-      "cos" == name || 
-      "tan" == name ||
-      "sinh" == name || 
-      "cosh" == name ||
-      "asin" == name || 
-      "acos" == name || 
-      "atan" == name || 
-      "atan2" == name) {
+  if (m_funcs.count(name)) {
     const scx::ScriptNum* n =
       scx::get_method_arg<scx::ScriptNum>(args,0,"value");
     if (!n) return scx::ScriptError::new_ref("No value specified");
