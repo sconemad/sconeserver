@@ -162,8 +162,13 @@ scx::ScriptRef* MathsInt::script_op(const scx::ScriptAuth& auth,
       return MathsInt::new_ref(m, r);
     }
     case scx::ScriptOp::Divide: {
-      mpz_t r; mpz_init(r); mpz_tdiv_q(r, m_value, rvalue);
-      return MathsInt::new_ref(m, r);
+      if (mpz_divisible_p(m_value, rvalue)) {
+	mpz_t r; mpz_init(r); mpz_tdiv_q(r, m_value, rvalue);
+	return MathsInt::new_ref(m, r);
+      }
+      // Promote to float to handle non-integer division
+      scx::ScriptRef fl(new MathsFloat(m_module.object(), get_string()));
+      return fl.object()->script_op(auth, ref, op, right);
     }
     case scx::ScriptOp::Modulus: {
       mpz_t r; mpz_init(r); mpz_tdiv_r(r, m_value, rvalue);
@@ -208,6 +213,7 @@ scx::ScriptRef* MathsInt::script_op(const scx::ScriptAuth& auth,
       return ref.ref_copy();
     }
     case scx::ScriptOp::DivideAssign: {
+      //XXX promote to float if not integer
       if (!ref.is_const()) mpz_tdiv_q(m_value, m_value, rvalue);
       return ref.ref_copy();
     }
