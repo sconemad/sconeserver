@@ -63,7 +63,7 @@ void free_func(void* ptr, size_t /* size */)
 //=========================================================================
 MathsModule::MathsModule() 
   : scx::Module("maths",scx::version()),
-    m_sf(16)
+    m_sf(0)
 {
   ::mp_set_memory_functions(alloc_func, realloc_func, free_func);
   m_funcs.insert("abs");
@@ -98,14 +98,15 @@ std::string MathsModule::info() const
   std::ostringstream oss;
   oss << "Mathematics\n"
       << "Using gmp-" << gmp_version << " (gmplib.org)\n"
-      << "Using mpfr-" << mpfr_get_version() << " (mpfr.org)\n";
+      << "Using mpfr-" << mpfr_get_version() << " (mpfr.org)\n"
+      << "Max float precision: " << MPFR_PREC_MAX << " bits\n";
   return oss.str();
 }
 
 //=============================================================================
 int MathsModule::init()
 {
-  mpfr_set_default_prec(1024);
+  mpfr_set_default_prec(128);
 
   scx::StandardContext::register_type("MathsFloat",this);
   scx::StandardContext::register_type("MathsInt",this);
@@ -137,17 +138,34 @@ scx::ScriptRef* MathsModule::script_op(const scx::ScriptAuth& auth,
   if (scx::ScriptOp::Lookup == op.type()) {
     std::string name = right->object()->get_string();
 
+    if ("set_prec" == name ||
+	"set_sf" == name) 
+      return new scx::ScriptMethodRef(ref,name);
+    
     // Methods
     if (m_funcs.count(name)) return new scx::ScriptMethodRef(ref,name);
     
     // Properties
     MathsFloat* c = 0;
 
-    if ("PI" == name) 
-      c = new MathsFloat(this,M_PI);
+    if ("prec" == name) {
+      return scx::ScriptInt::new_ref(mpfr_get_default_prec());
+    }
 
-    else if ("e" == name) 
-      c = new MathsFloat(this,M_E);
+    if ("sf" == name) {
+      return scx::ScriptInt::new_ref(m_sf);
+    }
+    
+    if ("PI" == name) {
+      Mpfr(r); mpfr_const_pi(r, rnd);
+      c = new MathsFloat(this, r);
+    }
+
+    else if ("e" == name) {
+      Mpfr r(1);
+      c = new MathsFloat(this, exp(r));
+      mpfr_clear(r);
+    }
 
     if (c) return new scx::ScriptRef(c,scx::ScriptRef::ConstRef);
 
@@ -162,6 +180,22 @@ scx::ScriptRef* MathsModule::script_method(const scx::ScriptAuth& auth,
 					   const std::string& name,
 					   const scx::ScriptRef* args)
 {
+  if ("set_prec" == name) {
+    const scx::ScriptNum* a_prec = 
+      scx::get_method_arg<scx::ScriptNum>(args,0,"value");
+    if (!a_prec) return scx::ScriptError::new_ref("No value specified");
+    mpfr_set_default_prec(a_prec->get_int());
+    return 0;
+  }
+  
+  if ("set_sf" == name) {
+    const scx::ScriptNum* a_sf = 
+      scx::get_method_arg<scx::ScriptNum>(args,0,"value");
+    if (!a_sf) return scx::ScriptError::new_ref("No value specified");
+    m_sf = a_sf->get_int();
+    return 0;
+  }
+
   if (m_funcs.count(name)) {
     const scx::ScriptNum* n =
       scx::get_method_arg<scx::ScriptNum>(args,0,"value");
