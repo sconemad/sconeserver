@@ -1,3 +1,40 @@
+sconeserver (0.9.9ppa3) precise; urgency=low
+
+  * New features:
+    - New "markdown" module for sconesite, supporting commonmark docs.
+    - Multiple template locations for sconesite, with standard templates.
+    - Sconesite allows article type to be specified on creation.
+    - Allow backlog to be specified for listening sockets.
+    - Thread pool dynamically expands if required.
+    - Support chunked transfer encoding in http::Client, RSS feeds.
+    - Improved float and int support in maths module using MPFR and GMP.
+
+  * Fixes:
+    - Improved logging from http and sconesite.
+    - Improved error handling in sconesite.
+    - Improved Thread interface.
+    - Improved Multiplexer (removing use of SIGUSR1).
+    - Numerous minor fixes and improvements.
+
+ -- Andrew Wedgbury <wedge@sconemad.com>  Tue, 22 Dec 2015 21:54:50 +0000
+
+sconeserver (0.9.9ppa2) precise; urgency=low
+
+  * New features:
+    - New "sconectl" command-line config/control client.
+    - Add/remove user methods in HTTP AuthRealm.
+    - Use If-Modified-Since for more efficient RSS feed refreshes.
+
+  * Fixes:
+    - Disable SSLv2 and SSLv3 methods.
+    - Eliminate lots of compiler warnings and spelling mistakes.
+    - Fixed tuesdayonly example module.
+    - Improvements to HTTP session security.
+    - Use socket timeout during SSL connecting stage.
+    - Use pkgconfig to detect openssl and libgps.
+
+ -- Andrew Wedgbury <wedge@sconemad.com>  Tue, 02 Jun 2015 05:55:34 +0000
+
 sconeserver (0.9.9ppa1) precise; urgency=low
 
   * Bump version to 0.9.9.
