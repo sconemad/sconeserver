@@ -281,7 +281,7 @@ scx::ScriptRef* MathsInt::script_method(const scx::ScriptAuth& auth,
   if ("gcd" == name) {
     const MathsInt* a = scx::get_method_arg<MathsInt>(args,0,"a");
     const MathsInt* b = scx::get_method_arg<MathsInt>(args,1,"b");
-    if (!a || !a) 
+    if (!a || !b) 
       return scx::ScriptError::new_ref("No a or b value specified");
     mpz_t r; mpz_init(r); mpz_gcd(r, a->get_value(), b->get_value());
     return MathsInt::new_ref(m, r);
@@ -290,7 +290,7 @@ scx::ScriptRef* MathsInt::script_method(const scx::ScriptAuth& auth,
   if ("lcm" == name) {
     const MathsInt* a = scx::get_method_arg<MathsInt>(args,0,"a");
     const MathsInt* b = scx::get_method_arg<MathsInt>(args,1,"b");
-    if (!a || !a) 
+    if (!a || !b) 
       return scx::ScriptError::new_ref("No a or b value specified");
     mpz_t r; mpz_init(r); mpz_lcm(r, a->get_value(), b->get_value());
     return MathsInt::new_ref(m, r);
