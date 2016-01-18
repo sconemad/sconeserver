@@ -55,7 +55,7 @@ scx::ScriptObject* MathsFloat::create(MathsModule* module,
   const scx::ScriptNum* nvalue = 
     value ? dynamic_cast<const scx::ScriptNum*>(value->object()) : 0;
   if (nvalue) {
-    return new MathsFloat(module,nvalue->get_real());
+    return new MathsFloat(module,nvalue->get_string());
   }
   
   return new MathsFloat(module,value ? value->object()->get_string() : "0");
@@ -112,7 +112,7 @@ scx::ScriptRef* MathsFloat::script_op(const scx::ScriptAuth& auth,
       if (rc) {
 	rvalue = rc;
       } else if (rn) {
-	cc = MathsFloat(m_module.object(),rn->get_real());
+	cc = MathsFloat(m_module.object(),rn->get_string());
 	rvalue = &cc;
       }
 
@@ -338,6 +338,12 @@ scx::ScriptRef* MathsFloat::script_method(const scx::ScriptAuth& auth,
   }
 
   if (r) return new scx::ScriptRef(r);
+
+  if ("mean" == name) {
+    const scx::ScriptList* al = scx::get_method_arg<scx::ScriptList>(args,0,"list");
+    if (al) return mean_list(al);
+    return mean_list(dynamic_cast<const scx::ScriptList*>(args->object()));
+  }
   
   return scx::ScriptObject::script_method(auth,ref,name,args);
 }
@@ -368,3 +374,28 @@ std::string MathsFloat::to_string(unsigned int dp) const
   mpfr_free_str(cs);
   return str;
 }
+
+//=========================================================================
+scx::ScriptRef* MathsFloat::mean_list(const scx::ScriptList* l)
+{
+  if (!l || l->size() == 0) return scx::ScriptError::new_ref("No arguments specified");
+
+  Mpfr r(0);
+  for (int i=0; i<l->size(); ++i) {
+    const scx::ScriptRef* a = l->get(i);
+    if (!a) return scx::ScriptError::new_ref("No value specified");
+    const MathsFloat* af = dynamic_cast<const MathsFloat*>(a->object());
+    const scx::ScriptNum* an = dynamic_cast<const scx::ScriptNum*>(a->object());
+    if (af) {
+      r = r + Mpfr(af->get_value());
+    } else if (an) {
+      r = r + Mpfr(an->get_string());
+    } else {
+      return scx::ScriptError::new_ref("Non numeric value specified");
+    }
+  }
+
+  r = r / l->size();
+  return new scx::ScriptRef(new MathsFloat(m_module.object(), r));
+}
+  

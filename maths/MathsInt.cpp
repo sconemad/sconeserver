@@ -82,17 +82,10 @@ MathsInt::~MathsInt()
 
 //=========================================================================
 scx::ScriptObject* MathsInt::create(MathsModule* module,
-			       const scx::ScriptRef* args)
+				    const scx::ScriptRef* args)
 {
   const scx::ScriptRef* value =
     scx::get_method_arg_ref(args,0,"value");
-
-  const scx::ScriptNum* nvalue = 
-    value ? dynamic_cast<const scx::ScriptNum*>(value->object()) : 0;
-  if (nvalue) {
-    return new MathsInt(module, nvalue->get_real());
-  }
-  
   return new MathsInt(module, value ? value->object()->get_string() : "0");
 }
 
@@ -279,20 +272,19 @@ scx::ScriptRef* MathsInt::script_method(const scx::ScriptAuth& auth,
   }
 
   if ("gcd" == name) {
-    const MathsInt* a = scx::get_method_arg<MathsInt>(args,0,"a");
-    const MathsInt* b = scx::get_method_arg<MathsInt>(args,1,"b");
-    if (!a || !b) 
-      return scx::ScriptError::new_ref("No a or b value specified");
-    mpz_t r; mpz_init(r); mpz_gcd(r, a->get_value(), b->get_value());
-    return MathsInt::new_ref(m, r);
+    const scx::ScriptList* al = scx::get_method_arg<scx::ScriptList>(args,0,"list");
+    if (al) return gcd_list(al);
+    return gcd_list(dynamic_cast<const scx::ScriptList*>(args->object()));
   }
 
   if ("lcm" == name) {
-    const MathsInt* a = scx::get_method_arg<MathsInt>(args,0,"a");
-    const MathsInt* b = scx::get_method_arg<MathsInt>(args,1,"b");
-    if (!a || !b) 
-      return scx::ScriptError::new_ref("No a or b value specified");
-    mpz_t r; mpz_init(r); mpz_lcm(r, a->get_value(), b->get_value());
+    const scx::ScriptList* al = scx::get_method_arg<scx::ScriptList>(args,0,"list");
+    if (al) return lcm_list(al);
+    return lcm_list(dynamic_cast<const scx::ScriptList*>(args->object()));
+  }
+
+  if ("fib" == name) {
+    mpz_t r; mpz_init(r); mpz_fib_ui(r, mpz_get_ui(m_value));
     return MathsInt::new_ref(m, r);
   }
 
@@ -317,3 +309,48 @@ std::string MathsInt::to_string() const
   ::free(cs);
   return str;
 }
+
+//=========================================================================
+scx::ScriptRef* MathsInt::gcd_list(const scx::ScriptList* l)
+{
+  if (!l || l->size() == 0) return scx::ScriptError::new_ref("No arguments specified");
+
+  const scx::ScriptRef* a = l->get(0);
+  const MathsInt* ai = a ? dynamic_cast<const MathsInt*>(a->object()) : 0;
+  mpz_t r; mpz_init_set(r, ai->get_value());
+  
+  for (int i=1; i<l->size(); ++i) {
+    const scx::ScriptRef* b = l->get(i);
+    const MathsInt* bi = b ? dynamic_cast<const MathsInt*>(b->object()) : 0;
+    if (!bi) {
+      mpz_clear(r);
+      return scx::ScriptError::new_ref("Non integer value specified");
+    }
+    mpz_gcd(r, r, bi->get_value());
+  }
+
+  return MathsInt::new_ref(m_module.object(), r);
+}
+      
+//=========================================================================
+scx::ScriptRef* MathsInt::lcm_list(const scx::ScriptList* l)
+{
+  if (!l || l->size() == 0) return scx::ScriptError::new_ref("No arguments specified");
+
+  const scx::ScriptRef* a = l->get(0);
+  const MathsInt* ai = a ? dynamic_cast<const MathsInt*>(a->object()) : 0;
+  mpz_t r; mpz_init_set(r, ai->get_value());
+  
+  for (int i=1; i<l->size(); ++i) {
+    const scx::ScriptRef* b = l->get(i);
+    const MathsInt* bi = b ? dynamic_cast<const MathsInt*>(b->object()) : 0;
+    if (!bi) {
+      mpz_clear(r);
+      return scx::ScriptError::new_ref("Non integer value specified");
+    }
+    mpz_lcm(r, r, bi->get_value());
+  }
+
+  return MathsInt::new_ref(m_module.object(), r);
+}
+    

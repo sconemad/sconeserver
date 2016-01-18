@@ -84,6 +84,8 @@ MathsModule::MathsModule()
   m_funcs.insert("sqrt");
   m_funcs.insert("gcd");
   m_funcs.insert("lcm");
+  m_funcs.insert("mean");
+  m_funcs.insert("fib");
 }
 
 //=========================================================================

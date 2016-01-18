@@ -170,6 +170,8 @@ public:
 
 protected:
 
+  scx::ScriptRef* mean_list(const scx::ScriptList* l);
+
   scx::ScriptRefTo<MathsModule> m_module;
   Mpfr m_value;
 

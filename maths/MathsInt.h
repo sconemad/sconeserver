@@ -72,6 +72,9 @@ public:
 
 protected:
 
+  scx::ScriptRef* gcd_list(const scx::ScriptList* l);
+  scx::ScriptRef* lcm_list(const scx::ScriptList* l);
+  
   scx::ScriptRefTo<MathsModule> m_module;
   mpz_t m_value;
 
