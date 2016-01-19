@@ -353,6 +353,7 @@ scx::ScriptRef* RenderMarkupContext::script_op(const scx::ScriptAuth& auth,
 	"escape" == name ||
 	"urlencode" == name ||
 	"urldecode" == name ||
+	"random_string" == name ||
 	"get_articles" == name ||
 	"process_article" == name ||
 	"edit_article" == name ||
@@ -469,6 +470,14 @@ scx::ScriptRef* RenderMarkupContext::script_method(const scx::ScriptAuth& auth,
       scx::get_method_arg<scx::ScriptString>(args,0,"value");
     if (value)
       return scx::ScriptString::new_ref(scx::Uri::decode(value->get_string()));
+    return scx::ScriptString::new_ref("");
+  }
+
+  if (name == "random_string") {
+    const scx::ScriptInt* len = 
+      scx::get_method_arg<scx::ScriptInt>(args,0,"len");
+    if (len)
+      return scx::ScriptString::new_ref(scx::random_b64url_string(len->get_int()));
     return scx::ScriptString::new_ref("");
   }
 
