@@ -118,10 +118,9 @@ scx::ScriptRef* SSLChannel::script_method(const scx::ScriptAuth& auth,
       cert = cert + std::string(a_key->get_string() + ".pub");
     }
 
-    if (SSL_CTX_use_certificate_file(
+    if (SSL_CTX_use_certificate_chain_file(
           m_ctx,
-          cert.path().c_str(),
-          SSL_FILETYPE_PEM) <= 0) {
+          cert.path().c_str()) <= 0) {
       return scx::ScriptError::new_ref("Error loading certificate");
     }
     
