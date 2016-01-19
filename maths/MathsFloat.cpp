@@ -20,15 +20,40 @@ Free Software Foundation, Inc.,
 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA */
 
 #include "MathsFloat.h"
+#include "MathsInt.h"
 #include "MathsModule.h"
 
 //=========================================================================
 MathsFloat::MathsFloat(MathsModule* module,
-	 const Mpfr& value)
+		       const Mpfr& value)
   : m_module(module),
     m_value(value)
 {
 
+}
+
+//=========================================================================
+MathsFloat::MathsFloat(MathsModule* module, const scx::ScriptObject* value)
+  : m_module(module)
+{
+  if (value == 0) {
+    m_value = 0;
+    return;
+  }
+
+  const MathsFloat* fv = dynamic_cast<const MathsFloat*>(value);
+  if (fv) {
+    m_value = fv->get_value();
+    return;
+  }
+
+  const MathsInt* iv = dynamic_cast<const MathsInt*>(value);
+  if (iv) {
+    m_value = iv->get_value();
+    return;
+  }
+
+  m_value = Mpfr(value->get_string());
 }
 
 //=========================================================================
@@ -47,18 +72,11 @@ MathsFloat::~MathsFloat()
 
 //=========================================================================
 scx::ScriptObject* MathsFloat::create(MathsModule* module,
-			       const scx::ScriptRef* args)
+				      const scx::ScriptRef* args)
 {
   const scx::ScriptRef* value =
     scx::get_method_arg_ref(args,0,"value");
-
-  const scx::ScriptNum* nvalue = 
-    value ? dynamic_cast<const scx::ScriptNum*>(value->object()) : 0;
-  if (nvalue) {
-    return new MathsFloat(module,nvalue->get_string());
-  }
-  
-  return new MathsFloat(module,value ? value->object()->get_string() : "0");
+  return new MathsFloat(module, value ? value->object() : 0);
 }
 
 //=========================================================================
@@ -112,7 +130,7 @@ scx::ScriptRef* MathsFloat::script_op(const scx::ScriptAuth& auth,
       if (rc) {
 	rvalue = rc;
       } else if (rn) {
-	cc = MathsFloat(m_module.object(),rn->get_string());
+	cc = MathsFloat(m_module.object(),rn);
 	rvalue = &cc;
       }
 
@@ -384,15 +402,9 @@ scx::ScriptRef* MathsFloat::mean_list(const scx::ScriptList* l)
   for (int i=0; i<l->size(); ++i) {
     const scx::ScriptRef* a = l->get(i);
     if (!a) return scx::ScriptError::new_ref("No value specified");
-    const MathsFloat* af = dynamic_cast<const MathsFloat*>(a->object());
-    const scx::ScriptNum* an = dynamic_cast<const scx::ScriptNum*>(a->object());
-    if (af) {
-      r = r + Mpfr(af->get_value());
-    } else if (an) {
-      r = r + Mpfr(an->get_string());
-    } else {
-      return scx::ScriptError::new_ref("Non numeric value specified");
-    }
+
+    MathsFloat::Ref af(new MathsFloat(m_module.object(), a->object()));
+    r = r + af.object()->get_value();
   }
 
   r = r / l->size();

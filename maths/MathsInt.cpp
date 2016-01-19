@@ -68,6 +68,31 @@ MathsInt::MathsInt(MathsModule* module, const mpz_t value)
 }
 
 //=========================================================================
+MathsInt::MathsInt(MathsModule* module, const scx::ScriptObject* value)
+  : m_module(module)
+{
+  if (value == 0) {
+    mpz_init_set_si(m_value, 0);
+    return;
+  }
+  
+  const MathsInt* iv = dynamic_cast<const MathsInt*>(value);
+  if (iv) {
+    mpz_init_set(m_value, iv->get_value());
+    return;
+  }
+
+  const MathsFloat* fv = dynamic_cast<const MathsFloat*>(value);
+  if (fv) {
+    mpz_init(m_value);
+    mpfr_get_z(m_value, fv->get_value(), GMP_RNDN);
+    return;
+  }
+
+  mpz_init_set_str(m_value, value->get_string().c_str(), 0);
+}
+
+//=========================================================================
 MathsInt::MathsInt(const MathsInt& c)
   : m_module(c.m_module)
 {
@@ -86,7 +111,7 @@ scx::ScriptObject* MathsInt::create(MathsModule* module,
 {
   const scx::ScriptRef* value =
     scx::get_method_arg_ref(args,0,"value");
-  return new MathsInt(module, value ? value->object()->get_string() : "0");
+  return new MathsInt(module, value ? value->object() : 0);
 }
 
 //=========================================================================
@@ -134,7 +159,7 @@ scx::ScriptRef* MathsInt::script_op(const scx::ScriptAuth& auth,
     const MathsInt* rmi = dynamic_cast<const MathsInt*>(right->object());
     if (!rmi) {
       // Promote to float to handle mixed ops
-      scx::ScriptRef fl(new MathsFloat(m_module.object(), get_string()));
+      scx::ScriptRef fl(new MathsFloat(m_module.object(), this));
       return fl.object()->script_op(auth, ref, op, right);
     }
     
@@ -160,7 +185,7 @@ scx::ScriptRef* MathsInt::script_op(const scx::ScriptAuth& auth,
 	return MathsInt::new_ref(m, r);
       }
       // Promote to float to handle non-integer division
-      scx::ScriptRef fl(new MathsFloat(m_module.object(), get_string()));
+      scx::ScriptRef fl(new MathsFloat(m_module.object(), this));
       return fl.object()->script_op(auth, ref, op, right);
     }
     case scx::ScriptOp::Modulus: {
@@ -289,7 +314,7 @@ scx::ScriptRef* MathsInt::script_method(const scx::ScriptAuth& auth,
   }
 
   // Promote to float to handle other methods
-  scx::ScriptRef fl(new MathsFloat(m_module.object(), get_string()));
+  scx::ScriptRef fl(new MathsFloat(m_module.object(), this));
   return fl.object()->script_method(auth, ref, name, args);
   
   return scx::ScriptObject::script_method(auth,ref,name,args);

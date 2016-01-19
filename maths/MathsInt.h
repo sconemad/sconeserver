@@ -42,6 +42,7 @@ public:
   MathsInt(MathsModule* module, long value);
   MathsInt(MathsModule* module, double value);
   MathsInt(MathsModule* module, const mpz_t value);
+  MathsInt(MathsModule* module, const scx::ScriptObject* value);
   MathsInt(const MathsInt& c);
 
   virtual ~MathsInt();

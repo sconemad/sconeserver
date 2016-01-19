@@ -50,6 +50,9 @@ public:
   Mpfr(const mpfr_t& f) 
   { mpfr_init_set(value,f,rnd); };
 
+  Mpfr(const mpz_t& z) 
+  { mpfr_init_set_z(value,z,rnd); };
+
   Mpfr(const Mpfr& c) 
   { mpfr_init_set(value,c.value,rnd); }
 
@@ -140,6 +143,7 @@ public:
   MathsFloat(MathsModule* module,
       const Mpfr& value = 0.0);
 
+  MathsFloat(MathsModule* module, const scx::ScriptObject* value);
   MathsFloat(const MathsFloat& c);
 
   virtual ~MathsFloat();
