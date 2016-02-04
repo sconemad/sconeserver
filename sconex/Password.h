@@ -59,6 +59,16 @@ public:
   static void unregister_method(const std::string& type,
 				scx::Provider<PasswordHash>* factory);
 
+  virtual ScriptRef* script_op(const ScriptAuth& auth,
+			       const ScriptRef& ref,
+			       const ScriptOp& op,
+			       const ScriptRef* right=0);
+
+  virtual ScriptRef* script_method(const ScriptAuth& auth,
+				   const ScriptRef& ref,
+				   const std::string& name,
+				   const ScriptRef* args);
+
   typedef ScriptRefTo<PasswordHash> Ref;
 
 private:

@@ -84,6 +84,54 @@ void PasswordHash::unregister_method(const std::string& type,
   s_providers->unregister_provider(type,factory);
 }
 
+//=============================================================================
+ScriptRef* PasswordHash::script_op(const ScriptAuth& auth,
+				   const ScriptRef& ref,
+				   const ScriptOp& op,
+				   const ScriptRef* right)
+{
+  if (op.type() == ScriptOp::Lookup) {
+    const std::string name = right->object()->get_string();
+
+    // Methods
+    if ("hash" == name ||
+	"verify" == name) {
+      return new scx::ScriptMethodRef(ref,name);
+    }
+  }
+
+  return ScriptObject::script_op(auth,ref,op,right);
+}
+
+//=============================================================================
+ScriptRef* PasswordHash::script_method(const ScriptAuth& auth,
+				       const ScriptRef& ref,
+				       const std::string& name,
+				       const ScriptRef* args)
+{
+  if ("hash" == name) {
+    const ScriptString* a_password = 
+      get_method_arg<ScriptString>(args,0,"password");
+    if (!a_password) return ScriptError::new_ref("No password specified");
+    return ScriptString::new_ref(rehash(a_password->get_string()));
+  }
+
+  if ("verify" == name) {
+    const ScriptString* a_password = 
+      get_method_arg<ScriptString>(args,0,"password");
+    if (!a_password) return ScriptError::new_ref("No password specified");
+
+    const ScriptString* a_hash = 
+      get_method_arg<ScriptString>(args,1,"hash");
+    if (!a_hash) return ScriptError::new_ref("No hash specified");
+
+    bool rr = false;
+    return ScriptBool::new_ref(verify(a_password->get_string(),
+				      a_hash->get_string(), rr));
+  }
+ 
+  return ScriptObject::script_method(auth,ref,name,args);
+}
 
 //=============================================================================
 void PasswordHash::init()
