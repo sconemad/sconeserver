@@ -212,25 +212,28 @@ scx::Condition SconesiteStream::start_section(const scx::MimeHeaderTable& header
   http::Response& resp = msg->get_response();
   const http::Session* session = req.get_session();
 
-  if (session && session->has_permission("upload")) {
-
-    std::string name;
-    scx::MimeHeader disp = headers.get_parsed("Content-Disposition");
-    const scx::MimeHeaderValue* fdata = disp.get_value("form-data");
-    if (!fdata) {
-      return scx::Close;
-    }
-        
-    fdata->get_parameter("name",name);
-    //    STREAM_DEBUG_LOG("Section name is '" << name << "'");
-
-    std::string fname;
-    fdata->get_parameter("filename",fname);
+  std::string name;
+  scx::MimeHeader disp = headers.get_parsed("Content-Disposition");
+  const scx::MimeHeaderValue* fdata = disp.get_value("form-data");
+  if (!fdata) {
+    return scx::Close;
+  }
+  
+  fdata->get_parameter("name",name);
+  //    STREAM_DEBUG_LOG("Section name is '" << name << "'");
+  
+  std::string fname;
+  fdata->get_parameter("filename",fname);
+  
+  const std::string file_pattern = "file_";
+  if (0 == name.find(file_pattern)) {
+    // Name starts with "file_" so stream it into a file, provided we
+    // have a session with the upload permission.
     
-    const std::string file_pattern = "file_";
-    std::string::size_type ip = name.find(file_pattern);
-    if (ip == 0) {
-      // Name starts with "file_" so stream it into a file
+    if (!session || !session->has_permission("upload")) {
+      resp.set_status(http::Status::Unauthorized);
+      
+    } else {
       scx::FilePath path = "/tmp";
       std::string filename = 
 	m_module.object()->name() + "-" + session->get_id() + "-" + name;
@@ -255,16 +258,13 @@ scx::Condition SconesiteStream::start_section(const scx::MimeHeaderTable& header
       
       log("Error opening file '" + path.path() + "'");
       delete file;
-
-    } else {
-      //      STREAM_DEBUG_LOG("Writing section to parameter '" << name << "'");
-      endpoint().add_stream(new ParamReaderStream(name,req));
-      return scx::Ok;
     }
   } else {
-    resp.set_status(http::Status::Unauthorized);
+    //      STREAM_DEBUG_LOG("Writing section to parameter '" << name << "'");
+    endpoint().add_stream(new ParamReaderStream(name,req));
+    return scx::Ok;
   }
-    
+  
   // Transfer to a null file to discard the data
   scx::NullFile* file = new scx::NullFile();
   scx::StreamTransfer* xfer = new scx::StreamTransfer(&endpoint());
