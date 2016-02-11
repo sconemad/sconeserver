@@ -122,6 +122,7 @@ private:
   scx::Condition receive_body();
   scx::Condition receive_body_chunked();
   scx::Condition receive_data();
+  void signal_complete(bool error);
   
   HTTPModule::Ref m_module;
   Client* m_client;

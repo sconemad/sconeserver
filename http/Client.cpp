@@ -277,8 +277,8 @@ ClientStream::ClientStream(HTTPModule* module,
 ClientStream::~ClientStream()
 {
   delete m_buffer;
-  if (m_seq != End) {
-    m_client->event_complete(true);
+  if (m_client) {
+    signal_complete(true);
   }
 }
 
@@ -312,7 +312,7 @@ scx::Condition ClientStream::event(scx::Stream::Event e)
       if (c != scx::Ok && c != scx::Wait) {
         enable_event(scx::Stream::Readable,false);
         m_seq = End;
-        m_client->event_complete(c == scx::Error);
+        signal_complete(c == scx::Error);
       }
     } break;
 
@@ -459,7 +459,7 @@ scx::Condition ClientStream::receive_headers()
       } else {
         enable_event(scx::Stream::Readable,false);
         m_seq = End;
-        m_client->event_complete(false);
+        signal_complete(false);
         return scx::End;
       }
       break;
@@ -482,7 +482,6 @@ scx::Condition ClientStream::receive_body()
   if (c != scx::Ok && c != scx::Wait) {
     enable_event(scx::Stream::Readable,false);
     m_seq = End;
-    m_client->event_complete(c == scx::Error);
   }
   return c;
 }
@@ -532,6 +531,17 @@ scx::Condition ClientStream::receive_data()
   }
   delete [] buffer;
   return c;
+}
+
+//=============================================================================
+void ClientStream::signal_complete(bool error)
+{
+  if (m_client) {  
+    m_client->event_complete(error);
+  } else {
+    DEBUG_LOG("signal_complete called more than once!");
+  }
+  m_client = 0;
 }
 
 //=============================================================================
