@@ -108,7 +108,7 @@ scx::ScriptRef* SQLiteQuery::script_op(const scx::ScriptAuth& auth,
     if (name == "result") return result();
     if (name == "result_list") return result_list();
     if (name == "insert_id")
-      return scx::ScriptInt::new_ref(::sqlite3_last_insert_rowid(m_db));
+      return scx::ScriptInt::new_ref(insert_id());
   }
   
   return scx::ScriptObject::script_op(auth,ref,op,right);
@@ -217,6 +217,12 @@ scx::ScriptRef* SQLiteQuery::result_list() const
     row->give(get_result(i));
   }
   return new scx::ScriptRef(row);
+}
+
+//=========================================================================
+int SQLiteQuery::insert_id() const
+{
+  return ::sqlite3_last_insert_rowid(m_db);
 }
 
 //=========================================================================

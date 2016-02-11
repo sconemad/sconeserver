@@ -94,6 +94,7 @@ public:
   virtual bool next_result();
   virtual scx::ScriptRef* result() const;
   virtual scx::ScriptRef* result_list() const;
+  virtual int insert_id() const;
 
   typedef scx::ScriptRefTo<MySqlQuery> Ref;
   

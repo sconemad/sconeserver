@@ -309,7 +309,7 @@ scx::ScriptRef* MySqlQuery::script_op(const scx::ScriptAuth& auth,
     if (name == "affected_rows") 
       return scx::ScriptInt::new_ref(m_affected_rows);
     if (name == "insert_id")
-      return scx::ScriptInt::new_ref(::mysql_insert_id(m_conn));
+      return scx::ScriptInt::new_ref(insert_id());
   }
   
   return scx::ScriptObject::script_op(auth,ref,op,right);
@@ -419,6 +419,12 @@ scx::ScriptRef* MySqlQuery::result_list() const
     row->give(rarg.get_arg());
   }
   return new scx::ScriptRef(row);
+}
+
+//=========================================================================
+int MySqlQuery::insert_id() const
+{
+  return ::mysql_insert_id(m_conn);
 }
 
 //=========================================================================

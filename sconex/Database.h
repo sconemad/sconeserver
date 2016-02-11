@@ -84,6 +84,7 @@ public:
   virtual bool next_result() =0;
   virtual ScriptRef* result() const =0;
   virtual ScriptRef* result_list() const =0;
+  virtual int insert_id() const =0;
 
   typedef scx::ScriptRefTo<DbQuery> Ref;
   
