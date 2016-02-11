@@ -304,23 +304,7 @@ Article::Ref* Profile::create_article(int pid,
     return 0;
   }
 
-  int id = -1;
-  std::auto_ptr<scx::DbQuery> query2(m_db->object()->new_query(
-    "SELECT id FROM article where parent = ? AND path = ?"));
-
-  if (!query2->exec(&args)) {
-    LOG("Failed to query new article in db");
-    return 0;
-  }
-  
-  if (query2->next_result()) {
-    scx::ScriptRef* row_ref = query2->result_list();
-    scx::ScriptList* row = dynamic_cast<scx::ScriptList*>(row_ref->object());
-    scx::ScriptRef* a_id = row->get(0);
-    if (a_id) id = a_id->object()->get_int();
-    delete row_ref;
-  }
-
+  int id = query->insert_id();
   if (id <= 0) {
     LOG("Could not determine id for new article");
     return 0;
