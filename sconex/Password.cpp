@@ -74,6 +74,7 @@ PasswordHash::~PasswordHash()
 void PasswordHash::register_method(const std::string& type,
 				   Provider<PasswordHash>* factory)
 {
+  init();
   s_providers->register_provider(type,factory);
 }
 
@@ -81,6 +82,7 @@ void PasswordHash::register_method(const std::string& type,
 void PasswordHash::unregister_method(const std::string& type,
 				     Provider<PasswordHash>* factory)
 {
+  init();
   s_providers->unregister_provider(type,factory);
 }
 

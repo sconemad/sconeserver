@@ -26,12 +26,14 @@ Free Software Foundation, Inc.,
 #include <sconex/Module.h>
 #include <sconex/Descriptor.h>
 #include <sconex/Stream.h>
+#include <sconex/Digest.h>
 
 //=============================================================================
 // SSLModule - A module providing Secure Socket Layer encryption streams
 //
 class SSLModule : public scx::Module,
-                  public scx::Provider<scx::Stream> {
+                  public scx::Provider<scx::Stream>,
+                  public scx::Provider<scx::Digest> {
 public:
 
   SSLModule();
@@ -58,6 +60,10 @@ public:
   virtual void provide(const std::string& type,
 		       const scx::ScriptRef* args,
 		       scx::Stream*& object);
+
+  virtual void provide(const std::string& type,
+		       const scx::ScriptRef* args,
+		       scx::Digest*& object);
 
   typedef scx::ScriptRefTo<SSLModule> Ref;
   

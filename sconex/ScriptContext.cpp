@@ -25,6 +25,7 @@ Free Software Foundation, Inc.,
 #include <sconex/Uri.h>
 #include <sconex/Date.h>
 #include <sconex/MimeType.h>
+#include <sconex/Digest.h>
 #include <sconex/RegExp.h>
 #include <sconex/utils.h>
 namespace scx {
@@ -163,6 +164,7 @@ StandardTypeProvider::StandardTypeProvider()
   StandardContext::register_type("TimeZone",this);
   StandardContext::register_type("Uri",this);
   StandardContext::register_type("MimeType",this);
+  StandardContext::register_type("Digest",this);
 #ifdef HAVE_LIBPCRE
   StandardContext::register_type("RegExp",this);
 #endif
@@ -205,6 +207,12 @@ void StandardTypeProvider::provide(const std::string& type,
 
   } else if ("MimeType" == type) {
     object = new MimeType(args);
+
+  } else if ("Digest" == type) {
+    const ScriptString* a_method = 
+      get_method_arg<ScriptString>(args,0,"method");
+    object = Digest::create(a_method ? a_method->get_string() : "",
+                            args);
 
 #ifdef HAVE_LIBPCRE
   } else if ("RegExp" == type) {

@@ -8,11 +8,13 @@ if BUILD_SSL
 endif
 
 ssl_la_SOURCES = \
+CryptoDigests.cpp \
 SSLModule.cpp \
 SSLStream.cpp \
 SSLChannel.cpp
 
 noinst_HEADERS = \
+CryptoDigests.h \
 SSLModule.h \
 SSLStream.h \
 SSLChannel.h

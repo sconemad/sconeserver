@@ -20,6 +20,7 @@ DatagramSocket.cpp \
 Date.cpp \
 Debug.cpp \
 Descriptor.cpp \
+Digest.cpp \
 File.cpp \
 FileDir.cpp \
 FilePath.cpp \
@@ -81,6 +82,7 @@ DatagramSocket.h \
 Date.h \
 Debug.h \
 Descriptor.h \
+Digest.h \
 File.h \
 FileDir.h \
 FilePath.h \

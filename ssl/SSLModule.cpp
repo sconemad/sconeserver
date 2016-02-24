@@ -23,6 +23,7 @@ Free Software Foundation, Inc.,
 #include "SSLModule.h"
 #include "SSLStream.h"
 #include "SSLChannel.h"
+#include "CryptoDigests.h"
 
 #include <sconex/ModuleInterface.h>
 #include <sconex/StreamDebugger.h>
@@ -30,6 +31,7 @@ Free Software Foundation, Inc.,
 #include <sconex/Log.h>
 
 #include <openssl/ssl.h>
+#include <openssl/evp.h>
 
 SCONEX_MODULE(SSLModule);
 
@@ -67,6 +69,16 @@ SSLModule::SSLModule()
   : scx::Module("ssl",scx::version())
 {
   scx::Stream::register_stream("ssl",this);
+
+  scx::Digest::register_method("MD2", this);
+  scx::Digest::register_method("MD4", this);
+  scx::Digest::register_method("MD5", this);
+  scx::Digest::register_method("SHA", this);
+  scx::Digest::register_method("SHA1", this);
+  scx::Digest::register_method("SHA224", this);
+  scx::Digest::register_method("SHA256", this);
+  scx::Digest::register_method("SHA384", this);
+  scx::Digest::register_method("SHA512", this);
 }
 
 //=========================================================================
@@ -74,11 +86,23 @@ SSLModule::~SSLModule()
 {  
   scx::Stream::unregister_stream("ssl",this);
 
+  scx::Digest::unregister_method("MD2", this);
+  scx::Digest::unregister_method("MD4", this);
+  scx::Digest::unregister_method("MD5", this);
+  scx::Digest::unregister_method("SHA", this);
+  scx::Digest::unregister_method("SHA1", this);
+  scx::Digest::unregister_method("SHA224", this);
+  scx::Digest::unregister_method("SHA256", this);
+  scx::Digest::unregister_method("SHA384", this);
+  scx::Digest::unregister_method("SHA512", this);
+
   CRYPTO_set_locking_callback(NULL);
   for (int i=0; i<CRYPTO_NUM_LOCKS; i++) {
     pthread_mutex_destroy(&(lock_cs[i]));
     //    fprintf(stderr,"%8ld:%s\n",lock_count[i],CRYPTO_get_lock_name(i));
   }
+
+  EVP_cleanup();
 }
 
 //=========================================================================
@@ -95,6 +119,7 @@ int SSLModule::init()
 {
   SSL_load_error_strings();
   SSL_library_init();
+  OpenSSL_add_all_algorithms();
 
   for (int i=0; i<CRYPTO_NUM_LOCKS; i++) {
     lock_count[i]=0;
@@ -262,4 +287,12 @@ void SSLModule::provide(const std::string& type,
   }
 
   object = new SSLStream(this,channel->get_string());
+}
+
+//=========================================================================
+void SSLModule::provide(const std::string& type,
+			const scx::ScriptRef* args,
+			scx::Digest*& object)
+{
+  object = new CryptoDigests(this,type);
 }
