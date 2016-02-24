@@ -47,6 +47,7 @@ MessageStream::MessageStream(HTTPModule* module,
     m_request(request),
     m_response(new Response()),
     m_error_response(false),
+    m_transparent(false),
     m_bytes_read(0),
     m_bytes_readable(-1),
     m_buffer(0),
@@ -149,6 +150,8 @@ scx::Condition MessageStream::event(scx::Stream::Event e)
 //=========================================================================
 scx::Condition MessageStream::read(void* buffer,int n,int& na)
 {
+  if (m_transparent) return Stream::read(buffer,n,na);
+
   if (m_bytes_read >= m_bytes_readable) {
     // Read all that is allowed, finish
     na = 0;
@@ -185,6 +188,8 @@ scx::Condition MessageStream::write(const void* buffer,int n,int& na)
     write_header();
   }
 
+  if (m_transparent) return Stream::write(buffer,n,na);
+  
   if (m_headers_sent) {
     if (m_write_chunked) {
       if (m_write_remaining <= 0) {
@@ -233,6 +238,14 @@ void MessageStream::send_continue()
   Stream::write("HTTP/1.0 100 Continue\r\n\r\n");
 }
 
+//=============================================================================
+void MessageStream::set_transparent()
+{
+  m_transparent = true;
+  build_header();
+  write_header();
+}
+  
 //=============================================================================
 HTTPModule& MessageStream::get_module()
 {

@@ -62,6 +62,7 @@ public:
   virtual std::string stream_status() const;
  
   void send_continue();
+  void set_transparent();
 
   HTTPModule& get_module();
 
@@ -87,6 +88,7 @@ private:
   Response::Ref m_response;
 
   bool m_error_response;
+  bool m_transparent;
 
   // Read
   int m_bytes_read;
