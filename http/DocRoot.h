@@ -131,12 +131,17 @@ public:
   
 protected:
 
+  // Check the path contained in the request URI is valid.
+  bool check_path(const std::string& uripath);
+  
   // Check HTTP authorization for this request.
   // Returns true if it passes.
   // Returns false if it fails, in which case the response headers are  set 
   // appropriately to request client authentication.
-  bool check_auth(Request& request, 
-		  Response& response);
+  bool check_auth(Request& request, Response& response);
+
+  // Lookup/create/update the session for this request if required.
+  void check_session(Request& request, Response& response);
   
 private:
 
