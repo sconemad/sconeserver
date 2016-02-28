@@ -30,7 +30,8 @@ class SCONEX_API Base64 {
 
 public:
 
-  static void encode(std::istream& in, std::ostream& out);
+  static void encode(std::istream& in, std::ostream& out,
+                     bool multiline=true);
   static void decode(std::istream& in, std::ostream& out);
 
 protected:

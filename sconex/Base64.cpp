@@ -56,7 +56,7 @@ void output_chunk(int c1, int c2, int c3, int pads, std::ostream& out)
 }
 
 //===========================================================================
-void Base64::encode(std::istream& in, std::ostream& out) 
+void Base64::encode(std::istream& in, std::ostream& out, bool multiline) 
 {
   int c1, c2, c3, ct=0;
   
@@ -74,12 +74,12 @@ void Base64::encode(std::istream& in, std::ostream& out)
       }
     }
     ct += 4;
-    if (ct > 71) {
+    if (ct > 71 && multiline) {
       out.put('\n');
       ct = 0;
     }
   }
-  if (ct) {
+  if (ct && multiline) {
     out.put('\n');
   }
 }
