@@ -44,14 +44,18 @@ class SCONEX_API Buffer {
 public:
 
   Buffer(int buffer_size);
+  Buffer(const Buffer& c);
   ~Buffer();
 
+  // Get a pointer to the buffer head - the start of the data
+  // Don't copy more than used() from head()
   const void* head() const;
   void* head();
-  // Don't copy more than used() from head()
-  
-  void* tail();
+
+  // Get a pointer to the buffer tail - one past the end of the data
   // Don't copy more than free() to tail
+  const void* tail() const;
+  void* tail();
 
   void push(int n);
   void pop(int n);
@@ -60,24 +64,28 @@ public:
   int push_from(const void* a, int n);
   int push_string(const std::string& s);
 
-  int insert_from(const void* a, int p, int n);
   // Insert n bytes into the buffer at position p
+  int insert_from(const void* a, int p, int n);
   
-  int remove(int p, int n);
   // Remove n bytes from the buffer from position p
+  int remove(int p, int n);
   
   int size() const;
   int free() const;
   int used() const;
   int wasted() const;
 
-  void compact();
   // Rearrange buffer to remove any wasted space.
+  void compact();
 
-  bool resize(int new_size);
   // Resize buffer
-  std::string status_string() const;
+  bool resize(int new_size);
+
+  // Ensure at least reqd bytes are free in the buffer
+  bool ensure_free(int reqd);
+  
   // Get a string representing the status of this buffer, for debugging/info
+  std::string status_string() const;
   
 protected:
 
@@ -88,6 +96,80 @@ private:
   int m_head;
   int m_tail;
   
+};
+
+  
+//=============================================================================
+class SCONEX_API BufferReader {
+public:
+
+  // Underflow is thrown when reading with not enough data available
+  class Underflow {
+  public:
+    Underflow() {};
+  };
+
+  // Construct a BufferReader for the buffer.
+  // net: convert multibyte values from network to host byte ordering.
+  BufferReader(Buffer& buffer, bool net=true);
+  
+  ~BufferReader();
+
+  // Pops read data from the buffer
+  void done();
+  
+  uint8_t read_u8();
+  uint16_t read_u16();
+  uint32_t read_u32();
+  uint64_t read_u64();
+
+  // Read an exact number of bytes into v
+  void read_bytes(char* v, int n);
+  
+private:
+
+  void* next(int n);
+
+  Buffer& m_buffer;
+  bool m_net;
+  int m_pos;
+};
+
+  
+//=============================================================================
+class SCONEX_API BufferWriter {
+public:
+
+  // Overflow is thrown when writing with not enough space available
+  class Overflow {
+  public:
+    Overflow() {};
+  };
+
+  // Construct a BufferWriter for the buffer.
+  // net: convert multibyte values from host to network byte ordering.
+  BufferWriter(Buffer& buffer, bool net=true);
+  
+  ~BufferWriter();
+
+  // Pushes read data to the buffer
+  void done();
+  
+  void write_u8(uint8_t v);
+  void write_u16(uint16_t v);
+  void write_u32(uint32_t v);
+  void write_u64(uint64_t v);
+
+  // Write an exact number of bytes from v
+  void write_bytes(const char* v, int n);
+  
+private:
+
+  void* next(int n);
+
+  Buffer& m_buffer;
+  bool m_net;
+  int m_pos;
 };
 
 };
