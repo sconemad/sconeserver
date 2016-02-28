@@ -24,6 +24,7 @@ Free Software Foundation, Inc.,
 
 #include <sconex/Stream.h>
 #include <sconex/Module.h>
+#include <sconex/Buffer.h>
 
 //=========================================================================
 // EchoStream - Echo protocol (RFC862)
@@ -31,7 +32,7 @@ Free Software Foundation, Inc.,
 class EchoStream : public scx::Stream {
 public:
 
-  EchoStream(scx::Module* module);
+  EchoStream(scx::Module* module, int buffer_size=1);
   ~EchoStream();
 
 protected:
@@ -41,6 +42,7 @@ protected:
 private:
   
   scx::Module::Ref m_module;
+  scx::Buffer m_buffer;
 
 };
 

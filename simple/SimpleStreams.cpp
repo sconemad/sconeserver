@@ -23,9 +23,10 @@ Free Software Foundation, Inc.,
 #include <sconex/Stream.h>
 
 //=========================================================================
-EchoStream::EchoStream(scx::Module* module)
+EchoStream::EchoStream(scx::Module* module, int buffer_size)
   : scx::Stream("echo"),
-    m_module(module)
+    m_module(module),
+    m_buffer(buffer_size)
 {
   enable_event(scx::Stream::Readable,true);
 }
@@ -39,27 +40,29 @@ EchoStream::~EchoStream()
 //=========================================================================
 scx::Condition EchoStream::event(scx::Stream::Event e)
 {
-  if (e == scx::Stream::Opening) {
-    endpoint().set_timeout(scx::Time(60));
-  }
-  
-  if (e == scx::Stream::Readable) {
-    endpoint().reset_timeout();
+  scx::Condition c = scx::Ok;
+  switch (e) {
 
-    char b;
-    int na;
-    scx::Condition c = Stream::read(&b,1,na);
-    if (na == 1) {
-      Stream::write(&b,1,na);
-    }
-    if (c == scx::End) {
-      return scx::Close;
-    }
-    return c;
-  }
+    case scx::Stream::Opening:
+      endpoint().set_timeout(scx::Time(60));
+      break;
 
-  return scx::Ok;
+    case scx::Stream::Closing:
+      break;
+
+    case scx::Stream::Readable:
+      c = Stream::read(m_buffer);
+      // Fall through to write...
+    case scx::Stream::Writeable:
+      if (m_buffer.used() > 0) c = Stream::write(m_buffer);
+      enable_event(scx::Stream::Readable, m_buffer.free() > 0);
+      enable_event(scx::Stream::Writeable, m_buffer.used() > 0);
+      break;
+  }
+  if (c == scx::Ok) endpoint().reset_timeout();
+  return c;
 }
+
 
 //=========================================================================
 DiscardStream::DiscardStream(scx::Module* module)

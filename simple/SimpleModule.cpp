@@ -64,7 +64,10 @@ void SimpleModule::provide(const std::string& type,
 			   scx::Stream*& object)
 {
   if ("echo" == type) {
-    object = new EchoStream(this);
+    const scx::ScriptInt* a_buffer_size =
+      scx::get_method_arg<scx::ScriptInt>(args,0,"buffer_size");
+    int buffer_size = (a_buffer_size ? a_buffer_size->get_int() : 1);
+    object = new EchoStream(this, buffer_size);
     
   } else if ("discard" == type) {
     object = new DiscardStream(this);
