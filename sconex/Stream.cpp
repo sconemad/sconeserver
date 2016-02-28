@@ -21,6 +21,7 @@ Free Software Foundation, Inc.,
 
 #include <sconex/Stream.h>
 #include <sconex/Module.h>
+#include <sconex/Buffer.h>
 namespace scx {
 
 ProviderScheme<Stream>* Stream::s_providers = 0;
@@ -46,16 +47,6 @@ Stream::Stream(const std::string& stream_name)
 //=============================================================================
 Stream::~Stream()
 {
-  /*
-  // Release the module refs
-  for (ModuleRefList::iterator it = m_module_refs.begin();
-       it != m_module_refs.end();
-       ++it) {
-    ScriptRef* r = (*it);
-    delete r;
-  }
-  */
-
   DEBUG_COUNT_DESTRUCTOR(Stream);
 }
 
@@ -70,6 +61,22 @@ Condition Stream::read(void* buffer,int n,int& na)
 }
 
 //=============================================================================
+Condition Stream::read(Buffer& buffer, int n)
+{
+  Condition c = Error;
+  int na = 0;
+  int max = buffer.free();
+  if (n < 0 || n > max) n = max;
+  if (m_chain) {
+    c = m_chain->read(buffer.tail(),n,na);
+  } else if (m_endpoint) {
+    c = m_endpoint->endpoint_read(buffer.tail(),n,na);
+  }
+  buffer.push(na);
+  return c;
+}
+  
+//=============================================================================
 Condition Stream::write(const void* buffer,int n,int& na)
 {
   DEBUG_ASSERT(m_chain || m_endpoint,"write() Unconnected stream");
@@ -79,6 +86,24 @@ Condition Stream::write(const void* buffer,int n,int& na)
   return m_endpoint->endpoint_write(buffer,n,na);
 }
 
+//=============================================================================
+// Write adaptor for Buffer
+//
+Condition Stream::write(Buffer& buffer, int n)
+{
+  Condition c = Error;
+  int na = 0;
+  int max = buffer.used();
+  if (n < 0 || n > max) n = max;
+  if (m_chain) {
+    c = m_chain->write(buffer.head(),n,na);
+  } else if (m_endpoint) {
+    c = m_endpoint->endpoint_write(buffer.head(),n,na);
+  }
+  buffer.pop(na);
+  return c;
+}
+ 
 //=============================================================================
 // Write adaptor for zero terminated string
 //
@@ -130,14 +155,6 @@ void Stream::set_chain(Stream* chain)
 {
   m_chain = chain;
 }
-
-/*
-//=============================================================================
-void Stream::add_module_ref(Module* module)
-{
-  m_module_refs.push_back(new ScriptRef(module));
-}
-*/
 
 //=============================================================================
 const std::string& Stream::stream_name() const

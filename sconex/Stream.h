@@ -30,6 +30,7 @@ namespace scx {
 
 class Module;
 class ScriptRef;
+class Buffer;
 
 //=============================================================================
 class SCONEX_API Stream : public IOBase {
@@ -43,15 +44,23 @@ public:
   Stream(const std::string& stream_name);
   virtual ~Stream();
     
-  virtual Condition read(void* buffer,int n,int& na);
   // Read n bytes from stream into buffer
+  virtual Condition read(void* buffer,int n,int& na);
 
-  virtual Condition write(const void* buffer,int n,int& na);
+  // Read into Buffer object
+  // n: Maximum number of bytest to read (-1 to fill buffer)
+  virtual Condition read(Buffer& buffer, int n=-1);
+  
   // write n bytes from buffer to stream
+  virtual Condition write(const void* buffer,int n,int& na);
 
-  int write(const char* string);
-  int write(const std::string& string);
+  // Write from Buffer object
+  // n: Maximum number of bytes to write (-1 for entire buffer)
+  virtual Condition write(Buffer& buffer, int n=-1);
+  
   // write string from buffer to stream
+  virtual int write(const char* string);
+  virtual int write(const std::string& string);
 
   // Event types
   enum Event {
@@ -60,7 +69,6 @@ public:
     SendReadable, SendWriteable
   };
   
-  virtual Condition event(Event e);
   // Handle event notification
   //
   // Streams need to override this method in order to handle events.
@@ -100,27 +108,23 @@ public:
   //     Close - Initiate close sequence for this connection
   //     Error - Force the connection closed at earliest oppurtunity  
   //
+  virtual Condition event(Event e);
 
+  // Get/set chain pointer
   void set_endpoint(Descriptor* endpoint);
   void set_chain(Stream* chain);
-  // Get/set chain pointer
 
-  //  void add_module_ref(Module* module);
-  // Make this stream reference a module
-  // This should prevent the module from being unloaded while this stream is
-  // active.
-  
-  const std::string& stream_name() const;
   // Get the name of the stream
+  const std::string& stream_name() const;
 
-  virtual std::string stream_status() const;
   // Get current status of the stream (if any) for debugging or
   // informational purposes. Derived classes can override this if
   // they wish to supply status information which might be useful
   // for debugging.
+  virtual std::string stream_status() const;
 
-  std::string event_status() const;
   // Get a string indicating the current event status of this stream.
+  std::string event_status() const;
 
   // Stream provider interface
   static void register_stream(const std::string& type,
@@ -132,10 +136,9 @@ protected:
 
   friend class Descriptor;
 
-  bool event_enabled(Event e) const;
   // Is the specified event enabled
+  bool event_enabled(Event e) const;
   
-  void enable_event(Event e, bool onoff);
   // Enable/disable specified event
   //
   // Readable, Writeable
@@ -147,26 +150,21 @@ protected:
   //   Enabling these will cause Readable/Writeable events to be generated
   //   by this stream and passed UP the chain from this stream.
   //
+  void enable_event(Event e, bool onoff);
 
-  Stream* find_stream(const std::string& stream_name);
   // Try and find named stream in the chain of preceeding streams
+  Stream* find_stream(const std::string& stream_name);
 
-  Descriptor& endpoint();
   // Allow access to the endpoint
+  Descriptor& endpoint();
 
-  std::string m_stream_name;
   // The name of the stream
+  std::string m_stream_name;
       
 private:
 
   // Event status
   int m_events;
-
-  /*
-  // List of modules used by this stream
-  typedef std::list<ScriptRef*> ModuleRefList;
-  ModuleRefList m_module_refs;
-  */
 
   // Upstream pointer
   Stream* m_chain;
