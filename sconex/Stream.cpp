@@ -145,6 +145,18 @@ Condition Stream::event(Event e)
 }
 
 //=============================================================================
+bool Stream::has_readable() const
+{
+  return false;
+}
+
+//=============================================================================
+bool Stream::has_writeable() const
+{
+  return false;
+}
+
+//=============================================================================
 void Stream::set_endpoint(Descriptor* endpoint)
 {
   m_endpoint = endpoint;
@@ -176,8 +188,8 @@ std::string Stream::event_status() const
   if (m_events & (1<<Closing)) es[1]='c';
   if (m_events & (1<<Readable)) es[2]='r';
   if (m_events & (1<<Writeable)) es[3]='w';
-  if (m_events & (1<<SendReadable)) es[4]='R';
-  if (m_events & (1<<SendWriteable)) es[5]='W';
+  if (has_readable()) es[4]='R';
+  if (has_writeable()) es[5]='W';
   return es;
 }
 

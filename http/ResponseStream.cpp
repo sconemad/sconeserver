@@ -319,7 +319,6 @@ scx::Condition ResponseStream::read(void* buffer,int n,int& na)
     RESPONSE_DEBUG_LOG("popping boundary (" << sz << " bytes)");
     m_buffer.pop(sz);
     find_mime_boundary();
-    enable_event(Stream::SendReadable,true);
     return scx::End;
   }
   
@@ -344,7 +343,6 @@ scx::Condition ResponseStream::read(void* buffer,int n,int& na)
   if (allow_read <= 0) {
     // Cannot return any data right now
     RESPONSE_DEBUG_LOG("No data, allow_read=" << allow_read);
-    //    enable_event(Stream::SendReadable,false); 
     return scx::Wait;
   }
 
@@ -362,10 +360,15 @@ scx::Condition ResponseStream::read(void* buffer,int n,int& na)
     m_mime_boundary_pos -= na;
   }
   
-  enable_event(Stream::SendReadable,m_buffer.used()); 
   return scx::Ok;
 }
 
+//=========================================================================
+bool ResponseStream::has_readable() const
+{
+  return (m_buffer.used() > 0);
+}
+  
 //=========================================================================
 scx::Condition ResponseStream::start_section(const scx::MimeHeaderTable& headers)
 {

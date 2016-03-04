@@ -46,6 +46,8 @@ public:
   
   virtual Condition read(void* buffer,int n,int& na);
 
+  virtual bool has_readable() const;
+
   virtual std::string stream_status() const;
   
   bool overflow();

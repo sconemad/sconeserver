@@ -63,7 +63,6 @@ Condition StreamTokenizer::tokenize(std::string& token)
 
     int nr=0;
     Condition c = Stream::read(m_buffer.tail(),avail,nr);
-    enable_event(Stream::SendReadable,m_buffer.used()); 
     if (nr <= 0) {
       // No more bytes available from source
       token = std::string();
@@ -106,7 +105,6 @@ Condition StreamTokenizer::tokenize(std::string& token)
 
   token = std::string((char*)m_buffer.head()+pre_skip,token_len);
   m_buffer.pop(pre_skip+token_len+post_skip);
-  enable_event(Stream::SendReadable,m_buffer.used()); 
 
   if (prev_overflow) {
     if (found_token) {
@@ -126,7 +124,6 @@ Condition StreamTokenizer::read(void* buffer,int n,int& na)
   if (m_buffer.used()) {
     na += m_buffer.pop_to(buffer,n);
     if (na == n) {
-      enable_event(Stream::SendReadable,m_buffer.used()); 
       return Ok;
     }
   }
@@ -136,7 +133,6 @@ Condition StreamTokenizer::read(void* buffer,int n,int& na)
     int nr = 0;
     Condition c = Stream::read((char*)buffer+na,left,nr);
     if (nr > 0) na += nr;
-    enable_event(Stream::SendReadable,m_buffer.used());
     return c;
   }
 
@@ -147,10 +143,15 @@ Condition StreamTokenizer::read(void* buffer,int n,int& na)
     na += m_buffer.pop_to((char*)buffer+na,left);
   }
 
-  enable_event(Stream::SendReadable,m_buffer.used()); 
   return c;
 }
 
+//=============================================================================
+bool StreamTokenizer::has_readable() const
+{
+  return (m_buffer.used() > 0);
+}
+ 
 //=============================================================================
 std::string StreamTokenizer::stream_status() const
 {

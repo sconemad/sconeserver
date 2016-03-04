@@ -68,7 +68,7 @@ protected:
   // from scx::Stream:
   virtual scx::Condition event(scx::Stream::Event e);
   virtual scx::Condition read(void* buffer,int n,int& na);
-
+  virtual bool has_readable() const;
   
   virtual scx::Condition start_section(const scx::MimeHeaderTable& headers);
   virtual scx::Condition send_response();

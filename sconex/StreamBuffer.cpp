@@ -63,12 +63,9 @@ Condition StreamBuffer::read(void* buffer,int n,int& na)
 {
   na = 0;
 
-  //TODO: Tidy use of SendReadable here
-  
   if (m_read_buffer.used()) {
     na += m_read_buffer.pop_to(buffer,n);
     if (na == n) {
-      enable_event(Stream::SendReadable,m_read_buffer.used()); 
       return Ok;
     }
   }
@@ -78,7 +75,6 @@ Condition StreamBuffer::read(void* buffer,int n,int& na)
     int nr = 0;
     Condition c = Stream::read((char*)buffer+na,left,nr);
     if (nr > 0) na += nr;
-    enable_event(Stream::SendReadable,m_read_buffer.used()); 
     return c; 
   }
 
@@ -88,7 +84,6 @@ Condition StreamBuffer::read(void* buffer,int n,int& na)
     m_read_buffer.push(nr);
     na += m_read_buffer.pop_to((char*)buffer+na,left);
   }
-  enable_event(Stream::SendReadable,m_read_buffer.used()); 
   return c;
 }
 
@@ -156,7 +151,8 @@ Condition StreamBuffer::event(Event e)
       // Don't let the stream dissapear if we haven't finished
       // sending the write buffer.
       if (m_write_buffer.used() > 0) {
-	return Wait;
+        enable_event(Stream::Writeable,true);
+        return Wait;
       }
     } break;
     
@@ -189,6 +185,18 @@ Condition StreamBuffer::event(Event e)
   return Ok;
 }
 
+//=============================================================================
+bool StreamBuffer::has_readable() const
+{
+  return (m_read_buffer.used() > 0);
+}
+
+//=============================================================================
+bool StreamBuffer::has_writeable() const
+{
+  return (m_write_buffer.used() > 0);
+}
+  
 //=============================================================================
 Condition StreamBuffer::write_through(
   const void* buffer,

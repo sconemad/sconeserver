@@ -296,10 +296,6 @@ int Descriptor::get_event_mask()
     event_mask = (1<<Stream::Writeable);
     
   } else if (m_state != Closed) {
-    if (fd() < 0) {
-      if (m_virtual_events & (1<<Stream::Readable)) event_mask |= (1<<Stream::SendReadable);
-      if (m_virtual_events & (1<<Stream::Writeable)) event_mask |= (1<<Stream::SendWriteable);
-    }
     std::list<Stream*>::const_iterator it = m_streams.begin();
     while (it != m_streams.end()) {
       const Stream* stream = (*it);
@@ -463,13 +459,11 @@ int Descriptor::dispatch(int events)
       } else {
 	// See if there any events to send
 	if (!event_readable && 
-	    stream->event_enabled(Stream::SendReadable)) {
-	  EVENT_DEBUG_LOG("SEND READABLE");
+	    stream->has_readable()) {
 	  event_readable = true;
 	}
-	if (!event_writeable 
-	    && stream->event_enabled(Stream::SendWriteable)) {
-	  EVENT_DEBUG_LOG("SEND WRITEABLE");
+	if (!event_writeable &&
+            stream->has_writeable()) {
 	  event_writeable = true;
 	}
 	++it;    

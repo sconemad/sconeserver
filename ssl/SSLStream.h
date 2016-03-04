@@ -51,7 +51,8 @@ public:
   virtual scx::Condition write(const void* buffer,int n,int& na);
 
   virtual scx::Condition event(scx::Stream::Event e);
-
+  virtual bool has_readable() const;
+  
   virtual std::string stream_status() const;
   
   scx::Condition init_ssl();

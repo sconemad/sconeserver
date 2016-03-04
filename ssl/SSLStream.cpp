@@ -183,6 +183,13 @@ scx::Condition SSLStream::event(scx::Stream::Event e)
 }
 
 //=============================================================================
+bool SSLStream::has_readable() const
+{
+  return (m_seq == Connected &&
+          SSL_pending(m_ssl) > 0);
+}
+
+//=============================================================================
 scx::Condition SSLStream::init_ssl()
 {
   m_last_read_cond=scx::Ok;
