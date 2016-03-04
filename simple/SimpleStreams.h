@@ -38,11 +38,13 @@ public:
 protected:
 
   virtual scx::Condition event(scx::Stream::Event e);
+  virtual std::string stream_status() const;
 
 private:
   
   scx::Module::Ref m_module;
   scx::Buffer m_buffer;
+  int m_read;
 
 };
 

@@ -26,7 +26,8 @@ Free Software Foundation, Inc.,
 EchoStream::EchoStream(scx::Module* module, int buffer_size)
   : scx::Stream("echo"),
     m_module(module),
-    m_buffer(buffer_size)
+    m_buffer(buffer_size),
+    m_read(0)
 {
   enable_event(scx::Stream::Readable,true);
 }
@@ -41,6 +42,7 @@ EchoStream::~EchoStream()
 scx::Condition EchoStream::event(scx::Stream::Event e)
 {
   scx::Condition c = scx::Ok;
+  int p;
   switch (e) {
 
     case scx::Stream::Opening:
@@ -48,19 +50,32 @@ scx::Condition EchoStream::event(scx::Stream::Event e)
       break;
 
     case scx::Stream::Closing:
+      if (m_buffer.used() > 0) return scx::Wait;
       break;
 
     case scx::Stream::Readable:
+      p = m_buffer.used();
       c = Stream::read(m_buffer);
+      m_read += (m_buffer.used() - p);
       // Fall through to write...
     case scx::Stream::Writeable:
       if (m_buffer.used() > 0) c = Stream::write(m_buffer);
+
       enable_event(scx::Stream::Readable, m_buffer.free() > 0);
       enable_event(scx::Stream::Writeable, m_buffer.used() > 0);
       break;
   }
   if (c == scx::Ok) endpoint().reset_timeout();
   return c;
+}
+
+//=============================================================================
+std::string EchoStream::stream_status() const
+{
+  std::ostringstream oss;
+  oss << "r:" << m_read
+      << " b:" << m_buffer.status_string();
+  return oss.str();
 }
 
 
