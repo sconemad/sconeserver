@@ -77,6 +77,8 @@ public:
   // Get microsecond component
   int microseconds() const;
 
+  void get_timeval(struct timeval& tv) const;
+  
   Time& operator=(const Time& t);
 
   Time operator+(const Time& t) const;

@@ -165,6 +165,14 @@ bool Date::valid() const
 }
 
 //=============================================================================
+bool Date::future() const
+{
+  timeval tn;
+  ::gettimeofday(&tn,0);
+  return timercmp(&m_time,&tn,>);
+}
+
+//=============================================================================
 int Date::microsecond() const
 {
   return m_time.tv_usec;
@@ -468,6 +476,12 @@ std::string Date::format(const std::string& fmt) const
 time_t Date::epoch_seconds() const
 {
   return m_time.tv_sec;
+}
+
+//=============================================================================
+void Date::get_timeval(struct timeval& tv) const
+{
+  tv = m_time;
 }
  
 //=============================================================================

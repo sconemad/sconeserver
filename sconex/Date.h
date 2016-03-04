@@ -51,6 +51,9 @@ public:
   // Is this a valid date?
   bool valid() const;
 
+  // Is this in the future
+  bool future() const;
+  
   int microsecond() const;
   int second() const;
   int minute() const;
@@ -95,6 +98,7 @@ public:
   void set_timezone(const TimeZone& timezone);
   
   time_t epoch_seconds() const;
+  void get_timeval(struct timeval& tv) const;
 
   // ScriptObject methods:
   virtual std::string get_string() const;

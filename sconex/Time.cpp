@@ -257,6 +257,12 @@ int Time::microseconds() const
 }
 
 //=============================================================================
+void Time::get_timeval(struct timeval& tv) const
+{
+  tv = m_time;
+}
+
+//=============================================================================
 std::string Time::string(Precision precision) const
 {
   int weeks,days,hours,minutes,seconds;
