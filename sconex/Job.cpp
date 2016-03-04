@@ -28,6 +28,8 @@ JobID Job::s_next_jobid = 1;
 //=============================================================================
 Job::Job(const std::string& type)
   : m_type(type),
+    m_job_state(Wait),
+    m_timeout(0),
     m_jobid(s_next_jobid++)
 {
   DEBUG_COUNT_CONSTRUCTOR(Job);
@@ -37,6 +39,42 @@ Job::Job(const std::string& type)
 Job::~Job()
 {
   DEBUG_COUNT_DESTRUCTOR(Job);
+}
+
+//=============================================================================
+bool Job::prepare(Date& timeout, int& mask)
+{
+  switch (m_job_state) {
+    case Run:
+    case Purge:
+      return false;
+    case Cycle:
+      m_job_state = Wait; // Recycle job into waiting state
+    case Wait:
+      break;
+  }
+  
+  return true;
+}
+  
+//=============================================================================
+int Job::get_fd() { return -1; }
+
+//=============================================================================
+bool Job::ready(int events)
+{
+  return (m_job_state == Wait);
+}
+
+//=============================================================================
+void Job::run_job()
+{
+  m_job_state = Job::Run;
+  if (run()) {
+    m_job_state = Job::Purge;
+  } else {
+    m_job_state = Job::Cycle;
+  }
 }
 
 //=============================================================================
@@ -63,14 +101,19 @@ Job::JobState Job::get_state() const
   return m_job_state;
 }
 
+//=============================================================================
+void Job::set_state(JobState state)
+{
+  m_job_state = state;
+}
 
+  
 //=============================================================================
 PeriodicJob::PeriodicJob(const std::string& type, const Time& period)
   : scx::Job(type),
-    m_timeout(0),
     m_period(period)
 {
-  reset_timeout();
+
 }
 
 //=============================================================================
@@ -80,17 +123,24 @@ PeriodicJob::~PeriodicJob()
 }
 
 //=============================================================================
-void PeriodicJob::reset_timeout()
+bool PeriodicJob::prepare(Date& timeout, int& mask)
 {
-  m_timeout = Date::now() + m_period;
+  if (!Job::prepare(timeout, mask)) return false;
+ 
+  if (!m_timeout.future()) m_timeout = Date::now() + m_period;
+  if (m_timeout < timeout) timeout = m_timeout;
+
+  return true;
 }
 
 //=============================================================================
-bool PeriodicJob::should_run()
+bool PeriodicJob::ready(int events)
 {
-  return (Date::now() >= m_timeout);
+  if (!Job::ready(events)) return false;
+  return (m_timeout.valid() && !m_timeout.future());
 }
 
+  
 //=============================================================================
 std::string PeriodicJob::describe() const
 {
@@ -121,16 +171,15 @@ void* JobThread::run()
 
     if (!m_job) continue; // Woken up for no reason, hmm...
     
-    bool purge = true;
     try {
       // Run the job
-      purge = m_job->run();
+      m_job->run_job();
       
     } catch (...) {
       DEBUG_LOG("EXCEPTION caught in job thread");
     }
     
-    m_manager.finished_job(this,m_job,purge);
+    m_manager.finished_job(this,m_job);
     m_job = 0;
 
   }
@@ -143,6 +192,7 @@ void JobThread::allocate_job(Job* job)
   m_mutex.lock();
   DEBUG_ASSERT(m_job==0,"JobThread already has a job allocated");
   m_job = job;
+  m_job->set_state(Job::Run);
   wakeup();
   m_mutex.unlock();
 }

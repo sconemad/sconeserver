@@ -48,7 +48,6 @@ public:
   virtual bool run()
   {
     m_manager.check_sessions();
-    reset_timeout();
     return false;
   };
 

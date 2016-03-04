@@ -50,7 +50,6 @@ public:
   virtual bool run()
   {
     m_module.object()->refresh();
-    reset_timeout();
     return false;
   };
 

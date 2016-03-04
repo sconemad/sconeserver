@@ -47,7 +47,6 @@ public:
   virtual bool run()
   {
     m_module.object()->refresh(false);
-    reset_timeout();
     return false;
   };
 

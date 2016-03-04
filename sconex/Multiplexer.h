@@ -84,7 +84,7 @@ private:
   friend class JobThread;
 
   bool allocate_job(Job* job);
-  bool finished_job(JobThread* thread, Job* job, bool purge);
+  bool finished_job(JobThread* thread, Job* job);
   
   void check_thread_pool();
 

@@ -286,7 +286,7 @@ void Descriptor::link_streams()
 }
 
 //=============================================================================
-int Descriptor::get_event_mask()
+int Descriptor::get_event_mask() const
 {
   int event_mask = 0;
 
@@ -305,6 +305,19 @@ int Descriptor::get_event_mask()
   }
   
   return event_mask;
+}
+
+//=============================================================================
+Date Descriptor::get_timeout() const
+{
+  if (m_virtual_events != 0) return Date::now();
+
+  for (std::list<Stream*>::const_iterator it = m_streams.begin();
+       it != m_streams.end(); ++it) {
+    if ((*it)->has_readable()) return Date::now();
+  }
+
+  return m_timeout;
 }
 
 //=============================================================================
@@ -555,11 +568,36 @@ DescriptorJob::~DescriptorJob()
 }
 
 //=============================================================================
-bool DescriptorJob::should_run()
+bool DescriptorJob::prepare(Date& timeout, int& mask)
 {
+  if (!Job::prepare(timeout, mask)) return false;
+  
+  m_timeout = m_descriptor->get_timeout();
+  if (m_timeout.valid() && m_timeout < timeout) timeout = m_timeout;
+  
+  mask = m_descriptor->get_event_mask();
   return true;
 }
 
+//=============================================================================
+int DescriptorJob::get_fd()
+{
+  return m_descriptor->fd();
+}
+
+//=============================================================================
+bool DescriptorJob::ready(int events)
+{
+  if (!Job::ready(events)) return false;
+  m_events = events;
+  return true;
+  // TODO: Currently DescriptorJobs are always run for each cycle, however,
+  // they only really need to run if there are events, the timeout has expired
+  // or there is any opening or closing to be done. Need to add some logic
+  // here to work this out.
+  //  return (m_events != 0 || (m_timeout.valid() && !m_timeout.future()));
+}
+  
 //=============================================================================
 bool DescriptorJob::run()
 {
@@ -596,24 +634,6 @@ std::string DescriptorJob::describe() const
 Descriptor* DescriptorJob::get_descriptor()
 {
   return m_descriptor;
-}
-
-//=============================================================================
-int DescriptorJob::get_event_mask()
-{
-  int mask = 0;
-  if (get_state() == Wait) {
-    mask = m_descriptor->get_event_mask();
-  }
-  return mask;
-}
-
-//=============================================================================
-void DescriptorJob::set_events(int events)
-{
-  if (get_state() == Wait) {
-    m_events = events;
-  }
 }
 
 };

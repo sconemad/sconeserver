@@ -33,6 +33,7 @@ class Multiplexer;
 typedef int JobID;
 
 //=============================================================================
+// A Job is a task to be run by the multiplexer.
 class SCONEX_API Job {
 
 public:
@@ -40,31 +41,53 @@ public:
   Job(const std::string& type);
   virtual ~Job();
 
-  virtual bool should_run() =0;
-  // Return to indicate whether the job should run now
+  // Prepare to schedule the job.
+  // timeout: The expiry time that will be used when waiting for events.
+  //   If the job needs to run before this timeout, then it should be
+  //   adjusted accordingly. [in/out]
+  // mask: Used to return the event mask, specifying which events to listen
+  //   for [out]
+  // return: true if the job should be considered for scheduling
+  //   (i.e. is not already running).
+  virtual bool prepare(Date& timeout, int& mask);
 
-  virtual bool run() =0;
+  // Get the file descriptor associated with this job, or -1 if the job has
+  // no associated file descriptor.
+  virtual int get_fd();
+
+  // Get whether the job is ready to run with the specified events.
+  virtual bool ready(int events);
+  
   // Run the job (usually launched in JobThread)
+  void run_job();
 
-  virtual std::string describe() const;
   // Return a description of the job
+  virtual std::string describe() const;
 
-  const std::string& type() const;
   // Return the type of job specified on construction
+  const std::string& type() const;
 
   JobID get_id() const;
 
   enum JobState { Wait, Run, Cycle, Purge };
   JobState get_state() const;
   
-private:
+protected:
   std::string m_type;
 
   friend class Multiplexer;
   friend class JobThread;
 
+  // Implement this to provide the actual task for this job.
+  // return: true to remove the job.
+  //         false to keep the job.
+  virtual bool run() =0;
+  
+  void set_state(JobState state);
+  
   JobState m_job_state;
-
+  Date m_timeout;
+  
   JobID m_jobid;
   static JobID s_next_jobid;
 
@@ -78,14 +101,12 @@ public:
   PeriodicJob(const std::string& type, const Time& period);
   virtual ~PeriodicJob();
 
-  void reset_timeout();
-
-  virtual bool should_run();
+  virtual bool prepare(Date& timeout, int& mask);
+  virtual bool ready(int events);
   virtual bool run() =0;
   virtual std::string describe() const;
 
 private:
-  scx::Date m_timeout;
   scx::Time m_period;
 };
 
@@ -97,8 +118,8 @@ public:
   JobThread(Multiplexer& manager);
   virtual ~JobThread();
 
-  virtual void* run();
   // Thread entry point
+  virtual void* run();
 
   void allocate_job(Job* job);
 

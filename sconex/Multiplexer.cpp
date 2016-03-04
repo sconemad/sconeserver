@@ -55,7 +55,6 @@ JobID Multiplexer::add_job(Job* job)
 {
   DEBUG_ASSERT(job!=0,"NULL Job added to kernel");
   JobID id = job->get_id();
-  job->m_job_state = Job::Wait;
 
   m_new_mutex.lock();
   m_jobs_new.push_back(job);
@@ -82,12 +81,12 @@ bool Multiplexer::end_job(JobID jobid)
   }
   
   if (found) {
-    while (job->m_job_state == Job::Run) {
+    while (job->get_state() == Job::Run) {
       // Job is running, wait for it to finish
       DEBUG_LOG("end_job: Waiting for job to finish");
       m_job_condition.wait(m_job_mutex);
     }
-    job->m_job_state = Job::Purge;
+    job->set_state(Job::Purge);
   }
 
   wakeup();
@@ -115,8 +114,7 @@ int Multiplexer::spin()
   fd_set fds_read; FD_ZERO(&fds_read);
   fd_set fds_write; FD_ZERO(&fds_write);
   fd_set fds_except; FD_ZERO(&fds_except);
-  bool immediate = false;
-
+  Date expiry = Date::now() + Time(m_latency);
   check_thread_pool();
   
   m_job_mutex.lock();
@@ -126,7 +124,7 @@ int Multiplexer::spin()
   while (!m_jobs_new.empty()) {
     m_jobs.push_back(m_jobs_new.front());
     m_jobs_new.pop_front();
-    immediate = true;
+    expiry = Date::now();
   }
   m_new_mutex.unlock();
   
@@ -144,38 +142,15 @@ int Multiplexer::spin()
   JobList::iterator it;
   for (it = m_jobs.begin(); it != m_jobs.end(); ++it) {
     Job* job = *it;
-    if (job->m_job_state != Job::Purge) {
-      if (job->m_job_state == Job::Cycle) {
-	// Recycle job into waiting state
-	job->m_job_state = Job::Wait;
-      }
-      DescriptorJob* djob = dynamic_cast<DescriptorJob*>(job);
-      if (djob) {
-	Descriptor* d = djob->get_descriptor();
-	int mask = djob->get_event_mask();
-	int fd = d->fd();
-	if (fd >= 0) {
-          ++num_added;
-          if (job->m_job_state == Job::Wait) {
-            // Don't select readable/writable for running jobs
-            if (0 != (mask & (1<<Stream::Readable))) FD_SET(fd,&fds_read);
-            if (0 != (mask & (1<<Stream::Writeable))) FD_SET(fd,&fds_write);
-          }
-          FD_SET(fd,&fds_except);
-	}
-	if (0 != (mask & (1<<Stream::SendReadable)) ||
-	    0 != (mask & (1<<Stream::SendWriteable))) {
-	  // These events can be sent immediately, so put the
-	  // select into immediate mode.
-	  immediate = true;
-	  // TODO: This may hog CPU if there is nothing after the
-	  // sending stream waiting to read/write. 
-	}
+    int mask = 0;
+    if (job->prepare(expiry, mask)) {
+      int fd = job->get_fd();
+      if (fd >= 0) {
+        ++num_added;
+        if (0 != (mask & (1<<Stream::Readable))) FD_SET(fd,&fds_read);
+        if (0 != (mask & (1<<Stream::Writeable))) FD_SET(fd,&fds_write);
+        FD_SET(fd,&fds_except);
 	maxfd = std::max(maxfd,fd);
-	
-      } else {
-	// Other kind of job
-	++num_added;
       }
     }
   }
@@ -186,29 +161,18 @@ int Multiplexer::spin()
     return 0;
   }
 
-  // Determine timeval to use depending on mode
-  timeval time;
-  if (immediate) {
-    // * Immediate mode select *
-    // Perform a non-blocking select, this checks for descriptor events and 
-    // returns straight away.
-    time.tv_usec = 0; time.tv_sec = 0;
-
-  } else {
-    // * Normal mode select *
-    // Perform a blocking select, returning only when an event occurs, or the 
-    // specified timeout is reached, unless we are interrupted by a signal 
-    // sent from another thread.
-    time.tv_usec = m_latency.tv_usec; time.tv_sec = m_latency.tv_sec;
+  timeval timeout; (expiry - Date::now()).get_timeval(timeout);
+  if (timeout.tv_sec < 0 || timeout.tv_usec < 0) {
+    timeout.tv_sec = 0; timeout.tv_usec = 0;
   }
   
   // Make the select call
-  if (select(maxfd+1, &fds_read, &fds_write, &fds_except, &time) < 0) {
+  if (select(maxfd+1, &fds_read, &fds_write, &fds_except, &timeout) < 0) {
     // Select returned an error or it was interrupted
     if (errno != EINTR) {
       DEBUG_LOG_ERRNO("select failed");
     }
-
+    
   } else {
 
     Date start = Date::now();
@@ -216,28 +180,15 @@ int Multiplexer::spin()
     // Select succeeded, decode events and allocate jobs
     for (it = m_jobs.begin(); it != m_jobs.end(); ++it) {
       Job* job = *it;
-      Job::JobState js = job->m_job_state;
-      if (js == Job::Wait) {
-	DescriptorJob* djob = dynamic_cast<DescriptorJob*>(job);
-	if (djob) {
-	  Descriptor* d = djob->get_descriptor();
-	  int fd = d->fd();
-	  int events = 0;
-	  
-	  if (fd >= 0) {
-	    events |= (FD_ISSET(fd,&fds_read) ? (1<<Stream::Readable) : 0);
-	    events |= (FD_ISSET(fd,&fds_write) ? (1<<Stream::Writeable) : 0);
-	  }
-	  djob->set_events(events);
-	} else if (!m_enable_jobs) {
-	  // Ignore all non-descriptor jobs
-	  continue;
-	} 
-	if (job->should_run()) {
-	  // Run the job
-	  allocate_job(job);
-          ++m_jobs_run;
-	}
+      int events = 0;
+      int fd = job->get_fd();
+      if (fd >= 0) {
+        events |= (FD_ISSET(fd,&fds_read) ? (1<<Stream::Readable) : 0);
+        events |= (FD_ISSET(fd,&fds_write) ? (1<<Stream::Writeable) : 0);
+      }
+      if (job->ready(events)) {
+        allocate_job(job);
+        ++m_jobs_run;
       }
     }
 
@@ -254,7 +205,7 @@ int Multiplexer::spin()
   m_job_mutex.lock();
   for (it = m_jobs.begin(); it != m_jobs.end(); ) {
     Job* job = *it;
-    if (job->m_job_state == Job::Purge) {
+    if (job->get_state() == Job::Purge) {
       it = m_jobs.erase(it);
       delete job;
     } else {
@@ -325,7 +276,7 @@ std::string Multiplexer::describe() const
     Job* job = *it;
 
     std::string state="?";
-    switch (job->m_job_state) {
+    switch (job->get_state()) {
       case Job::Wait:  state = "Z"; break;
       case Job::Run:   state = "R"; break;
       case Job::Cycle: state = "C"; break;
@@ -391,12 +342,7 @@ bool Multiplexer::allocate_job(Job* job)
   if (m_num_threads == 0) {
     
     // Single threaded mode - run job in this thread
-    job->m_job_state = Job::Run;
-    if (job->run()) {
-      job->m_job_state = Job::Purge;
-    } else {
-      job->m_job_state = Job::Cycle;
-    }
+    job->run_job();
 
   } else {
    
@@ -415,7 +361,6 @@ bool Multiplexer::allocate_job(Job* job)
     m_threads_pool.pop_front();
     m_threads_busy.push_back(thread);
     
-    job->m_job_state = Job::Run;
     thread->allocate_job(job);
   }
 
@@ -424,7 +369,7 @@ bool Multiplexer::allocate_job(Job* job)
 }
 
 //=============================================================================
-bool Multiplexer::finished_job(JobThread* thread, Job* job, bool purge)
+bool Multiplexer::finished_job(JobThread* thread, Job* job)
 {
   m_job_mutex.lock();
 
@@ -434,12 +379,6 @@ bool Multiplexer::finished_job(JobThread* thread, Job* job, bool purge)
   // Place the thread back onto the available pool
   m_threads_busy.remove(thread);
   m_threads_pool.push_back(thread);
-
-  if (purge) {
-    job->m_job_state = Job::Purge;
-  } else {
-    job->m_job_state = Job::Cycle;
-  }
 
   m_job_mutex.unlock();
 
@@ -498,7 +437,9 @@ void Multiplexer::update_stats(const Time& dispatch_time)
   m_job_waits_acc += dispatch_time.to_microseconds();
     
   if (++m_loops >= 100) {
-    m_job_waits = m_job_waits_acc / m_jobs_run;
+    m_job_waits = 0;
+    if (m_jobs_run) 
+      m_job_waits = m_job_waits_acc / m_jobs_run;
     m_job_waits_acc = 0;
     m_jobs_run = 0;
     

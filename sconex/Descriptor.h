@@ -158,9 +158,12 @@ private:
   void link_streams();
   // Link up the stream list
 
-  int get_event_mask();
   // Get a bitmask representing the enabled events
+  int get_event_mask() const;
 
+  // Get timeout interval
+  Date get_timeout() const;
+  
   int dispatch(int events);
   // Dispatch events to this descriptor
   // Return value indicates whether the socket is to remain open
@@ -186,13 +189,14 @@ public:
   DescriptorJob(Descriptor* d);
   virtual ~DescriptorJob();
 
-  virtual bool should_run();
+  virtual bool prepare(Date& timeout, int& mask);
+  virtual int get_fd();
+  virtual bool ready(int events);
+  
   virtual bool run();
   virtual std::string describe() const;
 
   Descriptor* get_descriptor();
-  int get_event_mask();
-  void set_events(int events);
   
 private:
 
