@@ -506,7 +506,7 @@ void Date::set_timezone(const TimeZone& timezone)
 //=============================================================================
 std::string Date::get_string() const
 {
-  return dcode();
+  return code();
 }
 
 //=============================================================================
@@ -565,6 +565,7 @@ ScriptRef* Date::script_op(const ScriptAuth& auth,
       if (name == "day") return ScriptInt::new_ref(day());
       if (name == "yday") return ScriptInt::new_ref(yday());
       if (name == "code") return ScriptString::new_ref(code());
+      if (name == "dcode") return ScriptString::new_ref(dcode());
       if (name == "string") return ScriptString::new_ref(string());
       if (name == "ansi") return ScriptString::new_ref(ansi_string());
       if (name == "epoch_seconds") return ScriptInt::new_ref(m_time.tv_sec);
