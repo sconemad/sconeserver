@@ -259,15 +259,15 @@ ScriptRef* ScriptExpr::expression(int p, bool f, bool exec)
           ScriptRef* right = 0;
 
 	  if (ScriptOp::Or == op && left->object()->get_int()) {
-	    // Short circuit | op - don't exec rhs if lhs is true
-	    ScriptExpr_DEBUG_LOG("Shorting |");
+	    // Short circuit || op - don't exec rhs if lhs is true
+	    ScriptExpr_DEBUG_LOG("Shorting ||");
 	    right = expression(p2+1,f,false);
 	    delete right;
 	    return left;
 
 	  } else if (ScriptOp::And == op && !left->object()->get_int()) {
-	    // Short circuit & op - don't exec rhs if lhs is false
-	    ScriptExpr_DEBUG_LOG("Shorting &");
+	    // Short circuit && op - don't exec rhs if lhs is false
+	    ScriptExpr_DEBUG_LOG("Shorting &&");
 	    right = expression(p2+1,f,false);
 	    delete right;
 	    return left;
@@ -616,6 +616,9 @@ void ScriptExpr::next()
 	if (hex==1) ends=false;
 	else ends=(++ex>1);
 	break;
+      case 'o': case 'O':
+	ends=false;
+	break;
       case '+': case '-':
 	ends=(pc!='e'&&pc!='E');
 	break;
@@ -768,9 +771,13 @@ void ScriptExpr::init()
   (*s_binary_ops)["-="] = ScriptOp::SubtractAssign;
   (*s_binary_ops)["*="] = ScriptOp::MultiplyAssign;
   (*s_binary_ops)["/="] = ScriptOp::DivideAssign;
-  (*s_binary_ops)["|"]  = ScriptOp::Or;
-  (*s_binary_ops)["xor"] = ScriptOp::Xor;
-  (*s_binary_ops)["&"]  = ScriptOp::And;
+  (*s_binary_ops)["||"]  = ScriptOp::Or;
+  (*s_binary_ops)["&&"]  = ScriptOp::And;
+  (*s_binary_ops)["|"]  = ScriptOp::BitOr;
+  (*s_binary_ops)["xor"]  = ScriptOp::BitXor;
+  (*s_binary_ops)["&"]  = ScriptOp::BitAnd;
+  (*s_binary_ops)["<<"]  = ScriptOp::LeftShift;
+  (*s_binary_ops)[">>"]  = ScriptOp::RightShift;
   (*s_binary_ops)["=="] = ScriptOp::Equality;
   (*s_binary_ops)["!="] = ScriptOp::Inequality;
   (*s_binary_ops)[">"]  = ScriptOp::GreaterThan;
@@ -789,6 +796,7 @@ void ScriptExpr::init()
   (*s_prefix_ops)["+"]  = ScriptOp::Positive;
   (*s_prefix_ops)["-"]  = ScriptOp::Negative;
   (*s_prefix_ops)["!"]  = ScriptOp::Not;
+  (*s_prefix_ops)["~"]  = ScriptOp::BitNot;
   (*s_prefix_ops)["++"]  = ScriptOp::PreIncrement;
   (*s_prefix_ops)["--"]  = ScriptOp::PreDecrement;
   (*s_binary_ops)["["]  = ScriptOp::Subscript;
@@ -812,12 +820,19 @@ void ScriptExpr::init()
 
   (*s_op_precs)[ScriptOp::Or] = ++p; // Logical OR
 
-  (*s_op_precs)[ScriptOp::Xor]= ++p; // Logical XOR
-
   (*s_op_precs)[ScriptOp::And] = ++p; // Logical AND
+
+  (*s_op_precs)[ScriptOp::BitOr] = ++p; // Bitwise OR
+
+  (*s_op_precs)[ScriptOp::BitXor]= ++p; // Bitwise XOR
+
+  (*s_op_precs)[ScriptOp::BitAnd] = ++p; // Bitwise AND
 
   (*s_op_precs)[ScriptOp::Equality] = ++p; // Equality
   (*s_op_precs)[ScriptOp::Inequality] = p;
+
+  (*s_op_precs)[ScriptOp::LeftShift] = ++p; // Bitwise shifts
+  (*s_op_precs)[ScriptOp::RightShift] = p;
 
   (*s_op_precs)[ScriptOp::GreaterThan] = ++p; // Relational
   (*s_op_precs)[ScriptOp::LessThan] = p;
@@ -840,6 +855,7 @@ void ScriptExpr::init()
   (*s_op_precs)[ScriptOp::Positive] = ++p; // Unary prefix
   (*s_op_precs)[ScriptOp::Negative] = p;
   (*s_op_precs)[ScriptOp::Not] = p;
+  (*s_op_precs)[ScriptOp::BitNot] = p;
   (*s_op_precs)[ScriptOp::PreIncrement] = p;
   (*s_op_precs)[ScriptOp::PreDecrement] = p;
 

@@ -133,9 +133,6 @@ ScriptRef* ScriptObject::script_op(const ScriptAuth& auth,
     if (right) return right->ref_copy(ScriptRef::Ref);
     return 0;
       
-  case ScriptOp::Xor:
-    return ScriptBool::new_ref((value!=0) ^ (rvalue!=0));
-    
   default:
     break;
   }

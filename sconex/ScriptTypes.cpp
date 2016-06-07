@@ -335,9 +335,6 @@ ScriptRef* ScriptBool::script_op(const ScriptAuth& auth,
       case ScriptOp::Or:
 	return ScriptBool::new_ref(m_value || rvalue);
 	
-      case ScriptOp::Xor:
-	return ScriptBool::new_ref(!m_value != !rvalue);
-	
       case ScriptOp::And:
 	return ScriptBool::new_ref(m_value && rvalue);
 
