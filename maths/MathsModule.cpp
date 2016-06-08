@@ -34,7 +34,8 @@ Free Software Foundation, Inc.,
 
 SCONEX_MODULE(MathsModule);
 
-const size_t ALLOC_LIMIT = 1000000;
+// This may be too much
+const size_t ALLOC_LIMIT = 1000000000;
 
 //=========================================================================
 void* alloc_func(size_t alloc_size)
@@ -86,6 +87,11 @@ MathsModule::MathsModule()
   m_funcs.insert("lcm");
   m_funcs.insert("mean");
   m_funcs.insert("fib");
+
+  m_funcs.insert("bin");
+  m_funcs.insert("oct");
+  m_funcs.insert("dec");
+  m_funcs.insert("hex");
 }
 
 //=========================================================================
@@ -112,6 +118,8 @@ int MathsModule::init()
 
   scx::StandardContext::register_type("MathsFloat",this);
   scx::StandardContext::register_type("MathsInt",this);
+  scx::StandardContext::register_type("Float",this);
+  scx::StandardContext::register_type("Int",this);
 
   return scx::Module::init();
 }
@@ -121,6 +129,8 @@ bool MathsModule::close()
 {
   scx::StandardContext::unregister_type("MathsFloat",this);
   scx::StandardContext::unregister_type("MathsInt",this);
+  scx::StandardContext::unregister_type("Float",this);
+  scx::StandardContext::unregister_type("Int",this);
 
   return scx::Module::close();
 }
@@ -141,7 +151,7 @@ scx::ScriptRef* MathsModule::script_op(const scx::ScriptAuth& auth,
     std::string name = right->object()->get_string();
 
     if ("set_prec" == name ||
-	"set_sf" == name) 
+	"set_sf" == name)
       return new scx::ScriptMethodRef(ref,name);
     
     // Methods
@@ -149,15 +159,19 @@ scx::ScriptRef* MathsModule::script_op(const scx::ScriptAuth& auth,
     
     // Properties
     MathsFloat* c = 0;
+    
+    if ("buildtime" == name) {
+      return scx::ScriptString::new_ref(__DATE__ " " __TIME__);
+    }
 
     if ("prec" == name) {
       return scx::ScriptInt::new_ref(mpfr_get_default_prec());
     }
 
-    if ("sf" == name) {
+    if ("SF" == name) {
       return scx::ScriptInt::new_ref(m_sf);
     }
-    
+
     if ("PI" == name) {
       Mpfr(r); mpfr_const_pi(r, rnd);
       c = new MathsFloat(this, r);
@@ -214,8 +228,8 @@ void MathsModule::provide(const std::string& type,
 			  const scx::ScriptRef* args,
 			  scx::ScriptObject*& object)
 {
-  if (type == "MathsFloat")
+  if (type == "MathsFloat" || type == "Float")
     object = MathsFloat::create(this,args);
-  if (type == "MathsInt")
+  if (type == "MathsInt" || type == "Int")
     object = MathsInt::create(this,args);
 }

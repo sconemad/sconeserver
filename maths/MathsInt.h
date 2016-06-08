@@ -67,7 +67,7 @@ public:
 
   const mpz_t& get_value() const;
   
-  std::string to_string() const;
+  std::string to_string(int base, int group) const;
   
   typedef scx::ScriptRefTo<MathsInt> Ref;
 

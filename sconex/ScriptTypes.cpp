@@ -513,6 +513,17 @@ ScriptRef* ScriptInt::script_op(const ScriptAuth& auth,
 	} else {
 	  return ScriptError::new_ref("Divide by zero");
 	}
+
+      case ScriptOp::BitOr:
+	return ScriptInt::new_ref(m_value | rvalue);
+      case ScriptOp::BitXor:
+	return ScriptInt::new_ref(m_value ^ rvalue);
+      case ScriptOp::BitAnd:
+	return ScriptInt::new_ref(m_value & rvalue);
+      case ScriptOp::LeftShift:
+	return ScriptInt::new_ref(m_value << rvalue);
+      case ScriptOp::RightShift:
+	return ScriptInt::new_ref(m_value >> rvalue);
 	
       case ScriptOp::Assign:
 	if (!ref.is_const()) {
@@ -562,6 +573,9 @@ ScriptRef* ScriptInt::script_op(const ScriptAuth& auth,
       
     case ScriptOp::Negative:
       return ScriptInt::new_ref(-m_value);
+
+    case ScriptOp::BitNot:
+      return ScriptInt::new_ref(~m_value);
       
     case ScriptOp::PreIncrement:
       if (!ref.is_const()) {

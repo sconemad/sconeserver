@@ -22,6 +22,7 @@ Free Software Foundation, Inc.,
 #include "MathsInt.h"
 #include "MathsFloat.h"
 #include "MathsModule.h"
+#include <sconex/ScriptTypes.h>
 
 //===========================================================================
 scx::ScriptRef* MathsInt::new_ref(MathsModule* module, mpz_t value)
@@ -89,7 +90,19 @@ MathsInt::MathsInt(MathsModule* module, const scx::ScriptObject* value)
     return;
   }
 
-  mpz_init_set_str(m_value, value->get_string().c_str(), 0);
+  std::string str = value->get_string();
+  const char* cs = str.c_str();
+  int base = 10;
+  if (str.length() > 2 && str[0] == '0') {
+    switch (str[1]) {
+    case 'b': base = 2; cs+=2; break;
+    case 'o': base = 8; cs+=2; break;
+    case 'd': base = 10; cs+=2; break;
+    case 'x': base = 16; cs+=2; break;
+    }
+  }
+  
+  mpz_init_set_str(m_value, cs, base);
 }
 
 //=========================================================================
@@ -123,7 +136,10 @@ scx::ScriptObject* MathsInt::new_copy() const
 //=========================================================================
 std::string MathsInt::get_string() const
 {
-  return to_string();
+  char* cs = mpz_get_str(0, 10, m_value);
+  std::string str(cs);
+  ::free(cs);
+  return str;
 }
 
 //=========================================================================
@@ -196,6 +212,26 @@ scx::ScriptRef* MathsInt::script_op(const scx::ScriptAuth& auth,
       mpz_t r; mpz_init(r); mpz_pow_ui(r, m_value, mpz_get_ui(rvalue));
       return MathsInt::new_ref(m, r);
     }
+    case scx::ScriptOp::BitOr: {
+      mpz_t r; mpz_init(r); mpz_ior(r, m_value, rvalue);
+      return MathsInt::new_ref(m, r);
+    }
+    case scx::ScriptOp::BitXor: {
+      mpz_t r; mpz_init(r); mpz_xor(r, m_value, rvalue);
+      return MathsInt::new_ref(m, r);
+    }
+    case scx::ScriptOp::BitAnd: {
+      mpz_t r; mpz_init(r); mpz_and(r, m_value, rvalue);
+      return MathsInt::new_ref(m, r);
+    }
+    case scx::ScriptOp::LeftShift: {
+      mpz_t r; mpz_init(r); mpz_mul_2exp(r, m_value, mpz_get_si(rvalue));
+      return MathsInt::new_ref(m, r);
+    }
+    case scx::ScriptOp::RightShift: {
+      mpz_t r; mpz_init(r); mpz_tdiv_q_2exp(r, m_value, mpz_get_si(rvalue));
+      return MathsInt::new_ref(m, r);
+    }
     case scx::ScriptOp::GreaterThan: {
       return scx::ScriptBool::new_ref(mpz_cmp(m_value, rvalue) > 0);
     }
@@ -249,6 +285,10 @@ scx::ScriptRef* MathsInt::script_op(const scx::ScriptAuth& auth,
       mpz_t r; mpz_init(r); mpz_neg(r, m_value);
       return MathsInt::new_ref(m, r);
     }
+    case scx::ScriptOp::BitNot: {
+      mpz_t r; mpz_init(r); mpz_com(r, m_value);
+      return MathsInt::new_ref(m, r);
+    }
     case scx::ScriptOp::PreIncrement: {
       if (!ref.is_const()) mpz_add_ui(m_value, m_value, 1);
       return ref.ref_copy();
@@ -286,7 +326,7 @@ scx::ScriptRef* MathsInt::script_method(const scx::ScriptAuth& auth,
 				   const scx::ScriptRef* args)
 {
   if ("string" == name) {
-    return scx::ScriptString::new_ref(to_string());
+    return scx::ScriptString::new_ref(get_string());
   }
 
   MathsModule* m = m_module.object();
@@ -313,6 +353,17 @@ scx::ScriptRef* MathsInt::script_method(const scx::ScriptAuth& auth,
     return MathsInt::new_ref(m, r);
   }
 
+  if ("bin" == name || "oct" == name || "dec" == name || "hex" == name) {
+    const scx::ScriptNum* group =
+      scx::get_method_arg<scx::ScriptNum>(args,1,"group");
+    int g = group ? group->get_int() : 0;
+    
+    if ("bin" == name) return scx::ScriptString::new_ref(to_string(2,g));
+    if ("oct" == name) return scx::ScriptString::new_ref(to_string(8,g));
+    if ("dec" == name) return scx::ScriptString::new_ref(to_string(10,g));
+    if ("hex" == name) return scx::ScriptString::new_ref(to_string(16,g));
+  }
+  
   // Promote to float to handle other methods
   scx::ScriptRef fl(new MathsFloat(m_module.object(), this));
   return fl.object()->script_method(auth, ref, name, args);
@@ -327,12 +378,32 @@ const mpz_t& MathsInt::get_value() const
 }
 
 //=========================================================================
-std::string MathsInt::to_string() const
+std::string MathsInt::to_string(int base, int group) const
 {
-  char* cs = mpz_get_str(0, 10, m_value);
-  std::string str(cs);
+  char* cs = mpz_get_str(0, base, m_value);
+  int neg = (cs[0] == '-');
+  std::ostringstream oss;
+  if (neg) oss << "-";
+  switch (base) {
+  case 2: oss << "0b"; break;
+  case 8: oss << "0o"; break;
+  case 10: break;
+  case 16: oss << "0x"; break;
+  default: oss << "0[" << base << "]"; break;
+  }
+  if (group == 0) {
+    oss << (cs + neg);
+  } else {
+    char* c = cs + neg;
+    size_t l = strlen(c);
+    int r = l % group;
+    if (r) oss << " " << std::string(c,r);
+    c += r;
+    r = group;
+    for (; *c; c += r) oss << " " << std::string(c,r);
+  }
   ::free(cs);
-  return str;
+  return oss.str();
 }
 
 //=========================================================================

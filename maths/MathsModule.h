@@ -27,8 +27,6 @@ Free Software Foundation, Inc.,
 #include <sconex/ScriptTypes.h>
 #include <sconex/ScriptExpr.h>
 
-const int BASE = 10;
-
 //=========================================================================
 class MathsModule : public scx::Module,
 		    public scx::Provider<scx::ScriptObject> {

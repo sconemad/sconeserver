@@ -384,10 +384,10 @@ std::string MathsFloat::to_string(unsigned int dp) const
   if (dp == 0) {
     // Convert bit precision to decimal places
     dp = (unsigned int)(mpfr_get_default_prec() * 0.301); // log(2)
-    ::mpfr_asprintf(&cs,"%-.*RNg",dp,m_value.value);
-  } else {
-    ::mpfr_asprintf(&cs,"%-.*RNg",dp,m_value.value);
   }
+
+  ::mpfr_asprintf(&cs,"%-.*RNg",dp,m_value.value);
+
   std::string str(cs);
   mpfr_free_str(cs);
   return str;
