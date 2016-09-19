@@ -276,7 +276,8 @@ void SQLiteQuery::bind_param(int param, const scx::ScriptRef* arg)
                               SQLITE_TRANSIENT);
     SQLiteQuery_DEBUG_LOG("Binding string param '" << value << "'");
 
-  } else if (typeid(scx::ScriptInt) == ti) {
+  } else if (typeid(scx::ScriptBool) == ti ||
+	     typeid(scx::ScriptInt) == ti) {
     int value = obj->get_int();
     err = ::sqlite3_bind_int(m_stmt, param, value);
     SQLiteQuery_DEBUG_LOG("Binding int param '" << value << "'");

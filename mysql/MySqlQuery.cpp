@@ -90,13 +90,20 @@ void MySqlArg::init_param(MYSQL_BIND& bind, const scx::ScriptRef* arg)
       bind.buffer = (void*)m_str_data;
       MySqlQuery_DEBUG_LOG("Binding string param '" << value << "'");
 
+    } else if (typeid(scx::ScriptBool) == ti) {
+      m_type = MYSQL_TYPE_SHORT;
+      short value = (obj->get_int() == 0) ? 0 : 1;
+      m_data.short_data = value;
+      m_length = sizeof(value);
+      MySqlQuery_DEBUG_LOG("Binding short int param '" << value << "'");
+      
     } else if (typeid(scx::ScriptInt) == ti) {
       m_type = MYSQL_TYPE_LONG;
       long value = obj->get_int();
       m_data.long_data = value;
       m_length = sizeof(value);
       MySqlQuery_DEBUG_LOG("Binding long int param '" << value << "'");
-      
+
     } else if (typeid(scx::ScriptNum) == ti) {
       m_type = MYSQL_TYPE_DOUBLE;
       double value = ((scx::ScriptNum*)obj)->get_real();
