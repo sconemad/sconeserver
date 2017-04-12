@@ -11,10 +11,9 @@ AuthRealmHtpasswd.cpp \
 AuthRealmDB.cpp \
 Client.cpp \
 ConnectionStream.cpp \
-DirIndexStream.cpp \
-DocRoot.cpp \
-ErrorPageStream.cpp \
-GetFileStream.cpp \
+DirIndex.cpp \
+GetFile.cpp \
+Handler.cpp \
 Host.cpp \
 HostMapper.cpp \
 HTTPModule.cpp \
@@ -34,10 +33,9 @@ AuthRealmHtpasswd.h \
 AuthRealmDB.h \
 Client.h \
 ConnectionStream.h \
-DirIndexStream.h \
-DocRoot.h \
-ErrorPageStream.h \
-GetFileStream.h \
+DirIndex.h \
+GetFile.h \
+Handler.h \
 Host.h \
 HostMapper.h \
 http.h \

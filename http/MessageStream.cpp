@@ -25,7 +25,6 @@ Free Software Foundation, Inc.,
 #include <http/Response.h>
 #include <http/HostMapper.h>
 #include <http/Host.h>
-#include <http/DocRoot.h>
 
 #include <sconex/sconex.h>
 #include <sconex/Buffer.h>
@@ -88,7 +87,7 @@ scx::Condition MessageStream::event(scx::Stream::Event e)
         }
       }
   
-      if (!connect_request_module(false)) {
+      if (!handle_request()) {
         return scx::Close;
       }
     } break;
@@ -96,18 +95,12 @@ scx::Condition MessageStream::event(scx::Stream::Event e)
     case scx::Stream::Closing: {
     
       if (!m_headers_sent) {
-        if (!m_buffer) {
-          if (!m_error_response) {
-            m_error_response = true;
-            if (connect_request_module(true)) {
-              // Cancel shutdown for now
-              return scx::End;
-            }
-          }
-          build_header();
-          m_finished = true;
+        if (m_buffer) {
+          return write_header();
+        } else {
+          send_simple_response(m_response.object()->get_status());
+          return scx::Wait;
         }
-        return write_header();
       }
 
       DEBUG_ASSERT(m_bytes_readable == m_bytes_read,"event(Closing) Message not read");
@@ -239,11 +232,39 @@ void MessageStream::send_continue()
 }
 
 //=============================================================================
+void MessageStream::send_simple_response(Status status)
+{
+  m_response.object()->set_status(status);
+  int na=0;
+  if (status.has_body()) {
+    std::ostringstream oss;
+    oss << "<html>"
+        << "<body>"
+        << "<h1>" << status.desc() << "</h1>"
+        << "<hr>"
+        << "<address>" << "SconeServer/" << scx::version().get_string() << "</address>"
+        << "</body>"
+        << "</html>";
+    std::string str = oss.str();
+    m_response.object()->set_header("Content-Type","text/html");
+    write(str.c_str(), str.length(), na);
+  } else {
+    write("", 0, na);
+  }
+}
+
+//=============================================================================
 void MessageStream::set_transparent()
 {
   m_transparent = true;
   build_header();
   write_header();
+}
+
+//=============================================================================
+void MessageStream::add_stream(scx::Stream* stream)
+{
+  endpoint().add_stream(stream);
 }
   
 //=============================================================================
@@ -273,38 +294,33 @@ Response& MessageStream::get_response()
 }
 
 //=============================================================================
-bool MessageStream::connect_request_module(bool error)
+bool MessageStream::handle_request()
 {
   // Pass through to host mapper for connection to appropriate host object
   HostMapper& mapper = m_module.object()->get_hosts();
-  bool success = mapper.connect_request(&endpoint(),
+  bool success = mapper.connect_request(this,
                                         *m_request.object(),
                                         *m_response.object());
-
-  if (!error) {
-    scx::Log log("http");
-    log.attach("profile", m_request.object()->get_profile());
-    log.attach("id", m_request.object()->get_id());
-    log.attach("uri", m_request.object()->get_uri().get_string());
-    
-    const scx::StreamSocket* sock =
-      dynamic_cast<const scx::StreamSocket*>(&endpoint());
-    const scx::SocketAddress* addr = sock->get_remote_addr();
-    log.attach("peer", addr->get_string());
-    
-    log.attach("referer", m_request.object()->get_header("Referer"));
-    log.attach("user-agent", m_request.object()->get_header("User-Agent"));
-    const Host* host = m_request.object()->get_host();
-    if (host) {
-      log.attach("host", host->get_id());
-    }
-    Session* session = m_request.object()->get_session();
-    if (session) {
-      log.attach("session", session->get_id());
-    }
-    
-    log.submit(m_request.object()->get_method());
+  scx::Log log("http");
+  log.attach("id", m_request.object()->get_id());
+  log.attach("uri", m_request.object()->get_uri().get_string());
+  
+  const scx::StreamSocket* sock =
+    dynamic_cast<const scx::StreamSocket*>(&endpoint());
+  const scx::SocketAddress* addr = sock->get_remote_addr();
+  log.attach("peer", addr->get_string());
+  
+  log.attach("referer", m_request.object()->get_header("Referer"));
+  log.attach("user-agent", m_request.object()->get_header("User-Agent"));
+  const Host* host = m_request.object()->get_host();
+  if (host) {
+    log.attach("host", host->get_id());
   }
+  Session* session = m_request.object()->get_session();
+  if (session) {
+    log.attach("session", session->get_id());
+  }
+  log.submit(m_request.object()->get_method());
 
   return success;
 }
@@ -332,13 +348,7 @@ bool MessageStream::build_header()
     }
   }
 
-  // Can a body be sent with this response type
-  const Status& status = m_response.object()->get_status();
-  bool body = (status.code() >= 200 &&
-	       status.code() != 204 &&
-	       status.code() != 304);
-  
-  if (body) {
+  if (m_response.object()->get_status().has_body()) {
     // Do we know the content length
     if (m_response.object()->get_header("Content-Length").empty()) {
       if (persist) {

@@ -40,7 +40,6 @@ class ConnectionStream;
 class Request;
 class FSNode;
 class FSDirectory;
-class DocRoot;
 class Host;
 
 //=============================================================================

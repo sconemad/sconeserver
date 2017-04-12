@@ -62,8 +62,15 @@ Profile::Profile(
   m_parent = &m_module;
 
   check_database();
-  configure_docroot("default");
-  configure_docroot("secure");
+
+  // Map all requests to the sconesite module
+  scx::ScriptList* ml = new scx::ScriptList();
+  ml->give(scx::ScriptString::new_ref(m_name));
+  m_host->object()->add_path_map("/",m_module.name(),new scx::ScriptRef(ml));
+  
+  // Enable automation session allocation
+  m_host->object()->set_param("auto_session", scx::ScriptInt::new_ref(1));
+  
   m_templates.add(get_path() + TPLDIR);
 
   refresh();
@@ -116,7 +123,7 @@ SconesiteModule& Profile::get_module()
 //=========================================================================
 const scx::FilePath& Profile::get_path()
 {
-  return m_host->object()->get_path();
+  return m_host->object()->get_hostroot();
 }
 
 //=========================================================================
@@ -732,23 +739,6 @@ Article* Profile::load_article(int id, int pid, const std::string& link,
   // Article cache must be locked for writing before calling this method!
   m_articles[id] = new Article::Ref(art);
   return art;
-}
-
-//=============================================================================
-void Profile::configure_docroot(const std::string& docroot)
-{
-  if (0 == m_host->object()->get_docroot(docroot)) {
-    LOG("Autoconfiguring docroot '" + docroot + "' for http host");
-    http::DocRoot::Ref dr = m_host->object()->add_docroot(docroot,ARTDIR);
-
-    // Map everything in this docroot to the sconesite module
-    scx::ScriptList* ml = new scx::ScriptList();
-    ml->give(scx::ScriptString::new_ref(m_name));
-    dr.object()->add_path_map("/",m_module.name(),new scx::ScriptRef(ml));
-
-    // Enable automation session allocation
-    dr.object()->set_param("auto_session", scx::ScriptInt::new_ref(1));
-  }
 }
 
 //=============================================================================

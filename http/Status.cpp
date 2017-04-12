@@ -109,6 +109,12 @@ std::string Status::string() const
   oss << ((int)m_code) << " " << desc();
   return oss.str();
 }
+
+//===========================================================================
+bool Status::has_body() const
+{
+  return (m_code >= 200 && m_code != 204 && m_code != 304);
+}
   
 //const char* CRLF = "\r\n";
 //const char* HTTP = "HTTP";

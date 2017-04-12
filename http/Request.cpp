@@ -29,11 +29,9 @@ Free Software Foundation, Inc.,
 namespace http {
 
 //===========================================================================
-Request::Request(const std::string& profile, const std::string& id)
+Request::Request(const std::string& id)
   : m_host(0),
-    m_profile(profile),
     m_id(id),
-    m_docroot(0),
     m_session(0),
     m_params(new scx::ScriptMap())
 {
@@ -199,27 +197,9 @@ const Host* Request::get_host() const
 }
 
 //=============================================================================
-const std::string& Request::get_profile() const
-{
-  return m_profile;
-}
-
-//=============================================================================
 const std::string& Request::get_id() const
 {
   return m_id;
-}
-
-//=============================================================================
-void Request::set_docroot(DocRoot* docroot)
-{
-  m_docroot = docroot;
-}
-
-//=============================================================================
-const DocRoot* Request::get_docroot() const
-{
-  return m_docroot;
 }
 
 //=============================================================================
@@ -349,7 +329,6 @@ scx::ScriptRef* Request::script_op(const scx::ScriptAuth& auth,
     if (name == "method") return scx::ScriptString::new_ref(m_method);
     if (name == "uri") return new scx::ScriptRef(m_uri.new_copy());
     if (name == "version") return new scx::ScriptRef(m_version.new_copy());
-    if (name == "profile") return scx::ScriptString::new_ref(m_profile);
     if (name == "id") return scx::ScriptString::new_ref(m_id);
     if (name == "params") 
       return m_params.ref_copy(ref.reftype());

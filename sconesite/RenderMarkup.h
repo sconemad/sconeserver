@@ -45,7 +45,7 @@ class RenderMarkupContext : public Context {
 public:
 
   RenderMarkupContext(
-    Profile& profile,
+    Profile* profile,
     SconesiteStream& stream,
     scx::Descriptor& output,
     http::Request& request,
@@ -54,7 +54,7 @@ public:
 
   ~RenderMarkupContext();
 
-  Profile& get_profile();
+  Profile* get_profile();
   const http::Request& get_request() const;
 
   void set_article(Article* article);
@@ -100,7 +100,7 @@ protected:
 
   void log(const std::string message);
   
-  Profile& m_profile;
+  Profile* m_profile;
   SconesiteStream& m_stream;
   scx::Descriptor& m_output;
   http::Request::Ref* m_request;

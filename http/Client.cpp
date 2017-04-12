@@ -37,7 +37,7 @@ Client::Client(HTTPModule* module,
                const std::string& method,
                const scx::Uri& url)
   : m_module(module),
-    m_request(new Request("client","")),
+    m_request(new Request("")),
     m_response(new Response()),
     m_error(false)
 {

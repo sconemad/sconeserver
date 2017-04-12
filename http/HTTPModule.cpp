@@ -21,9 +21,8 @@ Free Software Foundation, Inc.,
 
 #include <http/HTTPModule.h>
 #include <http/ConnectionStream.h>
-#include <http/GetFileStream.h>
-#include <http/DirIndexStream.h>
-#include <http/ErrorPageStream.h>
+#include <http/GetFile.h>
+#include <http/DirIndex.h>
 #include <http/Host.h>
 #include <http/Client.h>
 
@@ -45,9 +44,8 @@ HTTPModule::HTTPModule()
     m_idle_timeout(30)
 {
   scx::Stream::register_stream("http",this);
-  scx::Stream::register_stream("getfile",this);
-  scx::Stream::register_stream("dirindex",this);
-  scx::Stream::register_stream("errorpage",this);
+  Handler::register_handler("getfile",this);
+  Handler::register_handler("dirindex",this);
   scx::StandardContext::register_type("HTTPClient",this);
 
   m_hosts = new HostMapper::Ref(new HostMapper(*this));
@@ -59,9 +57,8 @@ HTTPModule::HTTPModule()
 HTTPModule::~HTTPModule()
 {
   scx::Stream::unregister_stream("http",this);
-  scx::Stream::unregister_stream("getfile",this);
-  scx::Stream::unregister_stream("dirindex",this);
-  scx::Stream::unregister_stream("errorpage",this);
+  Handler::unregister_handler("getfile",this);
+  Handler::unregister_handler("dirindex",this);
   scx::StandardContext::unregister_type("HTTPClient",this);
 }
 
@@ -201,19 +198,23 @@ void HTTPModule::provide(const std::string& type,
     std::string profile = (a_profile ? a_profile->get_string() : "default");
 
     object = new ConnectionStream(this,profile);
-
-  } else if ("getfile" == type) {
-    object = new GetFileStream(this);
-    
-  } else if ("dirindex" == type) {
-    object = new DirIndexStream(this);
-
-  } else if ("errorpage" == type) {
-    object = new ErrorPageStream(this);
-
   }
 }
 
+//=========================================================================
+void HTTPModule::provide(const std::string& type,
+                         const scx::ScriptRef* args,
+                         Handler*& object)
+{
+  if ("getfile" == type) {
+    object = new GetFileHandler(this);
+    
+  } else if ("dirindex" == type) {
+    object = new DirIndexHandler(this);
+    
+  }
+}
+  
 //=========================================================================
 void HTTPModule::provide(const std::string& type,
 			 const scx::ScriptRef* args,

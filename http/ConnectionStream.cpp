@@ -154,7 +154,7 @@ scx::Condition ConnectionStream::process_input()
       delete m_request;
       std::ostringstream oss;
       oss << m_num_connection << "-" << (m_num_request+1);
-      m_request = new Request(m_profile,oss.str());
+      m_request = new Request(oss.str());
       if (m_request->parse_request(line,0!=find_stream("ssl"))) {
 	m_seq = http_Headers;
 	++m_num_request;
