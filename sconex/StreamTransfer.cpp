@@ -264,6 +264,8 @@ void StreamTransferSource::dest_event(Event e)
       // Dest has finished reading
       m_close = true;
       enable_event(Stream::Readable,true);
+      // This is a hack to get the source to notice we are ready to close.
+      enable_event(Stream::Writeable,true);
     } break;
 
     default:
