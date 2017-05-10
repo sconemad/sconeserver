@@ -154,6 +154,7 @@ void MySqlArg::init_result(MYSQL_BIND& bind, MYSQL_FIELD& field)
   case MYSQL_TYPE_STRING:
   case MYSQL_TYPE_VAR_STRING:
   case MYSQL_TYPE_BLOB:
+  case MYSQL_TYPE_NEWDECIMAL:
     m_length = 1024;
     m_str_data = new char[m_length];
     memset(m_str_data,0,m_length);
@@ -208,6 +209,18 @@ scx::ScriptRef* MySqlArg::get_arg() const
     
   case MYSQL_TYPE_DOUBLE:
     return scx::ScriptReal::new_ref(m_data.double_data);
+
+  case MYSQL_TYPE_NEWDECIMAL:
+    if (m_length >= 0) {
+      if (m_length >= 1024) m_length = 1024-1;
+      m_str_data[m_length] = '\0';
+      char* end = 0;
+      double d = strtod(m_str_data,&end);
+      if (*end == '\0') {
+        return scx::ScriptReal::new_ref(d);
+      }
+    }
+    break;
 
   case MYSQL_TYPE_DATETIME:
     return new scx::ScriptRef(new scx::Date(m_data.time_data.year,
