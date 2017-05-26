@@ -37,8 +37,10 @@ public:
   
   virtual scx::Condition handle_message(http::MessageStream* message);
 
+  void log(http::MessageStream* message, const std::string str);
+  
 private:
-
+ 
   scx::ScriptRefTo<SconesiteModule> m_module;
   Profile* m_profile;
 };
