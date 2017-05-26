@@ -237,13 +237,15 @@ HandlerMap* Host::lookup_path_map(const std::string& name,
   std::string key="/"+name;
   pathinfo = "";
 
-  for (PatternMap::const_iterator it = m_path_mods.begin();
-       it != m_path_mods.end();
-       ++it) {
-    //    DEBUG_LOG("lookup_path_map "<<key<<" matching "<<it->first);
+  // First check for an exact match
+  PatternMap::const_iterator it = m_path_mods.find(key);
+  if (it != m_path_mods.end()) return it->second;
+  
+  for (it = m_path_mods.begin(); it != m_path_mods.end(); ++it) {
+    //DEBUG_LOG("lookup_path_map "<<key<<" matching "<<it->first);
     if (key.find(it->first) == 0) {
       pathinfo = key.substr(it->first.length());
-      //      DEBUG_LOG("  found "<<it->second->get_type());
+      //DEBUG_LOG("  found "<<it->second->get_type());
       return it->second;
     }
   }

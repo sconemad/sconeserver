@@ -65,6 +65,7 @@ public:
   void set_transparent();
 
   void add_stream(scx::Stream* stream);
+  scx::Descriptor* get_endpoint() { return &endpoint(); }
   
   HTTPModule& get_module();
 

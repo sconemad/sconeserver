@@ -23,7 +23,8 @@ Request.cpp \
 Response.cpp \
 ResponseStream.cpp \
 Session.cpp \
-Status.cpp
+Status.cpp \
+WebSocket.cpp
 
 httpincludedir = $(includedir)/http
 
@@ -46,7 +47,8 @@ Request.h \
 Response.h \
 ResponseStream.h \
 Session.h \
-Status.h
+Status.h \
+WebSocket.h
 
 http_la_LDFLAGS = -module -avoid-version
 

@@ -23,6 +23,7 @@ Free Software Foundation, Inc.,
 #include <http/ConnectionStream.h>
 #include <http/GetFile.h>
 #include <http/DirIndex.h>
+#include <http/WebSocket.h>
 #include <http/Host.h>
 #include <http/Client.h>
 
@@ -46,6 +47,7 @@ HTTPModule::HTTPModule()
   scx::Stream::register_stream("http",this);
   Handler::register_handler("getfile",this);
   Handler::register_handler("dirindex",this);
+  Handler::register_handler("websocket",this);
   scx::StandardContext::register_type("HTTPClient",this);
 
   m_hosts = new HostMapper::Ref(new HostMapper(*this));
@@ -59,6 +61,7 @@ HTTPModule::~HTTPModule()
   scx::Stream::unregister_stream("http",this);
   Handler::unregister_handler("getfile",this);
   Handler::unregister_handler("dirindex",this);
+  Handler::unregister_handler("websocket",this);
   scx::StandardContext::unregister_type("HTTPClient",this);
 }
 
@@ -212,6 +215,11 @@ void HTTPModule::provide(const std::string& type,
   } else if ("dirindex" == type) {
     object = new DirIndexHandler(this);
     
+  } else if ("websocket" == type) {
+    const scx::ScriptString* a_chain =
+      scx::get_method_arg<scx::ScriptString>(args,0,"chain");
+    if (!a_chain) return;
+    object = new WebSocketHandler(this,a_chain->get_string());
   }
 }
   
