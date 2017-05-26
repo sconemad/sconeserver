@@ -44,9 +44,9 @@ public:
   virtual ~HostMapper();
   
   // Process an incoming connection request
-  bool connect_request(MessageStream* message,
-		       Request& request,
-		       Response& response);
+  scx::Condition connect_request(MessageStream* message,
+                                 Request& request,
+                                 Response& response);
 
   Host* lookup_host(const std::string& name);
 

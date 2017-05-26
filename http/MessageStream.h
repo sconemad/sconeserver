@@ -79,7 +79,7 @@ public:
   
 private:
 
-  bool handle_request();
+  scx::Condition handle_request();
   
   bool build_header();
   scx::Condition write_header();

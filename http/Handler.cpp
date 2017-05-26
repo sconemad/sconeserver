@@ -91,19 +91,19 @@ const std::string& HandlerMap::get_type() const
 }
   
 //=========================================================================
-bool HandlerMap::handle_message(MessageStream* message)
+scx::Condition HandlerMap::handle_message(MessageStream* message)
 {
   Handler* handler = Handler::create(m_type, m_args);
   if (!handler) {
     DEBUG_LOG("Failed to create handler of type " << m_type <<
 	      " args: " <<
               (m_args ? m_args->object()->get_string() : "NULL"));
-    return false;
+    return scx::Error;
   }
 
-  handler->handle_message(message);
+  scx::Condition c = handler->handle_message(message);
   delete handler;
-  return true;
+  return c;
 }
   
 };

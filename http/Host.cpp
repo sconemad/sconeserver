@@ -84,9 +84,9 @@ int Host::init()
 }
 
 //=========================================================================
-bool Host::connect_request(MessageStream* message,
-			   Request& request,
-			   Response& response)
+scx::Condition Host::connect_request(MessageStream* message,
+                                     Request& request,
+                                     Response& response)
 {
   HandlerMap* h = 0;
 
@@ -100,13 +100,13 @@ bool Host::connect_request(MessageStream* message,
     // Check valid path
     if (!check_path(uripath)) {
       response.set_status(http::Status::Forbidden);
-      return false;
+      return scx::Close;
     }
     
     // Check http authorization
     if (!check_auth(request,response)) {
       response.set_status(http::Status::Unauthorized);
-      return false;
+      return scx::Close;
     }
 
     scx::FilePath path = m_docroot + uripath;
@@ -122,7 +122,7 @@ bool Host::connect_request(MessageStream* message,
       scx::FileStat stat(path);
       if (!stat.exists()) {
         response.set_status(http::Status::NotFound);
-        return false;
+        return scx::Close;
       } else if (stat.is_dir()) {
         h = lookup_extn_map(".");
       } else {
@@ -137,18 +137,11 @@ bool Host::connect_request(MessageStream* message,
   if (h == 0) {
     LOG("No handler found for request");
     response.set_status(http::Status::ServiceUnavailable);
-    return false;
+    return scx::Close;
   }
 
   // Invoke the handler
-  if (!h->handle_message(message)) {
-    LOG("Failed to handle request");
-    response.set_status(http::Status::ServiceUnavailable);
-    return false;
-  }
-
-  // Success
-  return true;
+  return h->handle_message(message);
 }
 
 //=========================================================================

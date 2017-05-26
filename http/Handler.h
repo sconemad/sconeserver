@@ -77,7 +77,7 @@ public:
 
   const std::string& get_type() const;
   
-  bool handle_message(MessageStream* message);
+  scx::Condition handle_message(MessageStream* message);
   
 private:
   std::string m_type;

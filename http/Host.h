@@ -26,6 +26,7 @@ Free Software Foundation, Inc.,
 #include <sconex/ScriptBase.h>
 #include <sconex/ScriptTypes.h>
 #include <sconex/FilePath.h>
+#include <sconex/IOBase.h>
 
 namespace scx { class Descriptor; }
 
@@ -60,9 +61,9 @@ public:
   int init();
 
   // Process an incoming connection request
-  bool connect_request(MessageStream* message,
-		       Request& request,
-		       Response& response);
+  scx::Condition connect_request(MessageStream* message,
+                                 Request& request,
+                                 Response& response);
   
   const std::string get_id() const;
   const std::string get_hostname() const;

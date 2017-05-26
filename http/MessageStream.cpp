@@ -87,7 +87,7 @@ scx::Condition MessageStream::event(scx::Stream::Event e)
         }
       }
   
-      if (!handle_request()) {
+      if (handle_request() != scx::Ok) {
         return scx::Close;
       }
     } break;
@@ -294,13 +294,13 @@ Response& MessageStream::get_response()
 }
 
 //=============================================================================
-bool MessageStream::handle_request()
+scx::Condition MessageStream::handle_request()
 {
   // Pass through to host mapper for connection to appropriate host object
   HostMapper& mapper = m_module.object()->get_hosts();
-  bool success = mapper.connect_request(this,
-                                        *m_request.object(),
-                                        *m_response.object());
+  scx::Condition c = mapper.connect_request(this,
+                                            *m_request.object(),
+                                            *m_response.object());
   scx::Log log("http");
   log.attach("id", m_request.object()->get_id());
   log.attach("uri", m_request.object()->get_uri().get_string());
@@ -322,7 +322,7 @@ bool MessageStream::handle_request()
   }
   log.submit(m_request.object()->get_method());
 
-  return success;
+  return c;
 }
   
 //=============================================================================

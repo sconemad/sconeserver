@@ -52,9 +52,9 @@ HostMapper::~HostMapper()
 }
 
 //=============================================================================
-bool HostMapper::connect_request(MessageStream* message,
-				 Request& request,
-				 Response& response)
+scx::Condition HostMapper::connect_request(MessageStream* message,
+                                           Request& request,
+                                           Response& response)
 {
   const scx::Uri& uri = request.get_uri();
   const std::string& hostname = uri.get_host();
@@ -72,7 +72,7 @@ bool HostMapper::connect_request(MessageStream* message,
     // This is bad, user should have setup a default host
     LOG("Unknown host '" + hostname + "'");
     message->send_simple_response(http::Status::NotFound);
-    return false;
+    return scx::Close;
   }
 
   HostMap::const_iterator it = m_hosts.find(mapped_host);
@@ -80,7 +80,7 @@ bool HostMapper::connect_request(MessageStream* message,
     LOG(std::string("Lookup failure: '") + hostname + 
         "' maps to unknown host '" + mapped_host + "'");
     message->send_simple_response(http::Status::NotFound);
-    return false;
+    return scx::Close;
   }
   Host* host = it->second->object();
 
@@ -92,7 +92,7 @@ bool HostMapper::connect_request(MessageStream* message,
         "' to '" + new_uri.get_string() + "'"); 
     response.set_header("Location",new_uri.get_string());
     message->send_simple_response(http::Status::Found);
-    return false;
+    return scx::Close;
   }
   
   request.set_host(host);
