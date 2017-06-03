@@ -71,6 +71,12 @@ const scx::Uri& Request::get_uri() const
 }
 
 //===========================================================================
+bool Request::is_secure() const
+{
+  return (m_uri.get_scheme() == "https");
+}
+ 
+//===========================================================================
 void Request::set_version(const scx::VersionTag& ver)
 {
   m_version = ver;
@@ -328,6 +334,7 @@ scx::ScriptRef* Request::script_op(const scx::ScriptAuth& auth,
     if (name == "user") return scx::ScriptString::new_ref(m_auth_user);
     if (name == "method") return scx::ScriptString::new_ref(m_method);
     if (name == "uri") return new scx::ScriptRef(m_uri.new_copy());
+    if (name == "secure") return scx::ScriptBool::new_ref(is_secure());
     if (name == "version") return new scx::ScriptRef(m_version.new_copy());
     if (name == "id") return scx::ScriptString::new_ref(m_id);
     if (name == "params") 

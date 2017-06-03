@@ -46,6 +46,7 @@ public:
 
   void set_uri(const scx::Uri& uri);
   const scx::Uri& get_uri() const;
+  bool is_secure() const;
   
   void set_version(const scx::VersionTag& ver);
   const scx::VersionTag& get_version() const;
