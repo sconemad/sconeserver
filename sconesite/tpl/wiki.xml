@@ -1,0 +1,66 @@
+<template>
+<?scx
+sub wiki_op(op)
+{
+  # Only allow ops over secure connections
+  if (!request.secure) {
+    log("Wiki op request over non-secure connection");
+    response.set_status(401);
+    abort();
+  }
+
+  if (op == 'create_article') {
+    ref art = profile.create_article(article.id, request.params["article"], request.params["type"]);
+    if (art) {
+      # Redirect to edit the new article
+      response.set_header("Location",request.uri.base+"/"+art.link+"?wiki=edit");
+      response.set_status(302);
+      abort();
+    }
+  }
+
+  if (op == 'edit_article') {
+    article.update(request.params["file_article"]);
+    response.set_header("Location",request.uri.base+"/"+article.link);
+    response.set_status(302);
+    abort();
+  }
+
+  if (op == 'remove_article') {
+    if (defined(request.params["article"])) {
+      profile.remove_article(Int(request.params["article"]));
+    }
+  }         
+
+  if (op == 'upload_file') {
+    if (defined(request.params["file_upload"])) {
+      var file = request.params["file_upload"];
+      if (file.filename) {
+        article.add_file(file);
+      }
+    }           
+  }
+
+  if (op == 'remove_file') {
+    if (defined(request.params["filename"])) {
+      article.remove_file(request.params["filename"]);
+    }
+  }
+
+  response.set_header("Location",request.uri.base+"/"+article.link+"?wiki=resources");
+  response.set_status(302);
+  abort();
+}
+
+if (defined(request.params["op"])) {
+  constref op = request.params["op"];
+  if (op == "create_article" ||
+      op == "edit_article" ||
+      op == "remove_article" ||
+      op == "upload_file" ||
+      op == "remove_file") {
+    wiki_op(op);    
+  }
+}
+?>
+</template>
