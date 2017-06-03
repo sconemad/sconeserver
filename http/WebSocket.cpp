@@ -36,6 +36,13 @@ Free Software Foundation, Inc.,
 
 namespace http {
 
+// Uncomment to enable debug logging
+//#define WEBSOCKET_DEBUG_LOG(m) STREAM_DEBUG_LOG(m)
+
+#ifndef WEBSOCKET_DEBUG_LOG
+#  define WEBSOCKET_DEBUG_LOG(m)
+#endif
+
 const char* WEBSOCKET_GUID = "258EAFA5-E914-47DA-95CA-C5AB0DC85B11";
 const int WEBSOCKET_VERSION = 13;
 
@@ -235,7 +242,7 @@ scx::Condition WebSocketStream::process_handshake()
   
   if (req.get_header("Connection") != "Upgrade" &&
       req.get_header("Upgrade") != "websocket") {
-    DEBUG_LOG("Not a websocket request");
+    STREAM_DEBUG_LOG("Not a websocket request");
     resp.set_status(Status::BadRequest);
     return scx::Close;
   }
@@ -246,7 +253,7 @@ scx::Condition WebSocketStream::process_handshake()
   std::string ver = req.get_header("Sec-WebSocket-Version");
   int vn = atoi(ver.c_str());
   if (vn != WEBSOCKET_VERSION) {
-    DEBUG_LOG("Unsupported WebSocket-Version: " + ver);
+    STREAM_DEBUG_LOG("Unsupported WebSocket-Version: " + ver);
     resp.set_status(Status::BadRequest);
     return scx::Close;
   }
@@ -254,7 +261,7 @@ scx::Condition WebSocketStream::process_handshake()
   std::string ac = key + WEBSOCKET_GUID;
   scx::Digest* sha = scx::Digest::create("SHA1",0);
   if (!sha) {
-    DEBUG_LOG("SHA1 hashing not supported");
+    STREAM_DEBUG_LOG("SHA1 hashing not supported");
     resp.set_status(Status::NotImplemented);
     return scx::Close;
   }
@@ -311,10 +318,10 @@ scx::Condition WebSocketStream::read_frame()
       for (int i=0; i<4; ++i) m_read_mask[i] = br.read_u8();
     }
 
-    DEBUG_LOG("FRAME fin:" << fin
-              << " op:" << opcode
-              << " usemask:" << m_read_usemask
-              << " len:" << m_read_len);
+    WEBSOCKET_DEBUG_LOG("FRAME fin:" << fin
+                        << " op:" << opcode
+                        << " usemask:" << m_read_usemask
+                        << " len:" << m_read_len);
 
     if (opcode < 8) { // Data frame
       br.done();
@@ -329,7 +336,7 @@ scx::Condition WebSocketStream::read_frame()
           m_read_format = Binary;
           break;
         default:
-          DEBUG_LOG("Unsupported opcode " << opcode);
+          STREAM_DEBUG_LOG("Unsupported opcode " << opcode);
           c = scx::Error;
           break;
       }
@@ -360,7 +367,7 @@ scx::Condition WebSocketStream::read_frame()
       case OPCODE_PING: handle_ping(data); break;
       case OPCODE_PONG: handle_pong(data); break;
       default:
-        DEBUG_LOG("Unsupported control opcode " << opcode);
+        STREAM_DEBUG_LOG("Unsupported control opcode " << opcode);
         c = scx::Error;
         break;
     }
@@ -381,7 +388,7 @@ void WebSocketStream::handle_close(scx::Buffer& data)
   br.read_bytes(msg,msglen);
   br.done();
   msg[msglen]=0;
-  DEBUG_LOG("Close: " << code << " " << msg);
+  WEBSOCKET_DEBUG_LOG("Close: " << code << " " << msg);
 
   // Place a close frame in the write buffer
   m_write_buffer.ensure_free(4+2+msglen);
