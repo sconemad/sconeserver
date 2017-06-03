@@ -42,7 +42,7 @@ const char* HTML_DOCTYPE = "<!doctype html>";
 
 //=========================================================================
 RenderMarkupContext::RenderMarkupContext(
-  Profile& profile,
+  Profile* profile,
   SconesiteStream& stream,
   scx::Descriptor& output,
   http::Request& request,
@@ -57,7 +57,7 @@ RenderMarkupContext::RenderMarkupContext(
     m_auto_number(false),
     m_inhibit(false)
 {
-  m_parent = &m_profile; // used to be module?
+  m_parent = m_profile; // used to be module?
 }
 
 //=========================================================================
@@ -74,7 +74,7 @@ RenderMarkupContext::~RenderMarkupContext()
 }
 
 //=========================================================================
-Profile& RenderMarkupContext::get_profile()
+Profile* RenderMarkupContext::get_profile()
 {
   return m_profile;
 }
@@ -405,7 +405,7 @@ scx::ScriptRef* RenderMarkupContext::script_op(const scx::ScriptAuth& auth,
     }
 
     if ("profile" == name) 
-      return new scx::ScriptRef(&m_profile);
+      return new scx::ScriptRef(m_profile);
   }
 
   return scx::ScriptObject::script_op(auth,ref,op,right);
@@ -562,7 +562,7 @@ scx::ScriptRef* RenderMarkupContext::script_method(const scx::ScriptAuth& auth,
     if (!a_tpl) {
       return scx::ScriptError::new_ref("Template name not specified");
     }
-    Template* tpl = m_profile.lookup_template(a_tpl->get_string());
+    Template* tpl = m_profile->lookup_template(a_tpl->get_string());
     if (!tpl) {
       return scx::ScriptError::new_ref("Unknown template");
     }

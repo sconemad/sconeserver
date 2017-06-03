@@ -201,36 +201,23 @@ if test "x$SCONESITE" = "xyes"; then
   fi
 fi
 
-# Check for ImageMagick
-AC_ARG_WITH([Magick++-config],
-  [AC_HELP_STRING([--with-Magick++-config=PATH],[Set path to Magick++-config])],
-  [MAGICK_CONFIG="$withval"],
-  [MAGICK_CONFIG="Magick++-config"]
-)
-AC_CHECK_PROG([MAGICK], ["$MAGICK_CONFIG"], [yes], [no])
-if test "x$MAGICK" = "xyes"; then
-  MAGICK_CFLAGS=`$MAGICK_CONFIG --cppflags`
-  MAGICK_LDFLAGS=`$MAGICK_CONFIG --ldflags`
-  MAGICK_LIBS=`$MAGICK_CONFIG --libs`
-fi
-
 # Image module
+# Use if ImageMagick++ found
 AC_ARG_WITH([image],
   [AC_HELP_STRING([--with-image],[Enable image module])],
   [IMAGE="$withval"],
-  [IMAGE="$MAGICK"]
+  [IMAGE="check"]
 )
-
-# Need ImageMagick for image
-if test "x$IMAGE" = "xyes"; then
-  if test "x$MAGICK" != "xyes"; then
-    AC_MSG_ERROR([library 'Magick++' is required for image])
-  fi
-  CXXFLAGS="$CXXFLAGS $MAGICK_CFLAGS"
-  IMAGE_LDFLAGS=$MAGICK_LDFLAGS
-  AC_SUBST(IMAGE_LDFLAGS)
-  IMAGE_LDFLAGS=$MAGICK_LIBS
-  AC_SUBST(IMAGE_LIBS)
+if test "x$IMAGE" = "xyes" -o "x$IMAGE" = "xcheck"; then
+  PKG_CHECK_MODULES(
+    [IMAGE], [ImageMagick++],
+    [IMAGE=yes],
+    [if test "x$IMAGE" = "xyes"; then
+      AC_MSG_FAILURE([$IMAGE_PKG_ERRORS])
+     else
+      AC_MSG_WARN([$IMAGE_PKG_ERRORS])
+     fi
+     IMAGE="no"])
 fi
 
 # rss module

@@ -118,7 +118,6 @@ protected:
                         const std::string& type="");
 
   void check_database();
-  void configure_docroot(const std::string& docroot);
   
 private:
   

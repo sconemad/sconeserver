@@ -26,6 +26,7 @@ Free Software Foundation, Inc.,
 #include <http/HostMapper.h>
 #include <http/AuthRealm.h>
 #include <http/Session.h>
+#include <http/Handler.h>
 #include <sconex/Module.h>
 #include <sconex/Descriptor.h>
 #include <sconex/Uri.h>
@@ -38,6 +39,7 @@ namespace http {
 //
 class HTTP_API HTTPModule : public scx::Module,
                             public scx::Provider<scx::Stream>,
+                            public scx::Provider<Handler>,
                             public scx::Provider<scx::ScriptObject> {
 public:
 
@@ -72,6 +74,11 @@ public:
   virtual void provide(const std::string& type,
 		       const scx::ScriptRef* args,
 		       scx::Stream*& object);
+
+  // Provider<Handler> method
+  virtual void provide(const std::string& type,
+		       const scx::ScriptRef* args,
+		       Handler*& object);
 
   // Provider<ScriptObject> method
   virtual void provide(const std::string& type,

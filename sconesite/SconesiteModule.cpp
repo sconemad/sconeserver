@@ -61,7 +61,7 @@ protected:
 SconesiteModule::SconesiteModule()
   : scx::Module("sconesite",scx::version())
 {
-  scx::Stream::register_stream(name(),this);
+  http::Handler::register_handler(name(),this);
   Document::register_document_type("xml",this);
 
   m_job = scx::Kernel::get()->add_job(
@@ -71,7 +71,7 @@ SconesiteModule::SconesiteModule()
 //=========================================================================
 SconesiteModule::~SconesiteModule()
 {
-  scx::Stream::unregister_stream(name(),this);
+  http::Handler::unregister_handler(name(),this);
   Document::unregister_document_type("xml",this);
 }
 
@@ -100,21 +100,10 @@ bool SconesiteModule::close()
 //=========================================================================
 void SconesiteModule::provide(const std::string& type,
 			      const scx::ScriptRef* args,
-			      scx::Stream*& object)
+			      http::Handler*& object)
 {
-  const scx::ScriptString* profile_name =
-    scx::get_method_arg<scx::ScriptString>(args,0,"profile");
-  if (!profile_name) {
-    LOG("No profile specified, aborting connection");
-  }
+  object = new SconesiteHandler(this, args);
 
-  Profile* profile = lookup_profile(profile_name->get_string());
-  if (!profile) {
-    LOG("Unknown profile '"+profile_name->get_string()+
-	"' specified, aborting connection");
-  }
-  
-  object = new SconesiteStream(this,*profile);
 }
 
 //=========================================================================

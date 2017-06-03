@@ -1,0 +1,65 @@
+<article>
+
+<h1>WebSocket test</h1>
+
+<p>
+  This is a test of Sconeserver's WebSocket capabilities.
+  Press the button below to run the test.
+</p>
+
+<button id='doit'>Run test</button>
+
+<p id='buffered'>0</p>
+<p id='total'>0</p>
+
+<script type='text/javascript'>
+
+var test_size = 700000;
+  
+function doit() {
+  var total = 0;
+  var wsu = (document.location.protocol == "https:") ? "wss://" : "ws://";
+  var ws = new WebSocket(wsu + document.location.host + "/websocket/ws",'proto');
+
+  function doClose() {
+    ws.close(1000,"Bye");
+  }
+
+  function checkSend() {
+    var buffered = ws.bufferedAmount;
+    document.getElementById('buffered').innerHTML =
+      buffered + " bytes left to send";
+    if (buffered > 0)
+      setTimeout(checkSend, 100);
+  }
+
+  ws.onopen = function(e) {
+    console.log('opened');
+    var data = "";
+    for (var i=0; i&lt;test_size; ++i)
+      { data = data + "a"; }
+    console.log('sending ' + data.length + ' bytes');
+    ws.send(data);
+    checkSend();
+  }
+
+  ws.onclose = function(e) {
+    console.log('closed');
+  }
+
+  ws.onerror = function(e) {
+    console.log('error');
+  }
+
+  ws.onmessage = function(e) {
+    console.log('ws: ' + e.data.length);
+    total += e.data.length;
+    document.getElementById('total').innerHTML = total + " bytes received";
+    if (total >= test_size)
+      setTimeout(doClose, 1000);
+  }
+}
+document.getElementById('doit').onclick = doit;
+</script>
+
+</article>

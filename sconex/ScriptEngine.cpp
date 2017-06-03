@@ -324,7 +324,8 @@ bool ScriptEngine::next_token(
             in_comment = false;
             ++post_skip;
             ++cur;
-            if (cur == end) throw "Oh shit!";
+            // Failed to find the end of line, oh well
+            if (cur == end) return false;
           }
           if (!in_comment) {
             return true;
@@ -501,7 +502,7 @@ bool ScriptEngineExec::event_error()
   case Tokenization: oss << "tokenization"; break;
   case Syntax: oss << "syntax"; break;
   case Underflow: oss << "underflow"; break;
-  default: oss << "unknown"; break;
+  default: oss << " unknown (" << get_error_type() << ")"; break;
   }
   oss << " error";
   Log("ScriptEngine").submit(oss.str());

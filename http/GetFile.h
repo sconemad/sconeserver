@@ -1,10 +1,8 @@
 /* SconeServer (http://www.sconemad.com)
 
-HTTP Get file stream
+HTTP Get file
 
-Stream to send a disk file via HTTP.
-
-Copyright (c) 2000-2013 Andrew Wedgbury <wedge@sconemad.com>
+Copyright (c) 2000-2016 Andrew Wedgbury <wedge@sconemad.com>
 
 This program is free software; you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -21,33 +19,29 @@ along with this program (see the file COPYING); if not, write to the
 Free Software Foundation, Inc.,
 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA */
 
-#ifndef httpGetFileStream_h
-#define httpGetFileStream_h
+#ifndef httpGetFile_h
+#define httpGetFile_h
 
 #include <http/HTTPModule.h>
+#include <http/Handler.h>
 #include <sconex/Stream.h>
 namespace http {
 
 //=========================================================================
-class HTTP_API GetFileStream : public scx::Stream {
+class HTTP_API GetFileHandler : public Handler {
 public:
 
-  GetFileStream(
-    HTTPModule* module
-  ) : Stream("getfile"),
-      m_module(module)
-  { };
+  GetFileHandler(HTTPModule* module)
+    : m_module(module) {}
+  virtual ~GetFileHandler() {}
 
-  ~GetFileStream() { };
-  
-protected:
-
-  virtual scx::Condition event(scx::Stream::Event e);
+  virtual scx::Condition handle_message(MessageStream* message);
 
 private:
 
-  scx::ScriptRefTo<HTTPModule> m_module;
+  HTTPModule::Ref m_module;
 
+  
 };
 
 };

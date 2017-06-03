@@ -95,6 +95,9 @@ public:
   // Get complete string including code and description
   // i.e. "200 OK" or "404 Not Found"
 
+  // Should a response with this status code include a message body?
+  bool has_body() const;
+  
 private:
 
   Code m_code;

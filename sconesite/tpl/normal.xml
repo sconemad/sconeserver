@@ -7,28 +7,29 @@
 <link rel="stylesheet" href="/style/mobile.css" media="screen and (max-width:75em)" type="text/css"/>
 <link rel="stylesheet" href="/style/print.css" media="print" type="text/css"/>
 <link rel="alternate" title="RSS" href="/?rss=1" type="application/rss+xml"/>
-<title><?scxp (article.title | "Home") + " - " + SITE_NAME ?></title>
+<title><?scxp (article.title || "Home") + " - " + SITE_NAME ?></title>
 </head>
 <body>
 
 <header>
 
-<h1><?scxp SITE_NAME ?></h1>
+<h1><a href='/'><?scxp SITE_NAME ?></a></h1>
 <p><?scxp SITE_DESC ?></p>
 
+<p> </p>
+
 <nav>
+<h2>Navigation</h2>
 <ul>
 <?scx
-ref q = profile.db.Query("select * from article");
-q.exec();
+if (article.parent) {
+  print("<li><a href='/"+article.parent.link+"'>"+(article.parent.title||"Home")+" [parent]</a></li>");
+}      
+ref q = profile.db.Query("SELECT * FROM article WHERE parent = ?");
+q.exec(article.id);
 while (q.next_result()) {
-  ref r = q.result;
-  if (r.path == '') continue;
-  if (article.id == r.id) {
-    print("<li><strong>/"+ r.path + "</strong></li>\n");
-  } else {
-    print("<li><a href='/" + r.path + "'>/"+ r.path + "</a></li>\n");
-  }
+  ref a = profile.lookup(q.result.id);
+  print("<li><a href='/" + a.link + "'>"+ a.title + "</a></li>\n");
 }
 ?>
 </ul>
@@ -53,28 +54,75 @@ print_subs(article.headings);
 ?>
 </nav>
 
+<nav class='account'>
+<h2>User</h2>
+<?scx 
+print("<form id='login' method='post' action='/"+request.uri.path+"'>");
+if (defined(session.auth)) {
+  print("<p>");
+  print("Logged in as user <strong>"+session.vars.user+"</strong><br/> ");
+  print("<input type='submit' value='logout' name='op'/>");
+  print("</p>");
+} else {
+  print("<p>Enter your credentials to login:<br/>");
+  print("<input type='text' id='username' name='username' placeholder='username'/> ");
+  print("<input type='password' name='password' placeholder='password'/><br/> ");
+  print("<input type='submit' value='login' name='op'/>");
+  print("</p>");
+}
+print("</form>");
+?>
+</nav>
+
+<h2>Debug</h2>
+<style type='text/css'>
+  p.scx-debug { font:normal 80% monospace; }
+</style>
+<p class='scx-debug'>
+<strong>Request id:</strong> <?scxp request.id ?><br/>
+<strong>Request:</strong> <?scxp request.method + " " + request.uri ?><br/>
+<strong>Parameters:</strong> <?scxp request.params ?><br/>
+<strong>Response:</strong> <?scxp response.status ?><br/>
+<strong>Session id:</strong> <?scxp session.id ?><br/>
+<strong>Session vars:</strong> <?scxp session.vars ?><br/>
+<strong>Session timeout:</strong> <?scxp session.timeout ?><br/>
+<strong>Remote addr:</strong> <?scxp remote_addr ?><br/>
+<strong>Server time:</strong> <?scxp Date() ?><br/>
+<strong>Profile:</strong> <?scxp profile ?><br/>
+<strong>Article:</strong> <?scxp article ?><br/>
+</p>
+
 </header>
 
 <main>
 <?scx 
-if (response.statuscode == 200) {
+if (defined(session.auth) && defined(request.params["wiki"])) {
+  template("wiki_edit");
+  
+} else if (response.statuscode == 200) {
+  if (defined(session.auth)) {
+    print("<div class='edit'>edit: ");
+    print("<a href='/"+article.link+"?wiki=edit'>article</a> / ");
+    print("<a href='/"+article.link+"?wiki=resources'>resources</a>");
+    print("</div>");
+  }
+
   process_article();
+
 } else {
   print("<h1>"+response.status+"</h1>");
   print("<p>");
   print("Oh dear, something has gone wrong!");
   print("</p>");
 }
-?>
-</main>
 
-<?scx
 var errors = article.errors;
 if (errors) {
   print("<h2>Errors</h2>");
   print("<pre>" + errors + "</pre>");
 }
 ?>
+</main>
 
 <footer>
 <p>This page was last updated
@@ -95,7 +143,6 @@ else
   print("a moment ago");
 ?>
 </p>
-<p>Requested from <?scxp remote_addr ?> on <?scxp Date().string ?></p>
 <p>
 See <a href='http://www.sconemad.com/sconeserver/'>www.sconemad.com/sconeserver/</a> 
 for more information about sconeserver and sconesite

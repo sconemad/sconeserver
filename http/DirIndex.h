@@ -1,8 +1,8 @@
 /* SconeServer (http://www.sconemad.com)
 
-HTTP error page stream
+HTTP Directory index
 
-Copyright (c) 2000-2013 Andrew Wedgbury <wedge@sconemad.com>
+Copyright (c) 2000-2016 Andrew Wedgbury <wedge@sconemad.com>
 
 This program is free software; you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -19,37 +19,51 @@ along with this program (see the file COPYING); if not, write to the
 Free Software Foundation, Inc.,
 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA */
 
-#ifndef httpErrorPageStream_h
-#define httpErrorPageStream_h
+#ifndef httpDirIndex_h
+#define httpDirIndex_h
 
+#include <http/ResponseStream.h>
 #include <http/HTTPModule.h>
 #include <sconex/Stream.h>
 namespace http {
 
 //=========================================================================
-class ErrorPageStream : public scx::Stream {
+class HTTP_API DirIndexHandler : public Handler {
 public:
 
-  ErrorPageStream(HTTPModule* module) 
-  : Stream("errorpage"),
-    m_module(module),
-    m_file_mode(false)
-  { };
+  DirIndexHandler(HTTPModule* module)
+    : m_module(module) {}
+  virtual ~DirIndexHandler() {}
 
-  ~ErrorPageStream() { };
+  virtual scx::Condition handle_message(MessageStream* message);
 
+private:
+
+  HTTPModule::Ref m_module;
+  
+};
+
+
+//=========================================================================
+class DirIndexStream : public http::ResponseStream {
+public:
+
+  DirIndexStream(HTTPModule* module,
+                 MessageStream* message)
+    : http::ResponseStream("dirindex"),
+      m_module(module),
+      m_message(message) {}
+  virtual ~DirIndexStream() {}
+  
 protected:
 
-  virtual scx::Condition event(scx::Stream::Event e);
+  virtual scx::Condition send_response();
 
-  void send_basic_page();
-  
 private:
     
   scx::ScriptRefTo<HTTPModule> m_module;
+  MessageStream* m_message;
 
-  bool m_file_mode;
-  
 };
 
 };

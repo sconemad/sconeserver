@@ -263,9 +263,10 @@ scx::ScriptStatement::Ref* XMLDoc::parse_script(char* data, int line)
   mfile.add_stream(script);
   
   // Parse statements
-  if (script->parse() != scx::End) {
+  scx::Condition c = script->parse();
+  if (c != scx::End) {
     std::ostringstream oss;
-    oss << get_filepath().path() << ":" 
+    oss << get_filepath().path() << ": " << (int)c << " "
         << (line + script->get_error_line()) << ": Script ";
     switch (script->get_error_type()) {
       case scx::ScriptEngine::Tokenization: oss << "tokenization"; break;

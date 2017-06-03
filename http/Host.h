@@ -23,9 +23,10 @@ Free Software Foundation, Inc.,
 #define httpHost_h
 
 #include <http/http.h>
-#include <http/DocRoot.h>
 #include <sconex/ScriptBase.h>
+#include <sconex/ScriptTypes.h>
 #include <sconex/FilePath.h>
+#include <sconex/IOBase.h>
 
 namespace scx { class Descriptor; }
 
@@ -35,6 +36,9 @@ class HTTPModule;
 class HostMapper;
 class Request;
 class Response;
+class AuthRealm;
+class MessageStream;
+class HandlerMap;
   
 //=============================================================================
 // Host - An HTTP host configuration
@@ -48,7 +52,8 @@ public:
     HostMapper& mapper,
     const std::string id,
     const std::string hostname,
-    const scx::FilePath& dir
+    const scx::FilePath& hostroot,
+    const scx::FilePath& docroot
   );
 
   virtual ~Host();
@@ -56,18 +61,44 @@ public:
   int init();
 
   // Process an incoming connection request
-  bool connect_request(scx::Descriptor* endpoint,
-		       Request& request,
-		       Response& response);
+  scx::Condition connect_request(MessageStream* message,
+                                 Request& request,
+                                 Response& response);
   
   const std::string get_id() const;
   const std::string get_hostname() const;
-  const scx::FilePath& get_path() const;
+  const scx::FilePath& get_hostroot() const;
+  const scx::FilePath& get_docroot() const;
 
-  DocRoot* get_docroot(const std::string& profile);
+  // Map a file extension to a handler and arguments
+  void add_extn_map(const std::string& pattern,
+                    const std::string& handler,
+                    scx::ScriptRef* args);
+  
+  // Lookup handler map to use for a particular file extension
+  HandlerMap* lookup_extn_map(const std::string& name) const;
 
-  DocRoot::Ref add_docroot(const std::string& profile,
-                           const scx::FilePath& path);
+  // Map a path to a handler and arguments
+  void add_path_map(const std::string& pattern,
+                    const std::string& handler,
+                    scx::ScriptRef* args);
+
+  // Lookup handler to use for a path
+  HandlerMap* lookup_path_map(const std::string& name,
+			     std::string& pathinfo) const;
+
+  // Map a path to an authentication realm
+  void add_realm_map(const std::string& pattern,
+                     const std::string& realm);
+
+  // Lookup authentication realm to use for path
+  std::string lookup_realm_map(const std::string& name) const;
+  
+  // Get/set parameter stored with this profile
+  const scx::ScriptRef* get_param(const std::string& name) const;
+  void set_param(const std::string& name,
+		 scx::ScriptRef* value);
+
 
   // ScriptObject methods
   virtual std::string get_string() const;
@@ -86,17 +117,35 @@ public:
   
 protected:
 
+  // Check the path contained in the request URI is valid.
+  bool check_path(const std::string& uripath);
+  
+  // Check HTTP authorization for this request.
+  // Returns true if it passes.
+  // Returns false if it fails, in which case the response headers are  set 
+  // appropriately to request client authentication.
+  bool check_auth(Request& request, Response& response);
+
+  // Lookup/create/update the session for this request if required.
+  void check_session(Request& request, Response& response);
+
 private:
 
   HTTPModule& m_module;
   HostMapper& m_mapper;
   std::string m_id;
   std::string m_hostname;
-  scx::FilePath m_dir;
+  scx::FilePath m_hostroot;
+  scx::FilePath m_docroot;
 
-  typedef std::map<std::string,DocRoot::Ref*> DocRootMap;
-  DocRootMap m_docroots;
+  typedef std::map<std::string,HandlerMap*> PatternMap;
+  PatternMap m_extn_mods;
+  PatternMap m_path_mods;
 
+  typedef std::map<std::string,std::string> RealmMap;
+  RealmMap m_realm_maps;
+
+  scx::ScriptMap::Ref m_params;
 };
 
 };

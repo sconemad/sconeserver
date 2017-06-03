@@ -1,8 +1,8 @@
 /* SconeServer (http://www.sconemad.com)
 
-HTTP Directory index stream
+HTTP Directory index
 
-Copyright (c) 2000-2013 Andrew Wedgbury <wedge@sconemad.com>
+Copyright (c) 2000-2016 Andrew Wedgbury <wedge@sconemad.com>
 
 This program is free software; you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -19,28 +19,33 @@ along with this program (see the file COPYING); if not, write to the
 Free Software Foundation, Inc.,
 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA */
 
-#include <http/DirIndexStream.h>
+#include <http/DirIndex.h>
 #include <http/HTTPModule.h>
 #include <http/Request.h>
 #include <http/MessageStream.h>
 #include <http/Status.h>
-#include <http/DocRoot.h>
 
 #include <sconex/FileDir.h>
 namespace http {
+
+//=========================================================================
+scx::Condition DirIndexHandler::handle_message(MessageStream* message)
+{
+  message->add_stream(new DirIndexStream(m_module.object(), message));
+  return scx::Ok;
+}
   
 //=========================================================================
 scx::Condition DirIndexStream::send_response()
 {
-  http::MessageStream* msg = GET_HTTP_MESSAGE();
-  const http::Request& req = msg->get_request();
+  const http::Request& req = m_message->get_request();
   const scx::Uri& uri = req.get_uri();
-  const http::DocRoot* docroot = req.get_docroot();
+  const http::Host* host = req.get_host();
   
   if (req.get_method() != "GET" && 
       req.get_method() != "HEAD" ) {
       // Don't understand the method
-    msg->get_response().set_status(http::Status::NotImplemented);
+    m_message->get_response().set_status(http::Status::NotImplemented);
     return scx::Close;
   }
   
@@ -49,7 +54,7 @@ scx::Condition DirIndexStream::send_response()
   
   if (stat.is_dir()) {
     const scx::ScriptRef* a_default_page = 
-      docroot->get_param("default_page");
+      host->get_param("default_page");
     std::string s_default_page = (BAD_SCRIPTREF(a_default_page) ? 
 				  "index.html" : 
 				  a_default_page->object()->get_string());
@@ -60,12 +65,12 @@ scx::Condition DirIndexStream::send_response()
     if (scx::FileStat(path + s_default_page).exists()) {
       // Redirect to default page
       if (url[url.size()-1] != '/') url += "/";
-      msg->log("Redirect '" + url + "' to '" + url + s_default_page + "'"); 
+      m_message->log("Redirect '" + url + "' to '" + url + s_default_page + "'"); 
       url += s_default_page;
       
-      msg->get_response().set_status(http::Status::Found);
-      msg->get_response().set_header("Content-Type","text/html");
-      msg->get_response().set_header("Location",url);
+      m_message->get_response().set_status(http::Status::Found);
+      m_message->get_response().set_header("Content-Type","text/html");
+      m_message->get_response().set_header("Location",url);
       return scx::Close;
     }
     
@@ -73,26 +78,26 @@ scx::Condition DirIndexStream::send_response()
       // Redirect to directory URL ending in '/'
       scx::Uri new_uri = uri;
       new_uri.set_path(uripath + "/");
-      msg->log("Redirect '" + uri.get_string() + 
+      m_message->log("Redirect '" + uri.get_string() + 
                "' to '" + new_uri.get_string() + "'"); 
       
-      msg->get_response().set_status(http::Status::Found);
-      msg->get_response().set_header("Content-Type","text/html");
-      msg->get_response().set_header("Location",new_uri.get_string());
+      m_message->get_response().set_status(http::Status::Found);
+      m_message->get_response().set_header("Content-Type","text/html");
+      m_message->get_response().set_header("Location",new_uri.get_string());
       return scx::Close;
     }
     
-    const scx::ScriptRef* a_allow_list = docroot->get_param("allow_list");
+    const scx::ScriptRef* a_allow_list = host->get_param("allow_list");
     bool allow_list = (a_allow_list ? 
 		       a_allow_list->object()->get_int() : 
 		       false);
     
     if (allow_list) {
       // Send directory listing if allowed
-      msg->log("Listing directory '" + url + "'"); 
+      m_message->log("Listing directory '" + url + "'"); 
       
-      msg->get_response().set_status(http::Status::Ok);
-      msg->get_response().set_header("Content-Type","text/html");
+      m_message->get_response().set_status(http::Status::Ok);
+      m_message->get_response().set_header("Content-Type","text/html");
       
       if (req.get_method() == "GET") {
 	write("<!DOCTYPE html PUBLIC \"-//W3C//DTD XHTML 1.0 Strict//EN\" "
@@ -124,7 +129,7 @@ scx::Condition DirIndexStream::send_response()
     }
     
     // Otherwise respond unauthorised
-    msg->get_response().set_status(http::Status::Unauthorized);
+    m_message->get_response().set_status(http::Status::Unauthorized);
     return scx::Close;
     
   }

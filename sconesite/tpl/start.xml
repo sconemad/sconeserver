@@ -5,6 +5,7 @@ template("common");
 template("account");
 template("shorturl");
 template("botdetect");
+template("wiki");
 
 if (defined(request.params["rss"])) {
   template("rss");

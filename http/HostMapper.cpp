@@ -25,6 +25,7 @@ Free Software Foundation, Inc.,
 #include <http/HTTPModule.h>
 #include <http/Request.h>
 #include <http/Response.h>
+#include <http/MessageStream.h>
 #include <sconex/ScriptTypes.h>
 #include <sconex/Descriptor.h>
 #include <sconex/Kernel.h>
@@ -51,9 +52,9 @@ HostMapper::~HostMapper()
 }
 
 //=============================================================================
-bool HostMapper::connect_request(scx::Descriptor* endpoint,
-				 Request& request,
-				 Response& response)
+scx::Condition HostMapper::connect_request(MessageStream* message,
+                                           Request& request,
+                                           Response& response)
 {
   const scx::Uri& uri = request.get_uri();
   const std::string& hostname = uri.get_host();
@@ -70,20 +71,16 @@ bool HostMapper::connect_request(scx::Descriptor* endpoint,
   } else {
     // This is bad, user should have setup a default host
     LOG("Unknown host '" + hostname + "'");
-    response.set_status(http::Status::NotFound);
-    response.set_header("Content-Type","text/html");
-    endpoint->write("<html><head></head><body><h1>Host not found</h1></body></html>");
-    return false;
+    message->send_simple_response(http::Status::NotFound);
+    return scx::Close;
   }
 
   HostMap::const_iterator it = m_hosts.find(mapped_host);
   if (it == m_hosts.end()) {
     LOG(std::string("Lookup failure: '") + hostname + 
         "' maps to unknown host '" + mapped_host + "'");
-    response.set_status(http::Status::NotFound);
-    response.set_header("Content-Type","text/html");
-    endpoint->write("<html><head></head><body><h1>Host not found</h1></body></html>");
-    return false;
+    message->send_simple_response(http::Status::NotFound);
+    return scx::Close;
   }
   Host* host = it->second->object();
 
@@ -93,16 +90,13 @@ bool HostMapper::connect_request(scx::Descriptor* endpoint,
     new_uri.set_host(host->get_hostname());
     LOG("Host redirect '" + uri.get_string() + 
         "' to '" + new_uri.get_string() + "'"); 
-    
-    response.set_status(http::Status::Found);
-    response.set_header("Content-Type","text/html");
     response.set_header("Location",new_uri.get_string());
-    endpoint->write("<html><head></head><body><h1>Host redirect</h1></body></html>");
-    return false;
+    message->send_simple_response(http::Status::Found);
+    return scx::Close;
   }
   
   request.set_host(host);
-  return host->connect_request(endpoint,request,response);
+  return host->connect_request(message,request,response);
 }
 
 //=============================================================================
@@ -216,7 +210,7 @@ scx::ScriptRef* HostMapper::script_method(const scx::ScriptAuth& auth,
     LOG("Adding host '" + s_id + "' hostname '" + s_hostname +
         "' path '" + a_path->get_string() + "'");
     scx::FilePath path = scx::Kernel::get()->get_conf_path() + a_path->get_string();
-    Host* host = new Host(m_module, *this, s_id, s_hostname, path.path());
+    Host* host = new Host(m_module, *this, s_id, s_hostname, path.path(), "art");
     host->init();
     m_hosts[s_id] = new Host::Ref(host);
     m_aliases[s_hostname] = s_id;

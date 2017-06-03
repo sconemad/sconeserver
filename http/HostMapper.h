@@ -32,6 +32,7 @@ namespace http {
 class HTTPModule;
 class Request;
 class Response;
+class MessageStream;
 
 //=============================================================================
 // HostMapper - Maps host names to host configurations defined on the server
@@ -43,9 +44,9 @@ public:
   virtual ~HostMapper();
   
   // Process an incoming connection request
-  bool connect_request(scx::Descriptor* endpoint,
-		       Request& request,
-		       Response& response);
+  scx::Condition connect_request(MessageStream* message,
+                                 Request& request,
+                                 Response& response);
 
   Host* lookup_host(const std::string& name);
 

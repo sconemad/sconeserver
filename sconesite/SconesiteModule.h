@@ -26,13 +26,14 @@ Free Software Foundation, Inc.,
 #include <sconesite/Article.h>
 #include <sconex/Module.h>
 #include <sconex/Job.h>
+#include <http/Handler.h>
 namespace scs {
 
 //=============================================================================
 // SconesiteModule - A content management module for SconeServer
 //
 class SconesiteModule : public scx::Module,
-                        public scx::Provider<scx::Stream>,
+                        public scx::Provider<http::Handler>,
                         public scx::Provider<Document> {
 public:
 
@@ -60,10 +61,10 @@ public:
 					const std::string& name,
 					const scx::ScriptRef* args);
 
-  // Provider<Stream> method
+  // Provider<Handler> method
   virtual void provide(const std::string& type,
 		       const scx::ScriptRef* args,
-		       scx::Stream*& object);
+		       http::Handler*& object);
 
   // Provider<Document> method
   virtual void provide(const std::string& type,

@@ -30,7 +30,6 @@ Free Software Foundation, Inc.,
 #include <sconex/FilePath.h>
 namespace http {
 
-class DocRoot;
 class Host;
 
 //=============================================================================
@@ -39,10 +38,7 @@ class Host;
 class HTTP_API Request : public scx::ScriptObject {
 public:
 
-  Request(
-    const std::string& profile,
-    const std::string& id
-  );
+  Request(const std::string& id);
   virtual ~Request();
 
   void set_method(const std::string& method);
@@ -50,6 +46,7 @@ public:
 
   void set_uri(const scx::Uri& uri);
   const scx::Uri& get_uri() const;
+  bool is_secure() const;
   
   void set_version(const scx::VersionTag& ver);
   const scx::VersionTag& get_version() const;
@@ -65,11 +62,7 @@ public:
   void set_host(Host* host);
   const Host* get_host() const;
 
-  const std::string& get_profile() const;
   const std::string& get_id() const;
-
-  void set_docroot(DocRoot* docroot);
-  const DocRoot* get_docroot() const;
 
   void give_session(Session::Ref* session);
   const Session* get_session() const;
@@ -136,15 +129,9 @@ private:
   // The HTTP Host
   Host* m_host;
 
-  // The profile
-  std::string m_profile;
-
   // Unique identifier for this request
   std::string m_id;
   
-  // The document root corresponding to the above profile
-  DocRoot* m_docroot;
-
   // The HTTP session (if applicable)
   Session::Ref* m_session;
 

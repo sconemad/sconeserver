@@ -11,10 +11,9 @@ AuthRealmHtpasswd.cpp \
 AuthRealmDB.cpp \
 Client.cpp \
 ConnectionStream.cpp \
-DirIndexStream.cpp \
-DocRoot.cpp \
-ErrorPageStream.cpp \
-GetFileStream.cpp \
+DirIndex.cpp \
+GetFile.cpp \
+Handler.cpp \
 Host.cpp \
 HostMapper.cpp \
 HTTPModule.cpp \
@@ -24,7 +23,8 @@ Request.cpp \
 Response.cpp \
 ResponseStream.cpp \
 Session.cpp \
-Status.cpp
+Status.cpp \
+WebSocket.cpp
 
 httpincludedir = $(includedir)/http
 
@@ -34,10 +34,9 @@ AuthRealmHtpasswd.h \
 AuthRealmDB.h \
 Client.h \
 ConnectionStream.h \
-DirIndexStream.h \
-DocRoot.h \
-ErrorPageStream.h \
-GetFileStream.h \
+DirIndex.h \
+GetFile.h \
+Handler.h \
 Host.h \
 HostMapper.h \
 http.h \
@@ -48,7 +47,8 @@ Request.h \
 Response.h \
 ResponseStream.h \
 Session.h \
-Status.h
+Status.h \
+WebSocket.h
 
 http_la_LDFLAGS = -module -avoid-version
 

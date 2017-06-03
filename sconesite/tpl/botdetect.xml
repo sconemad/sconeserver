@@ -5,8 +5,10 @@
 # the variable "bot" on the session as appropriate. This can be used later on
 # to select what content to show to search bots.
 #
-ref ua = request.get_header("User-agent");
-var bot = !!RegExp("Googlebot|Slurp|msnbot|Exabot").match(ua);
-session.vars.set("bot",bot);
+if (defined(session)) {
+  ref ua = request.get_header("User-agent");
+  var bot = !!RegExp("Googlebot|Slurp|msnbot|Exabot").match(ua);
+  session.vars.set("bot",bot);
+}
 ?>
 </template>

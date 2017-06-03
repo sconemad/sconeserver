@@ -42,8 +42,8 @@ public:
 
   virtual bool close();
 
-  virtual bool connect(scx::Descriptor* endpoint,
-		       const scx::ScriptRef* args);
+  bool connect(scx::Descriptor* endpoint,
+               const scx::ScriptRef* args);
 
   void add(const std::string& name,ConnectionChain* c);
   ConnectionChain::Ref* find(const std::string& name);

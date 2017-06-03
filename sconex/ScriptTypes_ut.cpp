@@ -264,11 +264,6 @@ void test_ScriptBool()
   UTCOD(test_script_op(vtrue,ScriptOp::Or,vfalse,ScriptBool(1)));
   UTCOD(test_script_op(vfalse,ScriptOp::Or,vtrue,ScriptBool(1)));
   UTCOD(test_script_op(vtrue,ScriptOp::Or,vtrue,ScriptBool(1)));
-
-  UTCOD(test_script_op(vfalse,ScriptOp::Xor,vfalse,ScriptBool(0)));
-  UTCOD(test_script_op(vtrue,ScriptOp::Xor,vfalse,ScriptBool(1)));
-  UTCOD(test_script_op(vfalse,ScriptOp::Xor,vtrue,ScriptBool(1)));
-  UTCOD(test_script_op(vtrue,ScriptOp::Xor,vtrue,ScriptBool(0)));
 }
 
 void test_ScriptReal()

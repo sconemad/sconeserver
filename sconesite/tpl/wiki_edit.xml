@@ -1,0 +1,93 @@
+<template>
+
+<if condition="request.params['wiki'] == 'edit'">
+
+<h1>Edit article</h1>
+
+<form method='post' action='?op=edit_article' enctype='multipart/form-data'>
+
+<div class='edit'>
+<input type='submit' value='Save article'/>
+</div>
+
+<textarea name='file_article' style='width:100%; height:70vh;'>
+<?scx edit_article(); ?>
+</textarea>
+
+</form>
+
+</if>
+
+<if condition="request.params['wiki'] == 'resources'">
+
+<h1>Edit resources</h1>
+
+<h2>Files</h2>
+
+<form id='upload' name='upload' method='post' action='?op=upload_file' enctype='multipart/form-data'>
+<input type='file' name='file_upload'/>
+<input type='submit' value='upload'/>
+</form>
+
+<table>
+<tr> <th>Name</th> <th>Type</th> <th>Size (bytes)</th> <th>Preview</th> <th>Action</th> </tr>
+<?scx
+var files = article.get_files();
+var i;
+for (i=0; i<files.size; ++i) {
+  var file = files[i];
+  var mimetype = mime.lookup(String(file));
+  print("<tr>");
+  print("<td><a href='"+file+"'>"+file+"</a></td>");
+  print("<td>"+String(mimetype)+"</td>");
+  print("<td>"+file.size+"</td>");
+  print("<td>");
+  if (mimetype.type == "image") {
+    print(image.thumbnail(article,String(file),"120x120"));
+  } else {
+    print("-");
+  }
+  print("</td>");
+
+  print("<td>");
+  print("<form method='post' action='?op=remove_file&filename="+urlencode(String(file))+"'>");
+  print("<input type='submit' value='remove' onClick='return confirm(\"Are you sure you want to remove this resource?\");'/>");
+  print("</form>");
+  print("</td>");
+
+  print("</tr>");
+}
+?>
+</table>
+
+<h2>Child articles</h2>
+
+<form id='create' method='post' action='?op=create_article'>
+ name:<input class='text' type='text' name='article'/>
+ type:<input class='text' type='text' name='type' value='md'/>
+<input type='submit' value='create new'/>
+</form>
+
+<table>
+<tr> <th>Article</th> <th>Action</th> </tr>
+<?scx
+ref q = profile.db.Query("SELECT id FROM article WHERE parent = ?");
+q.exec(article.id);
+var i;
+while (q.next_result()) {
+  ref art = profile.lookup(q.result.id);
+  print("<tr>");
+  print("<td><a href='/" + art.link + "'>" + art.title + "</a></td>");
+  print("<td>");
+  print("<form method='post' action='?op=remove_article&article="+art.id+"'>");
+  print("<input type='submit' value='remove' onClick='return confirm(\"Are you sure you want to remove this article?\");'/>");
+  print("</form>");
+  print("</td>");
+  print("</tr>");
+}
+?>
+</table>
+
+</if>
+
+</template>

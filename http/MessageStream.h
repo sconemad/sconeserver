@@ -38,7 +38,6 @@ namespace scx { class Buffer; };
 namespace http {
 
 class ConnectionStream;
-class DocRoot;
 class Host;
 
 // Macro to find the current http::MessageStream from within another stream
@@ -62,8 +61,12 @@ public:
   virtual std::string stream_status() const;
  
   void send_continue();
+  void send_simple_response(Status status);
   void set_transparent();
 
+  void add_stream(scx::Stream* stream);
+  scx::Descriptor* get_endpoint() { return &endpoint(); }
+  
   HTTPModule& get_module();
 
   // Log message with id
@@ -77,7 +80,7 @@ public:
   
 private:
 
-  bool connect_request_module(bool error);
+  scx::Condition handle_request();
   
   bool build_header();
   scx::Condition write_header();

@@ -31,17 +31,34 @@ namespace scs {
 class Profile;
 
 //=========================================================================
+class SconesiteHandler : public http::Handler {
+public:
+  SconesiteHandler(SconesiteModule* module, const scx::ScriptRef* args);
+  
+  virtual scx::Condition handle_message(http::MessageStream* message);
+
+  void log(http::MessageStream* message, const std::string str);
+  
+private:
+ 
+  scx::ScriptRefTo<SconesiteModule> m_module;
+  Profile* m_profile;
+};
+
+  
+//=========================================================================
 class SconesiteStream : public http::ResponseStream {
 public:
 
   SconesiteStream(SconesiteModule* module,
-		  Profile& profile);
+                  Profile* profile,
+                  http::MessageStream* message);
   
   ~SconesiteStream();
 
   virtual std::string stream_status() const;
   
-  void log(const std::string message);
+  void log(const std::string str);
 
 protected:
 
@@ -53,7 +70,8 @@ private:
   
   scx::ScriptRefTo<SconesiteModule> m_module;
   
-  Profile& m_profile;
+  Profile* m_profile;
+  http::MessageStream* m_message;
   Article::Ref* m_article;
 
   bool m_accept;

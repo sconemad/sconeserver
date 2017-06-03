@@ -3,7 +3,7 @@
 sub account_op(op)
 {
   # Only allow account ops over secure connections
-  if (request.profile != 'secure') {
+  if (!request.secure) {
     log("Account op request over non-secure connection");
     response.set_status(401);
     abort();
@@ -38,7 +38,7 @@ sub account_op(op)
     session.remove_permission("auth");
     session.remove_permission("upload");
     log("User '"+session.vars.user+"' logged out");
-    response.set_header("Location","http://"+request.uri.host);
+    response.set_header("Location",request.uri.base);
     response.set_status(302);
     abort();
 
@@ -62,8 +62,8 @@ sub account_op(op)
 
 if (defined(request.params["op"])) {
   constref op = request.params["op"];
-  if (op == "login" |
-      op == "logout" |
+  if (op == "login" ||
+      op == "logout" ||
       op == "chpass") {
     account_op(op);    
   }
