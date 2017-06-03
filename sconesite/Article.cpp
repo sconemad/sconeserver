@@ -373,10 +373,8 @@ scx::ScriptRef* Article::script_method(const scx::ScriptAuth& auth,
     scx::FileDir files(m_root);
     while (files.next()) {
       std::string file = files.name();
-      if (file != "." &&
-          file != ".." &&
-          file != "article.xml" && file != "article.xml~" &&
-          file != "meta.txt" && file != "meta.txt~") {
+      if (file[0] != '.' &&
+          file.find("article.") != 0) {
 	if (files.stat().is_dir()) {
 	  // Ignore directories for now?
 	  // filelist->give(scx::ScriptString::new_ref(file+"/"));
