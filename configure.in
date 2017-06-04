@@ -164,13 +164,6 @@ AC_ARG_WITH([testbuilder],
   [TESTBUILDER="yes"]
 )
 
-# Lettuce module
-AC_ARG_WITH([lettuce],
-  [AC_HELP_STRING([--with-lettuce],[Enable Lettuce module])],
-  [LETTUCE="$withval"],
-  [LETTUCE="yes"]
-)
-
 # Look for libxml2 settings
 AC_ARG_WITH([xml2-config],
   [AC_HELP_STRING([--with-xml2-config=PATH],[Set path to xml2-config])],
@@ -300,23 +293,6 @@ if test "x$MATHS" = "xyes"; then
   )
 fi
 
-# Ui module 
-# depends on libX11
-# Include by default if X headers are found
-AC_ARG_WITH([ui],
-  [AC_HELP_STRING([--with-ui],[Enable ui module])],
-  [UI="$withval"],
-  [AC_CHECK_HEADER([X11/Xlib.h],[UI="yes"],[UI="no"])]
-)
-# Need libX11 library for ui
-if test "x$UI" = "xyes"; then
-  AC_CHECK_LIB([X11],[XOpenDisplay],
-    [UI_LIBADD="-lX11"
-     AC_SUBST(UI_LIBADD)],
-    [AC_MSG_ERROR([library 'X11' is required for the ui module])]
-  )
-fi
-
 # Checks for header files.
 AC_HEADER_STDC
 AC_HEADER_DIRENT
@@ -395,7 +371,6 @@ AM_CONDITIONAL(BUILD_BLUETOOTH, test x$BLUETOOTH = xyes)
 AM_CONDITIONAL(BUILD_SSL, test x$SSL = xyes)
 AM_CONDITIONAL(BUILD_EXAMPLES, test x$EXAMPLES = xyes)
 AM_CONDITIONAL(BUILD_TESTBUILDER, test x$TESTBUILDER = xyes)
-AM_CONDITIONAL(BUILD_LETTUCE, test x$LETTUCE = xyes)
 AM_CONDITIONAL(BUILD_SCONESITE, test x$SCONESITE = xyes)
 AM_CONDITIONAL(BUILD_IMAGE, test x$IMAGE = xyes)
 AM_CONDITIONAL(BUILD_RSS, test x$RSS = xyes)
@@ -403,7 +378,6 @@ AM_CONDITIONAL(BUILD_MARKDOWN, test x$MARKDOWN = xyes)
 AM_CONDITIONAL(BUILD_MYSQL, test x$MYSQL = xyes)
 AM_CONDITIONAL(BUILD_SQLITE, test x$SQLITE = xyes)
 AM_CONDITIONAL(BUILD_MATHS, test x$MATHS = xyes)
-AM_CONDITIONAL(BUILD_UI, test x$UI = xyes)
 
 AC_CONFIG_FILES([Makefile])
 AC_CONFIG_FILES([sconex/Makefile])
@@ -429,13 +403,11 @@ AC_CONFIG_FILES([forward/Makefile])
 AC_CONFIG_FILES([tftp/Makefile])
 AC_CONFIG_FILES([test/Makefile])
 AC_CONFIG_FILES([testbuilder/Makefile])
-AC_CONFIG_FILES([lettuce/Makefile])
 AC_CONFIG_FILES([mysql/Makefile])
 AC_CONFIG_FILES([sqlite/Makefile])
 AC_CONFIG_FILES([smtp/Makefile])
 AC_CONFIG_FILES([rss/Makefile])
 AC_CONFIG_FILES([maths/Makefile])
-AC_CONFIG_FILES([ui/Makefile])
 
 AC_OUTPUT
 
@@ -469,9 +441,7 @@ The following modules will be built:
   + smtp	   yes
   + rss            $RSS
   + maths          $MATHS
-  + ui             $UI
   + testbuilder    $TESTBUILDER
-  + lettuce        $LETTUCE
   + test           yes
   + examples       $EXAMPLES
 ])

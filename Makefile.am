@@ -39,11 +39,7 @@ tftp \
 test \
 testbuilder
 
-EXPERIMENTAL = \
-lettuce \
-ui
-
-SUBDIRS = sconex examples $(MODULES) $(EXPERIMENTAL)
+SUBDIRS = sconex examples $(MODULES)
 
 docdir=$(datadir)/doc/$(PACKAGE)
 doc_DATA = AUTHORS COPYING ChangeLog INSTALL NEWS README THANKS TODO
