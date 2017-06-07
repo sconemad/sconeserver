@@ -22,6 +22,13 @@ Free Software Foundation, Inc.,
 #include <sconex/GzipStream.h>
 namespace scx {
 
+// Uncomment to enable debug logging
+//#define GZIP_DEBUG_LOG(m) STREAM_DEBUG_LOG(m)
+
+#ifndef GZIP_DEBUG_LOG
+#  define GZIP_DEBUG_LOG(m)
+#endif
+
 //=============================================================================
 GzipStream::GzipStream(
   int read_buffer_size,
@@ -106,7 +113,6 @@ Condition GzipStream::read(void* buffer,int n,int& na)
   // Can the request be fullfilled by the buffer?
   if (n <= m_read_out.used()) {
     na = m_read_out.pop_to(buffer, n);
-    enable_event(Stream::SendReadable,m_read_out.used());
     return Ok;
   }
 
@@ -122,7 +128,6 @@ Condition GzipStream::read(void* buffer,int n,int& na)
   n = std::min(n, m_read_out.used());
   if (n > 0) {
     na = m_read_out.pop_to(buffer,n);
-    enable_event(Stream::SendReadable,m_read_out.used());
     return Ok;
   }
 
@@ -218,6 +223,12 @@ Condition GzipStream::event(Event e)
 }
 
 //=============================================================================
+bool GzipStream::has_readable() const
+{
+  return m_read_out.used();
+}
+
+//=============================================================================
 std::string GzipStream::stream_status() const
 {
   std::ostringstream oss;
@@ -252,8 +263,8 @@ int GzipStream::inflate_buffer(int flush)
   int out = m_read_zs->total_out - prev_out;
   if (out) m_read_out.push(out);
 
-  DEBUG_LOG("inflate(" << flush << "): " << ret <<
-            " in:" << in << " out:" << out);
+  GZIP_DEBUG_LOG("inflate(" << flush << "): " << ret <<
+                 " in:" << in << " out:" << out);
   return ret;
 }
 
@@ -276,8 +287,8 @@ int GzipStream::deflate_buffer(int flush)
   int out = m_write_zs->total_out - prev_out;
   if (out) m_write_out.push(out);
 
-  DEBUG_LOG("deflate(" << flush << "): " << ret <<
-            " in:" << in << " out:" << out);
+  GZIP_DEBUG_LOG("deflate(" << flush << "): " << ret <<
+                 " in:" << in << " out:" << out);
   return ret;
 }
   
