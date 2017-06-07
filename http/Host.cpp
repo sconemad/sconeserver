@@ -90,49 +90,52 @@ scx::Condition Host::connect_request(MessageStream* message,
 {
   HandlerMap* h = 0;
 
-  if (response.get_status().code() != http::Status::Ok) {
-    h = lookup_extn_map("!");
-    
+  const scx::Uri& uri = request.get_uri();
+  const std::string& uripath = scx::Uri::decode(uri.get_path());
+
+  // Check valid path
+  if (!check_path(uripath)) {
+    response.set_status(http::Status::Forbidden);
+    return scx::Close;
+  }
+  
+  // Check http authorization
+  if (!check_auth(request,response)) {
+    response.set_status(http::Status::Unauthorized);
+    return scx::Close;
+  }
+  
+  scx::FilePath path = m_docroot + uripath;
+  request.set_path(path);
+  
+  std::string pathinfo;
+  h = lookup_path_map(uripath,pathinfo);
+  if (h) {
+    // Path mapped module
+    request.set_path_info(pathinfo);
   } else {
-    const scx::Uri& uri = request.get_uri();
-    const std::string& uripath = scx::Uri::decode(uri.get_path());
-
-    // Check valid path
-    if (!check_path(uripath)) {
-      response.set_status(http::Status::Forbidden);
+    // Normal file mapping
+    scx::FileStat stat(path);
+    if (!stat.exists()) {
+      response.set_status(http::Status::NotFound);
       return scx::Close;
-    }
-    
-    // Check http authorization
-    if (!check_auth(request,response)) {
-      response.set_status(http::Status::Unauthorized);
-      return scx::Close;
-    }
-
-    scx::FilePath path = m_docroot + uripath;
-    request.set_path(path);
-
-    std::string pathinfo;
-    h = lookup_path_map(uripath,pathinfo);
-    if (h) {
-      // Path mapped module
-      request.set_path_info(pathinfo);
+    } else if (stat.is_dir()) {
+      h = lookup_extn_map(".");
     } else {
-      // Normal file mapping
-      scx::FileStat stat(path);
-      if (!stat.exists()) {
-        response.set_status(http::Status::NotFound);
-        return scx::Close;
-      } else if (stat.is_dir()) {
-        h = lookup_extn_map(".");
-      } else {
-        h = lookup_extn_map(uripath);
-      }
+      h = lookup_extn_map(uripath);
     }
-
-    check_session(request,response);
   }
 
+  check_session(request,response);
+
+  scx::Log log("http.hosts");
+  log.attach("id", m_id);
+  log.attach("message", request.get_id());
+  log.attach("handler", h ? h->get_type() : "NONE");
+  log.attach("session", request.get_session() ?
+             request.get_session()->get_id() : "NONE");
+  log.submit("Handling message");
+  
   // Check we have a handler
   if (h == 0) {
     LOG("No handler found for request");
@@ -505,7 +508,6 @@ void Host::check_session(Request& request, Response& response)
   Session::Ref* s = m_module.get_sessions().lookup_session(scxid);
   if (s != 0) {
     // Existing session
-    LOGGER().attach("session",scxid).submit("Existing session");
     s->object()->set_last_used();
     
   } else {
@@ -517,7 +519,7 @@ void Host::check_session(Request& request, Response& response)
     if (b_auto_session) {
       s = m_module.get_sessions().new_session();
       scxid = s->object()->get_id();
-      LOGGER().attach("session",scxid).submit("New session");
+      LOGGER().attach("session",scxid).submit("Creating new session");
     }
   }
   

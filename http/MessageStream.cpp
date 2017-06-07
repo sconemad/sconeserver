@@ -305,7 +305,8 @@ scx::Condition MessageStream::handle_request()
   log.attach("peer", addr->get_string());
   log.attach("referer", m_request.object()->get_header("Referer"));
   log.attach("user-agent", m_request.object()->get_header("User-Agent"));
-  log.submit(m_request.object()->get_method());
+  log.attach("method", m_request.object()->get_method());
+  log.submit("New message");
 
   // Pass through to host mapper for connection to appropriate host object
   HostMapper& mapper = m_module.object()->get_hosts();
