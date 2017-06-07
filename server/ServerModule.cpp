@@ -30,6 +30,7 @@ Free Software Foundation, Inc.,
 #include <sconex/StreamBuffer.h>
 #include <sconex/StreamDebugger.h>
 #include <sconex/ScriptEngine.h>
+#include <sconex/GzipStream.h>
 #include <sconex/Log.h>
 
 SCONEX_MODULE(ServerModule);
@@ -45,6 +46,7 @@ ServerModule::ServerModule()
   scx::Stream::register_stream("term",this);
   scx::Stream::register_stream("sconescript",this);
   scx::Stream::register_stream("debug",this);
+  scx::Stream::register_stream("gzip",this);
 }
 
 //=============================================================================
@@ -55,6 +57,7 @@ ServerModule::~ServerModule()
   scx::Stream::unregister_stream("term",this);
   scx::Stream::unregister_stream("sconescript",this);
   scx::Stream::unregister_stream("debug",this);
+  scx::Stream::unregister_stream("gzip",this);
 }
 
 //=========================================================================
@@ -241,5 +244,21 @@ void ServerModule::provide(const std::string& type,
     if (!a_name) return;
     std::string name  = a_name->get_string();
     object = new scx::StreamDebugger(name);
+    
+  } else if ("gzip" == type) {
+    const int max = 10*1048576;
+    const scx::ScriptInt* a_read =
+      scx::get_method_arg<scx::ScriptInt>(args,0,"read");
+    if (!a_read) return;
+    int read_size = (int)a_read->get_int();
+    if (read_size > max) return;
+
+    const scx::ScriptInt* a_write =
+      scx::get_method_arg<scx::ScriptInt>(args,1,"write");
+    if (!a_write) return;
+    int write_size = (int)a_write->get_int();
+    if (write_size > max) return;
+
+    object = new scx::GzipStream(read_size,write_size);
   }
 }
