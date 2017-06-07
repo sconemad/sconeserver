@@ -296,33 +296,22 @@ Response& MessageStream::get_response()
 //=============================================================================
 scx::Condition MessageStream::handle_request()
 {
-  // Pass through to host mapper for connection to appropriate host object
-  HostMapper& mapper = m_module.object()->get_hosts();
-  scx::Condition c = mapper.connect_request(this,
-                                            *m_request.object(),
-                                            *m_response.object());
   scx::Log log("http");
   log.attach("id", m_request.object()->get_id());
   log.attach("uri", m_request.object()->get_uri().get_string());
-  
   const scx::StreamSocket* sock =
     dynamic_cast<const scx::StreamSocket*>(&endpoint());
   const scx::SocketAddress* addr = sock->get_remote_addr();
   log.attach("peer", addr->get_string());
-  
   log.attach("referer", m_request.object()->get_header("Referer"));
   log.attach("user-agent", m_request.object()->get_header("User-Agent"));
-  const Host* host = m_request.object()->get_host();
-  if (host) {
-    log.attach("host", host->get_id());
-  }
-  Session* session = m_request.object()->get_session();
-  if (session) {
-    log.attach("session", session->get_id());
-  }
   log.submit(m_request.object()->get_method());
 
-  return c;
+  // Pass through to host mapper for connection to appropriate host object
+  HostMapper& mapper = m_module.object()->get_hosts();
+  return mapper.connect_request(this,
+                                *m_request.object(),
+                                *m_response.object());
 }
   
 //=============================================================================
