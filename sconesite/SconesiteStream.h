@@ -34,6 +34,7 @@ class Profile;
 class SconesiteHandler : public http::Handler {
 public:
   SconesiteHandler(SconesiteModule* module, const scx::ScriptRef* args);
+  virtual ~SconesiteHandler();
   
   virtual scx::Condition handle_message(http::MessageStream* message);
 
@@ -43,6 +44,7 @@ private:
  
   scx::ScriptRefTo<SconesiteModule> m_module;
   Profile* m_profile;
+  Article::Ref* m_article;
 };
 
   
@@ -52,9 +54,10 @@ public:
 
   SconesiteStream(SconesiteModule* module,
                   Profile* profile,
+                  Article* article,
                   http::MessageStream* message);
   
-  ~SconesiteStream();
+  virtual ~SconesiteStream();
 
   virtual std::string stream_status() const;
   
@@ -74,7 +77,6 @@ private:
   http::MessageStream* m_message;
   Article::Ref* m_article;
 
-  bool m_accept;
   RenderMarkupContext::Ref* m_context;
   std::string m_file;
 
