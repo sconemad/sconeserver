@@ -475,10 +475,6 @@ int Descriptor::dispatch(int events)
 	    stream->has_readable()) {
 	  event_readable = true;
 	}
-	if (!event_writeable &&
-            stream->has_writeable()) {
-	  event_writeable = true;
-	}
 	++it;    
       }
 

@@ -109,10 +109,9 @@ public:
   //
   virtual Condition event(Event e);
 
-  // Does this stream have any buffered data to be read/written?
+  // Does this stream have any buffered data to be read?
   virtual bool has_readable() const;
-  virtual bool has_writeable() const;
-  
+
   // Get/set chain pointer
   void set_endpoint(Descriptor* endpoint);
   void set_chain(Stream* chain);

@@ -63,7 +63,6 @@ public:
 
   virtual Condition event(Event e);
   virtual bool has_readable() const;
-  virtual bool has_writeable() const;
 
   virtual std::string stream_status() const;
   

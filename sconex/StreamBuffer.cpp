@@ -192,12 +192,6 @@ bool StreamBuffer::has_readable() const
 }
 
 //=============================================================================
-bool StreamBuffer::has_writeable() const
-{
-  return (m_write_buffer.used() > 0);
-}
-  
-//=============================================================================
 Condition StreamBuffer::write_through(
   const void* buffer,
   int n,

@@ -214,13 +214,7 @@ scx::Condition WebSocketStream::event(scx::Stream::Event e)
 bool WebSocketStream::has_readable() const
 {
   return (m_read_state == Data &&
-          m_read_buffer.used() > 0);
-}
-  
-//=============================================================================
-bool WebSocketStream::has_writeable() const
-{
-  return (m_write_buffer.used() > 0);
+          m_read_buffer.used());
 }
   
 //=============================================================================

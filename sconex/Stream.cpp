@@ -151,12 +151,6 @@ bool Stream::has_readable() const
 }
 
 //=============================================================================
-bool Stream::has_writeable() const
-{
-  return false;
-}
-
-//=============================================================================
 void Stream::set_endpoint(Descriptor* endpoint)
 {
   m_endpoint = endpoint;
@@ -183,13 +177,12 @@ std::string Stream::stream_status() const
 //=============================================================================
 std::string Stream::event_status() const
 {
-  std::string es = "------";
+  std::string es = "-----";
   if (m_events & (1<<Opening)) es[0]='o';
   if (m_events & (1<<Closing)) es[1]='c';
   if (m_events & (1<<Readable)) es[2]='r';
   if (m_events & (1<<Writeable)) es[3]='w';
   if (has_readable()) es[4]='R';
-  if (has_writeable()) es[5]='W';
   return es;
 }
 
