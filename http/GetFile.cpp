@@ -31,6 +31,7 @@ Free Software Foundation, Inc.,
 #include <sconex/Date.h>
 #include <sconex/Kernel.h>
 #include <sconex/MimeType.h>
+#include <sconex/GzipStream.h>
 namespace http {
 
 //=========================================================================
@@ -80,17 +81,21 @@ scx::Condition GetFileHandler::handle_message(MessageStream* message)
   response.set_header("Content-Length",oss.str());
   
   // Lookup MIME type for file
+  bool compressible = false;
   scx::Module::Ref mime = scx::Kernel::get()->get_module("mime");
   if (mime.valid()) {
     scx::ScriptList::Ref args(new scx::ScriptList());
     args.object()->give( scx::ScriptString::new_ref(path.path()) );
     scx::ScriptMethodRef lookup_method(mime,"lookup");
+    scx::MimeType* mimetype = 0;
     scx::ScriptRef* ret = 
       lookup_method.call(scx::ScriptAuth::Untrusted,&args);
-    scx::MimeType* mimetype = 0;
     if (ret && (mimetype = dynamic_cast<scx::MimeType*>(ret->object()))) {
       response.set_header("Content-Type",mimetype->get_string());
     }
+    // Decide if the file is compressible, this will be used to
+    // determine whether to use gzip to send it.
+    compressible = (mimetype->get_type() == "text");
     delete ret;
   }
   
@@ -100,8 +105,31 @@ scx::Condition GetFileHandler::handle_message(MessageStream* message)
     delete file;
     return scx::Close;
   }
-  
-  message->log("GetFile '" + path.path() + "'"); 
+
+  message->log("GetFile '" + path.path() + "'");
+
+  // Decide whether to use gzip
+  // This is based on whether the file is compressible (text)
+  // and if it is over a certain size (i.e. worth compressing)
+  if (compressible && clength > 1000) {
+    // Also check if the client accepts gzip encoding
+    bool gzip_accepted = false;
+    scx::MimeHeader ae = request.get_header_parsed("Accept-Encoding");
+    for (int i=0; i<ae.num_values(); ++i) {
+      if (ae.get_value(i)->value() == "gzip") {
+        gzip_accepted = true;
+        break;
+      }
+    }
+    if (gzip_accepted) {
+      message->log("Using gzip");
+      message->add_stream(new scx::GzipStream(0,16384));
+      response.set_header("Content-Encoding","gzip");
+      // Unfortunately we have to remove the content-length, so 
+      // chunked encoding will be used for gzipped content.
+      response.remove_header("Content-Length");
+    }
+  }
   
   const int MAX_BUFFER_SIZE = 65536;
   
