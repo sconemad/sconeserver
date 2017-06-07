@@ -1,3 +1,22 @@
+sconeserver (0.9.10ppa1) xenial; urgency=low
+
+  * Bump version to 0.9.10.
+
+  * New features:
+    - Removed DocRoots/profiles to simplify http configuration.
+    - http WebSocket support.
+    - http Gzip content-encoding support.
+    - SconeScript: Support bitwise operations.
+    - Digest: Pluggable message digest support.
+
+  * Fixes:
+    - Improved logging from http.
+    - ssl: Support loading certificate chains.
+    - Multiplexer: Use job timeouts to feed into select.
+    - Numerous minor fixes and improvements.
+
+ -- Andrew Wedgbury <wedge@sconemad.com>  Wed, 07 Jun 2017 23:36:10 +0000
+
 sconeserver (0.9.9ppa3) precise; urgency=low
 
   * New features:
