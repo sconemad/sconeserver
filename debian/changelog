@@ -1,3 +1,15 @@
+sconeserver (0.9.10ppa3) xenial; urgency=low
+
+  * Try to bring debian/rules and debhelper compat up to date.
+
+ -- Andrew Wedgbury <wedge@sconemad.com>  Fri, 09 Jun 2017 05:53:23 +0000
+
+sconeserver (0.9.10ppa2) xenial; urgency=low
+
+  * Fix passing of DEB_BUILD_OPTIONS in debian rules
+
+ -- Andrew Wedgbury <wedge@sconemad.com>  Thu, 08 Jun 2017 06:13:54 +0000
+
 sconeserver (0.9.10ppa1) xenial; urgency=low
 
   * Bump version to 0.9.10.

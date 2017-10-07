@@ -1,77 +1,16 @@
 #!/usr/bin/make -f
-#export DH_VERBOSE=1
+export DH_VERBOSE = 1
+export DEB_BUILD_MAINT_OPTIONS = hardening=+all
+export DEB_CFLAGS_MAINT_APPEND  = -Wall -pedantic
+export DEB_LDFLAGS_MAINT_APPEND = -Wl,--as-needed
 
-package        := sconeserver
-prefix := $(shell pwd)/debian/$(package)
+%:
+	dh $@
 
-arch   := $(shell dpkg --print-architecture)
+override_dh_auto_configure:
+	dh_auto_configure -- --prefix=/usr --sysconfdir=/etc/sconeserver --libdir=/usr/lib --localstatedir=/var/log/sconeserver
 
+override_dh_auto_install:
+	dh_auto_install -- prefix=/usr sysconfdir=/etc/sconeserver libdir=/usr/lib localstatedir=/var/log/sconeserver includedir=/usr/include/sconeserver
 
-configure: configure-stamp
-configure-stamp:
-	dh_testdir
-	# Add here commands to configure the package.
-	$(checkdir)
-	# If you plan to install the target .deb on a wide variety of machines,
-	# you may want to add the "--enable-runtime-cpudetection" option to
-	# the line below, but beware: the resulting binary will run slower
-	./autogen.sh --prefix=/usr --sysconfdir=/etc/sconeserver --libdir=/usr/lib --localstatedir=/var/log/sconeserver $(DEB_BUILD_OPTIONS)
-
-	touch configure-stamp
-
-build: configure-stamp build-arch build-indep
-build-arch: build-stamp
-build-indep: build-stamp
-build-stamp:
-	dh_testdir
-
-	# commands to compile the package.
-	${MAKE} 
-
-	touch build-stamp
-
-clean:
-	dh_testdir
-	dh_testroot
-	rm -f build-stamp configure-stamp
-
-	# commands to clean up after the build process.
-	[ ! -f Makefile ] || $(MAKE) distclean
-	rm -f help_mp.h config.h config.mak
-	dh_clean
-
-# Build architecture-independent files here.
-binary-indep: build
-# We have nothing to do by default.
-
-# Build architecture-dependent files here.
-binary-arch: build
-	dh_testdir
-	dh_testroot
-	dh_prep
-	dh_installdirs
-
-	# commands to install the package into debian/<packagename>
-	$(MAKE) prefix=$(prefix)/usr sysconfdir=$(prefix)/etc/sconeserver libdir=$(prefix)/usr/lib localstatedir=$(prefix)/var/log/sconeserver includedir=$(prefix)/usr/include/sconeserver install
-
-	dh_install --sourcedir=$(prefix)
-	dh_installdebconf
-	dh_installchangelogs ChangeLog
-	dh_installinit -R --name=sconeserver
-	dh_installlogrotate --name=sconeserver
-	dh_installdocs --link-doc=sconeserver-base
-	dh_link
-	dh_strip
-	dh_compress
-	dh_fixperms
-	dh_makeshlibs
-	dh_installdeb
-	dh_perl
-	dh_shlibdeps
-	dh_gencontrol
-	dh_md5sums
-	dh_builddeb
-
-binary: binary-indep binary-arch
-
-.PHONY: binary binary-arch binary-indep clean checkroot
+override_dh_auto_test:
