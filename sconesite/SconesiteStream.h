@@ -66,7 +66,11 @@ public:
 protected:
 
   virtual scx::Condition event(scx::Stream::Event e);
-  virtual scx::Condition start_section(const scx::MimeHeaderTable& headers);
+  virtual bool handle_section(const scx::MimeHeaderTable& headers,
+                              const std::string& name);
+  virtual bool handle_file(const scx::MimeHeaderTable& headers,
+                           const std::string& name,
+                           const std::string& filename);
   virtual scx::Condition send_response();
 
 private:

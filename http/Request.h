@@ -81,9 +81,12 @@ public:
   void set_param(const std::string& name, const std::string& value);
   std::string get_param(const std::string& name) const;
   bool is_param(const std::string& name) const;
-
+  
   std::string build_header_string();
 
+  void set_body(scx::ScriptRef* body);
+  scx::ScriptRef* get_body();
+  
   // ScriptObject methods
   virtual std::string get_string() const;
 
@@ -147,6 +150,9 @@ private:
     
   // Parameters sent with the request
   scx::ScriptMap::Ref m_params;
+
+  // Request body
+  scx::ScriptRef* m_body;
   
 };
 

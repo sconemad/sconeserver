@@ -33,7 +33,8 @@ Request::Request(const std::string& id)
   : m_host(0),
     m_id(id),
     m_session(0),
-    m_params(new scx::ScriptMap())
+    m_params(new scx::ScriptMap()),
+    m_body(0)
 {
   
 }
@@ -42,6 +43,7 @@ Request::Request(const std::string& id)
 Request::~Request()
 {
   delete m_session;
+  delete m_body;
 }
 
 //===========================================================================
@@ -310,6 +312,20 @@ std::string Request::build_header_string()
   return str;
 }
 
+  
+//=========================================================================
+void Request::set_body(scx::ScriptRef* body)
+{
+  delete m_body;
+  m_body = body;
+}
+
+//=========================================================================
+scx::ScriptRef* Request::get_body()
+{
+  return m_body;
+}
+
 //=========================================================================
 std::string Request::get_string() const
 {
@@ -341,6 +357,8 @@ scx::ScriptRef* Request::script_op(const scx::ScriptAuth& auth,
       return m_params.ref_copy(ref.reftype());
     if (name == "session" && m_session) 
       return m_session->ref_copy(ref.reftype());
+    if (name == "body" && m_body) 
+      return m_body->ref_copy(ref.reftype());
   }
 
   return scx::ScriptObject::script_op(auth,ref,op,right);

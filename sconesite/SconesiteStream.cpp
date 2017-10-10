@@ -32,7 +32,6 @@ Free Software Foundation, Inc.,
 #include <http/Status.h>
 #include <sconex/Stream.h>
 #include <sconex/Date.h>
-#include <sconex/NullFile.h>
 #include <sconex/StreamTransfer.h>
 #include <sconex/StreamSocket.h>
 #include <sconex/Kernel.h>
@@ -40,52 +39,6 @@ Free Software Foundation, Inc.,
 #include <sconex/FilePath.h>
 #include <sconex/Log.h>
 namespace scs {
-
-//=========================================================================
-// ParamReaderStream - Stream for reading parameters in mime headers
-// TODO: probably should live in http
-//
-class ParamReaderStream : public scx::Stream {
-public:
-
-  ParamReaderStream(const std::string& name, http::Request& request)
-    : scx::Stream("ParamReader"),
-      m_name(name),
-      m_request(request)
-  {
-    enable_event(scx::Stream::Readable,true);
-  };
-
-  virtual scx::Condition event(scx::Stream::Event e)
-  {
-    if (e == scx::Stream::Readable) {
-      char buffer[1024];
-      scx::Condition c;
-      int na = 0;
-      do {
-	c = read(buffer,1024,na);
-	m_value += std::string(buffer,na);
-      } while (c == scx::Ok);
-
-      if (c == scx::End) {
-        m_request.set_param(m_name,m_value);
-	return scx::Close;
-      }
-    
-      return c;
-    }
-    
-    return scx::Ok;
-  };
-
-protected:
-  
-  std::string m_name;
-  std::string m_value;
-  http::Request& m_request;
-  
-};
-
 
 //=========================================================================
 SconesiteHandler::SconesiteHandler(SconesiteModule* module,
@@ -264,71 +217,54 @@ scx::Condition SconesiteStream::event(scx::Stream::Event e)
 }
 
 //=========================================================================
-scx::Condition SconesiteStream::start_section(const scx::MimeHeaderTable& headers)
+bool SconesiteStream::handle_section(const scx::MimeHeaderTable& headers,
+                                     const std::string& name)
+{
+  // If the section name starts with "file_", treat as a file 
+  const std::string file_pattern = "file_";
+  if (0 == name.find(file_pattern)) {
+    return handle_file(headers, name, "");
+  }
+  
+  return ResponseStream::handle_section(headers, name);  
+}
+
+//=========================================================================
+bool SconesiteStream::handle_file(const scx::MimeHeaderTable& headers,
+                                  const std::string& name,
+                                  const std::string& filename)
 {
   http::Request& req = const_cast<http::Request&>(m_message->get_request());
   http::Response& resp = m_message->get_response();
   const http::Session* session = req.get_session();
 
-  std::string name;
-  scx::MimeHeader disp = headers.get_parsed("Content-Disposition");
-  const scx::MimeHeaderValue* fdata = disp.get_value("form-data");
-  if (!fdata) {
-    return scx::Close;
+  if (!session || !session->has_permission("upload")) {
+    resp.set_status(http::Status::Unauthorized);
+    return false;
   }
+
+  scx::FilePath path = "/tmp";
+  path += std::string(m_module.object()->name() + "-" +
+		      session->get_id() + "-" + name);
+  req.set_param(name,
+                new scx::ScriptRef(new scx::ScriptFile(path,filename)));
   
-  fdata->get_parameter("name",name);
-  //    STREAM_DEBUG_LOG("Section name is '" << name << "'");
-  
-  std::string fname;
-  fdata->get_parameter("filename",fname);
-  
-  const std::string file_pattern = "file_";
-  if (0 == name.find(file_pattern)) {
-    // Name starts with "file_" so stream it into a file, provided we
-    // have a session with the upload permission.
-    
-    if (!session || !session->has_permission("upload")) {
-      resp.set_status(http::Status::Unauthorized);
-      
-    } else {
-      scx::FilePath path = "/tmp";
-      std::string filename = 
-	m_module.object()->name() + "-" + session->get_id() + "-" + name;
-      path += filename;
-      //      STREAM_DEBUG_LOG("Streaming section to file '" << path.path() << "'");
-      req.set_param(name,
-		    new scx::ScriptRef(new scx::ScriptFile(path,fname)));
-      
-      scx::File* file = new scx::File();
-      if (file->open(path.path(),
-		     scx::File::Write | scx::File::Create | 
-		     scx::File::Truncate,
-		     00660) == scx::Ok) {
-	//	endpoint().add_stream(new scx::StreamDebugger("https-file"));
-	scx::StreamTransfer* xfer = new scx::StreamTransfer(&endpoint());
-	file->add_stream(xfer);
-	// Add file to kernel
-	scx::Kernel::get()->connect(file);
-	file = 0;
-	return scx::Ok;
-      }
-      
-      log("Error opening file '" + path.path() + "'");
-      delete file;
-    }
-  } else {
-    //      STREAM_DEBUG_LOG("Writing section to parameter '" << name << "'");
-    endpoint().add_stream(new ParamReaderStream(name,req));
-    return scx::Ok;
+  scx::File* file = new scx::File();
+  if (file->open(path.path(),
+                 scx::File::Write | scx::File::Create | 
+                 scx::File::Truncate,
+                 00660) == scx::Ok) {
+    //	endpoint().add_stream(new scx::StreamDebugger("https-file"));
+    scx::StreamTransfer* xfer = new scx::StreamTransfer(&endpoint());
+    file->add_stream(xfer);
+    scx::Kernel::get()->connect(file);
+    file = 0;
+    return true;
   }
-  
-  // Transfer to a null file to discard the data
-  scx::NullFile* file = new scx::NullFile();
-  scx::StreamTransfer* xfer = new scx::StreamTransfer(&endpoint());
-  file->add_stream(xfer);
-  scx::Kernel::get()->connect(file);
-  return scx::Ok;  
+      
+  log("Error opening file '" + path.path() + "'");
+  delete file;
+  return false;
 }
 
 //=========================================================================

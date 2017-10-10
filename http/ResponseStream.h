@@ -38,6 +38,47 @@ class HTTP_API ResponseStream : public scx::Stream {
 
 public:
 
+  ResponseStream(const std::string& stream_name);
+  
+  ~ResponseStream();
+
+  virtual std::string stream_status() const;
+
+protected:
+
+  // from scx::Stream:
+  virtual scx::Condition event(scx::Stream::Event e);
+  virtual scx::Condition read(void* buffer,int n,int& na);
+  virtual bool has_readable() const;
+
+  // This is called when the request consists of a single-part message
+  // body. By default we add a stream to read this, setting any
+  // parameters on the request object.
+  virtual bool handle_body();
+
+  // This is called at the start of each (non-file) section within a
+  // multipart message body. By default we read the content of the section
+  // and add it to the named parameter in the request object.
+  // Override and return true to handle the section, or false to discard
+  // the data.
+  virtual bool handle_section(const scx::MimeHeaderTable& headers,
+                              const std::string& name);
+
+  // This is called at the start of each file section within a multipart
+  // message body.
+  // Override and return true to handle the file section, or false to
+  // discard the data (default implementation returns false).
+  virtual bool handle_file(const scx::MimeHeaderTable& headers,
+                           const std::string& name,
+                           const std::string& filename);
+
+  // This is called when ready to send a response.
+  virtual scx::Condition send_response();
+
+  bool send_file(const scx::FilePath& path);
+  
+private:
+
   enum ResponseSequence {
     resp_Start,
     resp_ReadSingle,
@@ -57,30 +98,8 @@ public:
     bound_Final
   };
   
-  ResponseStream(const std::string& stream_name);
-  
-  ~ResponseStream();
-
-  virtual std::string stream_status() const;
-
-protected:
-
-  // from scx::Stream:
-  virtual scx::Condition event(scx::Stream::Event e);
-  virtual scx::Condition read(void* buffer,int n,int& na);
-  virtual bool has_readable() const;
-  
-  virtual scx::Condition start_section(const scx::MimeHeaderTable& headers);
-  virtual scx::Condition send_response();
-
-  bool decode_param_string(const std::string& str,Request& request);
-
-  bool send_file(const scx::FilePath& path);
-  
   bool find_mime_boundary();
   
-private:
-
   friend class MimeHeaderStream;
 
   void mimeheader_line(const std::string& line);

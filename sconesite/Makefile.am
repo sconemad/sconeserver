@@ -51,7 +51,9 @@ tpl/google_analytics.xml \
 tpl/normal.xml \
 tpl/rss.xml \
 tpl/shorturl.xml \
-tpl/start.xml
+tpl/start.xml \
+tpl/wiki.xml \
+tpl/wiki_edit.xml
 
 testsitedir = $(scsdatadir)/test-site
 

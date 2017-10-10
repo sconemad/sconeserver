@@ -29,6 +29,8 @@ Free Software Foundation, Inc.,
 #include <sconex/StreamTransfer.h>
 #include <sconex/Kernel.h>
 #include <sconex/File.h>
+#include <sconex/ScriptExpr.h>
+#include <sconex/NullFile.h>
 
 namespace http {
 
@@ -40,8 +42,44 @@ namespace http {
 #endif
 
 //=========================================================================
-class MimeHeaderStream : public scx::LineBuffer {
+// Decode a parameter string, adding parameters to request
+static bool decode_param_string(const std::string& str, Request& request)
+{
+  if (str.empty()) return true;
 
+  std::string::size_type start = 0;
+  std::string::size_type end;
+  do { 
+    end = str.find_first_of("&",start);
+    std::string param;
+    if (end == std::string::npos) {
+      param = str.substr(start);
+    } else {
+      param = str.substr(start,end-start);
+    }
+
+    std::string name;
+    std::string value;
+    std::string::size_type ieq = param.find_first_of("=");
+    if (ieq == std::string::npos) {
+      name = scx::Uri::decode(param);
+    } else {
+      name = scx::Uri::decode(param.substr(0,ieq));
+      value = scx::Uri::decode(param.substr(ieq+1));
+    }
+    //    RESPONSE_DEBUG_LOG("param '" << name << "'='" << value << "'");
+    request.set_param(name, value);
+
+    start = end+1;    
+  } while (end != std::string::npos);
+
+  return true;
+}
+
+  
+//=========================================================================
+// MimeHeaderStream - Stream for reading mime headers
+class MimeHeaderStream : public scx::LineBuffer {
 public:
 
   MimeHeaderStream(ResponseStream& resp)
@@ -64,9 +102,7 @@ public:
           enable_event(scx::Stream::Readable,false);
           m_resp.mimeheader_end();
           return scx::Ok;
-
         } else {
-          
           m_resp.mimeheader_line(line);
         }
       }
@@ -76,10 +112,101 @@ public:
   };
 
 protected:
-  
   ResponseStream& m_resp;
   bool m_done;
+};
+
   
+//=========================================================================
+// ParamReaderStream - Stream for reading parameters in body sections
+class ParamReaderStream : public scx::Stream {
+public:
+
+  ParamReaderStream(Request& request, const std::string& name = "")
+    : scx::Stream("ParamReader"),
+      m_request(request),
+      m_name(name)
+  {
+    enable_event(scx::Stream::Readable,true);
+  };
+
+  virtual scx::Condition event(scx::Stream::Event e)
+  {
+    if (e == scx::Stream::Readable) {
+      char buffer[1024];
+      scx::Condition c;
+      int na = 0;
+      do {
+	c = read(buffer,1024,na);
+	m_value += std::string(buffer,na);
+      } while (c == scx::Ok);
+
+      if (c == scx::End) {
+        if (m_name != "") {
+          m_request.set_param(m_name,m_value);
+        } else {
+          decode_param_string(m_value, m_request);
+        }
+        m_value.clear();
+	return scx::Close;
+      }
+      return c;
+    }
+    
+    return scx::Ok;
+  };
+
+protected:
+  Request& m_request;
+  std::string m_name;
+  std::string m_value;
+};
+
+  
+//=========================================================================
+// JsonReaderStream - Stream for reading a JSON request body
+class JsonReaderStream : public scx::Stream {
+public:
+
+  JsonReaderStream(Request& request)
+    : scx::Stream("JsonReader"),
+      m_request(request)
+  {
+    enable_event(scx::Stream::Readable,true);
+  };
+
+  virtual scx::Condition event(scx::Stream::Event e)
+  {
+    if (e == scx::Stream::Readable) {
+      char buffer[1024];
+      scx::Condition c;
+      int na = 0;
+      do {
+	c = read(buffer,1024,na);
+	m_value += std::string(buffer,na);
+      } while (c == scx::Ok);
+      
+      if (c == scx::End) {
+        evaluate();
+        m_value.clear();
+	return scx::Close;
+      }
+    
+      return c;
+    }
+    return scx::Ok;
+  };
+
+  void evaluate() {
+    scx::ScriptExpr expr(scx::ScriptAuth::Untrusted);
+    expr.set_ctx(0, false);
+    scx::ScriptRef* result = expr.evaluate(m_value);
+    m_request.set_body(result);
+  };
+  
+protected:
+  std::string m_value;
+  Request& m_request;
 };
 
  
@@ -130,7 +257,7 @@ scx::Condition ResponseStream::event(scx::Stream::Event e)
     
   if (e == scx::Stream::Opening) {
     
-    decode_param_string(req.get_uri().get_query(),req);
+    decode_param_string(req.get_uri().get_query(), req);
     
     if (req.get_method() == "POST") {
       // Need to read message body
@@ -148,51 +275,29 @@ scx::Condition ResponseStream::event(scx::Stream::Event e)
     
       if (type == "multipart/form-data") {
         m_resp_seq = resp_ReadMultiStart;
+        enable_event(scx::Stream::Readable,true);
         
       } else {
         m_resp_seq = resp_ReadSingle;
       }
-      enable_event(scx::Stream::Readable,true);
 
     } else if (req.get_method() == "PUT") {
       // Need to read message body (single entity)
       m_resp_seq = resp_ReadSingle;
-      enable_event(scx::Stream::Readable,true);
       
     } else {
       // Go straight to write response
       m_resp_seq = resp_Write;
       enable_event(scx::Stream::Writeable,true);
     }
+
+    if (m_resp_seq == resp_ReadSingle) {
+      if (!handle_body()) return scx::Close;
+    }
   }
 
   if (e == scx::Stream::Readable) {
     switch (m_resp_seq) {
-      case resp_ReadSingle: {
-	char buffer[1024];
-	int na = 0;
-	while (true) {
-	  scx::Condition c = read(buffer,1024,na);
-          RESPONSE_DEBUG_LOG("ReadSingle na=" << na << " c=" << c);
-	  if (c == scx::Ok) {
-	    m_param_string += std::string(buffer,na);
-
-	  } else if (c == scx::Wait) {
-	    break;
-
-	  } else if (c == scx::End) {
-	    decode_param_string(m_param_string,req);
-	    m_resp_seq = resp_Write;
-	    enable_event(scx::Stream::Readable,false);
-	    enable_event(scx::Stream::Writeable,true);
-	    break;
-
-	  } else {
-	    return scx::Error;
-	  }
-	}
-      } break;
-
       case resp_ReadMultiStart: {
         char buffer[100];
         int na;
@@ -265,7 +370,9 @@ scx::Condition ResponseStream::event(scx::Stream::Event e)
 scx::Condition ResponseStream::read(void* buffer,int n,int& na)
 {
   if (m_resp_seq == resp_ReadSingle) {
-    return scx::Stream::read(buffer,n,na);
+    scx::Condition c = scx::Stream::read(buffer,n,na);
+    if (c == scx::End) m_resp_seq = resp_ReadEnd;
+    return c;
   }
 
   na = 0;
@@ -370,11 +477,44 @@ bool ResponseStream::has_readable() const
 }
   
 //=========================================================================
-scx::Condition ResponseStream::start_section(const scx::MimeHeaderTable& headers)
+bool ResponseStream::handle_body()
 {
-  return scx::Ok;
-}
+  MessageStream* msg = GET_HTTP_MESSAGE();
+  Request& req = const_cast<Request&>(msg->get_request());
+  std::string ct = req.get_header("Content-Type");
 
+  if (ct == "application/x-www-form-urlencoded") {
+    endpoint().add_stream(new ParamReaderStream(req));
+    return true;
+  }
+  
+  if (ct == "application/json") {
+    endpoint().add_stream(new JsonReaderStream(req));
+    return true;
+  }
+  
+  // Unknown content type
+  return false;
+}
+  
+//=========================================================================
+bool ResponseStream::handle_section(const scx::MimeHeaderTable& headers,
+                                    const std::string& name)
+{
+  MessageStream* msg = GET_HTTP_MESSAGE();
+  Request& req = const_cast<Request&>(msg->get_request());
+  endpoint().add_stream(new ParamReaderStream(req, name));
+  return true;
+}
+  
+//=========================================================================
+bool ResponseStream::handle_file(const scx::MimeHeaderTable& headers,
+                                 const std::string& name,
+                                 const std::string& filename)
+{
+  return false;
+}
+  
 //=========================================================================
 scx::Condition ResponseStream::send_response()
 {
@@ -436,40 +576,6 @@ bool ResponseStream::find_mime_boundary()
 }
 
 //=========================================================================
-bool ResponseStream::decode_param_string(const std::string& str,Request& request)
-{
-  if (str.empty()) return true;
-
-  std::string::size_type start = 0;
-  std::string::size_type end;
-  do { 
-    end = str.find_first_of("&",start);
-    std::string param;
-    if (end == std::string::npos) {
-      param = str.substr(start);
-    } else {
-      param = str.substr(start,end-start);
-    }
-
-    std::string name;
-    std::string value;
-    std::string::size_type ieq = param.find_first_of("=");
-    if (ieq == std::string::npos) {
-      name = scx::Uri::decode(param);
-    } else {
-      name = scx::Uri::decode(param.substr(0,ieq));
-      value = scx::Uri::decode(param.substr(ieq+1));
-    }
-    RESPONSE_DEBUG_LOG("param '" << name << "'='" << value << "'");
-    request.set_param(name, value);
-
-    start = end+1;    
-  } while (end != std::string::npos);
-
-  return true;
-}
-
-//=========================================================================
 void ResponseStream::mimeheader_line(const std::string& line)
 {
   if (m_resp_seq == resp_ReadMultiHeader) {
@@ -483,9 +589,33 @@ void ResponseStream::mimeheader_end()
 {
   if (m_resp_seq == resp_ReadMultiHeader) {
     RESPONSE_DEBUG_LOG("mimeheader_end");
-    start_section(m_section_headers);
+
+    std::string name;
+    scx::MimeHeader disp = m_section_headers.get_parsed("Content-Disposition");
+    const scx::MimeHeaderValue* fdata = disp.get_value("form-data");
+    if (!fdata) return; // scx::Close;
+    fdata->get_parameter("name",name);
+
     m_resp_seq = resp_ReadMultiBody;
+
+    std::string filename;
+    fdata->get_parameter("filename",filename);
+
+    bool handled = false;
+    if (filename != "") {
+      handled = handle_file(m_section_headers, name, filename);
+    } else {
+      handled = handle_section(m_section_headers, name);
+    }
+    
+    if (!handled) {
+      // Unhandled - transfer to a null file to discard the data
+      scx::NullFile* file = new scx::NullFile();
+      scx::StreamTransfer* xfer = new scx::StreamTransfer(&endpoint());
+      file->add_stream(xfer);
+      scx::Kernel::get()->connect(file);
+    }
   }
 }
-
+  
 };
