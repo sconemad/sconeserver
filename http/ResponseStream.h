@@ -107,8 +107,6 @@ private:
 
   ResponseSequence m_resp_seq;
 
-  std::string m_param_string;
-
   scx::Buffer m_buffer;
   std::string m_mime_boundary;
   int m_mime_boundary_pos;

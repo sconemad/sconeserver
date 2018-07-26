@@ -610,8 +610,10 @@ void ResponseStream::mimeheader_end()
     
     if (!handled) {
       // Unhandled - transfer to a null file to discard the data
+      STREAM_DEBUG_LOG("Using NULL file to discard data");
       scx::NullFile* file = new scx::NullFile();
       scx::StreamTransfer* xfer = new scx::StreamTransfer(&endpoint());
+      xfer->set_close_when_finished(true);
       file->add_stream(xfer);
       scx::Kernel::get()->connect(file);
     }
