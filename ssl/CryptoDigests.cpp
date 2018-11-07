@@ -21,15 +21,6 @@ Free Software Foundation, Inc.,
 
 #include "CryptoDigests.h"
 #include "SSLModule.h"
-
-// These were renamed in OpenSSL 1.1
-#ifndef EVP_MD_CTX_new
-#define EVP_MD_CTX_new EVP_MD_CTX_create
-#endif
-#ifndef EVP_MD_CTX_free
-#define EVP_MD_CTX_free EVP_MD_CTX_destroy
-#endif
-
 #include <sconex/ScriptTypes.h>
 #include <sconex/Log.h>
 

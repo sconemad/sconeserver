@@ -36,35 +36,6 @@ Free Software Foundation, Inc.,
 SCONEX_MODULE(SSLModule);
 
 //=========================================================================
-// Thread synchronization data and callbacks required by OpenSSL
-//
-static pthread_mutex_t lock_cs[CRYPTO_NUM_LOCKS];
-static long lock_count[CRYPTO_NUM_LOCKS];
-
-unsigned long pthreads_thread_id()
-{
-  return (unsigned long)pthread_self();
-}
-
-void pthreads_locking_callback(int mode, int type, const char* file, int line)
-{
-#ifdef undef
-  //SSL thread debug info:
-  fprintf(stderr,"thread=%4d mode=%s lock=%s %s:%d\n",
-          CRYPTO_thread_id(),
-          (mode&CRYPTO_LOCK)?"l":"u",
-          (type&CRYPTO_READ)?"r":"w",file,line);
-#endif
-
-  if (mode & CRYPTO_LOCK) {
-    pthread_mutex_lock(&(lock_cs[type]));
-    lock_count[type]++;
-  } else {
-    pthread_mutex_unlock(&(lock_cs[type]));
-  }
-}
-
-//=========================================================================
 SSLModule::SSLModule()
   : scx::Module("ssl",scx::version())
 {
@@ -96,11 +67,7 @@ SSLModule::~SSLModule()
   scx::Digest::unregister_method("SHA384", this);
   scx::Digest::unregister_method("SHA512", this);
 
-  CRYPTO_set_locking_callback(NULL);
-  for (int i=0; i<CRYPTO_NUM_LOCKS; i++) {
-    pthread_mutex_destroy(&(lock_cs[i]));
-    //    fprintf(stderr,"%8ld:%s\n",lock_count[i],CRYPTO_get_lock_name(i));
-  }
+  cleanup_openssl_threading();
 
   EVP_cleanup();
 }
@@ -121,14 +88,8 @@ int SSLModule::init()
   SSL_library_init();
   OpenSSL_add_all_algorithms();
 
-  for (int i=0; i<CRYPTO_NUM_LOCKS; i++) {
-    lock_count[i]=0;
-    pthread_mutex_init(&(lock_cs[i]),NULL);
-  }
+  init_openssl_threading();
 
-  CRYPTO_set_id_callback((unsigned long (*)())pthreads_thread_id);
-  CRYPTO_set_locking_callback(pthreads_locking_callback);
-  
   return Module::init();
 }
 

@@ -11,13 +11,15 @@ ssl_la_SOURCES = \
 CryptoDigests.cpp \
 SSLModule.cpp \
 SSLStream.cpp \
-SSLChannel.cpp
+SSLChannel.cpp \
+openssl-compat.c
 
 noinst_HEADERS = \
 CryptoDigests.h \
 SSLModule.h \
 SSLStream.h \
-SSLChannel.h
+SSLChannel.h \
+openssl-compat.h
 
 ssl_la_LDFLAGS = -module -avoid-version
 ssl_la_LIBADD = $(SSL_LIBS)

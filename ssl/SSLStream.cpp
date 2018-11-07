@@ -232,8 +232,16 @@ scx::Condition SSLStream::connect_ssl(scx::Stream::Event e)
 		      << " attempt " << m_init_retries 
 		      << " returned " << ret 
 		      << " error " << err);
+  if (err != 0) {
+    int e;
+    while ((e = ERR_get_error()) != 0) {
+      char buf[1024];
+      ERR_error_string_n(e, buf, 1024);
+      SSLStream_DEBUG_LOG("ERR " << e << ": " << buf);
+    }
+  }
   
-  if (++m_init_retries > 10) {
+  if (++m_init_retries > 10) {    
     DEBUG_LOG("connect_ssl aborted after 10 retries");
     return scx::Error;
   }
@@ -295,7 +303,7 @@ int SSLStream::sni_callback(SSL *ssl, int *ad, void *arg)
   SSLStream_DEBUG_LOG("SSL SNI hostname=" << (host ? host : "NULL"));
   if (host) {
     BIO* b = SSL_get_rbio(ssl);
-    SSLStream* scxsp = (SSLStream*)b->ptr;
+    SSLStream* scxsp = (SSLStream*)BIO_get_data(b);
     scxsp->got_hostname(host);
   }
   return SSL_TLSEXT_ERR_OK;
@@ -328,24 +336,19 @@ static int scxsp_new(BIO *h);
 static int scxsp_free(BIO *data);
 
 //=============================================================================
-static BIO_METHOD methods_scxsp=
-{
-  BIO_TYPE_SOCKET,
-  "Sconex pipe",
-  scxsp_write,
-  scxsp_read,
-  scxsp_puts,
-  0, /* scxsp_gets, */
-  scxsp_ctrl,
-  scxsp_new,
-  scxsp_free,
-  NULL,
-};
-
-//=============================================================================
 BIO_METHOD *BIO_s_scxsp(void)
 {
-  return(&methods_scxsp);
+  static BIO_METHOD* bm=0;
+  if (!bm) {
+    bm = BIO_meth_new(BIO_TYPE_SOCKET, "scx");
+    BIO_meth_set_write(bm, scxsp_write);
+    BIO_meth_set_read(bm, scxsp_read);
+    BIO_meth_set_puts(bm, scxsp_puts);
+    BIO_meth_set_ctrl(bm, scxsp_ctrl);
+    BIO_meth_set_create(bm, scxsp_new);
+    BIO_meth_set_destroy(bm, scxsp_free);
+  }
+  return bm;
 }
 
 //=============================================================================
@@ -356,17 +359,15 @@ BIO *BIO_new_scxsp(SSLStream* scxsp,int close_flag)
     return 0;
   }
   BIO_set_fd(b,1,close_flag);
-  b->ptr=scxsp;
+  BIO_set_data(b,scxsp);
   return b;
 }
 
 //=============================================================================
 static int scxsp_new(BIO *b)
 {
-  b->init=0;
-  b->num=0;
-  b->ptr=0;
-  b->flags=0;
+  BIO_set_init(b,0);
+  BIO_set_data(b,0);
 
   scxsp_DEBUG_LOG("scxsp_new(" << (void*)b << ")");
 
@@ -384,7 +385,7 @@ static int scxsp_free(BIO *b)
 //=============================================================================
 static int scxsp_read(BIO *b,char *buffer,int n)
 {
-  SSLStream* scxsp = (SSLStream*)b->ptr;
+  SSLStream* scxsp = (SSLStream*)BIO_get_data(b);
   DEBUG_ASSERT(buffer!=0,"scxsp_read() Invalid buffer");
   DEBUG_ASSERT(scxsp!=0,"scxsp_read() Invalid ptr");
 
@@ -410,7 +411,7 @@ static int scxsp_read(BIO *b,char *buffer,int n)
 //=============================================================================
 static int scxsp_write(BIO *b, const char *buffer, int n)
 {
-  SSLStream* scxsp = (SSLStream*)b->ptr;
+  SSLStream* scxsp = (SSLStream*)BIO_get_data(b);
   DEBUG_ASSERT(buffer!=0,"scxsp_write() Invalid buffer");
   DEBUG_ASSERT(scxsp!=0,"scxsp_write() Invalid ptr");
 
@@ -438,7 +439,6 @@ static int scxsp_write(BIO *b, const char *buffer, int n)
 static long scxsp_ctrl(BIO *b, int cmd, long num, void *ptr)
 {
   long ret=1;
-  int *ip;
 
   switch (cmd) {
   case BIO_CTRL_RESET:
@@ -451,26 +451,16 @@ static long scxsp_ctrl(BIO *b, int cmd, long num, void *ptr)
     ret=0;
     break;
   case BIO_C_SET_FD:
-    b->num= *((int *)ptr);
-    b->shutdown=(int)num;
-    b->init=1;
+    BIO_set_init(b, 1);
     break;
   case BIO_C_GET_FD:
-    if (b->init) {
-      ip=(int *)ptr;
-      if (ip != NULL) {
-        *ip=b->num;
-      }
-      ret=b->num;
-    }
-    else
-      ret= -1;
+    ret= -1;
     break;
   case BIO_CTRL_GET_CLOSE:
-    ret=b->shutdown;
+    ret=BIO_get_shutdown(b);
     break;
   case BIO_CTRL_SET_CLOSE:
-    b->shutdown=(int)num;
+    BIO_set_shutdown(b,(int)num);
     break;
   case BIO_CTRL_PENDING:
   case BIO_CTRL_WPENDING:
@@ -479,15 +469,8 @@ static long scxsp_ctrl(BIO *b, int cmd, long num, void *ptr)
   case BIO_CTRL_DUP:
     ret=1;
     break;
-
-  case BIO_CTRL_FLUSH: {
-//      SSLStream* scxsp = (SSLStream*)b->ptr;
-//      DEBUG_ASSERT(scxsp!=0,"scxsp_read() Invalid ptr");
-//      scxsp->Stream::flush();
-//      ret = 1;
-    }
+  case BIO_CTRL_FLUSH:
     break;
-
   default:
     ret=0;
     break;
@@ -496,19 +479,17 @@ static long scxsp_ctrl(BIO *b, int cmd, long num, void *ptr)
   scxsp_DEBUG_LOG("scxsp_ctrl(" << (void*)b << "," << cmd << "," << num
                   << "," << (void*)ptr << ") returning " << ret);
 
-  return(ret);
+  return ret;
 }
 
 //=============================================================================
 static int scxsp_puts(BIO *bp, const char *str)
 {
   int n,ret;
-
   n=strlen(str);
   ret=scxsp_write(bp,str,n);
   return ret;
 }
-
 
 /*
 //	printf("SSL connection using %s\n",SSL_get_cipher(m_ssl));
