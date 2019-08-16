@@ -103,7 +103,7 @@ private:
   friend class MimeHeaderStream;
 
   void mimeheader_line(const std::string& line);
-  void mimeheader_end();
+  scx::Condition mimeheader_end();
 
   ResponseSequence m_resp_seq;
 

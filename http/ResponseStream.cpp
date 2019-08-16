@@ -100,8 +100,7 @@ public:
         if (line.empty()) {
           m_done = true;
           enable_event(scx::Stream::Readable,false);
-          m_resp.mimeheader_end();
-          return scx::Ok;
+          return m_resp.mimeheader_end();
         } else {
           m_resp.mimeheader_line(line);
         }
@@ -585,7 +584,7 @@ void ResponseStream::mimeheader_line(const std::string& line)
 }
 
 //=========================================================================
-void ResponseStream::mimeheader_end()
+scx::Condition ResponseStream::mimeheader_end()
 {
   if (m_resp_seq == resp_ReadMultiHeader) {
     RESPONSE_DEBUG_LOG("mimeheader_end");
@@ -593,7 +592,7 @@ void ResponseStream::mimeheader_end()
     std::string name;
     scx::MimeHeader disp = m_section_headers.get_parsed("Content-Disposition");
     const scx::MimeHeaderValue* fdata = disp.get_value("form-data");
-    if (!fdata) return; // scx::Close;
+    if (!fdata) return scx::Close;
     fdata->get_parameter("name",name);
 
     m_resp_seq = resp_ReadMultiBody;
@@ -609,6 +608,9 @@ void ResponseStream::mimeheader_end()
     }
     
     if (!handled) {
+      STREAM_DEBUG_LOG("Unhandled POST data, closing");
+      return scx::Close;
+
       // Unhandled - transfer to a null file to discard the data
       STREAM_DEBUG_LOG("Using NULL file to discard data");
       scx::NullFile* file = new scx::NullFile();
