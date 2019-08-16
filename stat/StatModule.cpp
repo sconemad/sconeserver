@@ -177,56 +177,6 @@ scx::ScriptRef* StatModule::script_method(const scx::ScriptAuth& auth,
     }
     return 0;
   }
-
-  if ("print" == name) {
-    const scx::ScriptList* argl =
-      dynamic_cast<const scx::ScriptList*>(args->object());
-    scx::ScriptList default_argl;
-    if (!argl || argl->size() == 0) {
-      // Use these types as default if none were given
-      default_argl.give(scx::ScriptString::new_ref("conn"));
-      default_argl.give(scx::ScriptString::new_ref("in"));
-      default_argl.give(scx::ScriptString::new_ref("out"));
-      argl = &default_argl;
-    }
-
-    int wc = 14;
-    int ws = 8;
-    std::ostringstream oss;
-    // Heading
-    oss << "\n" 
-	<< std::right
-	<< std::setw(wc) 
-	<< "CHANNEL" << " | ";
-    for (int i=0; i<argl->size(); ++i) {
-      const scx::ScriptRef* type = argl->get(i);
-      oss << std::left
-	  << std::setw(ws) 
-	  << type->object()->get_string() << " ";
-    }
-    oss << "\n";
-
-    // Stats
-    for (ChannelMap::const_iterator it = m_channels.begin();
-	 it != m_channels.end();
-	 ++it) {
-      
-      StatChannel* channel = (*it).second->object();
-      oss << std::right
-	  << std::setw(wc)
-	  << (*it).first << " | ";
-      for (int i=0; i<argl->size(); ++i) {
-	const scx::ScriptRef* type = argl->get(i);
-	long stat = channel->get_stat(type->object()->get_string());
-	oss << std::left
-	    << std::setw(ws)
-	    << stat << " ";
-      }
-      oss << "\n";
-    }
-    return scx::ScriptString::new_ref(oss.str());
-  }
-    
   return scx::Module::script_method(auth,ref,name,args);
 }
 

@@ -48,10 +48,11 @@ protected:
   
 private:
 
-  void inc_stat(const std::string& type, long value);
+  void inc_stat(Stats::Type type, long value);
   
   StatModule::Ref m_module;
-  StatChannel::Ref m_channel;  
+  StatChannel::Ref m_channel;
+  Stats::Ref m_stats;
 };
 
 #endif

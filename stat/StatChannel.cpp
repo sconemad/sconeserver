@@ -24,10 +24,100 @@ Free Software Foundation, Inc.,
 #include "StatModule.h"
 #include <sconex/ScriptTypes.h>
 
+
+static const char* statTypeNames[] =
+  {"connections", "reads", "writes", "errors", "bytesRead", "bytesWritten"};
+
+//=========================================================================
+const char* Stats::stat_name(Type type)
+{
+  if (type >= StatTypeMax) return "";
+  return statTypeNames[type];
+}
+
+//=========================================================================
+Stats::Stats()
+  : m_stats((int)StatTypeMax, 0)
+{
+
+}
+
+//=========================================================================
+void Stats::inc_stat(Type type, long value)
+{
+  if (type >= StatTypeMax) return;
+  m_stats[type] += value;
+}
+
+//=============================================================================
+long Stats::get_stat(Type type) const
+{
+  if (type >= StatTypeMax) return 0;
+  return m_stats[type];
+}
+
+//=============================================================================
+void Stats::clear()
+{
+  for (int i=0; i<StatTypeMax; ++i) m_stats[i] = 0;
+}
+
+//=============================================================================
+std::string Stats::get_string() const
+{
+  return "stats";
+}
+
+//=============================================================================
+scx::ScriptRef* Stats::script_op(const scx::ScriptAuth& auth,
+				 const scx::ScriptRef& ref,
+				 const scx::ScriptOp& op,
+				 const scx::ScriptRef* right)
+{
+  if (op.type() == scx::ScriptOp::Lookup) {
+    const std::string name = right->object()->get_string();
+
+    // Methods
+    if ("clear" == name) {
+      return new scx::ScriptMethodRef(ref,name);
+    }
+
+    // Properties
+    for (int t=0; t<StatTypeMax; ++t) {
+      if (name == stat_name((Type)t)) {
+	return scx::ScriptInt::new_ref(m_stats[t]);
+      }
+    }
+  }
+  
+  return scx::ScriptObject::script_op(auth,ref,op,right);
+}
+
+//=============================================================================
+scx::ScriptRef* Stats::script_method(const scx::ScriptAuth& auth,
+				     const scx::ScriptRef& ref,
+				     const std::string& name,
+				     const scx::ScriptRef* args)
+{
+  if (!auth.admin()) return scx::ScriptError::new_ref("Not permitted");
+
+  if ("clear" == name) {
+    // Should check non-const ref
+    clear();
+    return 0;
+  }
+  
+  return scx::ScriptObject::script_method(auth,ref,name,args);
+}
+
+// --- StatChannel ---
+
+
 //=========================================================================
 StatChannel::StatChannel(StatModule* module, const std::string& name)
   : m_module(module),
-    m_name(name)
+    m_name(name),
+    m_stats(new Stats())
 {
 
 }
@@ -38,30 +128,16 @@ StatChannel::~StatChannel()
 
 }
 
-//=========================================================================
-void StatChannel::inc_stat(const std::string& type, long value)
+//=============================================================================
+const Stats* StatChannel::get_stats() const
 {
-  if (m_stats.count(type) == 0) {
-    m_stats[type] = value;
-  } else {
-    m_stats[type] += value;
-  }
+  return m_stats.object();
 }
 
 //=============================================================================
-long StatChannel::get_stat(const std::string& type) const
+void StatChannel::inc_stat(Stats::Type type, long value)
 {
-  StatMap::const_iterator it = m_stats.find(type);
-  if (it != m_stats.end()) {
-    return it->second;
-  }
-  return 0;
-}
-
-//=============================================================================
-void StatChannel::clear()
-{
-  m_stats.clear();
+  m_stats.object()->inc_stat(type, value);
 }
 
 //=============================================================================
@@ -85,22 +161,11 @@ scx::ScriptRef* StatChannel::script_op(const scx::ScriptAuth& auth,
     }
 
     // Properties
-    if ("list" == name) {
-      scx::ScriptMap* list = new scx::ScriptMap();
-      for (StatMap::const_iterator it = m_stats.begin();
-	   it != m_stats.end();
-	   ++it) {
-	list->give(it->first,scx::ScriptInt::new_ref(it->second));
-      }
-      return new scx::ScriptRef(list);
-    }
-
-    StatMap::const_iterator it = m_stats.find(name);
-    if (it != m_stats.end()) {
-      return scx::ScriptInt::new_ref(it->second);
+    if ("totals" == name) {
+      return m_stats.ref_copy(ref.reftype());
     }
   }
-
+  
   return scx::ScriptObject::script_op(auth,ref,op,right);
 }
 
@@ -113,7 +178,7 @@ scx::ScriptRef* StatChannel::script_method(const scx::ScriptAuth& auth,
   if (!auth.admin()) return scx::ScriptError::new_ref("Not permitted");
 
   if ("clear" == name) {
-    clear();
+    m_stats.object()->clear();
     return 0;
   }
   

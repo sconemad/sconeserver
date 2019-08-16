@@ -29,6 +29,55 @@ Free Software Foundation, Inc.,
 class StatModule;
 
 //=============================================================================
+// Stats - A set of connection statistics
+//
+class Stats : public scx::ScriptObject {
+public:
+
+  enum Type {
+    Connections = 0,
+    Reads,
+    Writes,
+    Errors,
+    BytesRead,
+    BytesWritten,
+    StatTypeMax
+  };
+
+  static const char* stat_name(Type type);
+
+  Stats();
+
+  // Increment the named stat type by value
+  void inc_stat(Type type, long value);
+
+  // Get the named stat value
+  long get_stat(Type type) const;
+
+  // Clear stats
+  void clear();
+
+  // ScriptObject methods
+  virtual std::string get_string() const;
+
+  virtual scx::ScriptRef* script_op(const scx::ScriptAuth& auth,
+				    const scx::ScriptRef& ref,
+				    const scx::ScriptOp& op,
+				    const scx::ScriptRef* right=0);
+
+  virtual scx::ScriptRef* script_method(const scx::ScriptAuth& auth,
+					const scx::ScriptRef& ref,
+					const std::string& name,
+					const scx::ScriptRef* args);
+
+  typedef scx::ScriptRefTo<Stats> Ref;
+
+private:
+  std::vector<long> m_stats;
+};
+
+
+//=============================================================================
 // StatChannel - A statistic-collection channel
 //
 class StatChannel : public scx::ScriptObject {
@@ -37,15 +86,9 @@ public:
   StatChannel(StatModule* module, const std::string& name);
   ~StatChannel();
 
-  // Increment the named stat type by value
-  void inc_stat(const std::string& type, long value);
+  const Stats* get_stats() const;
+  void inc_stat(Stats::Type type, long value);
 
-  // Get the named stat value
-  long get_stat(const std::string& type) const;
-
-  // Clear stats
-  void clear();
-  
   // ScriptObject methods
   virtual std::string get_string() const;
 
@@ -68,10 +111,7 @@ private:
   scx::ScriptRefTo<StatModule> m_module;
 
   std::string m_name;
-
-  typedef HASH_TYPE<std::string,long> StatMap;
-  StatMap m_stats;
-  
+  Stats::Ref m_stats;
 };
 
 #endif

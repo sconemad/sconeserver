@@ -32,9 +32,10 @@ StatStream::StatStream(StatModule* module,
 		       StatChannel* channel)
   : scx::Stream("stat"),
     m_module(module),
-    m_channel(channel)
+    m_channel(channel),
+    m_stats(new Stats())
 {
-  inc_stat("conn",1);
+  inc_stat(Stats::Connections, 1);
 }
 
 //=========================================================================
@@ -47,7 +48,8 @@ StatStream::~StatStream()
 scx::Condition StatStream::read(void* buffer,int n,int& na)
 {
   scx::Condition c = Stream::read(buffer,n,na);
-  inc_stat("in",na);
+  inc_stat(c == scx::Error ? Stats::Errors : Stats::Reads, 1);
+  inc_stat(Stats::BytesRead, na);
   return c;
 }
 
@@ -55,7 +57,8 @@ scx::Condition StatStream::read(void* buffer,int n,int& na)
 scx::Condition StatStream::write(const void* buffer,int n,int& na)
 {
   scx::Condition c = Stream::write(buffer,n,na);
-  inc_stat("out",na);
+  inc_stat(c == scx::Error ? Stats::Errors : Stats::Writes, 1);
+  inc_stat(Stats::BytesWritten, na);
   return c;
 }
 
@@ -64,15 +67,19 @@ std::string StatStream::stream_status() const
 {
   std::ostringstream oss;
   oss << m_channel.object()->get_string();
-  oss << " conn:" << m_channel.object()->get_stat("conn");
-  oss << " in:" << m_channel.object()->get_stat("in");
-  oss << " out:" << m_channel.object()->get_stat("out");
+  oss << " r:" << m_stats.object()->get_stat(Stats::Reads) << "(" 
+      << m_stats.object()->get_stat(Stats::BytesRead) << ")";
+  oss << " w:" << m_stats.object()->get_stat(Stats::Writes) << "(" 
+      << m_stats.object()->get_stat(Stats::BytesWritten) << ")";
+  oss << " e:" << m_stats.object()->get_stat(Stats::Errors);
   return oss.str();
 }
 
 //=========================================================================
-void StatStream::inc_stat(const std::string& type, long value)
+void StatStream::inc_stat(Stats::Type type, long value)
 {
+  if (type >= Stats::StatTypeMax) return;
+  m_stats.object()->inc_stat(type, value);
   m_channel.object()->inc_stat(type,value);
 }
 
