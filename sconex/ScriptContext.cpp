@@ -47,6 +47,7 @@ ScriptRefTo<StandardContext>* StandardContext::get()
 void StandardContext::register_type(const std::string& type,
 				    Provider<ScriptObject>* factory)
 {
+  DEBUG_LOG("Registered type " << type);
   get()->object()->register_provider(type,factory);
 }
 
@@ -54,6 +55,7 @@ void StandardContext::register_type(const std::string& type,
 void StandardContext::unregister_type(const std::string& type,
 				      Provider<ScriptObject>* factory)
 {
+  DEBUG_LOG("Unregistered type " << type);
   get()->object()->unregister_provider(type,factory);
 }
 
@@ -165,9 +167,7 @@ StandardTypeProvider::StandardTypeProvider()
   StandardContext::register_type("Uri",this);
   StandardContext::register_type("MimeType",this);
   StandardContext::register_type("Digest",this);
-#ifdef HAVE_LIBPCRE
   StandardContext::register_type("RegExp",this);
-#endif
 };
 
 //===========================================================================
@@ -213,11 +213,8 @@ void StandardTypeProvider::provide(const std::string& type,
       get_method_arg<ScriptString>(args,0,"method");
     object = Digest::create(a_method ? a_method->get_string() : "",
                             args);
-
-#ifdef HAVE_LIBPCRE
   } else if ("RegExp" == type) {
     object = new RegExp(args);
-#endif
   }
 };
 

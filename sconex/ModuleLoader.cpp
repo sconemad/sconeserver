@@ -146,7 +146,7 @@ bool ModuleLoader::load_module()
         // modpath/module/.libs/module.so (DEV)
         path = get_path() +
                FilePath(m_name) +
-               FilePath(".libs") +
+	  //               FilePath(".libs") +
                FilePath(m_name + ".so");
         break;
         

@@ -1,5 +1,5 @@
-usr/lib/lib*.la
-usr/lib/sconeserver/*.la
+#usr/lib/lib*.la
+#usr/lib/sconeserver/*.la
 
 usr/lib/sconeserver/test.so
 etc/sconeserver/modules.d/test.conf

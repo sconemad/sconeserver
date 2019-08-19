@@ -23,7 +23,7 @@ Free Software Foundation, Inc.,
 #include <sconex/ScriptBase.h>
 #include <sconex/ScriptExpr.h>
 #include <sconex/ScriptStatement.h>
-#include <IOBase.h>
+#include <sconex/IOBase.h>
 #include <sconex/utils.h>
 
 namespace scx {

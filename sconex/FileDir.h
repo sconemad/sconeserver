@@ -26,9 +26,7 @@ Free Software Foundation, Inc.,
 #include <sconex/FileStat.h>
 #include <sconex/FilePath.h>
 
-#ifdef HAVE_DIRENT_H
-#  include <dirent.h>
-#endif
+#include <dirent.h>
 
 namespace scx {
 

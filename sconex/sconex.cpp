@@ -35,7 +35,7 @@ VersionTag& version()
 const std::string& sconex_copyright()
 {
   static std::string s_copyright = 
-    "Copyright (c) 2000-2017 Andrew Wedgbury <wedge@sconemad.com>";
+    "Copyright (c) 2000-2018 Andrew Wedgbury <wedge@sconemad.com>";
   return s_copyright;
 }
 
@@ -49,7 +49,7 @@ const std::string& build_type()
 //=========================================================================
 Date& build_time()
 {
-  static Date s_build_time(__DATE__" "__TIME__,true);
+  static Date s_build_time( __DATE__ " " __TIME__ ,true);
   return s_build_time;
 }
 

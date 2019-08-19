@@ -103,15 +103,11 @@ std::string escape_html(const std::string& s)
 //============================================================================
 std::string type_name(const std::type_info& ti)
 {
-#ifdef HAVE_CXXABI_H
   int status;
   char* realname = abi::__cxa_demangle(ti.name(),0,0,&status);
   std::string ret(realname);
   free(realname);
   return ret;
-#else
-  return ti.name();
-#endif
 }
 
 

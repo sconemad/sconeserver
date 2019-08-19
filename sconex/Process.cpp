@@ -23,17 +23,9 @@ Free Software Foundation, Inc.,
 #include <sconex/utils.h>
 #include <sconex/Mutex.h>
 
-#ifdef HAVE_SYS_WAIT_H
 #  include <sys/wait.h>
-#endif
-
-#ifdef HAVE_SYS_UIO_H
 #  include <sys/uio.h>
-#endif
-
-#ifdef HAVE_SHADOW_H
 #  include <shadow.h>
-#endif
 
 namespace scx {
 

@@ -6,7 +6,7 @@ usr/share/man/man1/sconectl.1
 
 etc/sconeserver/sconeserver.conf
 
-usr/lib/lib*.so.*
+usr/lib/libsconex.so.*
 
 usr/lib/sconeserver/exec.so
 etc/sconeserver/modules.d/exec.conf

@@ -22,9 +22,7 @@ Free Software Foundation, Inc.,
 #include <sconex/Kernel.h>
 #include <sconex/File.h>
 
-#ifdef HAVE_GETOPT_H
-#  include <getopt.h>
-#endif
+#include <getopt.h>
 
 #ifndef CONF_PATH
 #  define CONF_PATH "etc"
