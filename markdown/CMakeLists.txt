@@ -5,6 +5,7 @@ project(markdown)
 # This may be a slight hack...
 set(CMARK_TESTS OFF CACHE BOOL "Build cmark tests and enable testing")
 set(CMARK_SHARED OFF CACHE BOOL "Build shared libcmark library")
+set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -fPIC")
 add_subdirectory(cmark)
 file(COPY ${CMAKE_CURRENT_BINARY_DIR}/cmark/src/cmark_export.h
   DESTINATION ${CMAKE_CURRENT_BINARY_DIR})
