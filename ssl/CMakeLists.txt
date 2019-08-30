@@ -4,12 +4,14 @@ include(../sconeserver.cmake)
 include(FindOpenSSL)
 
 set(SRCS
+  CryptoDigests.cpp
   openssl-compat.c
   SSLChannel.cpp 
   SSLModule.cpp 
   SSLStream.cpp)
 
 set(HDRS
+  CryptoDigests.h
   openssl-compat.h
   SSLChannel.h
   SSLModule.h 
