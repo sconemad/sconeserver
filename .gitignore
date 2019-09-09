@@ -1,4 +1,5 @@
 /bld*
+/obj-*
 *~
 
 debian/tmp/*
