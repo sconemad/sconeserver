@@ -10,6 +10,11 @@ add_definitions(-DHAVE_CONFIG_H)
 
 add_compile_options(-Wall)
 
+# Enable ASAN
+#set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fsanitize=address")
+#set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -fsanitize=address")
+#set(CMAKE_SHARED_LINKER_FLAGS "${CMAKE_SHARED_LINKER_FLAGS} -fsanitize=address")
+
 add_executable(sconed main.cpp)
 target_include_directories(sconed PRIVATE . .. ${CMAKE_CURRENT_BINARY_DIR})
 target_link_libraries(sconed sconex)
