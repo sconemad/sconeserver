@@ -123,7 +123,9 @@ ScriptRef* SocketAddress::script_op(const ScriptAuth& auth,
       default: return ScriptString::new_ref("unknown");
       }
     }
-  }
+    if (name == "valid_for_connect") return ScriptBool::new_ref(valid_for_connect());
+    if (name == "valid_for_bind") return ScriptBool::new_ref(valid_for_bind());
+    }
 
   return ScriptObject::script_op(auth,ref,op,right);
 }
