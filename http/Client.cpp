@@ -139,26 +139,26 @@ bool Client::run(const std::string& request_data)
     addr_url = m_request.object()->get_uri();
   }
   
-  // Lookup the ip module and use to create an IP4 socket address
+  // Create a socket address
   scx::SocketAddress* addr = 0;    
-  scx::Module::Ref ip = scx::Kernel::get()->get_module("ip");
-  if (!ip.valid()) {
-    DEBUG_LOG("IP address support not available");
-    return false;
-  }
-
   scx::ScriptList::Ref args(new scx::ScriptList());
   args.object()->give( scx::ScriptString::new_ref(addr_url.get_host()) );
   args.object()->give( scx::ScriptInt::new_ref(addr_url.get_port()) );
 
-  scx::ScriptObject* addr_obj = scx::StandardContext::create_object("IPAddr",&args);
+  scx::ScriptObject* addr_obj = scx::StandardContext::create_object("IP6Addr",&args);
   addr = dynamic_cast<scx::SocketAddress*>(addr_obj);
-
-  if (addr == 0) {
-    DEBUG_LOG("Unable to create socket address");
-    return false;
+  if (addr == 0 || !addr->valid_for_connect()) {
+    delete addr_obj;
+    // Retry with ipv4
+    addr_obj = scx::StandardContext::create_object("IPAddr",&args);
+    addr = dynamic_cast<scx::SocketAddress*>(addr_obj);
+    if (addr == 0 || !addr->valid_for_connect()) {
+      delete addr_obj;
+      DEBUG_LOG("Unable to create socket address");
+      return false;
+    }
   }
-  
+
   // Create the socket  
   scx::StreamSocket* sock = new scx::StreamSocket();
 
