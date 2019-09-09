@@ -26,65 +26,6 @@ Free Software Foundation, Inc.,
 #define BSIZE_MIN 1024
 #define BSIZE_MAX 65536
 
-#define m_s_addr m_addr.sin_addr.s_addr
-
-#ifndef HAVE_INET_PTON
-//=============================================================================
-// IP4 only inet_pton for systems that don't have it
-int inet_pton(
-  int family,
-  const char* strptr,
-  void* addrptr
-)
-{
-  if (family == AF_INET) {
-#ifdef HAVE_INET_ATON
-    struct in_addr in_val;
-    if (inet_aton(strptr, &in_val)) {
-      memcpy(addrptr, &in_val, sizeof(struct in_addr));
-      return 1;
-    }
-    return 0;
-#else
-    // We'll just have to use the crap one
-    *((unsigned long*)addrptr) = inet_addr(strptr);
-    // (hope in worked!)
-    return 1;
-#endif
-  }
-  //  errno = EAFNOSUPPORT;
-  return -1;
-}
-#endif
-
-#ifndef HAVE_INET_NTOP
-#define INET_ADDRSTRLEN 16
-//=============================================================================
-// IP4 only inet_ntop for systems that don't have it
-const char* inet_ntop(
-  int family,
-  const void* addrptr,
-  char* strptr,
-  size_t len
-)
-{
-  const unsigned char *p = (const unsigned char*)addrptr;
-  if (family == AF_INET) {
-    char temp[INET_ADDRSTRLEN];
-    std::ostringstream oss;
-    oss << (int)p[0] << "." << (int)p[1] << "."
-        << (int)p[2] << "." << (int)p[2];
-    if (oss.str().length() >= len) {
-      return 0;
-    }
-    strcpy(strptr,oss.str().c_str());
-    return strptr;
-  }
-  return 0;
-}
-#endif
-
-
 //=============================================================================
 IPSocketAddress::IPSocketAddress(scx::Module* module,
 				 const scx::ScriptRef* args)
@@ -238,18 +179,18 @@ void IPSocketAddress::set_address(
   
   if (addr.length()==0) {
     // Set the address invalid
-    m_s_addr = htonl(INADDR_ANY);
+    m_addr.sin_addr.s_addr = htonl(INADDR_ANY);
     m_valid = false;
     
   } else if (addr=="*") {
     // Wildcard address
-    m_s_addr = htonl(INADDR_ANY);
+    m_addr.sin_addr.s_addr = htonl(INADDR_ANY);
     m_host = addr;
     m_valid = true;
 		
   } else {
     // ip address string (xxx.xxx.xxx.xxx)
-    if (inet_pton(AF_INET, addr.c_str(), &m_s_addr) > 0) {
+    if (inet_pton(AF_INET, addr.c_str(), &m_addr.sin_addr.s_addr) > 0) {
       m_valid = true;
     } else {
       // Its not a valid ip address, so assume it is a host name and 
@@ -296,7 +237,7 @@ void IPSocketAddress::set_address(
   
   m_host = std::string();
   
-  unsigned char* paddr = (unsigned char*)&m_s_addr;
+  unsigned char* paddr = (unsigned char*)&m_addr.sin_addr.s_addr;
   
   paddr[0] = (unsigned char)ip1;
   paddr[1] = (unsigned char)ip2;
