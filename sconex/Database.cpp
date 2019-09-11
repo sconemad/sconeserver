@@ -63,14 +63,14 @@ Database::~Database()
 //=========================================================================
 bool Database::simple_query(const std::string& query)
 {
-  std::auto_ptr<DbQuery> q(new_query(query));
+  std::unique_ptr<DbQuery> q(new_query(query));
   return q->exec(0);
 }
 
 //=========================================================================
 int Database::simple_query_num(const std::string& query)
 {
-  std::auto_ptr<DbQuery> q(new_query(query));
+  std::unique_ptr<DbQuery> q(new_query(query));
   if (!q->exec(0)) return -1;
   if (!q->next_result()) return -1;
   ScriptRef* row_ref = q->result_list();
@@ -191,7 +191,7 @@ ScriptRef* DbProxy::script_op(const ScriptAuth& auth,
       return new ScriptMethodRef(ref,name);
     }
 
-    std::auto_ptr<DbQuery> query(m_db.object()->new_query(
+    std::unique_ptr<DbQuery> query(m_db.object()->new_query(
       "SELECT "+name+" FROM "+m_table+" WHERE "+m_key_field+" = ?"));
     
     ScriptList::Ref args(new ScriptList());
@@ -227,7 +227,7 @@ ScriptRef* DbProxy::script_method(const ScriptAuth& auth,
 
     const ScriptRef* value = get_method_arg_ref(args,1,"value");
     
-    std::auto_ptr<DbQuery> query(m_db.object()->new_query(
+    std::unique_ptr<DbQuery> query(m_db.object()->new_query(
       "UPDATE "+m_table+" SET "+s_name+" = ? WHERE "+m_key_field+" = ?"));
     
     ScriptList::Ref args(new ScriptList());

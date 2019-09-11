@@ -90,7 +90,7 @@ std::string AuthRealmDB::lookup_hash(const std::string& username)
 {
   if (!m_db) return "";
 
-  std::auto_ptr<scx::DbQuery> query(m_db->object()->new_query(
+  std::unique_ptr<scx::DbQuery> query(m_db->object()->new_query(
     "SELECT id,password FROM user WHERE username = ?"));
   
   scx::ScriptList::Ref args(new scx::ScriptList());
@@ -120,7 +120,7 @@ bool AuthRealmDB::update_hash(const std::string& username,
 {
   if (!m_db) return 0;
 
-  std::auto_ptr<scx::DbQuery> query(m_db->object()->new_query(
+  std::unique_ptr<scx::DbQuery> query(m_db->object()->new_query(
     "UPDATE user SET password = ? WHERE username = ?"));
   
   scx::ScriptList::Ref args(new scx::ScriptList());
@@ -134,7 +134,7 @@ scx::ScriptRef* AuthRealmDB::lookup_data(const std::string& username)
 {
   if (!m_db) return 0;
 
-  std::auto_ptr<scx::DbQuery> query(m_db->object()->new_query(
+  std::unique_ptr<scx::DbQuery> query(m_db->object()->new_query(
     "SELECT id FROM user WHERE username = ?"));
   
   scx::ScriptList::Ref args(new scx::ScriptList());
@@ -164,7 +164,7 @@ bool AuthRealmDB::add_user(const std::string& username,
 {
   if (!m_db) return false;
 
-  std::auto_ptr<scx::DbQuery> query(m_db->object()->new_query(
+  std::unique_ptr<scx::DbQuery> query(m_db->object()->new_query(
     "SELECT id FROM user WHERE username = ?"));
   
   scx::ScriptList::Ref args(new scx::ScriptList());
@@ -175,7 +175,7 @@ bool AuthRealmDB::add_user(const std::string& username,
 
   //XXX what about if someone else add the username in between these calls?
 
-  std::auto_ptr<scx::DbQuery> query2(m_db->object()->new_query(
+  std::unique_ptr<scx::DbQuery> query2(m_db->object()->new_query(
     "INSERT INTO user (username,password) VALUES (?,?)"));
 
   args.object()->give(scx::ScriptString::new_ref(hash));
@@ -190,7 +190,7 @@ bool AuthRealmDB::remove_user(const std::string& username)
 {
   if (!m_db) return false;
 
-  std::auto_ptr<scx::DbQuery> query(m_db->object()->new_query(
+  std::unique_ptr<scx::DbQuery> query(m_db->object()->new_query(
     "DELETE FROM user WHERE username = ?"));
   
   scx::ScriptList::Ref args(new scx::ScriptList());

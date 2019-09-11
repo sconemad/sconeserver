@@ -32,7 +32,7 @@ Free Software Foundation, Inc.,
 #include <sconex/ScriptTypes.h>
 #include <sconex/Database.h>
 #include <sconex/Log.h>
-#include <memory> // Using auto_ptr
+#include <memory> // Using unique_ptr
 namespace scs {
 
 // Uncomment to enable debug logging
@@ -141,7 +141,7 @@ Article::Ref* Profile::lookup_article(int id)
   locker.unlock();
 
   // Look for article in database
-  std::auto_ptr<scx::DbQuery> query(m_db->object()->new_query(
+  std::unique_ptr<scx::DbQuery> query(m_db->object()->new_query(
     "SELECT path,parent FROM article WHERE id = ?"));
 
   std::string link;
@@ -205,7 +205,7 @@ Article::Ref* Profile::lookup_article(const std::string& href,
   locker.unlock();
 
   // Look for article in database
-  std::auto_ptr<scx::DbQuery> query(m_db->object()->new_query(
+  std::unique_ptr<scx::DbQuery> query(m_db->object()->new_query(
     "SELECT id FROM article WHERE parent = ? AND path = ?"));
 
   std::string key = href;
@@ -300,7 +300,7 @@ Article::Ref* Profile::create_article(int pid,
     return 0;
   }
 
-  std::auto_ptr<scx::DbQuery> query(m_db->object()->new_query(
+  std::unique_ptr<scx::DbQuery> query(m_db->object()->new_query(
     "INSERT INTO article (parent,path) VALUES (?,?)"));
 
   scx::ScriptList::Ref args(new scx::ScriptList());
@@ -355,7 +355,7 @@ bool Profile::remove_article(int id)
     return false;
   }
   
-  std::auto_ptr<scx::DbQuery> query(m_db->object()->new_query(
+  std::unique_ptr<scx::DbQuery> query(m_db->object()->new_query(
     "DELETE FROM article WHERE id = ?"));
 
   scx::ScriptList::Ref args(new scx::ScriptList());
@@ -428,7 +428,7 @@ bool Profile::rename_article(int id,
 
   if (new_parent) {
     // Update parent id field
-    std::auto_ptr<scx::DbQuery> query(m_db->object()->new_query(
+    std::unique_ptr<scx::DbQuery> query(m_db->object()->new_query(
       "UPDATE article SET parent = ? WHERE id = ?"));
     scx::ScriptList::Ref args(new scx::ScriptList());
     args.object()->give(scx::ScriptInt::new_ref(new_pid));
@@ -441,7 +441,7 @@ bool Profile::rename_article(int id,
 
   if (!new_name.empty()) {
     // Update path field
-    std::auto_ptr<scx::DbQuery> query(m_db->object()->new_query(
+    std::unique_ptr<scx::DbQuery> query(m_db->object()->new_query(
       "UPDATE article SET path = ? WHERE id = ?"));
     scx::ScriptList::Ref args(new scx::ScriptList());
     args.object()->give(scx::ScriptString::new_ref(new_name));
@@ -689,7 +689,7 @@ bool Profile::set_meta(int id,
 		       const std::string& property,
 		       scx::ScriptRef* value)
 {
-  std::auto_ptr<scx::DbQuery> query(m_db->object()->new_query(
+  std::unique_ptr<scx::DbQuery> query(m_db->object()->new_query(
     "UPDATE article set "+property+" = ? WHERE id = ?"));
 
   scx::ScriptList::Ref args(new scx::ScriptList());
@@ -708,7 +708,7 @@ bool Profile::set_meta(int id,
 scx::ScriptRef* Profile::get_meta(int id,
 				  const std::string& property) const
 {
-  std::auto_ptr<scx::DbQuery> query(m_db->object()->new_query(
+  std::unique_ptr<scx::DbQuery> query(m_db->object()->new_query(
     "SELECT "+property+" FROM article WHERE id = ?"));
 
   scx::ScriptList::Ref args(new scx::ScriptList());

@@ -65,7 +65,7 @@ private:
   std::string m_host;
   std::string m_port;
 
-  std::auto_ptr<gpsmm> m_interface;
+  std::unique_ptr<gpsmm> m_interface;
 
   const int m_timeout_us;
 };

@@ -948,12 +948,12 @@ ScriptRef* ScriptList::script_method(const ScriptAuth& auth,
 
     const ScriptNum* a_offs = get_method_arg<ScriptNum>(args,0,"offset");
     int offset = a_offs ? a_offs->get_int() : 0;
-    if (offset < 0 || offset > m_list.size()) 
+    if (offset < 0 || offset > (int)m_list.size()) 
       return ScriptError::new_ref("ScriptList::splice() Offset out of range");
 
     const ScriptNum* a_len = get_method_arg<ScriptNum>(args,1,"length");
     int length= a_len ? a_len->get_int() : (m_list.size() - offset);
-    if (length < 0 || offset + length > m_list.size()) 
+    if (length < 0 || offset + length > (int)m_list.size()) 
       return ScriptError::new_ref("ScriptList::splice() Length out of range");
 
     ScriptList* removed = new ScriptList();

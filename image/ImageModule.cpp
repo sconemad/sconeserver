@@ -28,6 +28,8 @@ Free Software Foundation, Inc.,
 #include <sconex/ScriptTypes.h>
 #include <sconex/Log.h>
 
+#define MAGICKCORE_HDRI_ENABLE 0
+#define MAGICKCORE_QUANTUM_DEPTH 16
 #include <Magick++.h>
 using namespace Magick;
 

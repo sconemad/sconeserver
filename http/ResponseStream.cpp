@@ -620,6 +620,7 @@ scx::Condition ResponseStream::mimeheader_end()
       scx::Kernel::get()->connect(file);
     }
   }
+  return scx::Ok;
 }
   
 };

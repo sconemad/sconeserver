@@ -232,8 +232,7 @@ SocketAddress* DatagramSocket::peek_address()
   struct sockaddr* sa_local = (struct sockaddr*)sa_local_buffer;
 
   char buffer[1];
-  int na=0;
-  na = recvfrom(m_socket,(char*)buffer,0,MSG_PEEK,sa_local,&sa_size);
+  recvfrom(m_socket,(char*)buffer,0,MSG_PEEK,sa_local,&sa_size);
 
   sa->set_sockaddr(sa_local);
   delete [] sa_local_buffer;

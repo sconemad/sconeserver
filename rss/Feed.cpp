@@ -45,6 +45,7 @@ void RSSFeed_ErrorHandler(void* vcx,const char* str,...)
   //  xmlParserCtxt* cx = (xmlParserCtxt*)vcx;
   //  Feed* feed = (Feed*)cx->_private;
   RSSFeed_DEBUG_LOG("Feed error: " << msg);
+  std::ignore = msg;
 }
 
 //=========================================================================
