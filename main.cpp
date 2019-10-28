@@ -37,7 +37,8 @@ Free Software Foundation, Inc.,
 #endif
 
 // Command line option defaults
-static bool opt_foreground = false;
+static bool opt_daemonize = false;
+static bool opt_interactive = false;
 static bool opt_load_config = true;
 static std::string conf_path = CONF_PATH;
 static std::string mod_path = MOD_PATH;
@@ -96,7 +97,7 @@ int run()
   while (true) {
 
     // Enter the kernel loop
-    if (kernel->run(opt_foreground)) {
+    if (kernel->run(opt_interactive)) {
       break;
     }
 
@@ -104,7 +105,7 @@ int run()
 
   delete kernel;
 
-  if (opt_foreground) {
+  if (opt_interactive) {
     std::cout << std::endl;
   }
 
@@ -140,7 +141,8 @@ int main(int argc,char* argv[])
           << "Command line options:\n"
           << " -h         Print this help and exit\n"
           << " -v         Print version information and exit\n"
-          << " -f         Launch in foreground with console\n"
+          << " -d         Daemonize on launch\n"
+          << " -i         Launch with interactive console\n"
           << " -n         Don't read main configuration file\n"
           << " -c PATH    Set configuration path\n"
           << " -m PATH    Set module path\n"
@@ -156,19 +158,20 @@ int main(int argc,char* argv[])
 
   int c;
   extern char* optarg;
-  while ((c = getopt(argc,argv,"fnc:m:l:p:")) >= 0) {
+  while ((c = getopt(argc,argv,"dinc:m:l:p:")) >= 0) {
     switch (c) {
-      case '?': return 1;
-      case 'f': opt_foreground = true;  break;
-      case 'n': opt_load_config = false; break;
-      case 'c': conf_path = optarg; break;
-      case 'm': mod_path = optarg; break;
-      case 'l': var_path = optarg; break;
-      case 'p': pid_file = optarg; break;
+    case '?': return 1;
+    case 'd': opt_daemonize = true; break;
+    case 'i': opt_interactive = true;  break;
+    case 'n': opt_load_config = false; break;
+    case 'c': conf_path = optarg; break;
+    case 'm': mod_path = optarg; break;
+    case 'l': var_path = optarg; break;
+    case 'p': pid_file = optarg; break;
     }
   }
 
-  if (!opt_foreground) {
+  if (opt_daemonize) {
     // Daemonize
     pid_t pid;
     if ((pid=fork()) != 0) {
