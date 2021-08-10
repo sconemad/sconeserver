@@ -147,7 +147,7 @@ bool Descriptor::dup(int d)
 //=============================================================================
 void Descriptor::add_stream(Stream* stream)
 {
-  DEBUG_ASSERT(stream>=0,"add_stream() Invalid stream");
+  DEBUG_ASSERT(stream!=0,"add_stream() Invalid stream");
 
   m_streams.push_back(stream);
   stream->set_endpoint(this);
@@ -201,7 +201,7 @@ void Descriptor::add_stream_after(Stream* stream,const Stream* after)
 //=============================================================================
 bool Descriptor::remove_stream(Stream* stream)
 {
-  DEBUG_ASSERT(stream>=0,"remove_stream() Invalid stream");
+  DEBUG_ASSERT(stream!=0,"remove_stream() Invalid stream");
 
   std::list<Stream*>::iterator it = m_streams.begin();
   while (it != m_streams.end()) {
